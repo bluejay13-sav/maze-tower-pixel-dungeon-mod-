@@ -11,6 +11,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTalent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
@@ -41,8 +43,8 @@ import com.watabou.utils.DeviceCompat;
 public class WndCheats extends Window {
 
 	private static final int WIDTH      = 120;
-	private static final int BTN_HEIGHT = 18;
-	private static final int GAP        = 2;
+	private static final int BTN_HEIGHT = 16;
+	private static final int GAP        = 1;
 
 	//검 계열 소환 시 한 번에 주는 강화 주문서 수
 	private static final int UPGRADE_SCROLLS_PER_CLICK = 1;
@@ -63,6 +65,14 @@ public class WndCheats extends Window {
 			@Override
 			protected void onClick() {
 				give(new BloomCore());
+			}
+		});
+
+		addButton(new RedButton(Messages.get(this, "grant_talent"), 7){
+			@Override
+			protected void onClick() {
+				hide();
+				pickTalentCategory();
 			}
 		});
 
@@ -178,6 +188,50 @@ public class WndCheats extends Window {
 		} else {
 			Dungeon.level.drop(item, Dungeon.hero.pos).sprite.drop();
 		}
+	}
+
+	//2차 특성 직접 얻기: 분류 → 특성 → 레벨
+	private static void pickTalentCategory(){
+		GameScene.show(new WndOptions(Messages.get(WndCheats.class, "grant_talent"),
+				Messages.get(WndCheats.class, "grant_category"),
+				Messages.get(WndCheats.class, "cat_attack"),
+				Messages.get(WndCheats.class, "cat_skill"),
+				Messages.get(WndCheats.class, "cat_mana"),
+				Messages.get(WndCheats.class, "cat_element")){
+			@Override
+			protected void onSelect(int index) {
+				pickTalent(index);
+			}
+		});
+	}
+
+	private static void pickTalent(final int category){
+		final BloomTalent[] all = BloomTalent.values();
+		final int per = 6;
+		String[] names = new String[per];
+		for (int i = 0; i < per; i++){
+			BloomTalent t = all[category*per + i];
+			int lvl = BloomTree.level(Dungeon.hero, t);
+			names[i] = Messages.titleCase(t.title()) + (lvl >= 0 ? " (" + lvl + ")" : "");
+		}
+		GameScene.show(new WndOptions(Messages.get(WndCheats.class, "grant_talent"),
+				Messages.get(WndCheats.class, "grant_pick"), names){
+			@Override
+			protected void onSelect(int index) {
+				pickLevel(all[category*per + index]);
+			}
+		});
+	}
+
+	private static void pickLevel(final BloomTalent talent){
+		GameScene.show(new WndOptions(Messages.titleCase(talent.title()),
+				Messages.get(WndCheats.class, "grant_level"), "0", "1", "2"){
+			@Override
+			protected void onSelect(int index) {
+				BloomTree.get(Dungeon.hero).cheatGrant(Dungeon.hero, talent, index);
+				GLog.p(Messages.get(WndCheats.class, "granted", Messages.titleCase(talent.title()), index));
+			}
+		});
 	}
 
 	private static void goToDepth(int depth){

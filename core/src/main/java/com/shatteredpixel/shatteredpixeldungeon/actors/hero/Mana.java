@@ -40,8 +40,13 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	}
 
 	public int max(){
-		return MazeTower.MANA_MAX;
+		int max = MazeTower.MANA_MAX;
+		if (target instanceof Hero) max += BloomEffects.bonusMaxMana((Hero)target); //마나 감응
+		return max;
 	}
+
+	//집중: 마지막 행동이 대기·탐색이었는지 (다른 행동을 하면 Hero.act에서 꺼진다)
+	public boolean focusReady = false;
 
 	public int cur(){
 		return Math.min(mana, max());
@@ -68,7 +73,10 @@ public class Mana extends Buff implements ActionIndicator.Action {
 
 	//대기(휴식·탐색 포함)로 턴을 넘겼을 때 호출한다
 	public static void onWait( Hero hero, float turns ){
-		get(hero).gain(Math.round(MazeTower.MANA_PER_WAIT_TURN * turns));
+		Mana m = get(hero);
+		//명상: 대기 시 마나 회복 배율
+		m.gain(Math.round(MazeTower.MANA_PER_WAIT_TURN * turns * BloomEffects.waitManaMulti(hero)));
+		m.focusReady = true;
 	}
 
 	// ===== 스킬 버튼 (화면 오른쪽 아래 행동 버튼) =====

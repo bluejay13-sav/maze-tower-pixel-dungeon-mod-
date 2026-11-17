@@ -11,6 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
@@ -68,7 +69,7 @@ public class SwordSkill {
 	}
 
 	public static int manaCost(Hero hero){
-		return MazeTower.SKILL_MANA_COST;
+		return BloomEffects.skillCost(hero, MazeTower.SKILL_MANA_COST); //절약
 	}
 
 	// ===== 스킬 사용 중 상태 (다른 코드에서 확인용) =====
@@ -89,7 +90,7 @@ public class SwordSkill {
 		String hitsTxt = hits > 1
 				? Messages.get(SwordSkill.class, "dmg_multi", Math.round(dmgPerHit*100), hits, Math.round(dmgPerHit*hits*100))
 				: Messages.get(SwordSkill.class, "dmg_single", Math.round(dmgPerHit*100));
-		String desc = Messages.get(SwordSkill.class, "info", name(), hitsTxt, MazeTower.SKILL_MANA_COST);
+		String desc = Messages.get(SwordSkill.class, "info", name(), hitsTxt, (Dungeon.hero != null ? manaCost(Dungeon.hero) : MazeTower.SKILL_MANA_COST));
 		String extra = Messages.get(SwordSkill.class, nameKey + "_desc");
 		if (!extra.isEmpty() && !extra.startsWith("!!!")) desc += " " + extra;
 		return desc;
@@ -138,10 +139,13 @@ public class SwordSkill {
 			GLog.w(Messages.get(SwordSkill.class, "not_adjacent"));
 			return;
 		}
-		if (!Mana.get(hero).spend(manaCost(hero))){
+		final int cost = manaCost(hero);
+		if (Mana.get(hero).cur() < cost){
 			GLog.w(Messages.get(SwordSkill.class, "no_mana"));
 			return;
 		}
+		BloomEffects.beginSkill(hero, enemy, cost); //마나가 가득 찼는지, 집중 상태 기록
+		Mana.get(hero).spend(cost);
 
 		hero.busy();
 		hero.sprite.attack(enemy.pos, new Callback() {
@@ -157,6 +161,7 @@ public class SwordSkill {
 					}
 				}
 				active = null;
+				BloomEffects.endSkill(hero); //처치 시 마나 반환, 흐름·잔향·흘리기
 
 				Invisibility.dispel();
 				float delay = hero.attackDelay();

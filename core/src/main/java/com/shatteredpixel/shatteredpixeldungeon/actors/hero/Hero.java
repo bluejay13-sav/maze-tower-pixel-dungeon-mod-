@@ -554,6 +554,8 @@ public class Hero extends Char {
 			}
 		}
 
+		accuracy *= BloomEffects.accuracyMulti(this, target); //Maze Tower: 정밀타격, 흐름
+
 		if (buff(Scimitar.SwordDance.class) != null){
 			accuracy *= 1.50f;
 		}
@@ -891,6 +893,7 @@ public class Hero extends Char {
 		} else {
 			
 			resting = false;
+			Mana.get(this).focusReady = false; //Maze Tower: 대기·탐색 외 행동이면 집중 해제
 			
 			ready = false;
 			
@@ -1524,6 +1527,12 @@ public class Hero extends Char {
 		resting = fullRest;
 	}
 	
+	//Maze Tower: 원소 친화 - 내가 받는 냉각 등의 지속 감소
+	@Override
+	public float resist( Class effect ) {
+		return super.resist(effect) * BloomEffects.heroIncomingDuration(this, effect);
+	}
+
 	@Override
 	public int attackProc( final Char enemy, int damage ) {
 		damage = super.attackProc( enemy, damage );
@@ -1535,6 +1544,7 @@ public class Hero extends Char {
 			wep = belongings.attackingWeapon();
 		}
 
+		damage = BloomEffects.onHeroAttackProc( this, enemy, damage ); //Maze Tower: 2차 특성 피해·적중 효과
 		damage = Talent.onAttackProc( this, enemy, damage );
 
 		if (wep != null) {
@@ -1612,6 +1622,7 @@ public class Hero extends Char {
 			damage = rockArmor.absorb(damage);
 		}
 		
+		damage = BloomEffects.onHeroDefense(this, enemy, damage); //Maze Tower: 흘리기, 마나 장막
 		return super.defenseProc( enemy, damage );
 	}
 
@@ -1648,6 +1659,7 @@ public class Hero extends Char {
 
 		//temporarily assign to a float to avoid rounding a bunch
 		float damage = dmg;
+		damage = BloomEffects.onHeroDamage(this, Math.round(damage)); //Maze Tower: 원소 친화
 
 		Endure.EndureTracker endure = buff(Endure.EndureTracker.class);
 		if (!(src instanceof Char)){
@@ -2381,6 +2393,7 @@ public class Hero extends Char {
 				|| (attackTarget instanceof Mimic && attackTarget.alignment == Alignment.NEUTRAL);
 
 		boolean hit = attack(attackTarget);
+		BloomEffects.afterNormalAttack(this, attackTarget, hit); //Maze Tower: 생명탈취, 그림자검
 		
 		Invisibility.dispel();
 		spend( attackDelay() );

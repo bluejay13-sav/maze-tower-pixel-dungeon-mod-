@@ -1,0 +1,519 @@
+/*
+ * Maze Tower (가칭 미궁의 마탑)
+ * Shattered Pixel Dungeon 기반 아종. GPLv3.
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+
+import static com.shatteredpixel.shatteredpixeldungeon.MazeTower.*;
+import static com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTalent.*;
+
+//Maze Tower: 2차 특성 24개의 효과를 한곳에 모은 클래스.
+//원작 코드에는 짧은 호출 한 줄씩만 넣고(Hero, Char, SwordSkill, Mana, Buff, Burning), 실제 계산은 여기서 한다.
+public class BloomEffects {
+
+	private static int lvl(Hero hero, BloomTalent t){
+		return BloomTree.level(hero, t);
+	}
+
+	private static boolean isSkill(){
+		return SwordSkill.active != null;
+	}
+
+	// =====================================================================
+	// 스킬 한 번 사용 동안의 상태 (SwordSkill이 시작/끝에 호출)
+	// =====================================================================
+
+	public static class SkillUse {
+		public Char target;
+		public int manaSpent;
+		public boolean wasFullMana;
+		public boolean focusPrimed;
+		public boolean burstUsed;
+		public boolean executeApplied;
+	}
+
+	public static SkillUse skillUse = null;
+
+	//스킬 비용 (절약)
+	public static int skillCost(Hero hero, int base){
+		int t = lvl(hero, THRIFT);
+		if (t >= 0) base = Math.round(base * (1f - T_THRIFT_COST[t]));
+		return Math.max(0, base);
+	}
+
+	//마나를 쓰기 직전에 호출
+	public static SkillUse beginSkill(Hero hero, Char target, int cost){
+		SkillUse u = new SkillUse();
+		Mana m = Mana.get(hero);
+		u.target = target;
+		u.manaSpent = cost;
+		u.wasFullMana = m.isFull();
+		u.focusPrimed = m.focusReady;
+		m.focusReady = false;
+		skillUse = u;
+		return u;
+	}
+
+	//스킬 타격이 모두 끝난 뒤 호출
+	public static void endSkill(Hero hero){
+		SkillUse u = skillUse;
+		skillUse = null;
+		if (u == null) return;
+
+		//처치 시 마나 반환 (날 세우기 2레벨 50%, 처형 2레벨 100%, 큰 쪽)
+		if (u.target != null && !u.target.isAlive()){
+			float refund = 0;
+			if (lvl(hero, SHARPEN) >= 2) refund = Math.max(refund, T_SHARPEN_REFUND);
+			if (lvl(hero, EXECUTE) >= 2 && u.executeApplied) refund = Math.max(refund, T_EXECUTE_REFUND);
+			int amt = Math.round(u.manaSpent * refund);
+			if (amt > 0) Mana.get(hero).gain(amt);
+		}
+
+		//흐름: 다음 평타 강화
+		int f = lvl(hero, FLOW);
+		if (f >= 0) Buff.affect(hero, FlowTracker.class).charges = T_FLOW_ATTACKS[f];
+
+		//잔향: 몇 턴 동안 평타 적중 시 마나
+		int e = lvl(hero, ECHO);
+		if (e >= 0) Buff.prolong(hero, EchoTracker.class, T_ECHO_TURNS[e]);
+
+		//흘리기: 다음에 받는 공격 피해 감소
+		if (lvl(hero, PARRY) >= 0) Buff.affect(hero, ParryTracker.class);
+	}
+
+	// =====================================================================
+	// 명중 (Hero.attackSkill)
+	// =====================================================================
+
+	public static float accuracyMulti(Hero hero, Char target){
+		if (isSkill()) return 1f;
+		float acc = 1f;
+		int p = lvl(hero, PRECISION);
+		if (p >= 0) acc *= 1f + T_PRECISION_ACC[p];
+
+		FlowTracker flow = hero.buff(FlowTracker.class);
+		if (flow != null && lvl(hero, FLOW) >= 1) acc = Float.POSITIVE_INFINITY;
+		return acc;
+	}
+
+	//스킬 방어 무시 (집중 2레벨)
+	public static boolean skillIgnoresDefense(){
+		return isSkill() && skillUse != null && skillUse.focusPrimed
+				&& lvl(Dungeon.hero, FOCUS) >= 2;
+	}
+
+	// =====================================================================
+	// 공격 적중 (Hero.attackProc, 방어 적용 후 피해)
+	// =====================================================================
+
+	private static boolean inChain = false; //연쇄로 번진 피해 처리 중
+	private static boolean inShadow = false; //그림자검 추가 공격 중
+
+	public static int onHeroAttackProc(Hero hero, Char enemy, int damage){
+		if (enemy == null || enemy == hero) return damage;
+		boolean skill = isSkill();
+		float dmg = damage;
+		float bonus = 1f;
+
+		//--- 피해 배율 ---
+
+		//약점 노리기 (평타·스킬)
+		int w = lvl(hero, WEAK_POINT);
+		if (w >= 0 && hasNegativeStatus(enemy)) bonus += T_WEAK_POINT_DMG[w];
+
+		//서리 베기 2레벨: 냉각·빙결 적이 받는 피해
+		if (lvl(hero, FROST_SLASH) >= 2 && (enemy.buff(Chill.class) != null || enemy.buff(Frost.class) != null)){
+			bonus += T_FROST_SLASH_BONUS;
+		}
+
+		if (!skill){
+			//연격
+			int c = lvl(hero, COMBO);
+			if (c >= 0){
+				ComboTracker ct = Buff.affect(hero, ComboTracker.class);
+				if (ct.target != enemy.id()){
+					ct.target = enemy.id();
+					ct.count = 0;
+				}
+				ct.count++;
+				if (ct.count >= T_COMBO_HITS[c]){
+					bonus += T_COMBO_BONUS[c];
+					ct.count = 0;
+				}
+			}
+			//넘치는 힘
+			int o = lvl(hero, OVERFLOW);
+			if (o >= 0 && Mana.get(hero).isFull()) bonus += T_OVERFLOW_DMG[o];
+			//흐름
+			FlowTracker flow = hero.buff(FlowTracker.class);
+			if (flow != null){
+				bonus += T_FLOW_DMG;
+				flow.charges--;
+				if (flow.charges <= 0) flow.detach();
+			}
+		} else {
+			SkillUse u = skillUse;
+			//날 세우기
+			int s = lvl(hero, SHARPEN);
+			if (s >= 0) bonus += T_SHARPEN_DMG[s];
+			//집중
+			int fo = lvl(hero, FOCUS);
+			if (fo >= 0 && u != null && u.focusPrimed) bonus += T_FOCUS_DMG[fo];
+			//처형
+			int ex = lvl(hero, EXECUTE);
+			if (ex >= 0 && enemy.HP <= enemy.HT * T_EXECUTE_HP){
+				bonus += T_EXECUTE_DMG[ex];
+				if (u != null) u.executeApplied = true;
+			}
+			//마나 감응 2레벨: 가득 찬 마나로 쓴 스킬
+			if (lvl(hero, MANA_ATTUNE) >= 2 && u != null && u.wasFullMana) bonus += T_MANA_ATTUNE_FULL_DMG;
+			//원소 폭발: 스킬 한 번에 한 번
+			int eb = lvl(hero, ELEMENT_BURST);
+			if (eb >= 0 && u != null && !u.burstUsed && removeOneStatus(enemy)){
+				u.burstUsed = true;
+				bonus += T_ELEMENT_BURST_DMG[eb];
+				if (enemy.sprite != null){
+					enemy.sprite.centerEmitter().burst(MagicMissile.MagicParticle.FACTORY, 10);
+				}
+				Sample.INSTANCE.play(Assets.Sounds.ZAP);
+			}
+		}
+
+		dmg *= bonus;
+		int result = Math.round(dmg);
+
+		//--- 적중 시 효과 ---
+		if (!skill){
+			//마나 흡수
+			int md = lvl(hero, MANA_DRAIN);
+			if (md >= 0) Mana.get(hero).gain(T_MANA_DRAIN[md]);
+			//잔향
+			int ec = lvl(hero, ECHO);
+			if (ec >= 0 && hero.buff(EchoTracker.class) != null) Mana.get(hero).gain(T_ECHO_MANA[ec]);
+			//불꽃 칼날
+			int fb = lvl(hero, FLAME_BLADE);
+			if (fb >= 0 && Random.Float() < T_FLAME_BLADE_CHANCE[fb]){
+				ignite(hero, enemy, T_FLAME_BLADE_TURNS);
+			}
+		} else {
+			skillOnHitEffects(hero, enemy, result);
+			//연쇄
+			int ch = lvl(hero, CHAIN);
+			if (ch >= 0 && !inChain) chain(hero, enemy, result, ch);
+		}
+
+		//잔류전기 (평타·스킬)
+		residualShock(hero, enemy, result);
+
+		return result;
+	}
+
+	//스킬 적중 시 효과 (연쇄 2레벨이면 번진 대상에도)
+	private static void skillOnHitEffects(Hero hero, Char enemy, int damage){
+		int fs = lvl(hero, FROST_SLASH);
+		if (fs >= 0) chill(hero, enemy, T_FROST_SLASH_TURNS[fs]);
+	}
+
+	private static void chain(Hero hero, Char enemy, int damage, int level){
+		int amt = Math.round(damage * T_CHAIN_PCT[level]);
+		if (amt <= 0) return;
+		ArrayList<Char> candidates = new ArrayList<>();
+		for (Char c : Actor.chars()){
+			if (c != enemy && c != hero && c.alignment == Char.Alignment.ENEMY && c.isAlive()
+					&& Dungeon.level.distance(enemy.pos, c.pos) <= T_CHAIN_RANGE
+					&& Dungeon.level.heroFOV[c.pos]){
+				candidates.add(c);
+			}
+		}
+		if (candidates.isEmpty()) return;
+		Char other = Random.element(candidates);
+
+		inChain = true;
+		if (other.sprite != null && enemy.sprite != null){
+			hero.sprite.parent.add(new Lightning(enemy.sprite.center(), other.sprite.center(), null));
+		}
+		other.damage(amt, hero);
+		if (level >= 2 && other.isAlive()){
+			skillOnHitEffects(hero, other, amt);
+			residualShock(hero, other, amt);
+		}
+		inChain = false;
+	}
+
+	// =====================================================================
+	// 평타가 끝난 뒤 (Hero.onAttackComplete)
+	// =====================================================================
+
+	public static void afterNormalAttack(Hero hero, Char enemy, boolean hit){
+		if (enemy == null) return;
+
+		//생명탈취: 평타로 처치
+		int ls = lvl(hero, LIFE_STEAL);
+		if (ls >= 0 && hit && !enemy.isAlive() && enemy.alignment == Char.Alignment.ENEMY){
+			int heal = Math.min(T_LIFE_STEAL_HEAL[ls], hero.HT - hero.HP);
+			if (heal > 0){
+				hero.HP += heal;
+				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), FloatingText.HEALING);
+			}
+		}
+
+		//그림자검: 평타 한 번 더
+		int sb = lvl(hero, SHADOW_BLADE);
+		if (sb >= 0 && hit && !inShadow && enemy.isAlive() && Random.Float() < T_SHADOW_BLADE_CHANCE[sb]){
+			inShadow = true;
+			boolean hit2 = hero.attack(enemy);
+			inShadow = false;
+			afterNormalAttack(hero, enemy, hit2);
+		}
+	}
+
+	// =====================================================================
+	// 받는 피해 (Hero.defenseProc / Hero.damage)
+	// =====================================================================
+
+	public static int onHeroDefense(Hero hero, Char enemy, int damage){
+		if (damage <= 0) return damage;
+		float dmg = damage;
+
+		//흘리기
+		ParryTracker pt = hero.buff(ParryTracker.class);
+		int p = lvl(hero, PARRY);
+		if (pt != null){
+			if (p >= 0) dmg *= 1f - T_PARRY_REDUCE[p];
+			pt.detach();
+		}
+
+		//마나 장막
+		int mv = lvl(hero, MANA_VEIL);
+		if (mv >= 0 && hero.HP <= hero.HT * T_MANA_VEIL_HP && Mana.get(hero).spend(T_MANA_VEIL_COST)){
+			dmg *= 1f - T_MANA_VEIL_REDUCE[mv];
+			hero.sprite.showStatus(0x4488FF, "-" + T_MANA_VEIL_COST);
+		}
+
+		return Math.round(dmg);
+	}
+
+	//원소 친화 1~2레벨: 화상·냉각(·정전기) 중 받는 모든 피해 감소
+	public static int onHeroDamage(Hero hero, int dmg){
+		int a = lvl(hero, ELEMENT_AFFINITY);
+		if (a >= 1 && dmg > 0 && hasElementalStatus(hero)){
+			return Math.round(dmg * (1f - T_AFFINITY_REDUCE[a]));
+		}
+		return dmg;
+	}
+
+	//원소 친화: 내가 받는 화상·냉각(·정전기) 지속 감소 (Hero.resist, Burning.reignite)
+	public static float heroIncomingDuration(Hero hero, Class<?> effect){
+		if (lvl(hero, ELEMENT_AFFINITY) >= 0 && isElementalStatus(effect)){
+			return T_AFFINITY_DURATION;
+		}
+		return 1f;
+	}
+
+	// =====================================================================
+	// 마나 (Mana)
+	// =====================================================================
+
+	public static int bonusMaxMana(Hero hero){
+		int a = lvl(hero, MANA_ATTUNE);
+		return a >= 0 ? T_MANA_ATTUNE_MAX[a] : 0;
+	}
+
+	public static int waitManaMulti(Hero hero){
+		int m = lvl(hero, MEDITATION);
+		return m >= 0 ? T_MEDITATION_MULTI[m] : 1;
+	}
+
+	// =====================================================================
+	// 속성 (상태이상 걸기)
+	// =====================================================================
+
+	//잔류원소: 내가 건 상태이상 지속 배율
+	public static float inflictDuration(Hero hero, float base){
+		int l = lvl(hero, LINGERING_ELEMENT);
+		return l >= 0 ? base * T_LINGERING_DURATION[l] : base;
+	}
+
+	public static void ignite(Hero hero, Char enemy, float turns){
+		if (!enemy.isAlive()) return;
+		Buff.affect(enemy, Burning.class).reignite(enemy, inflictDuration(hero, turns));
+		if (enemy.sprite != null) enemy.sprite.emitter().burst(FlameParticle.FACTORY, 6);
+	}
+
+	public static void chill(Hero hero, Char enemy, float turns){
+		if (!enemy.isAlive()) return;
+		Buff.prolong(enemy, Chill.class, inflictDuration(hero, turns));
+		if (enemy.sprite != null) enemy.sprite.emitter().burst(SnowParticle.FACTORY, 6);
+	}
+
+	private static void residualShock(Hero hero, Char enemy, int damage){
+		int r = lvl(hero, RESIDUAL_SHOCK);
+		if (r < 0 || damage <= 0) return;
+
+		float chance = T_SHOCK_CHANCE[r];
+		if (isSkill()) chance *= SwordSkill.active.elementChanceMulti; //룬 블레이드 무형검
+		boolean onWater = Dungeon.level.water[enemy.pos];
+		if (!(r >= 2 && onWater) && Random.Float() >= chance) return;
+
+		int shockDmg = Math.max(1, Math.round(damage * T_SHOCK_DMG_FACTOR));
+
+		ArrayList<Lightning.Arc> arcs = new ArrayList<>();
+		if (hero.sprite != null && enemy.sprite != null){
+			arcs.add(new Lightning.Arc(hero.sprite.center(), enemy.sprite.center()));
+		}
+		shock(hero, enemy, shockDmg);
+
+		//인접한 적 1명에게 전이
+		ArrayList<Char> near = new ArrayList<>();
+		for (Char c : Actor.chars()){
+			if (c != enemy && c != hero && c.alignment == Char.Alignment.ENEMY && c.isAlive()
+					&& Dungeon.level.adjacent(enemy.pos, c.pos)){
+				near.add(c);
+			}
+		}
+		if (!near.isEmpty()){
+			Char other = Random.element(near);
+			if (other.sprite != null && enemy.sprite != null){
+				arcs.add(new Lightning.Arc(enemy.sprite.center(), other.sprite.center()));
+			}
+			shock(hero, other, shockDmg);
+		}
+
+		if (!arcs.isEmpty() && hero.sprite != null && hero.sprite.parent != null){
+			hero.sprite.parent.addToFront(new Lightning(arcs, null));
+		}
+		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
+	}
+
+	//전격 피해 한 번 (8단계에서 정전기 상태이상을 여기서 건다)
+	public static void shock(Hero hero, Char target, int dmg){
+		if (!target.isAlive()) return;
+		target.damage(dmg, new ShockDamage());
+		if (target.sprite != null) target.sprite.flash();
+	}
+
+	//전격 피해의 출처 표시용
+	public static class ShockDamage {}
+
+	// =====================================================================
+	// 상태이상 판정
+	// =====================================================================
+
+	public static boolean hasNegativeStatus(Char ch){
+		for (Buff b : ch.buffs()){
+			if (b.type == Buff.buffType.NEGATIVE) return true;
+		}
+		return false;
+	}
+
+	public static boolean isElementalStatus(Class<?> c){
+		return c == Burning.class || c == Chill.class || c == Frost.class;
+	}
+
+	public static boolean hasElementalStatus(Char ch){
+		for (Buff b : ch.buffs()){
+			if (isElementalStatus(b.getClass())) return true;
+		}
+		return false;
+	}
+
+	//원소 폭발: 상태이상 하나를 지운다 (속성 상태이상 우선)
+	private static boolean removeOneStatus(Char ch){
+		for (Buff b : ch.buffs()){
+			if (isElementalStatus(b.getClass())){
+				b.detach();
+				return true;
+			}
+		}
+		for (Buff b : ch.buffs()){
+			if (b.type == Buff.buffType.NEGATIVE && b instanceof FlavourBuff){
+				b.detach();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// =====================================================================
+	// 추적용 버프 (화면에 보이지 않음)
+	// =====================================================================
+
+	//연격: 같은 적을 때린 횟수
+	public static class ComboTracker extends Buff {
+		{ type = buffType.NEUTRAL; }
+		public int target = -1;
+		public int count = 0;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put("target", target);
+			bundle.put("count", count);
+		}
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			target = bundle.getInt("target");
+			count = bundle.getInt("count");
+		}
+	}
+
+	//흐름: 남은 강화 평타 수
+	public static class FlowTracker extends Buff {
+		{ type = buffType.POSITIVE; }
+		public int charges = 1;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put("charges", charges);
+		}
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			charges = bundle.getInt("charges");
+		}
+	}
+
+	//잔향: 남은 턴
+	public static class EchoTracker extends FlavourBuff {
+		{ type = buffType.POSITIVE; }
+	}
+
+	//흘리기: 다음 피격 1회
+	public static class ParryTracker extends Buff {
+		{ type = buffType.POSITIVE; }
+	}
+
+	//무기를 들고 있는지 (평타 판정 보조)
+	static boolean hasWeapon(Hero hero){
+		KindOfWeapon w = hero.belongings.attackingWeapon();
+		return w != null;
+	}
+}

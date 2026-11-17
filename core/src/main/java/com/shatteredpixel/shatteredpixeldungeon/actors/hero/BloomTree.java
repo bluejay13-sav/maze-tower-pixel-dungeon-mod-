@@ -183,6 +183,31 @@ public class BloomTree extends Buff {
 		return true;
 	}
 
+	//테스트용 치트: 특성을 원하는 레벨로 바로 얻는다 (포인트와 무관)
+	public void cheatGrant( Hero hero, BloomTalent talent, int level ){
+		unlocked = true;
+		for (Slot s : slots){
+			if (s.chosen == talent){
+				s.level = level;
+				return;
+			}
+		}
+		Slot target = null;
+		for (Slot s : slots){
+			if (!s.isChosen()){
+				target = s;
+				break;
+			}
+		}
+		if (target == null){
+			target = new Slot();
+			slots.add(target);
+		}
+		target.chosen = talent;
+		target.options = new BloomTalent[0];
+		target.level = level;
+	}
+
 	// ===== 저장 =====
 
 	private static final String UNLOCKED = "unlocked";

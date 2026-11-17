@@ -72,6 +72,55 @@ public class MazeTower {
 	//특성 최대 레벨 (0레벨로 해금, 포인트 1개당 1레벨)
 	public static final int BLOOM_MAX_TALENT_LEVEL = 2;
 
+	// ===== 2차 특성 수치 (배열은 [0레벨, 1레벨, 2레벨]) =====
+
+	//기본공격
+	public static final float[] T_PRECISION_ACC      = {0.20f, 0.40f, 0.60f};
+	public static final int[]   T_COMBO_HITS         = {3, 3, 2};
+	public static final float[] T_COMBO_BONUS        = {0.30f, 0.40f, 0.30f};
+	public static final float[] T_SHADOW_BLADE_CHANCE= {0.10f, 0.15f, 0.20f};
+	public static final float[] T_WEAK_POINT_DMG     = {0.10f, 0.20f, 0.30f};
+	public static final int[]   T_LIFE_STEAL_HEAL    = {5, 10, 15};
+	public static final float   T_FLOW_DMG           = 0.25f;
+	public static final int[]   T_FLOW_ATTACKS       = {1, 1, 2};
+
+	//스킬
+	public static final float[] T_SHARPEN_DMG        = {0.10f, 0.20f, 0.20f};
+	public static final float   T_SHARPEN_REFUND     = 0.50f; //2레벨, 처치 시 마나 반환
+	public static final float[] T_CHAIN_PCT          = {0.20f, 0.40f, 0.40f};
+	public static final int     T_CHAIN_RANGE        = 2;
+	public static final float[] T_FOCUS_DMG          = {0.25f, 0.40f, 0.40f};
+	public static final float   T_EXECUTE_HP         = 0.30f;
+	public static final float[] T_EXECUTE_DMG        = {0.20f, 0.35f, 0.35f};
+	public static final float   T_EXECUTE_REFUND     = 1.00f; //2레벨
+	public static final int[]   T_ECHO_TURNS         = {2, 3, 3};
+	public static final int[]   T_ECHO_MANA          = {3, 5, 8};
+	public static final float[] T_PARRY_REDUCE       = {0.15f, 0.25f, 0.35f};
+
+	//마나
+	public static final int[]   T_MANA_DRAIN         = {1, 3, 5};
+	public static final int[]   T_MANA_ATTUNE_MAX    = {20, 40, 40};
+	public static final float   T_MANA_ATTUNE_FULL_DMG = 0.50f; //2레벨
+	public static final float[] T_THRIFT_COST        = {0.10f, 0.20f, 0.30f};
+	public static final int[]   T_MEDITATION_MULTI   = {2, 3, 4};
+	public static final float[] T_OVERFLOW_DMG       = {0.10f, 0.20f, 0.30f};
+	public static final float   T_MANA_VEIL_HP       = 0.50f;
+	public static final int     T_MANA_VEIL_COST     = 20;
+	public static final float[] T_MANA_VEIL_REDUCE   = {0.25f, 0.40f, 0.60f};
+
+	//속성
+	public static final float[] T_FLAME_BLADE_CHANCE = {0.10f, 0.20f, 0.30f};
+	public static final float   T_FLAME_BLADE_TURNS  = 3f;
+	public static final float[] T_FROST_SLASH_TURNS  = {2f, 3f, 4f};
+	public static final float   T_FROST_SLASH_BONUS  = 0.20f; //2레벨, 냉각·빙결 적이 받는 피해
+	public static final float[] T_SHOCK_CHANCE       = {0.15f, 0.25f, 0.25f};
+	public static final float   T_SHOCK_DMG_FACTOR   = 0.50f; //그 타격 피해에 대한 전격 피해 (원작 전격 마법 부여와 같음)
+	public static final float[] T_LINGERING_DURATION = {1.50f, 2.00f, 2.00f};
+	public static final float   T_LINGERING_REACTION = 0.50f; //2레벨, 원소 반응 피해 (8단계)
+	public static final float[] T_ELEMENT_BURST_DMG  = {0.30f, 0.50f, 0.70f};
+	public static final float   T_AFFINITY_DURATION  = 0.50f;
+	public static final float[] T_AFFINITY_REDUCE    = {0f, 0.20f, 0.40f};
+
 	//1차 포인트를 주는 레벨 구간 (1차 능력은 미완성, 쌓이기만 한다)
 	public static final int FIRST_TIER_FIRST_LEVEL = 2;
 	public static final int FIRST_TIER_LAST_LEVEL  = 6;
