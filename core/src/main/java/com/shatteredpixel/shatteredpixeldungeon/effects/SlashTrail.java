@@ -27,7 +27,7 @@ import java.nio.ShortBuffer;
 //원작 CircleArc의 그리기 방식을 따르되, 부채꼴이 아니라 가는 띠를 그린다.
 public class SlashTrail extends Visual {
 
-	private static final int SEGMENTS = 16;
+	private static final int SEGMENTS = 32; //동그라미 베기도 매끄럽게
 
 	private final float radius;
 	private final float thickness;
@@ -76,6 +76,14 @@ public class SlashTrail extends Visual {
 	//true: 빛처럼 밝게 더해지는 궤적(기본). false: 어두운 색도 그대로 보이는 일반 궤적(예: 그림자검)
 	private boolean glow = true;
 
+	//동그라미(고리) 베기: 두께가 거의 일정하다
+	private boolean ring = false;
+
+	public SlashTrail ring(){
+		ring = true;
+		return this;
+	}
+
 	public SlashTrail solid(){
 		glow = false;
 		return this;
@@ -103,6 +111,7 @@ public class SlashTrail extends Visual {
 		if (sparkle == null) return;
 		int upto = Math.round(SEGMENTS * progress);
 		for (; sparkleDone < upto; sparkleDone++){
+			if (sparkleDone % 2 != 0) continue; //구간이 32개로 늘어 가루 양이 두 배가 되지 않게 한 칸 걸러 뿌린다
 			float a = startAngle + sweepAngle * (sparkleDone / (float)SEGMENTS);
 			Emitter e = GameScene.emitter();
 			if (e == null) return;
@@ -127,7 +136,10 @@ public class SlashTrail extends Visual {
 			float t = i / (float)SEGMENTS;  //띠 전체에서의 위치
 			float a = startAngle + sweepAngle * t;
 			//가운데가 두껍고 양끝이 얇다
-			float th = thickness * (float)Math.sin(Math.PI * t);
+			//기본: 가운데가 두껍고 양끝이 얇은 초승달. 고리(ring): 시작 부분만 살짝 가늘고 나머지는 같은 두께
+			float th = ring
+					? thickness * Math.min(1f, 0.25f + t * 4f)
+					: thickness * (float)Math.sin(Math.PI * t);
 			float cos = (float)Math.cos(a), sin = (float)Math.sin(a);
 
 			vertex[0] = cos * radius;

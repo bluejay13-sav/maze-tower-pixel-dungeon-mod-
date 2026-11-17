@@ -44,24 +44,26 @@ public class TalentEffects {
 		from.sprite.parent.add(new Beam.LightRay(from.sprite.center(), to.sprite.center()));
 	}
 
-	//그림자검: 스킬 '베기'와 같은 빛나는 베기 궤적에 보라회색만 입힌다.
-	//(평타와 구분되게 베기와 반대 방향으로 긋는다)
+	//그림자검: 적 둘레를 한 바퀴 도는 동그라미 베기. 두 겹으로 그린다.
+	//  몸통: 보라빛 도는 거의 검은 그림자 고리 (어두운 색이 그대로 칠해지는 solid)
+	//  테두리: 바깥쪽 가는 보라 빛 (어두운 바닥에서도 모양이 보이게)
 	public static void shadowStrike( Char hero, Char enemy ){
 		if (!visible(hero) || !visible(enemy)) return;
 
 		PointF h = hero.sprite.center(), e = enemy.sprite.center();
-		float d = (float)Math.atan2(e.y - h.y, e.x - h.x);
-		PointF c = new PointF(e.x - (float)Math.cos(d) * 6, e.y - (float)Math.sin(d) * 6);
-		//베기와 같은 크기·속도 (SkillEffects.slash 참고), 두 겹으로 그린다.
-		//몸통: 보라빛이 도는 거의 검은 그림자 (어두운 색이 그대로 칠해지는 solid)
-		new SlashTrail(12, 4.5f, d + 1.1f, -2.2f, 0f, 0.10f, 0.24f)
-				.trailColor(SHADOW_BODY).solid()
-				.show(enemy.sprite.parent, c);
-		//테두리: 바깥쪽 가는 보라 빛 (어두운 바닥에서도 모양이 보이게)
-		new SlashTrail(12.5f, 1.2f, d + 1.1f, -2.2f, 0f, 0.10f, 0.24f)
-				.trailColor(SHADOW_RIM)
-				.show(enemy.sprite.parent, c);
+		//주인공 쪽에서 베기 시작해 한 바퀴 돈다
+		float start = (float)Math.atan2(h.y - e.y, h.x - e.x);
+		float full = (float)Math.PI * 2f;
+		new SlashTrail(SHADOW_RADIUS, 3.5f, start, full, 0f, 0.14f, 0.24f)
+				.ring().trailColor(SHADOW_BODY).solid()
+				.show(enemy.sprite.parent, e);
+		new SlashTrail(SHADOW_RADIUS + 1f, 1f, start, full, 0f, 0.14f, 0.24f)
+				.ring().trailColor(SHADOW_RIM)
+				.show(enemy.sprite.parent, e);
 	}
+
+	//동그라미 베기 반지름 (적 그림보다 살짝 크게)
+	private static final float SHADOW_RADIUS = 9f;
 
 	//그림자검 색: 몸통은 보라빛 도는 거의 검은색, 테두리는 은은한 보라 빛
 	private static final int SHADOW_BODY = 0x1E1828;
