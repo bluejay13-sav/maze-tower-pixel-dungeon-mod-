@@ -50,10 +50,11 @@ public class TalentEffects {
 	public static void shadowStrike( Char hero, Char enemy ){
 		if (!visible(hero) || !visible(enemy)) return;
 
-		PointF h = hero.sprite.center(), e = enemy.sprite.center();
-		//주인공 쪽에서 베기 시작해 한 바퀴 돈다
+		//적 그림이 공격 동작 등으로 흔들려도 칸 한가운데를 기준으로 그린다
+		PointF h = hero.sprite.center(), e = enemy.sprite.destinationCenter();
+		//주인공 쪽에서 베기 시작해 원의 60%만 돈다
 		float start = (float)Math.atan2(h.y - e.y, h.x - e.x);
-		float full = (float)Math.PI * 2f;
+		float full = (float)Math.PI * 2f * SHADOW_SWEEP;
 		new SlashTrail(SHADOW_RADIUS, 3.5f, start, full, 0f, 0.14f, 0.24f)
 				.ring().trailColor(SHADOW_BODY).solid()
 				.show(enemy.sprite.parent, e);
@@ -63,7 +64,9 @@ public class TalentEffects {
 	}
 
 	//동그라미 베기 반지름 (적 그림보다 살짝 크게)
-	private static final float SHADOW_RADIUS = 9f;
+	private static final float SHADOW_RADIUS = 7f;
+	//동그라미 베기가 도는 양 (1 = 한 바퀴)
+	private static final float SHADOW_SWEEP = 0.6f;
 
 	//그림자검 색: 몸통은 보라빛 도는 거의 검은색, 테두리는 은은한 보라 빛
 	private static final int SHADOW_BODY = 0x1E1828;

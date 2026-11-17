@@ -136,9 +136,9 @@ public class SlashTrail extends Visual {
 			float t = i / (float)SEGMENTS;  //띠 전체에서의 위치
 			float a = startAngle + sweepAngle * t;
 			//가운데가 두껍고 양끝이 얇다
-			//기본: 가운데가 두껍고 양끝이 얇은 초승달. 고리(ring): 시작 부분만 살짝 가늘고 나머지는 같은 두께
+			//기본: 가운데가 두껍고 양끝이 얇은 초승달. 고리(ring): 양끝만 살짝 가늘고 나머지는 같은 두께
 			float th = ring
-					? thickness * Math.min(1f, 0.25f + t * 4f)
+					? thickness * Math.min(1f, Math.min(0.25f + t * 4f, 0.25f + (1f - t) * 4f))
 					: thickness * (float)Math.sin(Math.PI * t);
 			float cos = (float)Math.cos(a), sin = (float)Math.sin(a);
 
