@@ -9,7 +9,6 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
@@ -58,7 +57,7 @@ public class TalentEffects {
 		ghost.flipHorizontal = hero.sprite.flipHorizontal;
 		ghost.x = hero.sprite.x;
 		ghost.y = hero.sprite.y;
-		ghost.hardlight(0.38f, 0.18f, 0.70f); //어두운 보라
+		ghost.hardlight(0.40f, 0.34f, 0.50f); //보라와 회색을 섞은 어두운 색
 		ghost.alpha(0.75f);
 		hero.sprite.parent.add(ghost);
 
@@ -75,13 +74,12 @@ public class TalentEffects {
 			}
 		});
 
-		//보랏빛 잔상 베기 + 그림자
+		//보라와 회색을 섞은 어두운 잔상 베기 (입자 없이 베기 궤적만)
 		PointF h = hero.sprite.center(), e = enemy.sprite.center();
 		float d = (float)Math.atan2(e.y - h.y, e.x - h.x);
-		new SlashTrail(11, 3, d + 1.1f, -2.2f, 0.08f, 0.08f, 0.22f)
-				.trailColor(0x6A3FB8) //어두운 보라
+		new SlashTrail(13, 5, d + 1.15f, -2.3f, 0.06f, 0.09f, 0.28f)
+				.trailColor(0x4E465E).solid()
 				.show(enemy.sprite.parent, new PointF(e.x - (float)Math.cos(d) * 5, e.y - (float)Math.sin(d) * 5));
-		enemy.sprite.emitter().burst(ShadowParticle.CURSE, 10);
 	}
 
 	//연격(특성): 쌓이는 중첩 표시 (스킬 연격과 다른 노란 숫자)

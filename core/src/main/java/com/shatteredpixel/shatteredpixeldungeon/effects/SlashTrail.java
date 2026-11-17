@@ -73,6 +73,14 @@ public class SlashTrail extends Visual {
 		return this;
 	}
 
+	//true: 빛처럼 밝게 더해지는 궤적(기본). false: 어두운 색도 그대로 보이는 일반 궤적(예: 그림자검)
+	private boolean glow = true;
+
+	public SlashTrail solid(){
+		glow = false;
+		return this;
+	}
+
 	//궤적이 그려지기 시작할 때 한 번 실행 (예: 대상 번쩍임)
 	public SlashTrail onStart( Runnable r ){
 		onStart = r;
@@ -176,7 +184,7 @@ public class SlashTrail extends Visual {
 		super.draw();
 		if (nIndices == 0) return;
 
-		Blending.setLightMode();
+		if (glow) Blending.setLightMode();
 
 		NoosaScript script = NoosaScript.get();
 		texture.bind();
@@ -185,6 +193,6 @@ public class SlashTrail extends Visual {
 		script.camera( camera );
 		script.drawElements( verticesBuffer, indices, nIndices );
 
-		Blending.setNormalMode();
+		if (glow) Blending.setNormalMode();
 	}
 }
