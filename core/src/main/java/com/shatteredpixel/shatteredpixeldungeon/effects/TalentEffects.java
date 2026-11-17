@@ -51,14 +51,21 @@ public class TalentEffects {
 
 		PointF h = hero.sprite.center(), e = enemy.sprite.center();
 		float d = (float)Math.atan2(e.y - h.y, e.x - h.x);
-		//베기와 같은 크기·속도 (SkillEffects.slash 참고)
-		new SlashTrail(12, 4, d + 1.1f, -2.2f, 0f, 0.10f, 0.20f)
-				.trailColor(SHADOW_COLOR)
-				.show(enemy.sprite.parent, new PointF(e.x - (float)Math.cos(d) * 6, e.y - (float)Math.sin(d) * 6));
+		PointF c = new PointF(e.x - (float)Math.cos(d) * 6, e.y - (float)Math.sin(d) * 6);
+		//베기와 같은 크기·속도 (SkillEffects.slash 참고), 두 겹으로 그린다.
+		//몸통: 보라빛이 도는 거의 검은 그림자 (어두운 색이 그대로 칠해지는 solid)
+		new SlashTrail(12, 4.5f, d + 1.1f, -2.2f, 0f, 0.10f, 0.24f)
+				.trailColor(SHADOW_BODY).solid()
+				.show(enemy.sprite.parent, c);
+		//테두리: 바깥쪽 가는 보라 빛 (어두운 바닥에서도 모양이 보이게)
+		new SlashTrail(12.5f, 1.2f, d + 1.1f, -2.2f, 0f, 0.10f, 0.24f)
+				.trailColor(SHADOW_RIM)
+				.show(enemy.sprite.parent, c);
 	}
 
-	//그림자검 궤적 색: 보라와 회색을 섞고 살짝 어둡게 (빛나는 궤적이라 너무 어두우면 안 보인다)
-	private static final int SHADOW_COLOR = 0x8578A2;
+	//그림자검 색: 몸통은 보라빛 도는 거의 검은색, 테두리는 은은한 보라 빛
+	private static final int SHADOW_BODY = 0x1E1828;
+	private static final int SHADOW_RIM  = 0x6A5A8C;
 
 	//연격(특성): 쌓이는 중첩 표시 (스킬 연격과 다른 노란 숫자)
 	public static void comboStack( Char enemy, int count, int need ){
