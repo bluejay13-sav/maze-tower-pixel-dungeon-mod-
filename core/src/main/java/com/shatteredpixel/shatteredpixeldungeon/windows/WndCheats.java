@@ -233,7 +233,10 @@ public class WndCheats extends Window {
 				Messages.get(WndCheats.class, "grant_level"), "0", "1", "2"){
 			@Override
 			protected void onSelect(int index) {
-				BloomTree.get(Dungeon.hero).cheatGrant(Dungeon.hero, talent, index);
+				if (!BloomTree.get(Dungeon.hero).cheatGrant(Dungeon.hero, talent, index)){
+					GLog.w(Messages.get(WndCheats.class, "slots_full"));
+					return;
+				}
 				GLog.p(Messages.get(WndCheats.class, "granted", Messages.titleCase(talent.title()), index));
 			}
 		});

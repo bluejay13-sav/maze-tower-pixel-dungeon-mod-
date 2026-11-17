@@ -42,6 +42,11 @@ public class ElementalReactions {
 	//빙결이 풀릴 때 원작이 거는 냉기로는 다시 얼리지 않는다 (Frost.detach)
 	public static boolean suppressFreeze = false;
 
+	//맵 위의 올바른 칸에 있는지 (배치 전·제거 후 대상 보호)
+	public static boolean validPos( Char ch ){
+		return ch != null && Dungeon.level != null && ch.pos >= 0 && ch.pos < Dungeon.level.length();
+	}
+
 	private static boolean reacts( Char ch ){
 		return ch != null && ch.alignment != Char.Alignment.ALLY;
 	}
@@ -61,6 +66,7 @@ public class ElementalReactions {
 
 	//화상이 붙기 직전 (Burning.attachTo)
 	public static boolean beforeBurning( Char ch, Burning burning ){
+		if (ch.isImmune(Burning.class)) return false; //면역이면 붙지도, 반응하지도 않는다
 		//젖음 + 화상: 어떤 대상이든 둘 다 사라진다 (다른 반응보다 먼저)
 		if (isWet(ch)){
 			Buff.detach(ch, Wet.class);
@@ -90,6 +96,7 @@ public class ElementalReactions {
 
 	//냉기가 붙기 직전 (Chill.attachTo)
 	public static boolean beforeChill( Char ch ){
+		if (ch.isImmune(Chill.class)) return false;
 		if (!reacts(ch)){
 			Buff.detach(ch, Burning.class); //원작 처리
 			return false;
@@ -109,6 +116,7 @@ public class ElementalReactions {
 
 	//빙결이 붙기 직전 (Frost.attachTo)
 	public static boolean beforeFrost( Char ch ){
+		if (ch.isImmune(Frost.class)) return false;
 		if (!reacts(ch)){
 			Buff.detach(ch, Burning.class); //원작 처리
 			return false;
@@ -122,6 +130,7 @@ public class ElementalReactions {
 
 	//젖음이 붙기 직전 (Wet.attachTo): 불타고 있으면 둘 다 사라진다
 	public static boolean beforeWet( Char ch ){
+		if (ch.isImmune(Wet.class)) return false;
 		Burning b = ch.buff(Burning.class);
 		if (b != null){
 			b.detach();
@@ -139,7 +148,7 @@ public class ElementalReactions {
 
 	//불이 꺼지는 효과 (반응 피해 없음)
 	private static void douse( Char ch ){
-		if (ch.sprite != null && Dungeon.level.heroFOV[ch.pos]){
+		if (ch.sprite != null && validPos(ch) && Dungeon.level.heroFOV[ch.pos]){
 			CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 4);
 			Sample.INSTANCE.play(Assets.Sounds.BURNING, 0.5f);
 		}
@@ -186,7 +195,7 @@ public class ElementalReactions {
 	//남은 화상 지속시간 동안 받을 화상 피해를 한꺼번에 계산해 배율을 곱한다. 화상은 해제.
 	private static int burnReactionDamage( Burning burning, float multi ){
 		int burnTotal = burning.totalIncomingDMG();
-		burning.detach();
+		if (burning.target != null) burning.detach(); //붙지 못한 화상이면 뗄 대상이 없다
 		float dmg = burnTotal * multi * BloomEffects.reactionDamageMulti(Dungeon.hero);
 		return Math.max(1, Math.round(dmg));
 	}
@@ -247,7 +256,7 @@ public class ElementalReactions {
 	}
 
 	private static void announce( Char ch, String key, int color ){
-		if (ch.sprite != null && Dungeon.level.heroFOV[ch.pos]){
+		if (ch.sprite != null && validPos(ch) && Dungeon.level.heroFOV[ch.pos]){
 			ch.sprite.showStatus(color, Messages.get(ElementalReactions.class, key));
 		}
 	}

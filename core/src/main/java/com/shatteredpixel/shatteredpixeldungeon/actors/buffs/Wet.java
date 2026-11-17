@@ -30,7 +30,7 @@ public class Wet extends Buff {
 	}
 
 	public static boolean onWater( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch ){
-		return Dungeon.level != null && Dungeon.level.water[ch.pos] && !ch.flying;
+		return ElementalReactions.validPos(ch) && Dungeon.level.water[ch.pos] && !ch.flying;
 	}
 
 	@Override

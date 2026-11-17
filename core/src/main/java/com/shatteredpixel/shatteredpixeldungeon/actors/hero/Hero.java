@@ -1530,7 +1530,7 @@ public class Hero extends Char {
 	//Maze Tower: 원소 친화 - 내가 받는 냉각 등의 지속 감소
 	@Override
 	public float resist( Class effect ) {
-		return super.resist(effect) * BloomEffects.heroIncomingDuration(this, effect);
+		return super.resist(effect) * BloomEffects.heroResistFactor(this, effect);
 	}
 
 	@Override

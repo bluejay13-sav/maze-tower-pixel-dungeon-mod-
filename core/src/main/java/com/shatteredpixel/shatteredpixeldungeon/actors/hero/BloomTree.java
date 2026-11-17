@@ -145,6 +145,13 @@ public class BloomTree extends Buff {
 	public void sync( Hero hero ){
 		if (!unlocked) return;
 		int target = choicesFor(hero);
+		//저장 데이터에서 선택지가 사라진(특성 이름이 바뀐 등) 미선택 칸은 다시 정한다
+		for (int i = 0; i < slots.size(); i++){
+			Slot s = slots.get(i);
+			if (!s.isChosen() && s.options.length == 0){
+				s.options = rollOptions(i);
+			}
+		}
 		while (slots.size() < target){
 			Slot s = new Slot();
 			s.options = rollOptions(slots.size());
@@ -190,13 +197,13 @@ public class BloomTree extends Buff {
 		return true;
 	}
 
-	//테스트용 치트: 특성을 원하는 레벨로 바로 얻는다 (포인트와 무관)
-	public void cheatGrant( Hero hero, BloomTalent talent, int level ){
+	//테스트용 치트: 특성을 원하는 레벨로 바로 얻는다 (포인트와 무관). 6칸이 모두 찼으면 false.
+	public boolean cheatGrant( Hero hero, BloomTalent talent, int level ){
 		unlocked = true;
 		for (Slot s : slots){
 			if (s.chosen == talent){
 				s.level = level;
-				return;
+				return true;
 			}
 		}
 		Slot target = null;
@@ -207,12 +214,14 @@ public class BloomTree extends Buff {
 			}
 		}
 		if (target == null){
+			if (slots.size() >= MazeTower.BLOOM_SLOTS) return false;
 			target = new Slot();
 			slots.add(target);
 		}
 		target.chosen = talent;
 		target.options = new BloomTalent[0];
 		target.level = level;
+		return true;
 	}
 
 	// ===== 저장 =====
@@ -270,7 +279,8 @@ public class BloomTree extends Buff {
 				}
 			}
 			s.options = opts.toArray(new BloomTalent[0]);
-			s.level = bundle.getInt(LEVEL + i);
+			//저장값이 범위를 벗어나도 효과 배열을 넘지 않게
+			s.level = Math.max(0, Math.min(MazeTower.BLOOM_MAX_TALENT_LEVEL, bundle.getInt(LEVEL + i)));
 			slots.add(s);
 		}
 	}

@@ -15,6 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
@@ -328,6 +329,13 @@ public class BloomEffects {
 	}
 
 	//원소 친화: 내가 받는 화상·냉각(·정전기) 지속 감소 (Hero.resist, Burning.reignite)
+	//Hero.resist용: resist는 지속시간뿐 아니라 피해에도 쓰이므로(Char.damage), 피해를 주는 화상은 뺀다.
+	//화상 지속 감소는 Burning.reignite에서 heroIncomingDuration으로 따로 처리한다.
+	public static float heroResistFactor(Hero hero, Class<?> effect){
+		if (effect == Burning.class) return 1f;
+		return heroIncomingDuration(hero, effect);
+	}
+
 	public static float heroIncomingDuration(Hero hero, Class<?> effect){
 		if (lvl(hero, ELEMENT_AFFINITY) >= 0 && isElementalStatus(effect)){
 			return T_AFFINITY_DURATION;
@@ -377,7 +385,7 @@ public class BloomEffects {
 
 		float chance = T_SHOCK_CHANCE[r];
 		if (isSkill()) chance *= SwordSkill.active.elementChanceMulti; //룬 블레이드 무형검
-		boolean onWater = Dungeon.level.water[enemy.pos];
+		boolean onWater = Wet.onWater(enemy);
 		if (!(r >= 2 && onWater) && Random.Float() >= chance) return;
 
 		int shockDmg = Math.max(1, Math.round(damage * T_SHOCK_DMG_FACTOR));
