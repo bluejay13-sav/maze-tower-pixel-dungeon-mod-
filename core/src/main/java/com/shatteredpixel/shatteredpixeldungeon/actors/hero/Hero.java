@@ -2104,6 +2104,18 @@ public class Hero extends Char {
 					StatusPane.talentBlink = 10f;
 					WndHero.lastIdx = 1;
 				}
+				//Maze Tower: 2차 선택권·포인트가 생기면 알림
+				BloomTree tree = buff(BloomTree.class);
+				if (tree != null && tree.unlocked){
+					int before = tree.slots.size();
+					tree.sync(this);
+					if (tree.slots.size() > before || tree.hasPending(this)){
+						GLog.newLine();
+						GLog.p( Messages.get(BloomTree.class, "new_bloom") );
+						StatusPane.talentBlink = 10f;
+						WndHero.lastIdx = 1;
+					}
+				}
 			}
 			
 			Item.updateQuickslot();

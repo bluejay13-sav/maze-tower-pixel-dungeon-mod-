@@ -37,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ChampionEnemy;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DemonSpawner;
@@ -684,6 +685,11 @@ public class GameScene extends PixelScene {
 					unspentTalents = true;
 					break;
 				}
+			}
+			//Maze Tower: 고르지 않은 2차 칸이나 남은 2차 포인트
+			BloomTree bloom = Dungeon.hero.buff(BloomTree.class);
+			if (bloom != null && bloom.hasPending(Dungeon.hero)){
+				unspentTalents = true;
 			}
 			if (unspentTalents){
 				GLog.newLine();

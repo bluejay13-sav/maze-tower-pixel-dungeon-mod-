@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -32,6 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
 import com.shatteredpixel.shatteredpixeldungeon.items.keys.WornKey;
 import com.shatteredpixel.shatteredpixeldungeon.items.quest.GooBlob;
@@ -288,6 +290,11 @@ public class Goo extends Mob {
 		
 		GameScene.bossSlain();
 		Dungeon.level.drop( new WornKey( Dungeon.depth ), pos ).sprite.drop();
+
+		//Maze Tower: 2차 전직 아이템 개화의 핵
+		if (MazeTower.GOO_DROPS_BLOOM_CORE) {
+			Dungeon.level.drop( new BloomCore(), pos ).sprite.drop();
+		}
 		
 		//60% chance of 2 blobs, 30% chance of 3, 10% chance for 4. Average of 2.5
 		int blobs = Random.chances(new float[]{0, 0, 6, 3, 1});

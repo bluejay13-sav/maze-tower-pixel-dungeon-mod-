@@ -13,6 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
+import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
@@ -57,6 +58,13 @@ public class WndCheats extends Window {
 
 	public WndCheats(){
 		super();
+
+		addButton(new RedButton(Messages.get(this, "bloom_core"), 7){
+			@Override
+			protected void onClick() {
+				give(new BloomCore());
+			}
+		});
 
 		addButton(new RedButton(Messages.get(this, "divine_potion"), 7){
 			@Override

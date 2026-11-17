@@ -54,4 +54,26 @@ public class MazeTower {
 	public static final float SKILL_RUNIC_BLADE_DMG     = 1.90f; //무형검, 방어 무시
 	public static final float SKILL_RUNIC_BLADE_ELEMENT_CHANCE = 2f; //속성 특성 발동 확률 배수 (7단계 특성에서 사용)
 
+	// ===== 2차 전직 (개화의 핵) =====
+
+	//5층 보스(구)가 개화의 핵을 떨어뜨리는지
+	public static final boolean GOO_DROPS_BLOOM_CORE = true;
+
+	//2차 줄 칸 수 (핵 사용 1칸 + Lv7~11 5칸)
+	public static final int BLOOM_SLOTS = 6;
+
+	//2차 선택권·포인트를 주는 레벨 구간 (이 구간에서 레벨업마다 선택권 1, 포인트 1)
+	public static final int BLOOM_FIRST_LEVEL = 7;
+	public static final int BLOOM_LAST_LEVEL  = 11;
+
+	//한 칸에서 보여 주는 선택지 수
+	public static final int BLOOM_CHOICES_PER_SLOT = 3;
+
+	//특성 최대 레벨 (0레벨로 해금, 포인트 1개당 1레벨)
+	public static final int BLOOM_MAX_TALENT_LEVEL = 2;
+
+	//1차 포인트를 주는 레벨 구간 (1차 능력은 미완성, 쌓이기만 한다)
+	public static final int FIRST_TIER_FIRST_LEVEL = 2;
+	public static final int FIRST_TIER_LAST_LEVEL  = 6;
+
 }
