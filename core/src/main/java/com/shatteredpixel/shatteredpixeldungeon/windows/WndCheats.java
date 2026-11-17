@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
@@ -68,6 +69,13 @@ public class WndCheats extends Window {
 			protected void onClick() {
 				Hero hero = Dungeon.hero;
 				hero.earnExp(hero.maxExp() - hero.exp, WndCheats.class);
+			}
+		});
+
+		addButton(new RedButton(Messages.get(this, "fill_mana"), 7){
+			@Override
+			protected void onClick() {
+				Mana.get(Dungeon.hero).fill();
 			}
 		});
 

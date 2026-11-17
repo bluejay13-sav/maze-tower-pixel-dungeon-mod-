@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CircleArc;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -37,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndKeyBindings;
 import com.watabou.input.GameAction;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Camera;
+import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.NinePatch;
@@ -57,11 +59,19 @@ public class StatusPane extends Component {
 
 	private int lastTier = 0;
 
+	//Maze Tower: 마나 바 두께
+	private static final float MANA_BAR_H_LARGE = 2;
+	private static final float MANA_BAR_H_SMALL = 2;
+
 	private Image shieldHP;
 	private Image hp;
 	private Image Dot; //a visual darkening over HP and shield that shows total incoming DOT
 	private BitmapText hpText;
 	private Button heroInfoOnBar;
+
+	//Maze Tower: 체력 바 아래 마나 바
+	private ColorBlock manaBg;
+	private ColorBlock mana;
 
 	private Image exp;
 	private BitmapText expText;
@@ -161,6 +171,11 @@ public class StatusPane extends Component {
 		};
 		add(heroInfoOnBar);
 
+		manaBg = new ColorBlock(1, 1, 0xFF1A1A33);
+		add(manaBg);
+		mana = new ColorBlock(1, 1, 0xFF4488FF);
+		add(mana);
+
 		if (large)  exp = new Image(asset, 0, 121, 128, 7);
 		else        exp = new Image(asset, 0, 48, 17, 4);
 		add( exp );
@@ -224,6 +239,10 @@ public class StatusPane extends Component {
 
 			heroInfoOnBar.setRect(heroInfo.right(), y + 19, 130, 20);
 
+			manaBg.x = mana.x = hp.x;
+			manaBg.y = mana.y = hp.y + hp.height;
+			manaBg.size(128, MANA_BAR_H_LARGE);
+
 			//little extra for 14th buff
 			buffs.setRect(x + 31, y, 142, 16);
 
@@ -271,6 +290,10 @@ public class StatusPane extends Component {
 			PixelScene.align(expText);
 
 			heroInfoOnBar.setRect(heroInfo.right(), y, 50, 9);
+
+			manaBg.x = mana.x = hp.x;
+			manaBg.y = mana.y = hp.y + hp.height;
+			manaBg.size(hp.width, MANA_BAR_H_SMALL);
 
 			if (buffBarRowMaxWidths != null){
 				buffs.rowWidthLimits = buffBarRowMaxWidths;
@@ -342,6 +365,10 @@ public class StatusPane extends Component {
 			oldMax = max;
 		}
 
+		//Maze Tower: 마나 바 갱신
+		Mana m = Mana.get(Dungeon.hero);
+		mana.size(manaBg.width() * m.cur() / (float)m.max(), manaBg.height());
+
 		if (large) {
 			exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
 
@@ -398,6 +425,8 @@ public class StatusPane extends Component {
 		heroPaneCutout.alpha(value);
 		hpCutout.alpha(value);
 		avatar.alpha(value);
+		manaBg.alpha(value);
+		mana.alpha(value);
 		shieldHP.alpha(value);
 		hp.alpha(value);
 		hpText.alpha(0.6f*value);

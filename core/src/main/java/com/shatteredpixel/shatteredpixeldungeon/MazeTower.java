@@ -28,4 +28,12 @@ public class MazeTower {
 	//원작 전사의 부서진 인장(방어막)을 시작 장비로 줄지 여부
 	public static final boolean WARRIOR_SEAL = false;
 
+	// ===== 마나 =====
+
+	//최대 마나
+	public static final int MANA_MAX = 100;
+
+	//대기(휴식·탐색 포함)로 넘긴 한 턴마다 얻는 마나. 다른 행동으로는 얻지 못한다.
+	public static final int MANA_PER_WAIT_TURN = 10;
+
 }

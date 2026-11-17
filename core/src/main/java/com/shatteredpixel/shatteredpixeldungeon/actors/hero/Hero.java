@@ -871,6 +871,7 @@ public class Hero extends Char {
 			
 			if (resting) {
 				spendConstant( TIME_TO_REST );
+				Mana.onWait(this, TIME_TO_REST); //Maze Tower: 휴식 중 마나 회복
 				next();
 			} else {
 				ready();
@@ -1155,6 +1156,7 @@ public class Hero extends Char {
 				} else {
 
 					if (waitOrPickup) {
+						Mana.onWait(this, TIME_TO_REST); //Maze Tower: 제자리 대기로 마나 회복
 						spendAndNextConstant(TIME_TO_REST);
 					}
 
@@ -1504,6 +1506,7 @@ public class Hero extends Char {
 	}
 	
 	public void rest( boolean fullRest ) {
+		Mana.onWait(this, TIME_TO_REST); //Maze Tower: 대기로 마나 회복
 		spendAndNextConstant( TIME_TO_REST );
 		if (hasTalent(Talent.HOLD_FAST)){
 			if (heroClass != HeroClass.WARRIOR || buff(BrokenSeal.WarriorShield.class) != null) {
@@ -2619,8 +2622,9 @@ public class Hero extends Char {
 					Buff.affect(this, Hunger.class).affectHunger(TIME_TO_SEARCH - HUNGER_FOR_SEARCH);
 				}
 			}
+			Mana.onWait(this, TIME_TO_SEARCH); //Maze Tower: 탐색도 대기로 보고 마나 회복
 			spendAndNext(TIME_TO_SEARCH);
-			
+
 		}
 		
 		if (smthFound) {
