@@ -12,10 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
-import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
-import com.watabou.noosa.tweeners.AlphaTweener;
-import com.watabou.noosa.tweeners.PosTweener;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Callback;
 import com.watabou.utils.PointF;
@@ -47,40 +44,21 @@ public class TalentEffects {
 		from.sprite.parent.add(new Beam.LightRay(from.sprite.center(), to.sprite.center()));
 	}
 
-	//그림자검: 잔상 일격.
-	//보랏빛 반투명 주인공 잔상이 적에게 덤벼들며 사라지고, 적에게 보랏빛 베기 궤적과 그림자.
+	//그림자검: 스킬 '베기'와 같은 빛나는 베기 궤적에 보라회색만 입힌다.
+	//(평타와 구분되게 베기와 반대 방향으로 긋는다)
 	public static void shadowStrike( Char hero, Char enemy ){
 		if (!visible(hero) || !visible(enemy)) return;
 
-		//주인공 잔상
-		final Image ghost = new Image(hero.sprite);
-		ghost.flipHorizontal = hero.sprite.flipHorizontal;
-		ghost.x = hero.sprite.x;
-		ghost.y = hero.sprite.y;
-		ghost.hardlight(0.40f, 0.34f, 0.50f); //보라와 회색을 섞은 어두운 색
-		ghost.alpha(0.75f);
-		hero.sprite.parent.add(ghost);
-
-		//적 쪽으로 2/3쯤 덤벼든다
-		PointF to = new PointF(
-				hero.sprite.x + (enemy.sprite.x - hero.sprite.x) * 0.65f,
-				hero.sprite.y + (enemy.sprite.y - hero.sprite.y) * 0.65f);
-		hero.sprite.parent.add(new PosTweener(ghost, to, 0.12f));
-		hero.sprite.parent.add(new AlphaTweener(ghost, 0f, 0.35f){
-			@Override
-			protected void onComplete() {
-				super.onComplete();
-				ghost.killAndErase();
-			}
-		});
-
-		//보라와 회색을 섞은 어두운 잔상 베기 (입자 없이 베기 궤적만)
 		PointF h = hero.sprite.center(), e = enemy.sprite.center();
 		float d = (float)Math.atan2(e.y - h.y, e.x - h.x);
-		new SlashTrail(13, 5, d + 1.15f, -2.3f, 0.06f, 0.09f, 0.28f)
-				.trailColor(0x4E465E).solid()
-				.show(enemy.sprite.parent, new PointF(e.x - (float)Math.cos(d) * 5, e.y - (float)Math.sin(d) * 5));
+		//베기와 같은 크기·속도 (SkillEffects.slash 참고)
+		new SlashTrail(12, 4, d + 1.1f, -2.2f, 0f, 0.10f, 0.20f)
+				.trailColor(SHADOW_COLOR)
+				.show(enemy.sprite.parent, new PointF(e.x - (float)Math.cos(d) * 6, e.y - (float)Math.sin(d) * 6));
 	}
+
+	//그림자검 궤적 색: 보라와 회색을 섞고 살짝 어둡게 (빛나는 궤적이라 너무 어두우면 안 보인다)
+	private static final int SHADOW_COLOR = 0x9A8CB8;
 
 	//연격(특성): 쌓이는 중첩 표시 (스킬 연격과 다른 노란 숫자)
 	public static void comboStack( Char enemy, int count, int need ){
