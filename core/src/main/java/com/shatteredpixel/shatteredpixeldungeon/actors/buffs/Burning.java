@@ -98,11 +98,10 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 	@Override
 	public boolean act() {
 
-		//Maze Tower: reignite 없이 붙은 화상이면 여기서 증기 반응
-		if (steamPending){
-			steamPending = false;
+		//Maze Tower: reignite 없이 붙은 화상이면 여기서 증기·해빙 반응
+		if (pendingReaction != ElementalReactions.PENDING_NONE){
 			if (left <= 0) left = DURATION;
-			ElementalReactions.steamFromBurning(target, this);
+			ElementalReactions.resolvePending(target, this);
 			return true;
 		}
 
@@ -229,15 +228,15 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 		}
 		acted = false;
 
-		//Maze Tower: 냉기 상태에 화상이 붙었으면 지속시간이 정해진 지금 증기 반응
-		if (steamPending){
-			steamPending = false;
-			ElementalReactions.steamFromBurning(ch, this);
+		//Maze Tower: 냉기·빙결 상태에 화상이 붙었으면 지속시간이 정해진 지금 증기·해빙 반응
+		if (pendingReaction != ElementalReactions.PENDING_NONE){
+			ElementalReactions.resolvePending(ch, this);
 		}
 	}
 
-	//Maze Tower: 냉기 상태에 붙은 화상. 지속시간이 정해지면(reignite) 증기 반응을 일으킨다.
-	public boolean steamPending = false;
+	//Maze Tower: 냉기(증기)·빙결(해빙) 상태에 붙은 화상.
+	//반응 피해가 화상 지속시간에 따라 정해지므로, 지속시간이 정해지는 reignite에서 반응을 일으킨다.
+	public int pendingReaction = ElementalReactions.PENDING_NONE;
 
 	public void extend( float duration ) {
 		left += duration;

@@ -28,7 +28,7 @@ import java.util.ArrayList;
 //
 //  증기: 화상 + 냉기       → 남은 화상 지속시간의 화상 피해 합계 × 1.5, 화상·냉기 해제
 //  폭발: 정전기 + 화상     → 인접 1칸의 모든 적에게 기준 피해 × 1.2
-//  해빙: 빙결 + 화염       → 기준 피해 × 2, 빙결·화상 해제
+//  해빙: 빙결 + 화염       → 남은 화상 지속시간의 화상 피해 합계 × 2, 빙결·화상 해제
 //  빙결: 젖은 적 + 냉기    → 원작 Frost
 //
 //반응은 적(주인공·아군이 아닌 대상)에게만 일어난다. 주인공·아군은 원작처럼 서로 지우기만 한다.
@@ -63,15 +63,15 @@ public class ElementalReactions {
 			Buff.detach(ch, Chill.class); //원작 처리
 			return false;
 		}
+		//증기·해빙은 화상 지속시간을 알아야 하므로 일단 붙이고, 지속시간이 정해지는 reignite에서 터뜨린다
 		if (ch.buff(Frost.class) != null){
 			Buff.detach(ch, Frost.class);
-			thaw(ch);
-			return true;
+			burning.pendingReaction = PENDING_THAW;
+			return false;
 		}
 		if (ch.buff(Chill.class) != null){
-			//증기: 화상 지속시간을 알아야 하므로 일단 붙이고, 지속시간이 정해지는 reignite에서 터뜨린다
 			Buff.detach(ch, Chill.class);
-			burning.steamPending = true;
+			burning.pendingReaction = PENDING_STEAM;
 			return false;
 		}
 		if (ch.buff(StaticCharge.class) != null){
@@ -104,8 +104,7 @@ public class ElementalReactions {
 			return false;
 		}
 		if (ch.buff(Burning.class) != null){
-			Buff.detach(ch, Burning.class);
-			thaw(ch);
+			thawFromBurning(ch, ch.buff(Burning.class));
 			return true;
 		}
 		return false;
@@ -137,12 +136,34 @@ public class ElementalReactions {
 
 	// ===== 반응 =====
 
-	//증기: 남은 화상 지속시간 동안 받을 화상 피해를 한꺼번에 계산해 배율을 곱한다. 화상·냉기는 해제.
-	public static void steamFromBurning( Char ch, Burning burning ){
+	public static final int PENDING_NONE  = 0;
+	public static final int PENDING_STEAM = 1;
+	public static final int PENDING_THAW  = 2;
+
+	//Burning.reignite/act에서 호출: 미뤄 둔 증기·해빙을 일으킨다
+	public static void resolvePending( Char ch, Burning burning ){
+		int kind = burning.pendingReaction;
+		burning.pendingReaction = PENDING_NONE;
+		if (kind == PENDING_STEAM)     steamFromBurning(ch, burning);
+		else if (kind == PENDING_THAW) thawFromBurning(ch, burning);
+	}
+
+	//남은 화상 지속시간 동안 받을 화상 피해를 한꺼번에 계산해 배율을 곱한다. 화상은 해제.
+	private static int burnReactionDamage( Burning burning, float multi ){
 		int burnTotal = burning.totalIncomingDMG();
 		burning.detach();
-		float dmg = burnTotal * MazeTower.REACTION_STEAM_MULTI * BloomEffects.reactionDamageMulti(Dungeon.hero);
-		steam(ch, Math.max(1, Math.round(dmg)));
+		float dmg = burnTotal * multi * BloomEffects.reactionDamageMulti(Dungeon.hero);
+		return Math.max(1, Math.round(dmg));
+	}
+
+	//증기: 남은 화상 피해 합계 × 1.5, 화상·냉기 해제
+	public static void steamFromBurning( Char ch, Burning burning ){
+		steam(ch, burnReactionDamage(burning, MazeTower.REACTION_STEAM_MULTI));
+	}
+
+	//해빙: 남은 화상 피해 합계 × 2, 빙결·화상 해제
+	public static void thawFromBurning( Char ch, Burning burning ){
+		thaw(ch, burnReactionDamage(burning, MazeTower.REACTION_THAW_MULTI));
 	}
 
 	private static void steam( Char ch, int dmg ){
@@ -175,8 +196,7 @@ public class ElementalReactions {
 		exploding = false;
 	}
 
-	private static void thaw( Char ch ){
-		int dmg = Math.round(baseDamage() * MazeTower.REACTION_THAW_MULTI);
+	private static void thaw( Char ch, int dmg ){
 		announce(ch, "thaw", 0x88CCFF);
 		if (ch.sprite != null){
 			CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 8);
