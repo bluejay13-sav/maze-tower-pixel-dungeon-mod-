@@ -49,6 +49,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FireImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ElementalReactions;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FrostImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Fury;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Haste;
@@ -845,6 +847,9 @@ public abstract class Char extends Actor {
 			return;
 		}
 
+		//Maze Tower: 전격 피해를 받으면 정전기
+		ElementalReactions.onDamage(this, dmg, src);
+
 		if (!(src instanceof LifeLink || src instanceof Hunger) && buff(LifeLink.class) != null){
 			HashSet<LifeLink> links = buffs(LifeLink.class);
 			for (LifeLink link : links.toArray(new LifeLink[0])){
@@ -1329,7 +1334,10 @@ public abstract class Char extends Actor {
 			previousPos = -1;
 		}
 		pos = step;
-		
+
+		//Maze Tower: 물에 들어가면 젖음
+		if (Wet.onWater(this)) Buff.affect(this, Wet.class);
+
 		if (this != Dungeon.hero) {
 			sprite.visible = Dungeon.level.heroFOV[pos];
 		}

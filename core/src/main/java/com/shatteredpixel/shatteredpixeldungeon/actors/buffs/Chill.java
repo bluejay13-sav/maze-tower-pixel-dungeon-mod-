@@ -37,7 +37,8 @@ public class Chill extends FlavourBuff {
 
 	@Override
 	public boolean attachTo(Char target) {
-		Buff.detach( target, Burning.class );
+		//Maze Tower: 냉기+화상 → 증기, 젖음+냉기 → 빙결
+		if (ElementalReactions.beforeChill(target)) return false;
 
 		return super.attachTo(target);
 	}

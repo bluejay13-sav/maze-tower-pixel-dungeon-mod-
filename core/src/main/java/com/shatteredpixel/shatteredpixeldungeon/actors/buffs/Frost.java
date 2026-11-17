@@ -50,7 +50,8 @@ public class Frost extends FlavourBuff {
 	
 	@Override
 	public boolean attachTo( Char target ) {
-		Buff.detach( target, Burning.class );
+		//Maze Tower: 빙결+화염 → 해빙
+		if (ElementalReactions.beforeFrost(target)) return false;
 
 		if (super.attachTo( target )) {
 			
@@ -108,8 +109,12 @@ public class Frost extends FlavourBuff {
 		super.detach();
 		if (target.paralysed > 0)
 			target.paralysed--;
-		if (Dungeon.level.water[target.pos])
+		if (Dungeon.level.water[target.pos]) {
+			//Maze Tower: 빙결이 풀리며 걸리는 냉기로 다시 빙결되지 않게 한다
+			ElementalReactions.suppressFreeze = true;
 			Buff.prolong(target, Chill.class, Chill.DURATION/2f);
+			ElementalReactions.suppressFreeze = false;
+		}
 	}
 	
 	@Override

@@ -6,11 +6,14 @@
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -164,7 +167,9 @@ public class WndCheats extends Window {
 				GameScene.show(new WndOptions(Messages.get(WndCheats.class, "status"),
 						Messages.get(WndCheats.class, "status_body"),
 						Messages.get(WndCheats.class, "burning"),
-						Messages.get(WndCheats.class, "chill")){
+						Messages.get(WndCheats.class, "chill"),
+						Messages.get(WndCheats.class, "wet"),
+						Messages.get(WndCheats.class, "static")){
 					@Override
 					protected void onSelect(int index) {
 						pickTarget(index);
@@ -256,6 +261,12 @@ public class WndCheats extends Window {
 						break;
 					case 1:
 						Buff.affect(ch, Chill.class, Chill.DURATION);
+						break;
+					case 2:
+						Buff.affect(ch, Wet.class);
+						break;
+					case 3:
+						Buff.prolong(ch, StaticCharge.class, MazeTower.STATIC_TURNS);
 						break;
 				}
 			}

@@ -121,6 +121,22 @@ public class MazeTower {
 	public static final float   T_AFFINITY_DURATION  = 0.50f;
 	public static final float[] T_AFFINITY_REDUCE    = {0f, 0.20f, 0.40f};
 
+	// ===== 속성과 원소 반응 =====
+
+	//정전기: 전격 피해를 받으면 걸리는 턴 수
+	public static final float STATIC_TURNS = 2f;
+	//젖음: 물에서 나온 뒤 유지되는 턴 수
+	public static final int WET_AFTER_TURNS = 2;
+	//빙결: 젖은 적에게 냉기가 닿으면 걸리는 원작 Frost의 턴 수
+	public static final float FREEZE_TURNS = 3f;
+
+	//반응 기준 피해 = FLAT + PER_DEPTH × 층 (층이 깊을수록 커진다)
+	public static final float REACTION_BASE_FLAT      = 2f;
+	public static final float REACTION_BASE_PER_DEPTH = 0.5f;
+	public static final float REACTION_STEAM_MULTI     = 1.5f; //증기: 화상 + 냉기
+	public static final float REACTION_EXPLOSION_MULTI = 1.2f; //폭발: 정전기 + 화상, 인접 1칸
+	public static final float REACTION_THAW_MULTI      = 2.0f; //해빙: 빙결 + 화염
+
 	//1차 포인트를 주는 레벨 구간 (1차 능력은 미완성, 쌓이기만 한다)
 	public static final int FIRST_TIER_FIRST_LEVEL = 2;
 	public static final int FIRST_TIER_LAST_LEVEL  = 6;

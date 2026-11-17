@@ -89,7 +89,8 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 
 	@Override
 	public boolean attachTo(Char target) {
-		Buff.detach( target, Chill.class);
+		//Maze Tower: 화염+냉기 처리를 원소 반응(증기·해빙·폭발)으로 대체
+		if (ElementalReactions.beforeBurning(target)) return false;
 
 		return super.attachTo(target);
 	}

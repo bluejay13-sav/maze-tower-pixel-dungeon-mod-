@@ -14,6 +14,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
@@ -431,7 +432,13 @@ public class BloomEffects {
 	}
 
 	public static boolean isElementalStatus(Class<?> c){
-		return c == Burning.class || c == Chill.class || c == Frost.class;
+		return c == Burning.class || c == Chill.class || c == Frost.class || c == StaticCharge.class;
+	}
+
+	//잔류원소 2레벨: 원소 반응 피해 +50%
+	public static float reactionDamageMulti(Hero hero){
+		if (hero != null && lvl(hero, LINGERING_ELEMENT) >= 2) return 1f + T_LINGERING_REACTION;
+		return 1f;
 	}
 
 	public static boolean hasElementalStatus(Char ch){
