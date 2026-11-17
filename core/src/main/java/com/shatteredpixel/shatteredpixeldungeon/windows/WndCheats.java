@@ -79,6 +79,14 @@ public class WndCheats extends Window {
 			}
 		});
 
+		addButton(new RedButton(Messages.get(this, "empty_mana"), 7){
+			@Override
+			protected void onClick() {
+				Mana m = Mana.get(Dungeon.hero);
+				m.spend(m.cur());
+			}
+		});
+
 		addButton(new RedButton(Messages.get(this, "swords"), 7){
 			@Override
 			protected void onClick() {
