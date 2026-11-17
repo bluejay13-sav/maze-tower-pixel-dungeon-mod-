@@ -100,11 +100,14 @@ public class Mana extends Buff implements ActionIndicator.Action {
 		return null;
 	}
 
+	//장착한 검이 바뀌었으면 버튼을 갱신한다. 상태창(StatusPane)이 매 프레임 호출한다.
 	public void refreshSkillButton(){
 		MeleeWeapon w = skillWeapon();
 		if (w == null){
+			lastWeapon = null;
 			ActionIndicator.clearAction(this);
-		} else if (ActionIndicator.action != this || lastWeapon != w){
+		} else if (ActionIndicator.action == null
+				|| (ActionIndicator.action == this && lastWeapon != w)){
 			lastWeapon = w;
 			ActionIndicator.setAction(this);
 		}

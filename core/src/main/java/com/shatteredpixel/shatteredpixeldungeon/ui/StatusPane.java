@@ -368,6 +368,7 @@ public class StatusPane extends Component {
 		//Maze Tower: 마나 바 갱신
 		Mana m = Mana.get(Dungeon.hero);
 		mana.size(manaBg.width() * m.cur() / (float)m.max(), manaBg.height());
+		m.refreshSkillButton(); //장착한 검이 바뀌면 스킬 버튼 그림 갱신
 
 		if (large) {
 			exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
