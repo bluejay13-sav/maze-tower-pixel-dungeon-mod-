@@ -61,6 +61,18 @@ public class WndGame extends Window {
 		});
 		curBtn.icon(Icons.get(Icons.PREFS));
 
+		//Maze Tower: 테스트용 치트 메뉴 (디버그 빌드에서만)
+		if (WndCheats.enabled() && Dungeon.hero != null && Dungeon.hero.isAlive()) {
+			addButton( curBtn = new RedButton( Messages.get(this, "cheats") ) {
+				@Override
+				protected void onClick() {
+					hide();
+					GameScene.show(new WndCheats());
+				}
+			});
+			curBtn.icon(Icons.get(Icons.MAGNIFY));
+		}
+
 		// Challenges window
 		if (Dungeon.challenges > 0) {
 			addButton( curBtn = new RedButton( Messages.get(this, "challenges") ) {
