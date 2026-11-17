@@ -5,6 +5,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.watabou.gltextures.SmartTexture;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.glwrap.Blending;
@@ -12,6 +13,7 @@ import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.NoosaScript;
 import com.watabou.noosa.Visual;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.PointF;
 
 import java.nio.Buffer;
@@ -77,6 +79,27 @@ public class SlashTrail extends Visual {
 		return this;
 	}
 
+	//궤적이 그려지는 끝을 따라 입자를 뿌린다 (예: 반월베기 은색 가루)
+	private Emitter.Factory sparkle;
+	private int sparkleDone = 0;
+
+	public SlashTrail sparkle( Emitter.Factory factory ){
+		sparkle = factory;
+		return this;
+	}
+
+	private void emitSparkles( float progress ){
+		if (sparkle == null) return;
+		int upto = Math.round(SEGMENTS * progress);
+		for (; sparkleDone < upto; sparkleDone++){
+			float a = startAngle + sweepAngle * (sparkleDone / (float)SEGMENTS);
+			Emitter e = GameScene.emitter();
+			if (e == null) return;
+			e.pos(x + (float)Math.cos(a) * radius, y + (float)Math.sin(a) * radius);
+			e.burst(sparkle, 2);
+		}
+	}
+
 	public SlashTrail show( Group parent, PointF center ){
 		point(center);
 		parent.add(this);
@@ -134,9 +157,11 @@ public class SlashTrail extends Visual {
 		time += Game.elapsed;
 		if (time < drawTime){
 			build(time / drawTime);
+			emitSparkles(time / drawTime);
 			alpha(1f);
 		} else if (time < drawTime + fadeTime){
 			build(1f);
+			emitSparkles(1f);
 			alpha(1f - (time - drawTime) / fadeTime);
 		} else {
 			killAndErase();

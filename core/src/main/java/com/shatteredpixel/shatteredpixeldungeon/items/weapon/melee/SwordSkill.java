@@ -23,6 +23,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.tweeners.Delayer;
 import com.watabou.utils.Callback;
 
 //Maze Tower: 검 계열 고유 스킬.
@@ -152,25 +153,46 @@ public class SwordSkill {
 		hero.sprite.attack(enemy.pos, new Callback() {
 			@Override
 			public void call() {
-				hero.belongings.abilityWeapon = wep;
 				AttackIndicator.target(enemy);
-
-				SkillEffects.play(skill.nameKey, hero, enemy); //Maze Tower: 스킬 이펙트
-				active = skill;
-				for (int i = 0; i < skill.hits && enemy.isAlive(); i++){
-					if (hero.attack(enemy, skill.dmgPerHit, 0, skill.accMulti)){
-						Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-					}
-				}
-				active = null;
-				BloomEffects.endSkill(hero); //처치 시 마나 반환, 흐름·잔향·흘리기
-
-				Invisibility.dispel();
-				float delay = hero.attackDelay();
-				wep.afterAbilityUsed(hero);
-				hero.spendAndNext(delay);
-				Item.updateQuickslot();
+				doHit(hero, wep, skill, enemy, 0);
 			}
 		});
+	}
+
+	//타격 한 번. 여러 번 때리는 스킬은 타격 사이에 MazeTower.SKILL_HIT_INTERVAL초 텀을 둔다.
+	//(그동안 주인공은 행동 중이라 다른 누구도 움직이지 않는다)
+	private static void doHit(final Hero hero, final MeleeWeapon wep, final SwordSkill skill, final Char enemy, final int index){
+		hero.belongings.abilityWeapon = wep;
+
+		SkillEffects.hit(skill.nameKey, hero, enemy, index);
+		active = skill;
+		if (hero.attack(enemy, skill.dmgPerHit, 0, skill.accMulti)){
+			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+		}
+		active = null;
+
+		if (index + 1 < skill.hits && enemy.isAlive() && hero.isAlive() && hero.sprite != null && hero.sprite.parent != null){
+			Delayer wait = new Delayer(MazeTower.SKILL_HIT_INTERVAL){
+				@Override
+				protected void onComplete() {
+					super.onComplete();
+					doHit(hero, wep, skill, enemy, index + 1);
+				}
+			};
+			hero.sprite.parent.add(wait);
+		} else {
+			finish(hero, wep);
+		}
+	}
+
+	private static void finish(Hero hero, MeleeWeapon wep){
+		BloomEffects.endSkill(hero); //처치 시 마나 반환, 흐름·잔향·흘리기
+
+		Invisibility.dispel();
+		hero.belongings.abilityWeapon = wep;
+		float delay = hero.attackDelay();
+		wep.afterAbilityUsed(hero);
+		hero.spendAndNext(delay);
+		Item.updateQuickslot();
 	}
 }
