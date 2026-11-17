@@ -23,6 +23,7 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -960,6 +961,13 @@ public enum Talent {
 	public static final int MAX_TALENT_TIERS = 4;
 
 	public static void initClassTalents( Hero hero ){
+		//Maze Tower: 원작 직업 특성은 얻을 수 없다. 특성 줄은 비워 둔다.
+		if (!MazeTower.ORIGINAL_TALENTS){
+			while (hero.talents.size() < MAX_TALENT_TIERS){
+				hero.talents.add(new LinkedHashMap<>());
+			}
+			return;
+		}
 		initClassTalents( hero.heroClass, hero.talents, hero.metamorphedTalents );
 	}
 

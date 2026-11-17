@@ -679,7 +679,8 @@ public class GameScene extends PixelScene {
 
 			boolean unspentTalents = false;
 			for (int i = 1; i <= Dungeon.hero.talents.size(); i++){
-				if (Dungeon.hero.talentPointsAvailable(i) > 0){
+				//Maze Tower: 특성이 없는 빈 줄의 포인트는 알리지 않는다
+				if (!Dungeon.hero.talents.get(i-1).isEmpty() && Dungeon.hero.talentPointsAvailable(i) > 0){
 					unspentTalents = true;
 					break;
 				}

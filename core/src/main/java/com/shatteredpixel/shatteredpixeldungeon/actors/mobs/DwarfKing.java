@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -559,7 +560,10 @@ public class DwarfKing extends Mob {
 			h.destroy();
 		}
 
-		if (pos == CityBossLevel.throne){
+		//Maze Tower: 원작 갑옷 능력(왕의 왕관)은 떨어뜨리지 않는다
+		if (!MazeTower.ORIGINAL_ARMOR_ABILITY){
+			//떨어뜨리지 않음
+		} else if (pos == CityBossLevel.throne){
 			Dungeon.level.drop(new KingsCrown(), pos + Dungeon.level.width()).sprite.drop(pos);
 		} else {
 			Dungeon.level.drop(new KingsCrown(), pos).sprite.drop();

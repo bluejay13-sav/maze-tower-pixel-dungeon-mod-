@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -2093,7 +2094,8 @@ public class Hero extends Char {
 				GLog.p( Messages.get(this, "new_level") );
 				sprite.showStatus( CharSprite.POSITIVE, Messages.get(Hero.class, "level_up") );
 				Sample.INSTANCE.play( Assets.Sounds.LEVELUP );
-				if (lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){
+				//Maze Tower: 원작 특성을 쓰지 않으면 "새 특성 포인트" 알림을 띄우지 않는다
+				if (MazeTower.ORIGINAL_TALENTS && lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){
 					GLog.newLine();
 					GLog.p( Messages.get(this, "new_talent") );
 					StatusPane.talentBlink = 10f;
