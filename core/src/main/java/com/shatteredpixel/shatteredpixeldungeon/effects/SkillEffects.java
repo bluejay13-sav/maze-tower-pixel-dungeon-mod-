@@ -74,8 +74,8 @@ public class SkillEffects {
 			@Override
 			public void run() {
 				if (enemy.sprite != null){
-					enemy.sprite.centerEmitter().burst(SparkParticle.FACTORY, 4);
-					enemy.sprite.centerEmitter().burst(SilverParticle.FACTORY, 5);
+					enemy.sprite.centerEmitter().burst(SparkParticle.FACTORY, 2);
+					enemy.sprite.centerEmitter().burst(SilverParticle.FACTORY, 2);
 				}
 			}
 		});

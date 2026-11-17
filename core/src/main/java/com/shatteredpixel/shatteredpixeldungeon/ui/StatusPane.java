@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CircleArc;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
@@ -369,6 +370,7 @@ public class StatusPane extends Component {
 		Mana m = Mana.get(Dungeon.hero);
 		mana.size(manaBg.width() * m.cur() / (float)m.max(), manaBg.height());
 		m.refreshSkillButton(); //장착한 검이 바뀌면 스킬 버튼 그림 갱신
+		BloomEffects.updateHeroFx(Dungeon.hero); //흘리기 보호막, 준비 완료 빛, 가득 찬 마나 기운
 
 		if (large) {
 			exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();

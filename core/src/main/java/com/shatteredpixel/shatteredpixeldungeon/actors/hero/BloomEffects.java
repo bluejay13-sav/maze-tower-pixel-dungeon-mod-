@@ -19,6 +19,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TalentEffects;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
@@ -92,7 +93,10 @@ public class BloomEffects {
 			if (lvl(hero, SHARPEN) >= 2) refund = Math.max(refund, T_SHARPEN_REFUND);
 			if (lvl(hero, EXECUTE) >= 2 && u.executeApplied) refund = Math.max(refund, T_EXECUTE_REFUND);
 			int amt = Math.round(u.manaSpent * refund);
-			if (amt > 0) Mana.get(hero).gain(amt);
+			if (amt > 0){
+				Mana.get(hero).gain(amt);
+				TalentEffects.manaRefund(hero, u.target, amt); //푸른 마탄이 주인공에게
+			}
 		}
 
 		//흐름: 다음 평타 강화
@@ -162,9 +166,11 @@ public class BloomEffects {
 					ct.count = 0;
 				}
 				ct.count++;
+				if (ct.count < T_COMBO_HITS[c]) TalentEffects.comboStack(enemy, ct.count, T_COMBO_HITS[c]);
 				if (ct.count >= T_COMBO_HITS[c]){
 					bonus += T_COMBO_BONUS[c];
 					ct.count = 0;
+					TalentEffects.comboBurst(enemy);
 				}
 			}
 			//넘치는 힘
@@ -190,6 +196,7 @@ public class BloomEffects {
 			if (ex >= 0 && enemy.HP <= enemy.HT * T_EXECUTE_HP){
 				bonus += T_EXECUTE_DMG[ex];
 				if (u != null) u.executeApplied = true;
+				TalentEffects.execute(enemy); //붉은 섬광
 			}
 			//마나 감응 2레벨: 가득 찬 마나로 쓴 스킬
 			if (lvl(hero, MANA_ATTUNE) >= 2 && u != null && u.wasFullMana) bonus += T_MANA_ATTUNE_FULL_DMG;
@@ -198,9 +205,7 @@ public class BloomEffects {
 			if (eb >= 0 && u != null && !u.burstUsed && removeOneStatus(enemy)){
 				u.burstUsed = true;
 				bonus += T_ELEMENT_BURST_DMG[eb];
-				if (enemy.sprite != null){
-					enemy.sprite.centerEmitter().burst(MagicMissile.MagicParticle.FACTORY, 10);
-				}
+				TalentEffects.elementBurst(hero, enemy); //마탄
 				Sample.INSTANCE.play(Assets.Sounds.ZAP);
 			}
 		}
@@ -256,7 +261,7 @@ public class BloomEffects {
 
 		inChain = true;
 		if (other.sprite != null && enemy.sprite != null){
-			hero.sprite.parent.add(new Lightning(enemy.sprite.center(), other.sprite.center(), null));
+			TalentEffects.chain(enemy, other); //대상 사이 짧은 빛줄기
 		}
 		other.damage(amt, hero);
 		if (level >= 2 && other.isAlive()){
@@ -280,17 +285,37 @@ public class BloomEffects {
 			if (heal > 0){
 				hero.HP += heal;
 				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), FloatingText.HEALING);
+				TalentEffects.lifeSteal(hero);
 			}
 		}
 
 		//그림자검: 평타 한 번 더
 		int sb = lvl(hero, SHADOW_BLADE);
 		if (sb >= 0 && hit && !inShadow && enemy.isAlive() && Random.Float() < T_SHADOW_BLADE_CHANCE[sb]){
+			TalentEffects.shadowStrike(hero, enemy);
 			inShadow = true;
 			boolean hit2 = hero.attack(enemy);
 			inShadow = false;
 			afterNormalAttack(hero, enemy, hit2);
 		}
+	}
+
+	// =====================================================================
+	// 계속 켜져 있는 연출 (상태창이 매 프레임 호출)
+	// =====================================================================
+
+	public static void updateHeroFx(Hero hero){
+		if (hero == null) return;
+		Mana m = hero.buff(Mana.class);
+		//흘리기 대기 중: 보호막
+		boolean parry = hero.buff(ParryTracker.class) != null && lvl(hero, PARRY) >= 0;
+		//집중(대기·탐색 직후)·흐름(스킬 직후) 준비 완료: 은은한 빛
+		boolean ready = (lvl(hero, FOCUS) >= 0 && m != null && m.focusReady)
+				|| (lvl(hero, FLOW) >= 0 && hero.buff(FlowTracker.class) != null);
+		//넘치는 힘·마나 감응 + 가득 찬 마나: 은은한 푸른 기운
+		boolean full = m != null && m.isFull()
+				&& (lvl(hero, OVERFLOW) >= 0 || lvl(hero, MANA_ATTUNE) >= 0);
+		TalentEffects.updateHero(hero, parry, ready, full);
 	}
 
 	// =====================================================================
@@ -306,6 +331,7 @@ public class BloomEffects {
 		int p = lvl(hero, PARRY);
 		if (pt != null){
 			if (p >= 0) dmg *= 1f - T_PARRY_REDUCE[p];
+			if (p >= 0) TalentEffects.parryUsed(hero);
 			pt.detach();
 		}
 
@@ -314,6 +340,7 @@ public class BloomEffects {
 		if (mv >= 0 && hero.HP <= hero.HT * T_MANA_VEIL_HP && Mana.get(hero).spend(T_MANA_VEIL_COST)){
 			dmg *= 1f - T_MANA_VEIL_REDUCE[mv];
 			hero.sprite.showStatus(0x4488FF, "-" + T_MANA_VEIL_COST);
+			TalentEffects.manaVeil(hero);
 		}
 
 		return Math.round(dmg);
