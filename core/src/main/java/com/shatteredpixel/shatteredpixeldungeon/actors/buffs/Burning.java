@@ -90,13 +90,21 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 	@Override
 	public boolean attachTo(Char target) {
 		//Maze Tower: 화염+냉기 처리를 원소 반응(증기·해빙·폭발)으로 대체
-		if (ElementalReactions.beforeBurning(target)) return false;
+		if (ElementalReactions.beforeBurning(target, this)) return false;
 
 		return super.attachTo(target);
 	}
 
 	@Override
 	public boolean act() {
+
+		//Maze Tower: reignite 없이 붙은 화상이면 여기서 증기 반응
+		if (steamPending){
+			steamPending = false;
+			if (left <= 0) left = DURATION;
+			ElementalReactions.steamFromBurning(target, this);
+			return true;
+		}
 
 		if (acted && Dungeon.level.water[target.pos] && !target.flying){
 			detach();
@@ -220,7 +228,16 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 			ch.needsIncomingDOTUpdate = true;
 		}
 		acted = false;
+
+		//Maze Tower: 냉기 상태에 화상이 붙었으면 지속시간이 정해진 지금 증기 반응
+		if (steamPending){
+			steamPending = false;
+			ElementalReactions.steamFromBurning(ch, this);
+		}
 	}
+
+	//Maze Tower: 냉기 상태에 붙은 화상. 지속시간이 정해지면(reignite) 증기 반응을 일으킨다.
+	public boolean steamPending = false;
 
 	public void extend( float duration ) {
 		left += duration;

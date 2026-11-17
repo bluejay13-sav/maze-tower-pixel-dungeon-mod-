@@ -26,7 +26,7 @@ import java.util.ArrayList;
 
 //Maze Tower: 원소 반응. 원작에서 화염과 냉기가 서로를 지우던 처리를 아래 반응으로 바꾼다.
 //
-//  증기: 화상 + 냉기       → 기준 피해 × 1.5, 화상·냉기 해제
+//  증기: 화상 + 냉기       → 남은 화상 지속시간의 화상 피해 합계 × 1.5, 화상·냉기 해제
 //  폭발: 정전기 + 화상     → 인접 1칸의 모든 적에게 기준 피해 × 1.2
 //  해빙: 빙결 + 화염       → 기준 피해 × 2, 빙결·화상 해제
 //  빙결: 젖은 적 + 냉기    → 원작 Frost
@@ -58,7 +58,7 @@ public class ElementalReactions {
 	// ===== 상태이상이 붙기 직전 (true를 돌려주면 그 상태이상은 붙지 않는다) =====
 
 	//화상이 붙기 직전 (Burning.attachTo)
-	public static boolean beforeBurning( Char ch ){
+	public static boolean beforeBurning( Char ch, Burning burning ){
 		if (!reacts(ch)){
 			Buff.detach(ch, Chill.class); //원작 처리
 			return false;
@@ -69,9 +69,10 @@ public class ElementalReactions {
 			return true;
 		}
 		if (ch.buff(Chill.class) != null){
+			//증기: 화상 지속시간을 알아야 하므로 일단 붙이고, 지속시간이 정해지는 reignite에서 터뜨린다
 			Buff.detach(ch, Chill.class);
-			steam(ch);
-			return true;
+			burning.steamPending = true;
+			return false;
 		}
 		if (ch.buff(StaticCharge.class) != null){
 			explode(ch);
@@ -86,8 +87,7 @@ public class ElementalReactions {
 			return false;
 		}
 		if (ch.buff(Burning.class) != null){
-			Buff.detach(ch, Burning.class);
-			steam(ch);
+			steamFromBurning(ch, ch.buff(Burning.class));
 			return true;
 		}
 		if (!suppressFreeze && isWet(ch) && ch.buff(Frost.class) == null){
@@ -137,8 +137,15 @@ public class ElementalReactions {
 
 	// ===== 반응 =====
 
-	private static void steam( Char ch ){
-		int dmg = Math.round(baseDamage() * MazeTower.REACTION_STEAM_MULTI);
+	//증기: 남은 화상 지속시간 동안 받을 화상 피해를 한꺼번에 계산해 배율을 곱한다. 화상·냉기는 해제.
+	public static void steamFromBurning( Char ch, Burning burning ){
+		int burnTotal = burning.totalIncomingDMG();
+		burning.detach();
+		float dmg = burnTotal * MazeTower.REACTION_STEAM_MULTI * BloomEffects.reactionDamageMulti(Dungeon.hero);
+		steam(ch, Math.max(1, Math.round(dmg)));
+	}
+
+	private static void steam( Char ch, int dmg ){
 		announce(ch, "steam", 0xCCCCCC);
 		if (ch.sprite != null) CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 10);
 		Sample.INSTANCE.play(Assets.Sounds.BURNING);

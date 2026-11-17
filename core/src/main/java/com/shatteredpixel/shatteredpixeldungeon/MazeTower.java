@@ -133,7 +133,7 @@ public class MazeTower {
 	//반응 기준 피해 = FLAT + PER_DEPTH × 층 (층이 깊을수록 커진다)
 	public static final float REACTION_BASE_FLAT      = 2f;
 	public static final float REACTION_BASE_PER_DEPTH = 0.5f;
-	public static final float REACTION_STEAM_MULTI     = 1.5f; //증기: 화상 + 냉기
+	public static final float REACTION_STEAM_MULTI     = 1.5f; //증기: 화상 + 냉기. 남은 화상 피해 합계에 곱한다 (기준 피해 아님)
 	public static final float REACTION_EXPLOSION_MULTI = 1.2f; //폭발: 정전기 + 화상, 인접 1칸
 	public static final float REACTION_THAW_MULTI      = 2.0f; //해빙: 빙결 + 화염
 
