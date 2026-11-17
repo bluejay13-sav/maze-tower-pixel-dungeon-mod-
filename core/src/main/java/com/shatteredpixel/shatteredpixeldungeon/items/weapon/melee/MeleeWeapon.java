@@ -77,6 +77,10 @@ public class MeleeWeapon extends Weapon {
 		if (Dungeon.hero != null && (Dungeon.hero.heroClass == HeroClass.DUELIST
 			|| Dungeon.hero.hasTalent(Talent.SWIFT_EQUIP))){
 			return AC_ABILITY;
+		//Maze Tower: 장착한 검은 기본 행동이 스킬 (퀵슬롯에 넣으면 바로 스킬 사용)
+		} else if (SwordSkill.heroUsesSkills(Dungeon.hero) && isEquipped(Dungeon.hero)
+				&& SwordSkill.forWeapon(this) != null){
+			return AC_ABILITY;
 		} else {
 			return super.defaultAction();
 		}
@@ -87,13 +91,18 @@ public class MeleeWeapon extends Weapon {
 		ArrayList<String> actions = super.actions(hero);
 		if (isEquipped(hero) && hero.heroClass == HeroClass.DUELIST){
 			actions.add(AC_ABILITY);
+		//Maze Tower: 검 스킬
+		} else if (isEquipped(hero) && SwordSkill.heroUsesSkills(hero) && SwordSkill.forWeapon(this) != null){
+			actions.add(AC_ABILITY);
 		}
 		return actions;
 	}
 
 	@Override
 	public String actionName(String action, Hero hero) {
-		if (action.equals(AC_ABILITY)){
+		if (action.equals(AC_ABILITY) && SwordSkill.heroUsesSkills(hero) && SwordSkill.forWeapon(this) != null){
+			return Messages.upperCase(SwordSkill.forWeapon(this).name()); //Maze Tower
+		} else if (action.equals(AC_ABILITY)){
 			return Messages.upperCase(Messages.get(this, "ability_name"));
 		} else {
 			return super.actionName(action, hero);
@@ -104,7 +113,15 @@ public class MeleeWeapon extends Weapon {
 	public void execute(Hero hero, String action) {
 		super.execute(hero, action);
 
-		if (action.equals(AC_ABILITY)){
+		//Maze Tower: 마나를 쓰는 검 스킬
+		if (action.equals(AC_ABILITY) && SwordSkill.heroUsesSkills(hero) && SwordSkill.forWeapon(this) != null){
+			usesTargeting = false;
+			if (!isEquipped(hero)) {
+				GLog.w(Messages.get(this, "ability_need_equip"));
+			} else {
+				SwordSkill.execute(hero, this);
+			}
+		} else if (action.equals(AC_ABILITY)){
 			usesTargeting = false;
 			if (!isEquipped(hero)) {
 				if (hero.hasTalent(Talent.SWIFT_EQUIP)){
@@ -364,6 +381,9 @@ public class MeleeWeapon extends Weapon {
 		//the mage's staff has no ability as it can only be gained by the mage
 		if (Dungeon.hero != null && Dungeon.hero.heroClass == HeroClass.DUELIST && !(this instanceof MagesStaff)){
 			info += "\n\n" + abilityInfo();
+		//Maze Tower: 검 스킬 설명
+		} else if (SwordSkill.heroUsesSkills(Dungeon.hero) && SwordSkill.forWeapon(this) != null){
+			info += "\n\n" + SwordSkill.forWeapon(this).desc();
 		}
 		
 		return info;
