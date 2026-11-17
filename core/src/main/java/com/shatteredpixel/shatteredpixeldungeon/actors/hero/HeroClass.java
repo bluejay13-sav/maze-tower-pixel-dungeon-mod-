@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.QuickSlot;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
@@ -178,7 +179,8 @@ public enum HeroClass {
 
 		Dungeon.quickslot.setSlot(0, stones);
 
-		if (hero.belongings.armor != null){
+		//Maze Tower: 전사 전용 부서진 인장(방어막)은 주지 않는다
+		if (MazeTower.WARRIOR_SEAL && hero.belongings.armor != null){
 			hero.belongings.armor.affixSeal(new BrokenSeal());
 			Catalog.setSeen(BrokenSeal.class); //as it's not added to the inventory
 		}

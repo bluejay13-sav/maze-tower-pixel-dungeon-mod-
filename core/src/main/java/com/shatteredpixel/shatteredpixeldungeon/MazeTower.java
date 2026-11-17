@@ -25,4 +25,7 @@ public class MazeTower {
 	//원작 갑옷 능력(왕의 왕관)을 얻을 수 있는지 여부
 	public static final boolean ORIGINAL_ARMOR_ABILITY = false;
 
+	//원작 전사의 부서진 인장(방어막)을 시작 장비로 줄지 여부
+	public static final boolean WARRIOR_SEAL = false;
+
 }
