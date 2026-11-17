@@ -29,7 +29,7 @@ import java.util.ArrayList;
 //  증기: 화상 + 냉기       → 남은 화상 지속시간의 화상 피해 합계 × 1.5, 화상·냉기 해제
 //  폭발: 정전기 + 화상     → 인접 1칸의 모든 적에게 기준 피해 × 1.2
 //  해빙: 빙결 + 화염       → 남은 화상 지속시간의 화상 피해 합계 × 2, 빙결·화상 해제
-//  빙결: 젖은 적 + 냉기    → 원작 Frost
+//  빙결: 젖음 + 냉기       → 젖음·냉기 해제, 원작 Frost (순서 무관)
 //
 //  젖음 + 화상            → 둘 다 해제 (모든 대상, 다른 반응보다 먼저)
 //
@@ -99,6 +99,8 @@ public class ElementalReactions {
 			return true;
 		}
 		if (!suppressFreeze && isWet(ch) && ch.buff(Frost.class) == null){
+			//빙결: 젖음과 냉기는 사라지고 얼어붙는다 (냉기는 붙지 않는다)
+			Buff.detach(ch, Wet.class);
 			freeze(ch);
 			return true;
 		}
@@ -124,6 +126,12 @@ public class ElementalReactions {
 		if (b != null){
 			b.detach();
 			douse(ch);
+			return true;
+		}
+		//냉기 상태로 젖으면: 냉기·젖음은 사라지고 얼어붙는다
+		if (reacts(ch) && ch.buff(Chill.class) != null && ch.buff(Frost.class) == null){
+			Buff.detach(ch, Chill.class);
+			freeze(ch);
 			return true;
 		}
 		return false;
