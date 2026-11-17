@@ -41,8 +41,15 @@ public class BloomTree extends Buff {
 	public boolean unlocked = false;
 	public final ArrayList<Slot> slots = new ArrayList<>();
 
-	//신성한 영감의 물약 등으로 얻은 추가 포인트 (9단계)
+	//신성한 영감의 물약으로 얻은 2차 추가 포인트
 	public int bonusPoints = 0;
+	//신성한 영감의 물약으로 얻은 1차 추가 포인트 (1차 능력은 미완성, 쌓이기만 한다)
+	public int firstTierBonus = 0;
+
+	//1차 포인트 합계 (레벨 + 물약)
+	public int firstTierTotal( Hero hero ){
+		return firstTierPoints(hero) + firstTierBonus;
+	}
 
 	// ===== 가져오기 =====
 
@@ -212,6 +219,7 @@ public class BloomTree extends Buff {
 
 	private static final String UNLOCKED = "unlocked";
 	private static final String BONUS    = "bonus_points";
+	private static final String FIRST_BONUS = "first_tier_bonus";
 	private static final String COUNT    = "slot_count";
 	private static final String CHOSEN   = "slot_chosen_";
 	private static final String OPTIONS  = "slot_options_";
@@ -222,6 +230,7 @@ public class BloomTree extends Buff {
 		super.storeInBundle(bundle);
 		bundle.put(UNLOCKED, unlocked);
 		bundle.put(BONUS, bonusPoints);
+		bundle.put(FIRST_BONUS, firstTierBonus);
 		bundle.put(COUNT, slots.size());
 		for (int i = 0; i < slots.size(); i++){
 			Slot s = slots.get(i);
@@ -238,6 +247,7 @@ public class BloomTree extends Buff {
 		super.restoreFromBundle(bundle);
 		unlocked = bundle.getBoolean(UNLOCKED);
 		bonusPoints = bundle.getInt(BONUS);
+		firstTierBonus = bundle.getInt(FIRST_BONUS);
 		slots.clear();
 		int count = bundle.getInt(COUNT);
 		for (int i = 0; i < count; i++){

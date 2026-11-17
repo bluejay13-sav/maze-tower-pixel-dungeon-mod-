@@ -62,7 +62,7 @@ public class BloomTalentsPane extends ScrollPane {
 		firstTitle = part(PixelScene.renderTextBlock(Messages.get(this, "tier1"), 9));
 		firstTitle.hardlight(Window.TITLE_COLOR);
 		firstInfo = part(PixelScene.renderTextBlock(
-				Messages.get(this, "tier1_info", BloomTree.firstTierPoints(hero)), 6));
+				Messages.get(this, "tier1_info", tree.firstTierTotal(hero)), 6));
 
 		sep = part(new ColorBlock(1, 1, 0xFF000000));
 
