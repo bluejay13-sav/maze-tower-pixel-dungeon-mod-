@@ -58,7 +58,7 @@ public class TalentEffects {
 	}
 
 	//그림자검 궤적 색: 보라와 회색을 섞고 살짝 어둡게 (빛나는 궤적이라 너무 어두우면 안 보인다)
-	private static final int SHADOW_COLOR = 0x9A8CB8;
+	private static final int SHADOW_COLOR = 0x8578A2;
 
 	//연격(특성): 쌓이는 중첩 표시 (스킬 연격과 다른 노란 숫자)
 	public static void comboStack( Char enemy, int count, int need ){
