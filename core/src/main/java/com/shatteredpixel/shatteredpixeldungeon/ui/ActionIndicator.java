@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.input.GameAction;
 import com.watabou.noosa.BitmapText;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.Visual;
 
 public class ActionIndicator extends Tag {
@@ -57,10 +58,18 @@ public class ActionIndicator extends Tag {
 		instance = null;
 	}
 	
+	//Maze Tower: 마나가 부족한데 스킬을 쓰려 하면 버튼 그림이 좌우로 흔들린다
+	private float shakeTime = 0;
+	private static final float SHAKE_DURATION = 0.35f;
+
+	public static void shake(){
+		if (instance != null) instance.shakeTime = SHAKE_DURATION;
+	}
+
 	@Override
 	protected synchronized void layout() {
 		super.layout();
-		
+
 		if (primaryVis != null){
 			if (!flipped)   primaryVis.x = x + (SIZE - primaryVis.width()) / 2f + 1;
 			else            primaryVis.x = x + width - (SIZE + primaryVis.width()) / 2f - 1;
@@ -120,6 +129,17 @@ public class ActionIndicator extends Tag {
 
 				layout();
 				needsRefresh = false;
+			}
+
+			//Maze Tower: 흔들림 (layout으로 제자리를 잡은 뒤 좌우로 밀었다가 되돌린다)
+			if (shakeTime > 0){
+				shakeTime -= Game.elapsed;
+				layout();
+				float off = shakeTime > 0
+						? (float)Math.sin(shakeTime * 60f) * 2.5f * (shakeTime / SHAKE_DURATION)
+						: 0;
+				if (primaryVis != null) primaryVis.x += off;
+				if (secondVis != null)  secondVis.x += off;
 			}
 
 			if (!Dungeon.hero.ready) {

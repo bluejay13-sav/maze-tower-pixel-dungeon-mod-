@@ -20,6 +20,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
@@ -111,6 +112,7 @@ public class SwordSkill {
 		}
 		if (Mana.get(hero).cur() < manaCost(hero)){
 			GLog.w(Messages.get(SwordSkill.class, "no_mana"));
+			ActionIndicator.shake(); //마나 부족: 스킬 버튼 흔들림
 			return;
 		}
 
@@ -144,6 +146,7 @@ public class SwordSkill {
 		final int cost = manaCost(hero);
 		if (Mana.get(hero).cur() < cost){
 			GLog.w(Messages.get(SwordSkill.class, "no_mana"));
+			ActionIndicator.shake(); //마나 부족: 스킬 버튼 흔들림
 			return;
 		}
 		BloomEffects.beginSkill(hero, enemy, cost); //마나가 가득 찼는지, 집중 상태 기록

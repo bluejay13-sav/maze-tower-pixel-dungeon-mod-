@@ -46,6 +46,9 @@ public class BloomTree extends Buff {
 	//신성한 영감의 물약으로 얻은 1차 추가 포인트 (1차 능력은 미완성, 쌓이기만 한다)
 	public int firstTierBonus = 0;
 
+	//상태창에서 이미 본 칸 수 (새로 생긴 + 칸만 빛나며 등장하게)
+	public int seenSlots = 0;
+
 	//1차 포인트 합계 (레벨 + 물약)
 	public int firstTierTotal( Hero hero ){
 		return firstTierPoints(hero) + firstTierBonus;
@@ -229,6 +232,7 @@ public class BloomTree extends Buff {
 	private static final String UNLOCKED = "unlocked";
 	private static final String BONUS    = "bonus_points";
 	private static final String FIRST_BONUS = "first_tier_bonus";
+	private static final String SEEN     = "seen_slots";
 	private static final String COUNT    = "slot_count";
 	private static final String CHOSEN   = "slot_chosen_";
 	private static final String OPTIONS  = "slot_options_";
@@ -240,6 +244,7 @@ public class BloomTree extends Buff {
 		bundle.put(UNLOCKED, unlocked);
 		bundle.put(BONUS, bonusPoints);
 		bundle.put(FIRST_BONUS, firstTierBonus);
+		bundle.put(SEEN, seenSlots);
 		bundle.put(COUNT, slots.size());
 		for (int i = 0; i < slots.size(); i++){
 			Slot s = slots.get(i);
@@ -257,6 +262,7 @@ public class BloomTree extends Buff {
 		unlocked = bundle.getBoolean(UNLOCKED);
 		bonusPoints = bundle.getInt(BONUS);
 		firstTierBonus = bundle.getInt(FIRST_BONUS);
+		seenSlots = bundle.getInt(SEEN);
 		slots.clear();
 		int count = bundle.getInt(COUNT);
 		for (int i = 0; i < count; i++){

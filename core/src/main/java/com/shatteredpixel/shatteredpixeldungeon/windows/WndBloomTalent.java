@@ -81,7 +81,10 @@ public class WndBloomTalent extends Window {
 				if (choiceWnd != null) choiceWnd.hide();
 				GLog.p(Messages.get(WndBloomTalent.class, "chosen", Messages.titleCase(talent.title())));
 				if (!tree.hasPending(hero)) StatusPane.talentBlink = 0;
-				if (pane != null) pane.rebuild();
+				if (pane != null){
+					pane.rebuild();
+					pane.chosen(slotIndex); //칸이 채워지며 번쩍
+				}
 			}
 		});
 	}

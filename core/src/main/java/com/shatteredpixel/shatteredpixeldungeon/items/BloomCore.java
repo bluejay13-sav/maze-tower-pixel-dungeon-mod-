@@ -10,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -61,6 +62,16 @@ public class BloomCore extends Item {
 			hero.busy();
 			hero.sprite.operate( hero.pos );
 			Sample.INSTANCE.play( Assets.Sounds.MASTERY );
+
+			//꽃이 피는 빛: 큰 분홍 꽃잎 빛이 천천히 돌며 피었다 지고, 가운데 금빛 꽃술이 반짝인다
+			Flare petals = new Flare(10, 44);
+			petals.color(0xFF9FD6, true);
+			petals.angularSpeed = 40;
+			petals.show(hero.sprite, 2.6f);
+			Flare core = new Flare(6, 22);
+			core.color(0xFFE38A, true);
+			core.angularSpeed = -70;
+			core.show(hero.sprite, 2.0f);
 
 			Emitter e = hero.sprite.centerEmitter();
 			e.pos(e.x-2, e.y-6, 4, 4);

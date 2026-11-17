@@ -19,6 +19,7 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndBloomChoice;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBloomTalent;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.PointerArea;
+import com.watabou.noosa.Game;
 import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
@@ -82,7 +83,12 @@ public class BloomTalentsPane extends ScrollPane {
 		for (int i = 0; i < MazeTower.BLOOM_SLOTS; i++){
 			SlotButton b = part(new SlotButton(i));
 			slotButtons.add(b);
+			//처음 보는 + 칸은 빛나며 등장한다 (여러 칸이면 차례로)
+			if (i < tree.slots.size() && i >= tree.seenSlots && !tree.slots.get(i).isChosen()){
+				b.appear((i - tree.seenSlots) * 0.2f);
+			}
 		}
+		tree.seenSlots = Math.max(tree.seenSlots, tree.slots.size());
 	}
 
 	//고르기·강화 후 다시 그린다
@@ -197,6 +203,75 @@ public class BloomTalentsPane extends ScrollPane {
 			}
 		}
 
+		// ===== 연출: + 칸 등장(빛나며 커짐), 특성 선택(번쩍) =====
+
+		private float appearDelay = -1;  //등장 연출까지 남은 시간 (-1이면 없음)
+		private float appearTime = 0;    //등장 연출 남은 시간
+		private float flashTime = 0;     //번쩍임 남은 시간
+		private static final float APPEAR_DURATION = 1.0f;
+		private static final float FLASH_DURATION = 0.45f;
+
+		public void appear( float delay ){
+			appearDelay = delay;
+			if (icon != null) icon.alpha(0f);
+			bg.alpha(0.3f);
+		}
+
+		public void flash(){
+			flashTime = FLASH_DURATION;
+		}
+
+		private void burstStars( int n ){
+			Emitter emitter = (Emitter) content.recycle(Emitter.class);
+			emitter.revive();
+			emitter.pos(x + width/2f, y + TalentButton.WIDTH/2f);
+			emitter.burst(Speck.factory(Speck.STAR), n);
+		}
+
+		private void restoreColors(){
+			bg.resetColor();
+			if (icon != null) icon.resetColor();
+			if (slot() != null && !slot().isChosen()) bg.hardlight(1f, 1f, 0.5f);
+		}
+
+		@Override
+		public void update() {
+			super.update();
+
+			if (appearDelay >= 0){
+				appearDelay -= Game.elapsed;
+				if (appearDelay < 0){
+					appearTime = APPEAR_DURATION;
+					burstStars(8);
+					Sample.INSTANCE.play(Assets.Sounds.CHARMS, 0.6f, 1.4f);
+				}
+			}
+			if (appearTime > 0){
+				appearTime -= Game.elapsed;
+				float p = 1f - Math.max(0, appearTime) / APPEAR_DURATION; //0→1
+				//서서히 나타나며 밝게 깜빡이다가 원래 색으로
+				float glow = 1f + 1.2f * (1f - p) * Math.abs((float)Math.sin(p * Math.PI * 3));
+				bg.alpha(Math.min(1f, 0.3f + p * 1.5f));
+				bg.brightness(glow);
+				if (icon != null){
+					icon.alpha(Math.min(1f, p * 2f));
+					icon.brightness(glow);
+				}
+				if (appearTime <= 0){
+					restoreColors();
+					bg.alpha(1f);
+					if (icon != null) icon.alpha(1f);
+				}
+			}
+			if (flashTime > 0){
+				flashTime -= Game.elapsed;
+				float f = Math.max(0, flashTime) / FLASH_DURATION;
+				bg.brightness(1f + 2f * f);
+				if (icon != null) icon.brightness(1f + 2f * f);
+				if (flashTime <= 0) restoreColors();
+			}
+		}
+
 		@Override
 		protected void onPointerDown() {
 			if (icon != null) icon.brightness(1.5f);
@@ -239,10 +314,20 @@ public class BloomTalentsPane extends ScrollPane {
 		}
 	}
 
+	//특성을 골라 칸이 채워질 때: 번쩍이며 별
+	public void chosen(int index){
+		if (index < 0 || index >= slotButtons.size()) return;
+		SlotButton b = slotButtons.get(index);
+		b.flash();
+		b.burstStars(14);
+		Sample.INSTANCE.play(Assets.Sounds.LEVELUP, 0.8f, 1.0f);
+	}
+
 	//강화했을 때 별 효과
 	public void celebrate(int index){
 		if (index < 0 || index >= slotButtons.size()) return;
 		SlotButton b = slotButtons.get(index);
+		b.flash();
 		Sample.INSTANCE.play(Assets.Sounds.LEVELUP, 0.7f, 1.2f);
 		Emitter emitter = (Emitter) content.recycle(Emitter.class);
 		emitter.revive();

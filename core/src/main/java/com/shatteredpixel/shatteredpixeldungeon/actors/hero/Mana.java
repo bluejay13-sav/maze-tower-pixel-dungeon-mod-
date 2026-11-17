@@ -8,6 +8,7 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TalentEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
@@ -74,9 +75,12 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	//대기(휴식·탐색 포함)로 턴을 넘겼을 때 호출한다
 	public static void onWait( Hero hero, float turns ){
 		Mana m = get(hero);
+		int before = m.cur();
 		//명상: 대기 시 마나 회복 배율
 		m.gain(Math.round(MazeTower.MANA_PER_WAIT_TURN * turns * BloomEffects.waitManaMulti(hero)));
 		m.focusReady = true;
+		//마나가 실제로 찼으면 푸른 입자가 피어오른다
+		if (m.cur() > before) TalentEffects.manaRegen(hero);
 	}
 
 	// ===== 스킬 버튼 (화면 오른쪽 아래 행동 버튼) =====
@@ -118,9 +122,18 @@ public class Mana extends Buff implements ActionIndicator.Action {
 				|| (ActionIndicator.action == this && lastWeapon != w)){
 			lastWeapon = w;
 			ActionIndicator.setAction(this);
+		} else if (ActionIndicator.action == this && canAfford() != lastAffordable){
+			//마나가 비용보다 많아지거나 적어지면 버튼을 다시 그린다 (회색 / 원래 색)
+			ActionIndicator.refresh();
 		}
+		lastAffordable = canAfford();
 	}
 	private MeleeWeapon lastWeapon;
+	private boolean lastAffordable = true;
+
+	private boolean canAfford(){
+		return !(target instanceof Hero) || cur() >= SwordSkill.manaCost((Hero)target);
+	}
 
 	@Override
 	public String actionName() {
@@ -131,14 +144,17 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	@Override
 	public Visual primaryVisual() {
 		MeleeWeapon w = skillWeapon();
-		return w == null ? new ItemSprite() : new ItemSprite(w);
+		ItemSprite ico = w == null ? new ItemSprite() : new ItemSprite(w);
+		//마나가 부족하면 회색으로
+		if (!canAfford()) ico.tint(0x808080, 0.75f);
+		return ico;
 	}
 
 	@Override
 	public Visual secondaryVisual() {
 		BitmapText txt = new BitmapText(PixelScene.pixelFont);
 		txt.text(Integer.toString(SwordSkill.manaCost((Hero)target)));
-		txt.hardlight(0x88BBFF);
+		txt.hardlight(canAfford() ? 0x88BBFF : 0xFF6666); //부족하면 빨간 비용
 		txt.measure();
 		return txt;
 	}
