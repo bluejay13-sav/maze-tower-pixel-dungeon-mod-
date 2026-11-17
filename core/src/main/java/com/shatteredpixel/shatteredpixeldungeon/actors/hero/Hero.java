@@ -2392,18 +2392,32 @@ public class Hero extends Char {
 		boolean wasEnemy = attackTarget.alignment == Alignment.ENEMY
 				|| (attackTarget instanceof Mimic && attackTarget.alignment == Alignment.NEUTRAL);
 
-		boolean hit = attack(attackTarget);
-		BloomEffects.afterNormalAttack(this, attackTarget, hit); //Maze Tower: 생명탈취, 그림자검
-		
+		final boolean hit = attack(attackTarget);
+		final Char target = attackTarget;
+
+		//Maze Tower: 생명탈취, 그림자검. 그림자검이 발동하면 잠시 텀을 둔 뒤 잔상 일격을 하고 나서
+		//아래 마무리(턴 소모 등)를 이어서 한다. 그동안 주인공은 행동 중이라 아무도 움직이지 않는다.
+		Runnable finish = new Runnable() {
+			@Override
+			public void run() {
+				finishAttackComplete(target, hit, wasEnemy);
+			}
+		};
+		if (BloomEffects.afterNormalAttack(this, target, hit, finish)) return;
+		finish.run();
+	}
+
+	//원작 onAttackComplete의 뒷부분 (Maze Tower: 그림자검 텀 때문에 따로 뺐다)
+	private void finishAttackComplete( Char target, boolean hit, boolean wasEnemy ){
 		Invisibility.dispel();
 		spend( attackDelay() );
 
 		if (hit && subClass == HeroSubClass.GLADIATOR && wasEnemy){
-			Buff.affect( this, Combo.class ).hit(attackTarget);
+			Buff.affect( this, Combo.class ).hit(target);
 		}
 
 		if (hit && heroClass == HeroClass.DUELIST && wasEnemy){
-			Buff.affect( this, Sai.ComboStrikeTracker.class).addHit( attackTarget );
+			Buff.affect( this, Sai.ComboStrikeTracker.class).addHit( target );
 		}
 
 		curAction = null;

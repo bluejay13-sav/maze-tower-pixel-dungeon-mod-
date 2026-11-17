@@ -6,9 +6,9 @@
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ManaWispParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -58,7 +58,7 @@ public class TalentEffects {
 		ghost.flipHorizontal = hero.sprite.flipHorizontal;
 		ghost.x = hero.sprite.x;
 		ghost.y = hero.sprite.y;
-		ghost.hardlight(0.55f, 0.35f, 1f);
+		ghost.hardlight(0.38f, 0.18f, 0.70f); //어두운 보라
 		ghost.alpha(0.75f);
 		hero.sprite.parent.add(ghost);
 
@@ -79,10 +79,9 @@ public class TalentEffects {
 		PointF h = hero.sprite.center(), e = enemy.sprite.center();
 		float d = (float)Math.atan2(e.y - h.y, e.x - h.x);
 		new SlashTrail(11, 3, d + 1.1f, -2.2f, 0.08f, 0.08f, 0.22f)
-				.trailColor(0xAA77FF)
+				.trailColor(0x6A3FB8) //어두운 보라
 				.show(enemy.sprite.parent, new PointF(e.x - (float)Math.cos(d) * 5, e.y - (float)Math.sin(d) * 5));
 		enemy.sprite.emitter().burst(ShadowParticle.CURSE, 10);
-		enemy.sprite.showStatus(0xAA88FF, Messages.get(TalentEffects.class, "shadow"));
 	}
 
 	//연격(특성): 쌓이는 중첩 표시 (스킬 연격과 다른 노란 숫자)
@@ -114,12 +113,17 @@ public class TalentEffects {
 	public static void manaRefund( final Char hero, Char from, final int amount ){
 		if (!visible(hero)) return;
 		if (from != null && from.sprite != null && from.sprite.parent != null){
-			MagicMissile.boltFromChar(hero.sprite.parent, MagicMissile.MAGIC_MISSILE, from.sprite, hero.pos, new Callback() {
+			MagicMissile bolt = MagicMissile.boltFromChar(hero.sprite.parent, MagicMissile.MAGIC_MISSILE, from.sprite, hero.pos, new Callback() {
 				@Override
 				public void call() {
-					if (hero.sprite != null) hero.sprite.showStatus(0x4488FF, "+" + amount);
+					if (hero.sprite != null){
+						hero.sprite.showStatus(0x4488FF, "+" + amount);
+						hero.sprite.centerEmitter().burst(MagicMissile.MagicParticle.FACTORY, 8);
+					}
 				}
 			});
+			//원작 마탄(초당 200)보다 훨씬 느리게 날아와 눈으로 따라갈 수 있게
+			bolt.setSpeed(MazeTower.MANA_REFUND_BOLT_SPEED);
 		} else {
 			hero.sprite.showStatus(0x4488FF, "+" + amount);
 		}
@@ -145,7 +149,7 @@ public class TalentEffects {
 	private static CharSprite lastSprite;
 	private static ShieldHalo parryHalo;   //흘리기 대기 중 보호막
 	private static GlowBlock readyGlow;    //집중·흐름 준비 완료
-	private static Emitter manaWisps;      //가득 찬 마나
+	private static Flare manaAura;         //가득 찬 마나
 
 	//상태창이 매 프레임 호출. 원하는 상태에 맞춰 켜고 끈다.
 	public static void updateHero( Hero hero, boolean parry, boolean ready, boolean fullMana ){
@@ -156,7 +160,7 @@ public class TalentEffects {
 			lastSprite = hero.sprite;
 			parryHalo = null;
 			readyGlow = null;
-			manaWisps = null;
+			manaAura = null;
 		}
 		boolean alive = hero.isAlive();
 
@@ -175,14 +179,21 @@ public class TalentEffects {
 			readyGlow = null;
 		}
 
-		if (fullMana && alive && manaWisps == null){
-			manaWisps = hero.sprite.emitter();
-			if (manaWisps != null) manaWisps.pour(ManaWispParticle.FACTORY, 0.25f);
-		} else if ((!fullMana || !alive) && manaWisps != null){
-			manaWisps.on = false;
-			manaWisps = null;
+		//가득 찬 마나: 주인공 뒤에서 천천히 도는 은은한 푸른 빛살 (젖음의 물방울과 구분되게 입자가 아닌 빛)
+		if (fullMana && alive && manaAura == null){
+			manaAura = new Flare(7, 20);
+			manaAura.color(0x2A5CFF, true);
+			manaAura.angularSpeed = 25;
+			manaAura.show(hero.sprite, 0);
+			manaAura.alpha(0.45f);
+		} else if ((!fullMana || !alive) && manaAura != null){
+			manaAura.killAndErase();
+			manaAura = null;
 		}
-		if (manaWisps != null) manaWisps.visible = hero.sprite.visible;
+		if (manaAura != null){
+			manaAura.point(hero.sprite.center());
+			manaAura.visible = hero.sprite.visible;
+		}
 	}
 
 	static PointF center( Char ch ){

@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.tweeners.Delayer;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
@@ -275,8 +276,10 @@ public class BloomEffects {
 	// 평타가 끝난 뒤 (Hero.onAttackComplete)
 	// =====================================================================
 
-	public static void afterNormalAttack(Hero hero, Char enemy, boolean hit){
-		if (enemy == null) return;
+	//그림자검이 발동해 텀을 두고 이어서 처리하면 true를 돌려준다. 그때는 끝난 뒤 done을 부른다.
+	//false면 부른 쪽이 바로 done을 처리한다.
+	public static boolean afterNormalAttack(final Hero hero, final Char enemy, boolean hit, final Runnable done){
+		if (enemy == null) return false;
 
 		//생명탈취: 평타로 처치
 		int ls = lvl(hero, LIFE_STEAL);
@@ -292,12 +295,30 @@ public class BloomEffects {
 		//그림자검: 평타 한 번 더
 		int sb = lvl(hero, SHADOW_BLADE);
 		if (sb >= 0 && hit && !inShadow && enemy.isAlive() && Random.Float() < T_SHADOW_BLADE_CHANCE[sb]){
-			TalentEffects.shadowStrike(hero, enemy);
-			inShadow = true;
-			boolean hit2 = hero.attack(enemy);
-			inShadow = false;
-			afterNormalAttack(hero, enemy, hit2);
+			//평타가 끝난 뒤 잠깐 텀을 두고 잔상 일격
+			if (hero.sprite != null && hero.sprite.parent != null){
+				hero.sprite.parent.add(new Delayer(SHADOW_BLADE_DELAY){
+					@Override
+					protected void onComplete() {
+						super.onComplete();
+						if (!shadowStrike(hero, enemy, done)) done.run();
+					}
+				});
+				return true;
+			}
+			return shadowStrike(hero, enemy, done);
 		}
+		return false;
+	}
+
+	//잔상 일격 한 번. 또 그림자검이 발동해 이어지면 true.
+	private static boolean shadowStrike(Hero hero, Char enemy, Runnable done){
+		if (!hero.isAlive() || !enemy.isAlive()) return false;
+		TalentEffects.shadowStrike(hero, enemy);
+		inShadow = true;
+		boolean hit2 = hero.attack(enemy);
+		inShadow = false;
+		return afterNormalAttack(hero, enemy, hit2, done);
 	}
 
 	// =====================================================================

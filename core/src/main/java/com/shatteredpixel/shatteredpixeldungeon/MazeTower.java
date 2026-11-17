@@ -44,6 +44,13 @@ public class MazeTower {
 	//여러 번 때리는 스킬(연격, 반월베기)의 타격 사이 텀 (초, 화면 연출용)
 	public static final float SKILL_HIT_INTERVAL = 0.24f;
 
+	// ===== 연출 =====
+
+	//그림자검: 평타가 끝난 뒤 잔상 일격까지의 텀 (초)
+	public static final float SHADOW_BLADE_DELAY = 0.22f;
+	//마나 반환 마탄이 날아오는 속도 (원작 마탄은 200)
+	public static final float MANA_REFUND_BOLT_SPEED = 55f;
+
 	//피해 배율은 그 무기 평타 피해에 대한 비율 (1.5 = 150%)
 	public static final float SKILL_WORN_SHORTSWORD_DMG = 1.50f; //베기
 	public static final float SKILL_SHORTSWORD_DMG      = 1.80f; //베기
