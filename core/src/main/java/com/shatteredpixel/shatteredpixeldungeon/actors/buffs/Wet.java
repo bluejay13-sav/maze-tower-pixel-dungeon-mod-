@@ -24,6 +24,8 @@ public class Wet extends Buff {
 
 	@Override
 	public boolean attachTo( com.shatteredpixel.shatteredpixeldungeon.actors.Char target ) {
+		//빙결 상태에서는 젖지 않는다 (물 위에서 얼어 있어도 화염으로 해빙이 일어나게)
+		if (target.buff(Frost.class) != null) return false;
 		//불타는 대상이 젖으면 화상과 젖음이 함께 사라진다
 		if (ElementalReactions.beforeWet(target)) return false;
 		return super.attachTo(target);
@@ -35,6 +37,11 @@ public class Wet extends Buff {
 
 	@Override
 	public boolean act() {
+		//빙결 상태에서는 젖지 않는다
+		if (target.buff(Frost.class) != null){
+			detach();
+			return true;
+		}
 		if (onWater(target)){
 			left = MazeTower.WET_AFTER_TURNS;
 		} else {

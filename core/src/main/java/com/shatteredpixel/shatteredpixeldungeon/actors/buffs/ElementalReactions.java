@@ -52,6 +52,8 @@ public class ElementalReactions {
 	}
 
 	public static boolean isWet( Char ch ){
+		//빙결 상태면 물 위에 있어도 젖지 않은 것으로 본다
+		if (ch.buff(Frost.class) != null) return false;
 		return ch.buff(Wet.class) != null || Wet.onWater(ch);
 	}
 
@@ -80,6 +82,7 @@ public class ElementalReactions {
 		//증기·해빙은 화상 지속시간을 알아야 하므로 일단 붙이고, 지속시간이 정해지는 reignite에서 터뜨린다
 		if (ch.buff(Frost.class) != null){
 			Buff.detach(ch, Frost.class);
+			Buff.detach(ch, Chill.class); //물 위에서 빙결이 풀릴 때 원작이 거는 냉기도 함께 지운다
 			burning.pendingReaction = PENDING_THAW;
 			return false;
 		}
