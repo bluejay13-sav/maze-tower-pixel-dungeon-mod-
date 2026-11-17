@@ -109,8 +109,9 @@ public class Frost extends FlavourBuff {
 		super.detach();
 		if (target.paralysed > 0)
 			target.paralysed--;
-		if (Dungeon.level.water[target.pos]) {
-			//Maze Tower: 빙결이 풀리며 걸리는 냉기로 다시 빙결되지 않게 한다
+		//Maze Tower: 원소 반응을 받는 적은 빙결이 풀릴 때 냉기가 남지 않는다 (남으면 물 위에서 계속 다시 얼어붙음)
+		if (Dungeon.level.water[target.pos] && !ElementalReactions.reacts(target)) {
+			//주인공·아군은 원작대로 냉기. 그래도 다시 빙결되지 않게 한다
 			ElementalReactions.suppressFreeze = true;
 			Buff.prolong(target, Chill.class, Chill.DURATION/2f);
 			ElementalReactions.suppressFreeze = false;

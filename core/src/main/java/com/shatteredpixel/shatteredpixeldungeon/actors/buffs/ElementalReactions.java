@@ -72,7 +72,7 @@ public class ElementalReactions {
 		return ch != null && Dungeon.level != null && ch.pos >= 0 && ch.pos < Dungeon.level.length();
 	}
 
-	private static boolean reacts( Char ch ){
+	public static boolean reacts( Char ch ){
 		return ch != null && ch.alignment != Char.Alignment.ALLY;
 	}
 
