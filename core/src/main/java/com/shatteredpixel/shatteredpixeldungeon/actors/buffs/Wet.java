@@ -8,7 +8,9 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.WaterDropParticle;
 import com.watabou.noosa.Image;
+import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Bundle;
 
 //Maze Tower: 젖음. 물 타일 위에 있는 동안 + 물에서 나온 뒤 2턴.
@@ -53,6 +55,21 @@ public class Wet extends Buff {
 		}
 		spend(TICK);
 		return true;
+	}
+
+	//걸려 있는 동안 몸에서 물방울이 떨어진다
+	private Emitter drops;
+
+	@Override
+	public void fx(boolean on) {
+		if (on){
+			if (drops == null && target.sprite != null){
+				drops = ElementalReactions.statusEmitter(target, WaterDropParticle.FACTORY, 0.2f);
+			}
+		} else if (drops != null){
+			drops.on = false;
+			drops = null;
+		}
 	}
 
 	@Override

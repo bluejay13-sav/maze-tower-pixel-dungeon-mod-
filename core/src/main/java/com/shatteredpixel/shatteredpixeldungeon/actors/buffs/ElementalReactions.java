@@ -14,6 +14,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM100;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.watabou.utils.PathFinder;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Lightning;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BlastParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
@@ -21,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLightning;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Shocking;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.particles.Emitter;
 
 import java.util.ArrayList;
 
@@ -38,6 +45,24 @@ public class ElementalReactions {
 
 	//반응 피해의 출처 표시용
 	public static class ReactionDamage {}
+
+	//상태이상이 걸려 있는 동안 몸에서 계속 나오는 입자 (정전기 스파크, 젖음 물방울).
+	//원작은 죽을 때 버프를 떼지 않으므로, 대상이 죽으면 스스로 멈추고 안 보일 때는 숨긴다.
+	public static Emitter statusEmitter( final Char ch, Emitter.Factory factory, float interval ){
+		if (ch.sprite == null || ch.sprite.parent == null) return null;
+		Emitter e = new Emitter(){
+			@Override
+			public void update() {
+				if (on && (!ch.isAlive() || ch.sprite == null)) on = false;
+				if (ch.sprite != null) visible = ch.sprite.visible;
+				super.update();
+			}
+		};
+		e.pos(ch.sprite);
+		ch.sprite.parent.add(e);
+		e.pour(factory, interval);
+		return e;
+	}
 
 	//빙결이 풀릴 때 원작이 거는 냉기로는 다시 얼리지 않는다 (Frost.detach)
 	public static boolean suppressFreeze = false;
@@ -213,22 +238,36 @@ public class ElementalReactions {
 		thaw(ch, burnReactionDamage(burning, MazeTower.REACTION_THAW_MULTI));
 	}
 
+	//반응 이펙트를 그려도 되는지 (주인공 시야 안)
+	private static boolean seen( Char ch ){
+		return ch.sprite != null && validPos(ch) && Dungeon.level.heroFOV[ch.pos];
+	}
+
+	//증기: 큰 김 (Speck.STEAM을 그 칸과 주변 칸에)
 	private static void steam( Char ch, int dmg ){
-		announce(ch, "steam", 0xCCCCCC);
-		if (ch.sprite != null) CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 10);
+		announce(ch, "steam", 0xDDDDDD);
+		if (seen(ch)){
+			CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 25);
+			for (int n : PathFinder.NEIGHBOURS8){
+				int c = ch.pos + n;
+				if (c >= 0 && c < Dungeon.level.length() && !Dungeon.level.solid[c]){
+					CellEmitter.get(c).burst(Speck.factory(Speck.STEAM), 4);
+				}
+			}
+		}
 		Sample.INSTANCE.play(Assets.Sounds.BURNING);
+		Sample.INSTANCE.play(Assets.Sounds.GAS, 0.6f);
 		ch.damage(dmg, new ReactionDamage());
 	}
 
 	private static boolean exploding = false;
 
+	//폭발: BlastParticle + 번개 섬광 (중심에서 맞는 적들로 번개, 화면 흔들림)
 	private static void explode( Char ch ){
 		if (exploding) return;
 		exploding = true;
 		int dmg = Math.round(baseDamage() * MazeTower.REACTION_EXPLOSION_MULTI);
 		announce(ch, "explosion", 0xFF8800);
-		CellEmitter.center(ch.pos).burst(BlastParticle.FACTORY, 20);
-		Sample.INSTANCE.play(Assets.Sounds.BLAST);
 
 		ArrayList<Char> hit = new ArrayList<>();
 		for (Char c : Actor.chars()){
@@ -237,24 +276,52 @@ public class ElementalReactions {
 				hit.add(c);
 			}
 		}
+
+		if (seen(ch)){
+			CellEmitter.center(ch.pos).burst(BlastParticle.FACTORY, 30);
+			CellEmitter.center(ch.pos).burst(SparkParticle.FACTORY, 20);
+			ArrayList<Lightning.Arc> arcs = new ArrayList<>();
+			for (Char c : hit){
+				if (c != ch && c.sprite != null){
+					arcs.add(new Lightning.Arc(ch.sprite.center(), c.sprite.center()));
+				}
+				if (c.sprite != null) c.sprite.flash();
+			}
+			if (!arcs.isEmpty() && ch.sprite.parent != null){
+				ch.sprite.parent.addToFront(new Lightning(arcs, null));
+			}
+			PixelScene.shake(2, 0.3f);
+		}
+		Sample.INSTANCE.play(Assets.Sounds.BLAST);
+		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
+
 		for (Char c : hit){
 			c.damage(dmg, new ReactionDamage());
 		}
 		exploding = false;
 	}
 
+	//해빙: 얼음이 깨지며(원작 IceBlock이 녹고 얼음 조각) 불꽃이 튄다
 	private static void thaw( Char ch, int dmg ){
 		announce(ch, "thaw", 0x88CCFF);
-		if (ch.sprite != null){
+		if (seen(ch)){
+			Splash.at(ch.pos, 0xCCEEFF, 12);
+			ch.sprite.emitter().burst(FlameParticle.FACTORY, 12);
 			CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 8);
-			ch.sprite.emitter().burst(SnowParticle.FACTORY, 8);
 		}
 		Sample.INSTANCE.play(Assets.Sounds.SHATTER);
+		Sample.INSTANCE.play(Assets.Sounds.BURNING, 0.6f);
 		ch.damage(dmg, new ReactionDamage());
 	}
 
+	//빙결 생성: 눈보라 + 원작 IceBlock (Frost가 붙으면 자동으로 얼음 덩어리가 생긴다)
 	private static void freeze( Char ch ){
 		announce(ch, "freeze", 0x66AAFF);
+		if (seen(ch)){
+			ch.sprite.emitter().burst(SnowParticle.FACTORY, 20);
+			Splash.at(ch.pos, 0x99CCFF, 6);
+		}
+		Sample.INSTANCE.play(Assets.Sounds.SHATTER, 0.5f, 1.4f);
 		Buff.affect(ch, Frost.class, MazeTower.FREEZE_TURNS);
 	}
 
