@@ -31,6 +31,8 @@ import java.util.ArrayList;
 //  해빙: 빙결 + 화염       → 남은 화상 지속시간의 화상 피해 합계 × 2, 빙결·화상 해제
 //  빙결: 젖은 적 + 냉기    → 원작 Frost
 //
+//  젖음 + 화상            → 둘 다 해제 (모든 대상, 다른 반응보다 먼저)
+//
 //반응은 적(주인공·아군이 아닌 대상)에게만 일어난다. 주인공·아군은 원작처럼 서로 지우기만 한다.
 public class ElementalReactions {
 
@@ -59,6 +61,12 @@ public class ElementalReactions {
 
 	//화상이 붙기 직전 (Burning.attachTo)
 	public static boolean beforeBurning( Char ch, Burning burning ){
+		//젖음 + 화상: 어떤 대상이든 둘 다 사라진다 (다른 반응보다 먼저)
+		if (isWet(ch)){
+			Buff.detach(ch, Wet.class);
+			douse(ch);
+			return true;
+		}
 		if (!reacts(ch)){
 			Buff.detach(ch, Chill.class); //원작 처리
 			return false;
@@ -108,6 +116,25 @@ public class ElementalReactions {
 			return true;
 		}
 		return false;
+	}
+
+	//젖음이 붙기 직전 (Wet.attachTo): 불타고 있으면 둘 다 사라진다
+	public static boolean beforeWet( Char ch ){
+		Burning b = ch.buff(Burning.class);
+		if (b != null){
+			b.detach();
+			douse(ch);
+			return true;
+		}
+		return false;
+	}
+
+	//불이 꺼지는 효과 (반응 피해 없음)
+	private static void douse( Char ch ){
+		if (ch.sprite != null && Dungeon.level.heroFOV[ch.pos]){
+			CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 4);
+			Sample.INSTANCE.play(Assets.Sounds.BURNING, 0.5f);
+		}
 	}
 
 	//정전기가 붙은 직후 (StaticCharge.attachTo)

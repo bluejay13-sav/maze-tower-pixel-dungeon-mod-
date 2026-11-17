@@ -22,6 +22,13 @@ public class Wet extends Buff {
 
 	private int left = MazeTower.WET_AFTER_TURNS;
 
+	@Override
+	public boolean attachTo( com.shatteredpixel.shatteredpixeldungeon.actors.Char target ) {
+		//불타는 대상이 젖으면 화상과 젖음이 함께 사라진다
+		if (ElementalReactions.beforeWet(target)) return false;
+		return super.attachTo(target);
+	}
+
 	public static boolean onWater( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch ){
 		return Dungeon.level != null && Dungeon.level.water[ch.pos] && !ch.flying;
 	}
