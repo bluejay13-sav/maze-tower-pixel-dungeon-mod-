@@ -1055,6 +1055,10 @@ public class WndSettings extends WndTabbed {
 			add(sep1);
 
 			final ArrayList<Languages> langs = new ArrayList<>(Arrays.asList(Languages.values()));
+			//Maze Tower: 지원 언어(한국어, 영어)만 표시
+			for (Languages l : Languages.values()){
+				if (!l.supported()) langs.remove(l);
+			}
 
 			Languages nativeLang = Languages.matchLocale(Locale.getDefault());
 			langs.remove(nativeLang);

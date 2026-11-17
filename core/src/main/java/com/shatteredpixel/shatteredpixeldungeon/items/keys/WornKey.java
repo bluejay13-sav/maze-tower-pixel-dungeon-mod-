@@ -49,7 +49,8 @@ public class WornKey extends Key {
 
 	@Override
 	public boolean doPickUp(Hero hero, int pos) {
-		if(!SPDSettings.supportNagged()){
+		//Maze Tower: 구 처치 후 후원 안내 창 끔
+		if(false && !SPDSettings.supportNagged()){
 			try {
 				Dungeon.saveAll();
 				Game.runOnRenderThread(new Callback() {

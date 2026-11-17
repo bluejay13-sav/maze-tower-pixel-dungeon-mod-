@@ -97,15 +97,20 @@ public enum Languages {
 
 	public static Languages matchLocale(Locale locale){
 		//special case for chinese traditional, which matches more specifically than other languages
-		if (locale.getLanguage().equals("zh") && locale.toString().contains("Hant")){
+		if (CHI_TRAD.supported() && locale.getLanguage().equals("zh") && locale.toString().contains("Hant")){
 			return Languages.CHI_TRAD;
 		}
 		return matchCode(locale.getLanguage());
 	}
 
+	//Maze Tower: 한국어와 영어만 사용한다. 다른 언어 상수는 원작 코드 참조 때문에 남겨 두되 선택되지 않게 한다.
+	public boolean supported(){
+		return this == ENGLISH || this == KOREAN;
+	}
+
 	public static Languages matchCode(String code){
 		for (Languages lang : Languages.values()){
-			if (lang.code().equals(code))
+			if (lang.supported() && lang.code().equals(code))
 				return lang;
 		}
 		return ENGLISH;
