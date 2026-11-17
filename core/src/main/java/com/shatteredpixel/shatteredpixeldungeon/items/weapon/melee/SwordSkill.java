@@ -15,6 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
+import com.shatteredpixel.shatteredpixeldungeon.effects.SkillEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
@@ -154,6 +155,7 @@ public class SwordSkill {
 				hero.belongings.abilityWeapon = wep;
 				AttackIndicator.target(enemy);
 
+				SkillEffects.play(skill.nameKey, hero, enemy); //Maze Tower: 스킬 이펙트
 				active = skill;
 				for (int i = 0; i < skill.hits && enemy.isAlive(); i++){
 					if (hero.attack(enemy, skill.dmgPerHit, 0, skill.accMulti)){
