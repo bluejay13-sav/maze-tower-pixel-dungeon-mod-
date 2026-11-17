@@ -11,7 +11,6 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
 import com.watabou.noosa.Group;
 import com.watabou.utils.Callback;
 import com.watabou.utils.PointF;
-import com.watabou.utils.Random;
 
 //Maze Tower: 검 스킬 이펙트. 스킬 이름 기준이라 같은 이름의 스킬은 무기가 달라도 같은 이펙트를 쓴다.
 //여러 번 때리는 스킬은 SwordSkill이 타격 사이에 텀을 두고 타격마다 hit()를 부른다.
@@ -82,29 +81,41 @@ public class SkillEffects {
 		});
 	}
 
-	//연격: 짧은 궤적, 타격마다 번쩍. 타격마다 궤적 방향이 엇갈린다.
+	//연격: 타격마다 모양이 다르다. 짧은 사선 → 반대 사선(X자) → 크게 가로지르는 마무리. 타격마다 번쩍.
 	private static void flurry( Char hero, Char enemy, int index ){
 		float d = dir(hero, enemy);
-		float start = d - 0.8f + Random.Float(-0.6f, 0.6f);
-		float sweep = (index % 2 == 0) ? 1.6f : -1.6f;
-		if (sweep < 0) start += 1.6f;
-		new SlashTrail(8, 3, start, sweep, 0f, 0.06f, 0.15f)
-				.trailColor(WHITE)
-				.show(layer(enemy), pulledBack(enemy, d, 3));
+		switch (index){
+			case 0: //첫 번째 사선
+				new SlashTrail(9, 3, d - 1.3f, 1.4f, 0f, 0.06f, 0.16f)
+						.trailColor(WHITE).show(layer(enemy), pulledBack(enemy, d, 2));
+				break;
+			case 1: //반대 사선 (X자)
+				new SlashTrail(9, 3, d + 1.3f, -1.4f, 0f, 0.06f, 0.16f)
+						.trailColor(WHITE).show(layer(enemy), pulledBack(enemy, d, 2));
+				break;
+			default: //마무리: 더 크고 두껍게 가로지르고 불똥
+				new SlashTrail(13, 5, d - 1.2f, 2.4f, 0f, 0.08f, 0.22f)
+						.trailColor(PALE).show(layer(enemy), pulledBack(enemy, d, 5));
+				enemy.sprite.centerEmitter().burst(SparkParticle.FACTORY, 5);
+				break;
+		}
 		enemy.sprite.flash();
 	}
 
-	//반월베기: 반달 모양 궤적 + 은색 가루. 두 번째 타격은 반대 방향.
+	//반월베기: 반달 모양 궤적 + 은색 가루.
+	//첫 타는 작은 반달, 두 번째 타는 반대 방향으로 더 크고 두꺼운 반달에 은색 가루가 더 많이.
 	private static void crescent( Char hero, Char enemy, int index ){
 		float d = dir(hero, enemy);
-		PointF c = pulledBack(enemy, d, 4);
 		float half = (float)Math.PI / 2f;
 		if (index % 2 == 0){
-			new SlashTrail(14, 5, d - half,  (float)Math.PI, 0f, 0.12f, 0.22f)
-					.trailColor(PALE).sparkle(SilverParticle.FACTORY).show(layer(enemy), c);
+			new SlashTrail(12, 4, d - half,  (float)Math.PI, 0f, 0.12f, 0.22f)
+					.trailColor(PALE).sparkle(SilverParticle.FACTORY, 1)
+					.show(layer(enemy), pulledBack(enemy, d, 3));
 		} else {
-			new SlashTrail(14, 5, d + half, -(float)Math.PI, 0f, 0.12f, 0.22f)
-					.trailColor(PALE).sparkle(SilverParticle.FACTORY).show(layer(enemy), c);
+			new SlashTrail(16, 6, d + half, -(float)Math.PI, 0f, 0.14f, 0.28f)
+					.trailColor(WHITE).sparkle(SilverParticle.FACTORY, 3)
+					.show(layer(enemy), pulledBack(enemy, d, 5));
+			enemy.sprite.centerEmitter().burst(SilverParticle.FACTORY, 8);
 		}
 	}
 

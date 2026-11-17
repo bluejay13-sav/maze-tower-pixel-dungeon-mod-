@@ -83,7 +83,10 @@ public class SlashTrail extends Visual {
 	private Emitter.Factory sparkle;
 	private int sparkleDone = 0;
 
-	public SlashTrail sparkle( Emitter.Factory factory ){
+	private int sparkleCount = 2;
+
+	public SlashTrail sparkle( Emitter.Factory factory, int perSegment ){
+		sparkleCount = perSegment;
 		sparkle = factory;
 		return this;
 	}
@@ -96,7 +99,7 @@ public class SlashTrail extends Visual {
 			Emitter e = GameScene.emitter();
 			if (e == null) return;
 			e.pos(x + (float)Math.cos(a) * radius, y + (float)Math.sin(a) * radius);
-			e.burst(sparkle, 2);
+			e.burst(sparkle, sparkleCount);
 		}
 	}
 

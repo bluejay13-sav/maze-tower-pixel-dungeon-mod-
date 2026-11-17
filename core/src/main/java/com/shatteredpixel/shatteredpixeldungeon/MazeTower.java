@@ -42,7 +42,7 @@ public class MazeTower {
 	public static final int SKILL_MANA_COST = 30;
 
 	//여러 번 때리는 스킬(연격, 반월베기)의 타격 사이 텀 (초, 화면 연출용)
-	public static final float SKILL_HIT_INTERVAL = 0.18f;
+	public static final float SKILL_HIT_INTERVAL = 0.24f;
 
 	//피해 배율은 그 무기 평타 피해에 대한 비율 (1.5 = 150%)
 	public static final float SKILL_WORN_SHORTSWORD_DMG = 1.50f; //베기
