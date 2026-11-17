@@ -13,7 +13,10 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
+import com.watabou.noosa.tweeners.AlphaTweener;
+import com.watabou.noosa.tweeners.PosTweener;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Callback;
 import com.watabou.utils.PointF;
@@ -45,14 +48,41 @@ public class TalentEffects {
 		from.sprite.parent.add(new Beam.LightRay(from.sprite.center(), to.sprite.center()));
 	}
 
-	//그림자검: 잔상 일격 (대상에 그림자, 주인공에게 잔상)
+	//그림자검: 잔상 일격.
+	//보랏빛 반투명 주인공 잔상이 적에게 덤벼들며 사라지고, 적에게 보랏빛 베기 궤적과 그림자.
 	public static void shadowStrike( Char hero, Char enemy ){
-		if (visible(enemy)){
-			enemy.sprite.emitter().burst(ShadowParticle.CURSE, 8);
-		}
-		if (visible(hero)){
-			hero.sprite.emitter().burst(ShadowParticle.UP, 6);
-		}
+		if (!visible(hero) || !visible(enemy)) return;
+
+		//주인공 잔상
+		final Image ghost = new Image(hero.sprite);
+		ghost.flipHorizontal = hero.sprite.flipHorizontal;
+		ghost.x = hero.sprite.x;
+		ghost.y = hero.sprite.y;
+		ghost.hardlight(0.55f, 0.35f, 1f);
+		ghost.alpha(0.75f);
+		hero.sprite.parent.add(ghost);
+
+		//적 쪽으로 2/3쯤 덤벼든다
+		PointF to = new PointF(
+				hero.sprite.x + (enemy.sprite.x - hero.sprite.x) * 0.65f,
+				hero.sprite.y + (enemy.sprite.y - hero.sprite.y) * 0.65f);
+		hero.sprite.parent.add(new PosTweener(ghost, to, 0.12f));
+		hero.sprite.parent.add(new AlphaTweener(ghost, 0f, 0.35f){
+			@Override
+			protected void onComplete() {
+				super.onComplete();
+				ghost.killAndErase();
+			}
+		});
+
+		//보랏빛 잔상 베기 + 그림자
+		PointF h = hero.sprite.center(), e = enemy.sprite.center();
+		float d = (float)Math.atan2(e.y - h.y, e.x - h.x);
+		new SlashTrail(11, 3, d + 1.1f, -2.2f, 0.08f, 0.08f, 0.22f)
+				.trailColor(0xAA77FF)
+				.show(enemy.sprite.parent, new PointF(e.x - (float)Math.cos(d) * 5, e.y - (float)Math.sin(d) * 5));
+		enemy.sprite.emitter().burst(ShadowParticle.CURSE, 10);
+		enemy.sprite.showStatus(0xAA88FF, Messages.get(TalentEffects.class, "shadow"));
 	}
 
 	//연격(특성): 쌓이는 중첩 표시 (스킬 연격과 다른 노란 숫자)
