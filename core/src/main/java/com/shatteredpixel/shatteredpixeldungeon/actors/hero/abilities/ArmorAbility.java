@@ -101,7 +101,9 @@ public abstract class ArmorAbility implements Bundlable {
 	}
 
 	public String desc(){
-		return Messages.get(this, "desc") + "\n\n" + Messages.get(this, "cost", (int)baseChargeUse);
+		return Messages.get(this, "desc") + "\n\n" + Messages.get(this, "cost", (int)baseChargeUse)
+				//Maze Tower: 4차 능력에는 다른 전직 특성이 적용되지 않는다
+				+ (com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_TALENTS ? "" : "\n\n" + Messages.get(ArmorAbility.class, "maze_no_bloom"));
 	}
 
 	public int icon(){

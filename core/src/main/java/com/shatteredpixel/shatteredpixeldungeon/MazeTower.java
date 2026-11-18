@@ -272,4 +272,53 @@ public class MazeTower {
 	//으깨기 범위 (대상 중심 칸 수. 원작은 주인공 중심 3칸 = 7×7)
 	public static final int CRUSH_RADIUS = 2;
 
+	// ===== 4차 전직 (결실) =====
+
+	//20층 보스(드워프 왕)가 결실의 핵을 떨어뜨리는지 (왕의 왕관 대신)
+	public static final boolean DWARF_KING_DROPS_FRUIT_CORE = true;
+
+	//결실의 핵으로 고를 수 있는 4차 능력 (전사: 영웅의 도약 / 인내)
+	public static com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility[] fruitPaths( HeroClass cls ){
+		if (cls == HeroClass.WARRIOR){
+			return new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility[]{
+					new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.HeroicLeap(),
+					new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure()};
+		}
+		return new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility[0];
+	}
+
+	//4차 포인트: 결실의 핵을 쓸 때 + Lv21~25에 1씩
+	public static final int T4_CORE_POINTS = 3;
+	public static final int T4_FIRST_LEVEL = 21;
+	public static final int T4_LAST_LEVEL  = 25;
+
+	//특성 줄마다 레벨로 얻는 기본 포인트 수 (별 개수). 1차 Lv2~6, 3차 Lv13~20, 4차 핵 + Lv21~25
+	public static int tierRegularPoints( int tier ){
+		switch (tier){
+			case 1: return FIRST_TIER_LAST_LEVEL - FIRST_TIER_FIRST_LEVEL + 1;
+			case 3: return 8;
+			case 4: return T4_CORE_POINTS + T4_LAST_LEVEL - T4_FIRST_LEVEL + 1;
+			default: return 0;
+		}
+	}
+
+	// ===== 4차 특성 (배열은 [0레벨, 1레벨, 2레벨, 3레벨, 4레벨], 높은 레벨이 아래 레벨을 대체) =====
+
+	//영웅의 도약
+	public static final int LEAP_MAX_DIST = 5;
+	public static final int     T4_BODY_SLAM_FLAT  = 5;                              //몸통 박치기 기본 피해
+	public static final float[] T4_BODY_SLAM_ARMOR = {0f, 0.50f, 0.75f, 1.00f, 1.50f}; //+ 방어력 비율
+	public static final int     T4_IMPACT_PUSH     = 2;                              //충격파 밀침 칸
+	public static final float[] T4_IMPACT_VULN     = {0f, 0.25f, 0.50f, 0.75f, 1.00f}; //취약 확률
+	public static final float   T4_IMPACT_VULN_TURNS = 5f;
+	public static final float[] T4_DOUBLE_JUMP     = {0f, 0.16f, 0.30f, 0.40f, 0.50f}; //3턴 안에 다시 도약하면 충전 감소
+	public static final float   T4_DOUBLE_JUMP_TURNS = 3f;
+
+	//인내
+	public static final float[] T4_RETRIB_TOTAL = {1.00f, 1.20f, 1.50f, 1.80f, 2.10f}; //지속적인 응징: 추가 피해 총 배율
+	public static final int[]   T4_RETRIB_HITS  = {1, 2, 3, 3, 3};                   //나눠 주는 횟수
+	public static final float[] T4_SHRUG_REDUCE = {0.50f, 0.55f, 0.60f, 0.65f, 0.70f}; //무시하기: 피해 감소
+	public static final float   T4_ENDURE_AFTER = 10f; //인내가 끝난 뒤 추가 피해를 줄 수 있는 턴
+	public static final float[] T4_THORNS       = {0f, 0.06f, 0.09f, 0.12f, 0.15f};   //가시갑옷: 받은 피해 중 주변 적에게
+
 }

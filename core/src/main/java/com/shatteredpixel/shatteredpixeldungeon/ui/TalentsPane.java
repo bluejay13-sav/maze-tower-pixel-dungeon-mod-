@@ -250,6 +250,13 @@ public class TalentsPane extends ScrollPane {
 
 		}
 
+		//Maze Tower: 줄마다 레벨로 얻는 기본 포인트 수 (4차는 핵 사용 3 + Lv21~25)
+		private static int regularStars(int tier){
+			return MazeTower.ORIGINAL_TALENTS
+					? Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier]
+					: MazeTower.tierRegularPoints(tier);
+		}
+
 		private void setupStars(){
 			if (!stars.isEmpty()){
 				for (Image im : stars){
@@ -258,7 +265,7 @@ public class TalentsPane extends ScrollPane {
 				stars.clear();
 			}
 
-			int totStars = Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier] + Dungeon.hero.bonusTalentPoints(tier);
+			int totStars = regularStars(tier) + Dungeon.hero.bonusTalentPoints(tier);
 			int openStars = Dungeon.hero.talentPointsAvailable(tier);
 			int usedStars = Dungeon.hero.talentPointsSpent(tier);
 			for (int i = 0; i < totStars; i++){
@@ -283,7 +290,7 @@ public class TalentsPane extends ScrollPane {
 		protected void layout() {
 			super.layout();
 
-			int regStars = Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier];
+			int regStars = regularStars(tier);
 
 			float titleWidth = title.width();
 			titleWidth += 2 + Math.min(stars.size(), regStars)*6;
@@ -310,7 +317,7 @@ public class TalentsPane extends ScrollPane {
 			//별이 많으면 (기본 포인트 수 또는 들어가는 만큼씩) 여러 줄로 나눈다.
 			if (!MazeTower.ORIGINAL_TALENTS && !stars.isEmpty() && titleWidth > width - 4){
 				title.setPos(x + (width - title.width())/2f, y);
-				int baseRow = Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier];
+				int baseRow = regularStars(tier);
 				int perRow = Math.max(1, Math.min(baseRow, (int)((width - 4) / 6)));
 				float rowTop = title.bottom() + 2;
 				for (int i = 0; i < stars.size(); i += perRow){

@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility;
@@ -70,7 +71,7 @@ public class WndChooseAbility extends Window {
 						super.onSelect(index);
 						if (index == 0){
 							WndChooseAbility.this.hide();
-							ArmorAbility abil = Random.oneOf(hero.heroClass.armorAbilities());
+							ArmorAbility abil = Random.oneOf(paths(hero)); //Maze Tower
 							crown.upgradeArmor(hero, armor, abil);
 							GameScene.show(new WndInfoArmorAbility(hero.heroClass, abil));
 						}
@@ -96,7 +97,7 @@ public class WndChooseAbility extends Window {
 
 		RenderedTextBlock body = PixelScene.renderTextBlock( 6 );
 		if (crown != null) {
-			body.text(Messages.get(this, "message"), WIDTH);
+			body.text(Messages.get(this, MazeTower.ORIGINAL_ARMOR_ABILITY ? "message" : "maze_message"), WIDTH); //Maze Tower: 개화 특성 미적용 안내
 		} else {
 			body.text(Messages.get(this, "message_no_crown"), WIDTH);
 		}
@@ -104,7 +105,7 @@ public class WndChooseAbility extends Window {
 		add( body );
 
 		float pos = body.bottom() + 3*GAP;
-		for (ArmorAbility ability : hero.heroClass.armorAbilities()) {
+		for (ArmorAbility ability : paths(hero)) { //Maze Tower
 
 			RedButton abilityButton = new RedButton(ability.shortDesc(), 6){
 				@Override
@@ -161,6 +162,11 @@ public class WndChooseAbility extends Window {
 
 		resize(WIDTH, (int)pos);
 
+	}
+
+	//Maze Tower: 결실의 핵으로 고를 수 있는 4차 능력만 보인다
+	private static ArmorAbility[] paths(Hero hero){
+		return MazeTower.ORIGINAL_ARMOR_ABILITY ? hero.heroClass.armorAbilities() : MazeTower.fruitPaths(hero.heroClass);
 	}
 
 

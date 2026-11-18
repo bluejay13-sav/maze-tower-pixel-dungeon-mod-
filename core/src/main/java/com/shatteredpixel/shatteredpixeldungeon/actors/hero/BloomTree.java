@@ -47,6 +47,8 @@ public class BloomTree extends Buff {
 	public int firstTierBonus = 0;
 	//신성한 영감의 물약으로 얻은 3차(만개) 추가 포인트
 	public int thirdTierBonus = 0;
+	//신성한 영감의 물약으로 얻은 4차(결실) 추가 포인트
+	public int fourthTierBonus = 0;
 
 	//상태창에서 이미 본 칸 수 (새로 생긴 + 칸만 빛나며 등장하게)
 	public int seenSlots = 0;
@@ -235,6 +237,7 @@ public class BloomTree extends Buff {
 	private static final String BONUS    = "bonus_points";
 	private static final String FIRST_BONUS = "first_tier_bonus";
 	private static final String THIRD_BONUS = "third_tier_bonus";
+	private static final String FOURTH_BONUS = "fourth_tier_bonus";
 	private static final String SEEN     = "seen_slots";
 	private static final String COUNT    = "slot_count";
 	private static final String CHOSEN   = "slot_chosen_";
@@ -248,6 +251,7 @@ public class BloomTree extends Buff {
 		bundle.put(BONUS, bonusPoints);
 		bundle.put(FIRST_BONUS, firstTierBonus);
 		bundle.put(THIRD_BONUS, thirdTierBonus);
+		bundle.put(FOURTH_BONUS, fourthTierBonus);
 		bundle.put(SEEN, seenSlots);
 		bundle.put(COUNT, slots.size());
 		for (int i = 0; i < slots.size(); i++){
@@ -267,6 +271,7 @@ public class BloomTree extends Buff {
 		bonusPoints = bundle.getInt(BONUS);
 		firstTierBonus = bundle.getInt(FIRST_BONUS);
 		thirdTierBonus = bundle.getInt(THIRD_BONUS);
+		fourthTierBonus = bundle.getInt(FOURTH_BONUS);
 		seenSlots = bundle.getInt(SEEN);
 		slots.clear();
 		int count = bundle.getInt(COUNT);

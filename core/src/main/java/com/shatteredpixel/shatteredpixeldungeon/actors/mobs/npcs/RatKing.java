@@ -121,7 +121,8 @@ public class RatKing extends NPC {
 			return super.interact(c);
 		}
 
-		KingsCrown crown = Dungeon.hero.belongings.getItem(KingsCrown.class);
+		KingsCrown found = Dungeon.hero.belongings.getItem(KingsCrown.class);
+		final KingsCrown crown = found instanceof com.shatteredpixel.shatteredpixeldungeon.items.FruitCore ? null : found; //Maze Tower: 결실의 핵으로는 쥐 변신 능력을 얻지 않는다
 		if (state == SLEEPING) {
 			notice();
 			yell( Messages.get(this, "not_sleeping") );

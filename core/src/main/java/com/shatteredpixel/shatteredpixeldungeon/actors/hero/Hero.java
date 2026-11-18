@@ -399,6 +399,12 @@ public class Hero extends Char {
 			int levels = Math.max(0, Math.min(lvl, Talent.tierLevelThresholds[4] - 1) - Talent.tierLevelThresholds[3] + 1);
 			return levels + bonusTalentPoints(3) - talentPointsSpent(3);
 		}
+		//Maze Tower: 4차(결실) 줄은 결실의 핵을 쓰면 열리고, 핵 사용 포인트 + Lv21~25 레벨 포인트 + 물약 포인트
+		if (!MazeTower.ORIGINAL_TALENTS && tier == 4){
+			if (armorAbility == null) return 0;
+			int levels = Math.max(0, Math.min(lvl, MazeTower.T4_LAST_LEVEL) - MazeTower.T4_FIRST_LEVEL + 1);
+			return MazeTower.T4_CORE_POINTS + levels + bonusTalentPoints(4) - talentPointsSpent(4);
+		}
 		if (lvl < (Talent.tierLevelThresholds[tier] - 1)
 			|| (tier == 3 && subClass == HeroSubClass.NONE)
 			|| (tier == 4 && armorAbility == null)) {
@@ -415,6 +421,7 @@ public class Hero extends Char {
 		if (!MazeTower.ORIGINAL_TALENTS){
 			if (tier == 1) return BloomTree.get(this).firstTierBonus;
 			if (tier == 3 && subClass != HeroSubClass.NONE) return BloomTree.get(this).thirdTierBonus; //3차(만개) 줄
+			if (tier == 4 && armorAbility != null) return BloomTree.get(this).fourthTierBonus; //4차(결실) 줄
 			return 0;
 		}
 		if (lvl < (Talent.tierLevelThresholds[tier]-1)
@@ -2145,7 +2152,10 @@ public class Hero extends Char {
 						|| (!MazeTower.ORIGINAL_TALENTS && lvl < Talent.tierLevelThresholds[2])
 						//Maze Tower: 3차(만개) 포인트를 주는 레벨(13~20), 만개의 핵을 쓴 뒤
 						|| (!MazeTower.ORIGINAL_TALENTS && subClass != HeroSubClass.NONE
-							&& lvl >= Talent.tierLevelThresholds[3] && lvl < Talent.tierLevelThresholds[4])){
+							&& lvl >= Talent.tierLevelThresholds[3] && lvl < Talent.tierLevelThresholds[4])
+						//Maze Tower: 4차(결실) 포인트를 주는 레벨(21~25), 결실의 핵을 쓴 뒤
+						|| (!MazeTower.ORIGINAL_TALENTS && armorAbility != null
+							&& lvl >= MazeTower.T4_FIRST_LEVEL && lvl <= MazeTower.T4_LAST_LEVEL)){
 					GLog.newLine();
 					GLog.p( Messages.get(this, "new_talent") );
 					StatusPane.talentBlink = 10f;

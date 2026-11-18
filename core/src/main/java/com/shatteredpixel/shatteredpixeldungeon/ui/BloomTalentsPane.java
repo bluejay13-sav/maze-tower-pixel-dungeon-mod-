@@ -28,7 +28,7 @@ import com.watabou.noosa.ui.Component;
 
 import java.util.ArrayList;
 
-//Maze Tower: 상태창 특성 탭. 원작 TalentsPane 대신 1차(발아) / 2차(개화, 6칸) / 3차(만개) 줄을 보여 준다.
+//Maze Tower: 상태창 특성 탭. 원작 TalentsPane 대신 1차(발아) / 2차(개화, 6칸) / 3차(만개) / 4차(결실) 줄을 보여 준다.
 public class BloomTalentsPane extends ScrollPane {
 
 	private static final int SLOTS_PER_ROW = 3;
@@ -48,6 +48,12 @@ public class BloomTalentsPane extends ScrollPane {
 	private TalentsPane.TalentTierPane thirdTier;
 	private RenderedTextBlock thirdTitle;
 	private RenderedTextBlock thirdInfo;
+
+	//4차(결실) 줄: 결실의 핵을 쓰면 원작 특성 줄(4단계)로 보여 준다
+	private ColorBlock sep4;
+	private TalentsPane.TalentTierPane fourthTier;
+	private RenderedTextBlock fourthTitle;
+	private RenderedTextBlock fourthInfo;
 
 	public BloomTalentsPane() {
 		super(new Component());
@@ -124,6 +130,20 @@ public class BloomTalentsPane extends ScrollPane {
 			thirdTitle = part(PixelScene.renderTextBlock(Messages.get(this, "tier3"), 9));
 			thirdTitle.hardlight(Window.TITLE_COLOR);
 			thirdInfo = part(PixelScene.renderTextBlock(Messages.get(this, "tier3_locked"), 6));
+		}
+
+		//4차(결실) 줄
+		sep4 = part(new ColorBlock(1, 1, 0xFF000000));
+		fourthTier = null;
+		fourthTitle = null;
+		fourthInfo = null;
+		if (hero.armorAbility != null && !hero.talents.get(3).isEmpty()){
+			fourthTier = part(new TalentsPane.TalentTierPane(hero.talents.get(3), 4, TalentButton.Mode.UPGRADE));
+			fourthTier.title.text(Messages.get(this, "tier4_open", Messages.titleCase(hero.armorAbility.name())));
+		} else {
+			fourthTitle = part(PixelScene.renderTextBlock(Messages.get(this, "tier4"), 9));
+			fourthTitle.hardlight(Window.TITLE_COLOR);
+			fourthInfo = part(PixelScene.renderTextBlock(Messages.get(this, "tier4_locked"), 6));
 		}
 	}
 
@@ -203,6 +223,22 @@ public class BloomTalentsPane extends ScrollPane {
 			thirdInfo.maxWidth((int)width - 4);
 			thirdInfo.setPos(2, top);
 			top = thirdInfo.bottom() + 4;
+		}
+
+		sep4.x = 0;
+		sep4.y = top;
+		sep4.size(width, 1);
+		top += 3;
+		if (fourthTier != null){
+			fourthTier.setRect(0, top, width, 0);
+			top = fourthTier.bottom() + 4;
+		} else {
+			top += 1;
+			fourthTitle.setPos((width - fourthTitle.width())/2f, top);
+			top = fourthTitle.bottom() + 3;
+			fourthInfo.maxWidth((int)width - 4);
+			fourthInfo.setPos(2, top);
+			top = fourthInfo.bottom() + 4;
 		}
 
 		content.setSize(width, Math.max(height, top));

@@ -560,9 +560,13 @@ public class DwarfKing extends Mob {
 			h.destroy();
 		}
 
-		//Maze Tower: 원작 갑옷 능력(왕의 왕관)은 떨어뜨리지 않는다
+		//Maze Tower: 원작 갑옷 능력(왕의 왕관) 대신 결실의 핵
 		if (!MazeTower.ORIGINAL_ARMOR_ABILITY){
-			//떨어뜨리지 않음
+			//대신 결실의 핵(4차 전직)을 떨어뜨린다
+			if (MazeTower.DWARF_KING_DROPS_FRUIT_CORE && Dungeon.hero.armorAbility == null){
+				int at = pos == CityBossLevel.throne ? pos + Dungeon.level.width() : pos;
+				Dungeon.level.drop(new com.shatteredpixel.shatteredpixeldungeon.items.FruitCore(), at).sprite.drop(pos);
+			}
 		} else if (pos == CityBossLevel.throne){
 			Dungeon.level.drop(new KingsCrown(), pos + Dungeon.level.width()).sprite.drop(pos);
 		} else {

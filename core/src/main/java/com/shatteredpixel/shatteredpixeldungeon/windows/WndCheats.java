@@ -22,6 +22,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
 import com.shatteredpixel.shatteredpixeldungeon.items.FullBloomCore;
+import com.shatteredpixel.shatteredpixeldungeon.items.FruitCore;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornDagger;
@@ -81,6 +83,23 @@ public class WndCheats extends Window {
 			@Override
 			protected void onClick() {
 				give(new FullBloomCore());
+			}
+		});
+
+		addPair(new RedButton(Messages.get(this, "fruit_core"), 7){
+			@Override
+			protected void onClick() {
+				give(new FruitCore());
+			}
+		}, new RedButton(Messages.get(this, "armor_charge"), 7){
+			@Override
+			protected void onClick() {
+				if (!(Dungeon.hero.belongings.armor() instanceof ClassArmor)){
+					GLog.w(Messages.get(WndCheats.class, "no_class_armor"));
+					return;
+				}
+				((ClassArmor)Dungeon.hero.belongings.armor()).charge = 100;
+				Item.updateQuickslot();
 			}
 		});
 

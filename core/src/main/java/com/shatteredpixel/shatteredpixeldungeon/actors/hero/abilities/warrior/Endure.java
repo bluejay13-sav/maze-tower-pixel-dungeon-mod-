@@ -23,6 +23,7 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -41,6 +42,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Bundle;
+import com.watabou.utils.PathFinder;
 
 public class Endure extends ArmorAbility {
 
@@ -54,7 +56,8 @@ public class Endure extends ArmorAbility {
 		if (hero.buff(EndureTracker.class) != null){
 			hero.buff(EndureTracker.class).detach();
 		}
-		Buff.prolong(hero, EndureTracker.class, 12f);
+		//Maze Tower: 버티기 3턴 + 끝난 뒤 10턴 (원작 12턴)
+		Buff.prolong(hero, EndureTracker.class, MazeTower.ORIGINAL_TALENTS ? 12f : 3f + MazeTower.T4_ENDURE_AFTER);
 
 		Combo combo = hero.buff(Combo.class);
 		if (combo != null){
@@ -103,6 +106,13 @@ public class Endure extends ArmorAbility {
 			if (enduring) {
 				damageBonus += damage/2;
 
+				//Maze Tower: 무시하기 50→55/60/65/70% 감소, 가시갑옷 (받은 피해 일부를 주변 1칸의 적에게)
+				if (!MazeTower.ORIGINAL_TALENTS){
+					Hero hero = Dungeon.hero;
+					thorns(hero, damage);
+					return damage * (1f - MazeTower.T4_SHRUG_REDUCE[Math.min(4, hero.pointsInTalent(Talent.SHRUG_IT_OFF))]);
+				}
+
 				float damageMulti = 0.5f;
 				if (Dungeon.hero.hasTalent(Talent.SHRUG_IT_OFF)){
 					//total damage reduction is 60%/68%/74%/80%, based on points in talent
@@ -120,6 +130,22 @@ public class Endure extends ArmorAbility {
 			}
 
 			enduring = false;
+
+			//Maze Tower: 지속적인 응징 - 추가 피해를 2~3회로 나눠 총 120/150/180/210%
+			if (!MazeTower.ORIGINAL_TALENTS){
+				int lvl = Math.min(4, Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION));
+				hitsLeft = MazeTower.T4_RETRIB_HITS[lvl];
+				damageBonus = Math.round(damageBonus * MazeTower.T4_RETRIB_TOTAL[lvl] / hitsLeft);
+				if (damageBonus > 0) {
+					target.sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.3f, 3 );
+					Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
+					SpellSprite.show(target, SpellSprite.BERSERK);
+				} else {
+					detach();
+				}
+				return;
+			}
+
 			damageBonus *= 1f + 0.15f*Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION);
 
 			int nearby = 0;
@@ -139,6 +165,20 @@ public class Endure extends ArmorAbility {
 				SpellSprite.show(target, SpellSprite.BERSERK);
 			} else {
 				detach();
+			}
+		}
+
+		//Maze Tower: 가시갑옷 - 버티는 동안 받은 피해(경감 전, 방어력 계산 전)의 일부를 주변 1칸의 적에게
+		private void thorns(Hero hero, float damage){
+			int lvl = Math.min(4, hero.pointsInTalent(Talent.EVEN_THE_ODDS));
+			int amt = Math.round(damage * MazeTower.T4_THORNS[lvl]);
+			if (amt <= 0) return;
+			for (int i : PathFinder.NEIGHBOURS8){
+				Char ch = Actor.findChar(target.pos + i);
+				if (ch != null && ch.alignment == Char.Alignment.ENEMY && ch.isAlive()){
+					ch.damage(amt, hero);
+					if (ch.sprite != null) ch.sprite.flash();
+				}
 			}
 		}
 
