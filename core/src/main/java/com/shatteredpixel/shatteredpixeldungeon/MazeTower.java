@@ -13,8 +13,11 @@ public class MazeTower {
 
 	// ===== 주인공 =====
 
-	//직업 선택 없이 시작하는 주인공 (내부적으로 원작 직업 하나를 재사용)
-	public static final HeroClass HERO = HeroClass.WARRIOR;
+	//선택할 수 있는 직업: 전사·마법사·도적·사냥꾼 (결투가·성직자는 선택 불가). 해금은 원작대로.
+	public static boolean isPlayableClass( HeroClass cls ){
+		return cls == HeroClass.WARRIOR || cls == HeroClass.MAGE
+				|| cls == HeroClass.ROGUE || cls == HeroClass.HUNTRESS;
+	}
 
 	//원작 직업 특성(1~4층 특성 줄)을 쓸지 여부
 	public static final boolean ORIGINAL_TALENTS = false;
@@ -26,7 +29,7 @@ public class MazeTower {
 	public static final boolean ORIGINAL_ARMOR_ABILITY = false;
 
 	//원작 전사의 부서진 인장(방어막)을 시작 장비로 줄지 여부
-	public static final boolean WARRIOR_SEAL = false;
+	public static final boolean WARRIOR_SEAL = true; //(결정) 직업 단계부터 다시 준다
 
 	// ===== 마나 =====
 

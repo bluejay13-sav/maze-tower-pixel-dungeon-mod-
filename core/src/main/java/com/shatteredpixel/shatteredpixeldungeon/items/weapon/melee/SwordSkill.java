@@ -68,7 +68,7 @@ public class SwordSkill {
 
 	//이 영웅이 마나 스킬을 쓰는지 (결투가는 원작 능력을 그대로 쓴다)
 	public static boolean heroUsesSkills(Hero hero){
-		return hero != null && hero.heroClass == MazeTower.HERO && hero.heroClass != HeroClass.DUELIST;
+		return hero != null && MazeTower.isPlayableClass(hero.heroClass); //4직업 모두 마나 스킬
 	}
 
 	public static int manaCost(Hero hero){

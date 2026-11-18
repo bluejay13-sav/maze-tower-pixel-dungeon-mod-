@@ -194,8 +194,8 @@ public class HeroSelectScene extends PixelScene {
 		add(infoButton);
 
 		for (HeroClass cl : HeroClass.values()){
-			//Maze Tower: 주인공 하나만 표시
-			if (cl != MazeTower.HERO) continue;
+			//Maze Tower: 전사·마법사·도적·사냥꾼만 표시 (결투가·성직자 숨김)
+			if (!MazeTower.isPlayableClass(cl)) continue;
 			HeroBtn button = new HeroBtn(cl);
 			add(button);
 			heroBtns.add(button);
@@ -391,8 +391,8 @@ public class HeroSelectScene extends PixelScene {
 		add(fadeResetter);
 		resetFade();
 
-		//Maze Tower: 직업 선택 없이 주인공을 미리 고른다
-		GamesInProgress.selectedClass = MazeTower.HERO;
+		//Maze Tower: 선택할 수 없는 직업(결투가·성직자)이 골라져 있으면 비운다
+		if (GamesInProgress.selectedClass != null && !MazeTower.isPlayableClass(GamesInProgress.selectedClass)) GamesInProgress.selectedClass = null;
 
 		if (GamesInProgress.selectedClass != null){
 			setSelectedHero(GamesInProgress.selectedClass);
@@ -831,8 +831,8 @@ public class HeroSelectScene extends PixelScene {
 
 			int unlockedCount = 0;
 			for (HeroClass cls : HeroClass.values()){
-				//Maze Tower: 주인공 하나만 셈
-				if (cls == MazeTower.HERO && cls.isUnlocked()) unlockedCount++;
+				//Maze Tower: 선택할 수 있는 직업만 셈
+				if (MazeTower.isPlayableClass(cls) && cls.isUnlocked()) unlockedCount++;
 			}
 
 			if (unlockedCount >= 2) {
@@ -847,7 +847,7 @@ public class HeroSelectScene extends PixelScene {
 							HeroClass randomCls;
 							do {
 								randomCls = Random.oneOf(HeroClass.values());
-							} while (!randomCls.isUnlocked());
+							} while (!randomCls.isUnlocked() || !MazeTower.isPlayableClass(randomCls)); //Maze Tower: 4직업 중에서만
 							setSelectedHero(randomCls);
 							GamesInProgress.randomizedClass = true;
 						}
@@ -947,7 +947,7 @@ public class HeroSelectScene extends PixelScene {
 							HeroClass randomCls;
 							do {
 								randomCls = Random.oneOf(HeroClass.values());
-							} while (!randomCls.isUnlocked());
+							} while (!randomCls.isUnlocked() || !MazeTower.isPlayableClass(randomCls)); //Maze Tower: 4직업 중에서만
 							setSelectedHero(randomCls);
 							GamesInProgress.randomizedClass = true;
 						} else {

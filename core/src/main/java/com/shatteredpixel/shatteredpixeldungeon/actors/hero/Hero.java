@@ -404,6 +404,10 @@ public class Hero extends Char {
 	}
 
 	public int bonusTalentPoints(int tier){
+		//Maze Tower: 신성한 영감의 물약은 1차 줄에 +1씩(최대 +3) 준다. 그 값은 BloomTree에 저장된다.
+		if (!MazeTower.ORIGINAL_TALENTS){
+			return tier == 1 ? BloomTree.get(this).firstTierBonus : 0;
+		}
 		if (lvl < (Talent.tierLevelThresholds[tier]-1)
 				|| (tier == 3 && subClass == HeroSubClass.NONE)
 				|| (tier == 4 && armorAbility == null)) {
@@ -2109,8 +2113,9 @@ public class Hero extends Char {
 				GLog.p( Messages.get(this, "new_level") );
 				sprite.showStatus( CharSprite.POSITIVE, Messages.get(Hero.class, "level_up") );
 				Sample.INSTANCE.play( Assets.Sounds.LEVELUP );
-				//Maze Tower: 원작 특성을 쓰지 않으면 "새 특성 포인트" 알림을 띄우지 않는다
-				if (MazeTower.ORIGINAL_TALENTS && lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){
+				//Maze Tower: 원작 특성 대신 1차(발아) 줄만 쓰므로 1차 포인트를 주는 레벨(2~6)에서만 알린다
+				if ((MazeTower.ORIGINAL_TALENTS && lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1])
+						|| (!MazeTower.ORIGINAL_TALENTS && lvl < Talent.tierLevelThresholds[2])){
 					GLog.newLine();
 					GLog.p( Messages.get(this, "new_talent") );
 					StatusPane.talentBlink = 10f;

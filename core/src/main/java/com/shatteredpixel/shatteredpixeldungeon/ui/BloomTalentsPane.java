@@ -34,8 +34,7 @@ public class BloomTalentsPane extends ScrollPane {
 
 	private final ArrayList<Gizmo> parts = new ArrayList<>();
 
-	private RenderedTextBlock firstTitle;
-	private RenderedTextBlock firstInfo;
+	private TalentsPane.TalentTierPane firstTier; //1차(발아) 줄: 원작 특성 줄을 그대로 쓴다
 	private ColorBlock sep;
 	private RenderedTextBlock secondTitle;
 	private RenderedTextBlock secondInfo;
@@ -57,11 +56,9 @@ public class BloomTalentsPane extends ScrollPane {
 		BloomTree tree = BloomTree.get(hero);
 		tree.sync(hero);
 
-		//1차 줄 (1차 능력은 미완성)
-		firstTitle = part(PixelScene.renderTextBlock(Messages.get(this, "tier1"), 9));
-		firstTitle.hardlight(Window.TITLE_COLOR);
-		firstInfo = part(PixelScene.renderTextBlock(
-				Messages.get(this, "tier1_info", tree.firstTierTotal(hero)), 6));
+		//1차(발아) 줄: 직업 특성 5개, 원작처럼 별(포인트)을 보고 특성을 눌러 포인트를 넣는다
+		firstTier = part(new TalentsPane.TalentTierPane(hero.talents.get(0), 1, TalentButton.Mode.UPGRADE));
+		firstTier.title.text(Messages.get(this, "tier1"));
 
 		sep = part(new ColorBlock(1, 1, 0xFF000000));
 
@@ -106,11 +103,8 @@ public class BloomTalentsPane extends ScrollPane {
 
 		float top = 2;
 
-		firstTitle.setPos((width - firstTitle.width())/2f, top);
-		top = firstTitle.bottom() + 3;
-		firstInfo.maxWidth((int)width - 4);
-		firstInfo.setPos(2, top);
-		top = firstInfo.bottom() + 4;
+		firstTier.setRect(0, top, width, 0);
+		top = firstTier.bottom() + 4;
 
 		sep.x = 0;
 		sep.y = top;

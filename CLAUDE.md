@@ -365,6 +365,8 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 | 숲의 감각 | 탐색 범위 +1칸 | 탐색 범위 +2칸, 5칸 안의 가장 가까운 적 1마리를 항상 볼 수 있음 |
 
 - 원작 특성과 이름이 같은 것은 원작 구현을 참고하고 수치만 바꾼다.
+- (구현) 1차 특성은 원작 Talent를 재사용한다(`Talent.sproutTalents`): 마력이 깃든 식사=EMPOWERING_MEAL, 격투술=FOLLOWUP_STRIKE, 조용한 걸음=SILENT_STEPS, 숲의 감각=HEIGHTENED_SENSES. 투지(GRIT)·마나 순환(MANA_CYCLE)은 새로 추가. 19단계 전까지 원작 이름·효과로 동작하는 것이 있다.
+- (구현) 1차 포인트 = Lv2~6 레벨 포인트 + 신성한 영감의 물약(`BloomTree.firstTierBonus`, `Hero.bonusTalentPoints`).
 - 최대 마나 증가(푸짐한 식사·마력이 깃든 식사)는 영구이고 저장된다. 두 특성은 직업이 달라 겹치지 않는다.
 
 ## 구현 순서 (단계마다 사용자 확인) — 모두 완료

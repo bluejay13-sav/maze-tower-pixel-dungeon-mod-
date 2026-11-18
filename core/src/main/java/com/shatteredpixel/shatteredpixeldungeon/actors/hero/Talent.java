@@ -201,7 +201,11 @@ public enum Talent {
 	//universal T4
 	HEROIC_ENERGY(26, 4), //See icon() and title() for special logic for this one
 	//Ratmogrify T4
-	RATSISTANCE(215, 4), RATLOMACY(216, 4), RATFORCEMENTS(217, 4);
+	RATSISTANCE(215, 4), RATLOMACY(216, 4), RATFORCEMENTS(217, 4),
+
+	//Maze Tower: 1차(발아) 특성 중 원작에 없는 것 (아이콘은 임시로 원작 아이콘 재사용)
+	GRIT(12),       //전사 투지
+	MANA_CYCLE(40); //마법사 마나 순환
 
 	public static class ImprovisedProjectileCooldown extends FlavourBuff{
 		public int icon() { return BuffIndicator.TIME; }
@@ -961,14 +965,36 @@ public enum Talent {
 	public static final int MAX_TALENT_TIERS = 4;
 
 	public static void initClassTalents( Hero hero ){
-		//Maze Tower: 원작 직업 특성은 얻을 수 없다. 특성 줄은 비워 둔다.
+		//Maze Tower: 원작 직업 특성(1~4단계) 대신 1차(발아) 특성 5개만 1단계 줄에 둔다. 2~4단계 줄은 비워 둔다.
 		if (!MazeTower.ORIGINAL_TALENTS){
 			while (hero.talents.size() < MAX_TALENT_TIERS){
 				hero.talents.add(new LinkedHashMap<>());
 			}
+			for (Talent t : sproutTalents(hero.heroClass)){
+				if (!hero.talents.get(0).containsKey(t)) hero.talents.get(0).put(t, 0);
+			}
 			return;
 		}
 		initClassTalents( hero.heroClass, hero.talents, hero.metamorphedTalents );
+	}
+
+	//Maze Tower: 직업별 1차(발아) 특성 5개 (명세 11번).
+	//원작과 이름이 같거나 비슷한 것은 원작 특성을 재사용하고, 효과·수치는 19단계에서 명세대로 바꾼다.
+	public static Talent[] sproutTalents( HeroClass cls ){
+		switch (cls){
+			case WARRIOR: default:
+				//푸짐한 식사, 베테랑의 직감, 분노 자극, 강철의 의지, 투지
+				return new Talent[]{HEARTY_MEAL, VETERANS_INTUITION, PROVOKED_ANGER, IRON_WILL, GRIT};
+			case MAGE:
+				//마력이 깃든 식사, 학자의 직감, 잔류 마력, 예비 방어막, 마나 순환
+				return new Talent[]{EMPOWERING_MEAL, SCHOLARS_INTUITION, LINGERING_MAGIC, BACKUP_BARRIER, MANA_CYCLE};
+			case ROGUE:
+				//은닉한 보존식, 도둑의 직감, 불시의 타격, 보호의 그림자, 조용한 걸음
+				return new Talent[]{CACHED_RATIONS, THIEFS_INTUITION, SUCKER_PUNCH, PROTECTIVE_SHADOWS, SILENT_STEPS};
+			case HUNTRESS:
+				//자연의 은혜, 생존자의 직감, 격투술, 자연의 도움, 숲의 감각
+				return new Talent[]{NATURES_BOUNTY, SURVIVALISTS_INTUITION, FOLLOWUP_STRIKE, NATURES_AID, HEIGHTENED_SENSES};
+		}
 	}
 
 	public static void initClassTalents( HeroClass cls, ArrayList<LinkedHashMap<Talent, Integer>> talents){
