@@ -23,6 +23,8 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.TalentEffects;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.watabou.noosa.audio.Sample;
@@ -444,10 +446,10 @@ public class BloomEffects {
 		}
 		shock(hero, enemy, shockDmg);
 
-		//인접한 적 1명에게 전이
+		//인접한 1명에게 전이 (적뿐 아니라 옆에 있는 주인공·아군에게도 튈 수 있다)
 		ArrayList<Char> near = new ArrayList<>();
 		for (Char c : Actor.chars()){
-			if (c != enemy && c != hero && c.alignment == Char.Alignment.ENEMY && c.isAlive()
+			if (c != enemy && c.isAlive()
 					&& Dungeon.level.adjacent(enemy.pos, c.pos)){
 				near.add(c);
 			}
@@ -474,7 +476,14 @@ public class BloomEffects {
 	}
 
 	//전격 피해의 출처 표시용
-	public static class ShockDamage {}
+	//전격 피해의 출처. 주인공이 튄 번개에 맞아 죽으면 사망 기록을 남긴다.
+	public static class ShockDamage implements Hero.Doom {
+		@Override
+		public void onDeath() {
+			Dungeon.fail(this);
+			GLog.n(Messages.get(BloomEffects.class, "shock_death"));
+		}
+	}
 
 	// =====================================================================
 	// 상태이상 판정
