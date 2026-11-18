@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -39,6 +40,7 @@ public class BloomTalentsPane extends ScrollPane {
 	private ColorBlock sep;
 	private RenderedTextBlock secondTitle;
 	private RenderedTextBlock secondInfo;
+	private final ArrayList<Image> secondStars = new ArrayList<>(); //2차 포인트 별 (1차·3차 줄과 같은 모양)
 	private final ArrayList<SlotButton> slotButtons = new ArrayList<>();
 
 	//3차(만개) 줄: 만개의 핵을 쓰면 원작 특성 줄(3단계)로 보여 준다
@@ -77,9 +79,27 @@ public class BloomTalentsPane extends ScrollPane {
 		if (!tree.unlocked){
 			info = Messages.get(this, "tier2_locked");
 		} else {
-			info = Messages.get(this, "tier2_points", tree.pointsAvailable(hero), tree.pointsEarned(hero));
+			info = Messages.get(this, "tier2_hint");
 		}
 		secondInfo = part(PixelScene.renderTextBlock(info, 6));
+
+		//남은 포인트는 별로: 밝은 별 = 쓸 수 있는 포인트, 회색 = 쓴 포인트, 어두운 별 = 아직 얻지 못한 포인트
+		secondStars.clear();
+		if (tree.unlocked){
+			int regular = MazeTower.BLOOM_LAST_LEVEL - MazeTower.BLOOM_FIRST_LEVEL + 1;
+			int total = regular + tree.bonusPoints;
+			int open = tree.pointsAvailable(hero);
+			int used = tree.pointsSpent();
+			for (int i = 0; i < total; i++){
+				Image im = part(new Speck().image(Speck.STAR));
+				secondStars.add(im);
+				if (i >= open && i < open + used){
+					im.tint(0.75f, 0.75f, 0.75f, 0.9f);
+				} else if (i >= open + used){
+					im.tint(0f, 0f, 0f, 0.9f);
+				}
+			}
+		}
 
 		slotButtons.clear();
 		for (int i = 0; i < MazeTower.BLOOM_SLOTS; i++){
@@ -132,8 +152,27 @@ public class BloomTalentsPane extends ScrollPane {
 		sep.size(width, 1);
 		top += 4;
 
-		secondTitle.setPos((width - secondTitle.width())/2f, top);
-		top = secondTitle.bottom() + 3;
+		//제목 + 별을 가운데에 (원작 특성 줄과 같은 배치, 기본 5개를 넘는 별은 다음 줄)
+		int regStars = MazeTower.BLOOM_LAST_LEVEL - MazeTower.BLOOM_FIRST_LEVEL + 1;
+		float titleWidth = secondTitle.width() + (secondStars.isEmpty() ? 0 : 2 + Math.min(secondStars.size(), regStars)*6);
+		secondTitle.setPos((width - titleWidth)/2f, top);
+		float starLeft = secondTitle.right() + 2;
+		float starTop = secondTitle.top();
+		if (regStars < secondStars.size()) starTop -= 2;
+		float bottom = secondTitle.bottom();
+		int n = regStars;
+		for (Image star : secondStars){
+			star.x = starLeft;
+			star.y = starTop;
+			PixelScene.align(star);
+			bottom = Math.max(bottom, star.y + star.height());
+			starLeft += 6;
+			if (--n == 0){
+				starTop += 6;
+				starLeft = secondTitle.right() + 2;
+			}
+		}
+		top = bottom + 3;
 		secondInfo.maxWidth((int)width - 4);
 		secondInfo.setPos(2, top);
 		top = secondInfo.bottom() + 4;

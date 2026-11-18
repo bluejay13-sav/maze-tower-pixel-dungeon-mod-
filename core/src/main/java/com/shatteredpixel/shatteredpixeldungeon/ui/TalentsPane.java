@@ -23,6 +23,7 @@ package com.shatteredpixel.shatteredpixeldungeon.ui;
 
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
@@ -162,6 +163,7 @@ public class TalentsPane extends ScrollPane {
 	public static class TalentTierPane extends Component {
 
 		private int tier;
+		private TalentButton.Mode mode; //Maze Tower
 
 		public RenderedTextBlock title;
 		ArrayList<TalentButton> buttons;
@@ -173,6 +175,7 @@ public class TalentsPane extends ScrollPane {
 			super();
 
 			this.tier = tier;
+			this.mode = mode; //Maze Tower
 
 			title = PixelScene.renderTextBlock(Messages.titleCase(Messages.get(TalentsPane.class, "tier", tier)), 9);
 			title.hardlight(Window.TITLE_COLOR);
@@ -303,14 +306,22 @@ public class TalentsPane extends ScrollPane {
 				}
 			}
 
-			if (random != null){
+			//Maze Tower: 무작위 버튼은 별 옆이 아니라 별보다 살짝 아래 오른쪽에 둔다.
+			//그 줄은 버튼이 사라져도 비워 두어(특성을 올려도 높이가 바뀌지 않게) 특성 버튼은 그 아래에 놓는다.
+			float buttonTop = title.bottom() + 4;
+			if (!MazeTower.ORIGINAL_TALENTS && mode == TalentButton.Mode.UPGRADE){
+				float starsBottom = stars.isEmpty() ? title.bottom() : stars.get(stars.size()-1).y + stars.get(stars.size()-1).height();
+				float randomTop = Math.max(title.bottom(), starsBottom) + 1;
+				if (random != null) random.setRect(x + width - 16, randomTop, 16, 14);
+				buttonTop = randomTop + 14 + 1;
+			} else if (random != null){
 				random.setRect(width - 16, y-2, 16, 14);
 			}
 
 			float gap = (width - buttons.size()*TalentButton.WIDTH)/(buttons.size()+1);
 			left = x + gap;
 			for (TalentButton btn : buttons){
-				btn.setPos(left, title.bottom() + 4);
+				btn.setPos(left, buttonTop); //Maze Tower: 무작위 버튼 줄 아래
 				PixelScene.align(btn);
 				left += btn.width() + gap;
 			}
