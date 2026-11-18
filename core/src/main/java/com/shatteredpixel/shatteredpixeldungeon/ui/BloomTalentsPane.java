@@ -311,10 +311,10 @@ public class BloomTalentsPane extends ScrollPane {
 		Sample.INSTANCE.play(Assets.Sounds.LEVELUP, 0.8f, 1.0f);
 	}
 
-	//강화했을 때: 번쩍
+	//강화했을 때: 소리만
 	public void celebrate(int index){
 		if (index < 0 || index >= slotButtons.size()) return;
-		slotButtons.get(index).flash();
+		//강화는 번쩍임 없이 소리만 (얻을 때만 한 번 번쩍인다)
 		Sample.INSTANCE.play(Assets.Sounds.LEVELUP, 0.7f, 1.2f);
 	}
 }

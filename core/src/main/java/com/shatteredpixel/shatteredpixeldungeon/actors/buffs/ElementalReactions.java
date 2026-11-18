@@ -12,6 +12,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM100;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.watabou.utils.PathFinder;
@@ -44,7 +46,14 @@ import java.util.ArrayList;
 public class ElementalReactions {
 
 	//반응 피해의 출처 표시용
-	public static class ReactionDamage {}
+	//반응 피해의 출처. 주인공이 반응(폭발 등)에 휘말려 죽으면 사망 기록을 남긴다.
+	public static class ReactionDamage implements Hero.Doom {
+		@Override
+		public void onDeath() {
+			Dungeon.fail(this);
+			GLog.n(Messages.get(ElementalReactions.class, "ondeath"));
+		}
+	}
 
 	//상태이상이 걸려 있는 동안 몸에서 계속 나오는 입자 (정전기 스파크, 젖음 물방울).
 	//원작은 죽을 때 버프를 떼지 않으므로, 대상이 죽으면 스스로 멈추고 안 보일 때는 숨긴다.
@@ -271,7 +280,8 @@ public class ElementalReactions {
 
 		ArrayList<Char> hit = new ArrayList<>();
 		for (Char c : Actor.chars()){
-			if (c.isAlive() && c.alignment == Char.Alignment.ENEMY
+			//폭발은 적·주인공·아군 가리지 않고 1칸 안의 모두에게
+			if (c.isAlive()
 					&& Dungeon.level.distance(ch.pos, c.pos) <= 1){
 				hit.add(c);
 			}
