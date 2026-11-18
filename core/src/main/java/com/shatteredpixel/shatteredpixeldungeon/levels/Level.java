@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.levels;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -47,6 +48,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RevealedArea;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Shadows;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.SproutEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
@@ -1435,7 +1437,7 @@ public abstract class Level implements Bundlable {
 			if (c.buff(MindVision.class) != null) {
 				mindVisRange = Integer.MAX_VALUE;
 			} else {
-				if (((Hero) c).hasTalent(Talent.HEIGHTENED_SENSES)) {
+				if (MazeTower.ORIGINAL_TALENTS && ((Hero) c).hasTalent(Talent.HEIGHTENED_SENSES)) { //Maze Tower: 숲의 감각은 아래
 					mindVisRange = 1 + ((Hero) c).pointsInTalent(Talent.HEIGHTENED_SENSES);
 				}
 				if (c.buff(DivineSense.DivineSenseTracker.class) != null) {
@@ -1470,6 +1472,14 @@ public abstract class Level implements Bundlable {
 				}
 			}
 			
+			//Maze Tower: 숲의 감각 2레벨 - 가까운 적 1마리를 늘 본다
+			Mob tracked = SproutEffects.trackedEnemy((Hero) c);
+			if (tracked != null && !fieldOfView[tracked.pos]) {
+				for (int i : PathFinder.NEIGHBOURS9) {
+					heroMindFov[tracked.pos + i] = true;
+				}
+			}
+
 			if (c.buff( Awareness.class ) != null) {
 				for (Heap heap : heaps.valueList()) {
 					int p = heap.pos;

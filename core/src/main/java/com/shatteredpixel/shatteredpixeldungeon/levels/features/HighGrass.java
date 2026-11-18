@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.levels.features;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -92,13 +93,13 @@ public class HighGrass {
 
 				//berries try to drop on floors 2/3/4/6/7/8, to a max of 4/6
 				if (ch instanceof Hero && ((Hero) ch).hasTalent(Talent.NATURES_BOUNTY)){
-					int berriesAvailable = 2 + 2*((Hero) ch).pointsInTalent(Talent.NATURES_BOUNTY);
+					int berriesAvailable = MazeTower.T1_BERRIES[Math.min(2, ((Hero) ch).pointsInTalent(Talent.NATURES_BOUNTY))]; //Maze Tower: 자연의 은혜 5/8개
 
 					Talent.NatureBerriesDropped dropped = Buff.affect(ch, Talent.NatureBerriesDropped.class);
 					berriesAvailable -= dropped.count();
 
 					if (berriesAvailable > 0) {
-						int targetFloor = 2 + 2 * ((Hero) ch).pointsInTalent(Talent.NATURES_BOUNTY);
+						int targetFloor = MazeTower.T1_BERRIES[Math.min(2, ((Hero) ch).pointsInTalent(Talent.NATURES_BOUNTY))]; //Maze Tower
 						targetFloor -= berriesAvailable;
 						targetFloor += (targetFloor >= 5) ? 3 : 2;
 

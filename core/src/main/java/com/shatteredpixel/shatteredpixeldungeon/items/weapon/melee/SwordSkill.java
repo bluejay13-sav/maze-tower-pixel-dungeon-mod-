@@ -15,6 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.SproutEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SkillEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -188,6 +189,7 @@ public class SwordSkill {
 		final boolean surprise = skill.surpriseDmg > 0 && enemy instanceof Mob && ((Mob)enemy).surprisedBy(hero, true);
 		BloomEffects.beginSkill(hero, enemy, cost); //마나가 가득 찼는지, 집중 상태 기록
 		Mana.get(hero).spend(cost);
+		SproutEffects.onSkillUsed(hero); //1차 특성: 투지
 
 		hero.busy();
 		Callback strike = new Callback() {

@@ -83,6 +83,41 @@ public class MazeTower {
 	//투척 무기 분해: 1개당 (티어 × 이 값)발, 저주받은 것은 절반
 	public static final int ARROWS_PER_THROWN_TIER = 5;
 
+	// ===== 1차 특성 (발아). 배열은 [0레벨, 1레벨, 2레벨] =====
+
+	//전사
+	public static final int[]   T1_HEARTY_HEAL       = {0, 5, 8};      //푸짐한 식사: 체력 33% 이하일 때 먹으면 회복
+	public static final float   T1_HEARTY_HP         = 0.334f;
+	public static final int     T1_HEARTY_MANA       = 5;              //푸짐한 식사 2: 먹을 때마다 최대 마나
+	public static final int     T1_MEAL_MANA_TIMES   = 5;              //식사로 최대 마나가 오르는 최대 횟수
+	public static final float   T1_VETERAN_WEAPON_ID = 2f;             //베테랑의 직감: 무기 감정 속도
+	public static final int[]   T1_PROVOKED_DMG      = {0, 3, 6};      //분노 자극
+	public static final int[]   T1_IRON_WILL         = {0, 2, 5};      //강철의 의지: 인장 방어막 +
+	public static final float   T1_GRIT_HP           = 0.2f;           //투지: 체력 20% 이하
+	public static final int[]   T1_GRIT_SHIELD       = {0, 2, 5};
+	//마법사
+	public static final int[]   T1_EMPOWER_MANA      = {0, 10, 20};    //마력이 깃든 식사: 먹을 때마다 최대 마나
+	public static final float   T1_SCHOLAR_WAND_ID   = 3f;             //학자의 직감
+	public static final int[]   T1_LINGERING_DMG     = {0, 2, 5};      //잔류 마력
+	public static final int[]   T1_BACKUP_SHIELD     = {0, 3, 6};      //예비 방어막
+	public static final int[]   T1_MANA_CYCLE_TURNS  = {0, 2, 1};      //마나 순환: 가득 찬 채 대기할 턴
+	//도적
+	public static final int[]   T1_CACHED_RATIONS    = {0, 3, 5};      //은닉한 보존식
+	public static final float   T1_THIEF_RING_ID     = 3f;             //도둑의 직감
+	public static final int[]   T1_SUCKER_DMG        = {0, 3, 6};      //불시의 타격
+	public static final int[]   T1_SHADOW_EVERY      = {0, 2, 1};      //보호의 그림자: 몇 턴마다
+	public static final int[]   T1_SHADOW_AMOUNT     = {0, 2, 3};
+	public static final int[]   T1_SHADOW_MAX        = {0, 6, 9};
+	public static final float[] T1_SILENT_STEPS      = {0f, 0.2f, 0.4f}; //조용한 걸음: 잠든 적이 깰 확률 감소
+	//사냥꾼
+	public static final int[]   T1_BERRIES           = {0, 5, 8};      //자연의 은혜
+	public static final float   T1_SURVIVAL_BOW_ID   = 3f;             //생존자의 직감
+	public static final int[]   T1_BRAWL_DMG         = {0, 1, 3};      //격투술: 활 근접 평타
+	public static final int[]   T1_NATURE_AID_BARK   = {0, 2, 4};      //자연의 도움: 나무껍질
+	public static final int[]   T1_NATURE_AID_TIME   = {0, 3, 5};      //  나무껍질이 1씩 줄어드는 간격(턴)
+	public static final int[]   T1_SENSES_SEARCH     = {0, 1, 2};      //숲의 감각: 탐색 범위 +
+	public static final int     T1_SENSES_TRACK      = 5;              //숲의 감각 2: 이 거리 안의 가장 가까운 적 1마리를 늘 본다
+
 	// ===== 연출 =====
 
 	//그림자검: 평타가 끝난 뒤 잔상 일격까지의 텀 (초)

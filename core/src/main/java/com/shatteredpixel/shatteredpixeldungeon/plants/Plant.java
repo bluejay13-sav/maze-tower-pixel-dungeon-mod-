@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.plants;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barkskin;
@@ -70,7 +71,8 @@ public abstract class Plant implements Bundlable {
 
 		if (Dungeon.level.heroFOV[pos] && Dungeon.hero.hasTalent(Talent.NATURES_AID)){
 			// 3/5 turns based on talent points spent
-			Barkskin.conditionallyAppend(Dungeon.hero, 2, 1 + 2*(Dungeon.hero.pointsInTalent(Talent.NATURES_AID)));
+			int aid = Math.min(2, Dungeon.hero.pointsInTalent(Talent.NATURES_AID)); //Maze Tower: 자연의 도움 나무껍질 2/4, 2레벨은 더 오래
+			Barkskin.conditionallyAppend(Dungeon.hero, MazeTower.T1_NATURE_AID_BARK[aid], MazeTower.T1_NATURE_AID_TIME[aid]);
 		}
 
 		wither();

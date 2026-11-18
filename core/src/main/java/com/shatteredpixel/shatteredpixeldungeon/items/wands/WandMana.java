@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.SproutEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
@@ -57,6 +58,7 @@ public class WandMana {
 		int cost = manaCost(hero, wand);
 		if (isStaffWand(hero, wand) && SwordSkill.heroUsesSkills(hero)){
 			BloomEffects.beginStaffSkill(hero, wand, Actor.findChar(targetCell), cost);
+			SproutEffects.onSkillUsed(hero); //1차 특성: 투지
 		}
 		if (cost > 0) Mana.get(hero).spend(cost);
 	}

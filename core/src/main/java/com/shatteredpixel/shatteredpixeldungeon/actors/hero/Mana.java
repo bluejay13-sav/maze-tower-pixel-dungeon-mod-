@@ -47,11 +47,18 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	public int max(){
 		int max = MazeTower.MANA_MAX;
 		if (target instanceof Hero) max += BloomEffects.bonusMaxMana((Hero)target); //마나 감응
+		max += mealBonus; //1차 특성: 푸짐한 식사·마력이 깃든 식사
 		return max;
 	}
 
 	//집중: 마지막 행동이 대기·탐색이었는지 (다른 행동을 하면 Hero.act에서 꺼진다)
 	public boolean focusReady = false;
+
+	//1차 특성: 식사로 오른 최대 마나와 횟수 (영구, 저장됨)
+	public int mealBonus = 0;
+	public int mealTimes = 0;
+	//마나 순환: 마나가 가득 찬 채로 이어서 대기한 턴
+	public float cycleTurns = 0;
 
 	public int cur(){
 		return Math.min(mana, max());
@@ -79,6 +86,7 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	//대기(휴식·탐색 포함)로 턴을 넘겼을 때 호출한다
 	public static void onWait( Hero hero, float turns ){
 		Mana m = get(hero);
+		SproutEffects.manaCycle(hero, m, turns); //마나 순환 (회복 전에 가득 찼는지 본다)
 		//명상: 대기 시 마나 회복 배율
 		m.gain(Math.round(MazeTower.MANA_PER_WAIT_TURN * turns * BloomEffects.waitManaMulti(hero)));
 		m.focusReady = true;
@@ -194,11 +202,15 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle(bundle);
 		bundle.put(MANA, mana);
+		bundle.put("meal_bonus", mealBonus);
+		bundle.put("meal_times", mealTimes);
 	}
 
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		super.restoreFromBundle(bundle);
 		mana = bundle.getInt(MANA);
+		mealBonus = bundle.getInt("meal_bonus");
+		mealTimes = bundle.getInt("meal_times");
 	}
 }

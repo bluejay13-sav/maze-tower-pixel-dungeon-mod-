@@ -62,6 +62,10 @@ public class WornShortbow extends MeleeWeapon {
 	//지금 화살을 쏘는 중인지 (원거리 평타·조준 사격의 타격 판정 동안만 true)
 	private static boolean shooting = false;
 
+	public static boolean isShooting(){
+		return shooting;
+	}
+
 	@Override
 	public int damageRoll(Char owner) {
 		if (shooting && owner instanceof Hero){

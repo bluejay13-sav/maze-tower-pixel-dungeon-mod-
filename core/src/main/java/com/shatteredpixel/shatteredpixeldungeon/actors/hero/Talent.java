@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortbow;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -224,15 +225,17 @@ public enum Talent {
 
 		@Override
 		public boolean act() {
-			//barrier every 2/1 turns, to a max of 3/5
+			//Maze Tower: 1레벨 2턴마다 2 (최대 6), 2레벨 매 턴 3 (최대 9)
 			if (((Hero)target).hasTalent(Talent.PROTECTIVE_SHADOWS) && target.invisible > 0){
+				int lvl = Math.min(2, ((Hero)target).pointsInTalent(Talent.PROTECTIVE_SHADOWS));
+				int cap = MazeTower.T1_SHADOW_MAX[lvl];
 				Barrier barrier = Buff.affect(target, Barrier.class);
-				if (barrier.shielding() < 1 + 2*((Hero)target).pointsInTalent(Talent.PROTECTIVE_SHADOWS)) {
-					barrierInc += 0.5f * ((Hero) target).pointsInTalent(Talent.PROTECTIVE_SHADOWS);
+				if (barrier.shielding() < cap) {
+					barrierInc += 1f / MazeTower.T1_SHADOW_EVERY[lvl];
 				}
 				if (barrierInc >= 1){
 					barrierInc = 0;
-					barrier.incShield(1);
+					barrier.incShield(Math.min(MazeTower.T1_SHADOW_AMOUNT[lvl], cap - barrier.shielding()));
 				} else {
 					barrier.incShield(0); //resets barrier decay
 				}
@@ -505,12 +508,13 @@ public enum Talent {
 			Buff.affect(hero, BrokenSeal.WarriorShield.class);
 		}
 
-		if (talent == VETERANS_INTUITION && hero.pointsInTalent(VETERANS_INTUITION) == 2){
+		SproutEffects.onTalentUpgraded(hero, talent); //Maze Tower
+		if (talent == VETERANS_INTUITION && hero.pointsInTalent(VETERANS_INTUITION) >= 1){ //Maze Tower: 1레벨부터 방어구 즉시 감정
 			if (hero.belongings.armor() != null && !ShardOfOblivion.passiveIDDisabled())  {
 				hero.belongings.armor.identify();
 			}
 		}
-		if (talent == THIEFS_INTUITION && hero.pointsInTalent(THIEFS_INTUITION) == 2){
+		if (MazeTower.ORIGINAL_TALENTS && talent == THIEFS_INTUITION && hero.pointsInTalent(THIEFS_INTUITION) == 2){
 			if (hero.belongings.ring instanceof Ring && !ShardOfOblivion.passiveIDDisabled()) {
 				hero.belongings.ring.identify();
 			}
@@ -523,7 +527,7 @@ public enum Talent {
 				}
 			}
 		}
-		if (talent == THIEFS_INTUITION && hero.pointsInTalent(THIEFS_INTUITION) == 1){
+		if (MazeTower.ORIGINAL_TALENTS && talent == THIEFS_INTUITION && hero.pointsInTalent(THIEFS_INTUITION) == 1){
 			if (hero.belongings.ring instanceof Ring) hero.belongings.ring.setKnown();
 			if (hero.belongings.misc instanceof Ring) ((Ring) hero.belongings.misc).setKnown();
 		}
@@ -590,25 +594,14 @@ public enum Talent {
 	public static class NatureBerriesDropped extends CounterBuff{{revivePersists = true;}};
 
 	public static void onFoodEaten( Hero hero, float foodVal, Item foodSource ){
-		if (hero.hasTalent(HEARTY_MEAL)){
-			//4/6 HP healed, when hero is below 33% health (with a little rounding up)
-			if (hero.HP/(float)hero.HT < 0.334f) {
-				int healing = 2 + 2 * hero.pointsInTalent(HEARTY_MEAL);
-				hero.HP = Math.min(hero.HP + healing, hero.HT);
-				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healing), FloatingText.HEALING);
-
-			}
-		}
+		//Maze Tower: 푸짐한 식사·마력이 깃든 식사는 SproutEffects (1차 특성)
+		SproutEffects.onFoodEaten(hero);
 		if (hero.hasTalent(IRON_STOMACH)){
 			if (hero.cooldown() > 0) {
 				Buff.affect(hero, WarriorFoodImmunity.class, hero.cooldown());
 			}
 		}
-		if (hero.hasTalent(EMPOWERING_MEAL)){
-			//2/3 bonus wand damage for next 3 zaps
-			Buff.affect( hero, WandEmpower.class).set(1 + hero.pointsInTalent(EMPOWERING_MEAL), 3);
-			ScrollOfRecharging.charge( hero );
-		}
+		//(Maze Tower: 원작 마력이 깃든 식사 효과는 쓰지 않는다)
 		int wandChargeTurns = 0;
 		if (hero.hasTalent(ENERGIZING_MEAL)){
 			//5/8 turns of recharging
@@ -691,7 +684,7 @@ public enum Talent {
 		// Affected by both Warrior(1.75x/2.5x) and Duelist(2.5x/inst.) talents
 		if (item instanceof MeleeWeapon){
 			factor *= 1f + 1.5f*hero.pointsInTalent(ADVENTURERS_INTUITION); //instant at +2 (see onItemEquipped)
-			factor *= 1f + 0.75f*hero.pointsInTalent(VETERANS_INTUITION);
+			factor *= hero.pointsInTalent(VETERANS_INTUITION) >= 1 ? MazeTower.T1_VETERAN_WEAPON_ID : 1f; //Maze Tower
 		}
 		// Affected by both Warrior(2.5x/inst.) and Duelist(1.75x/2.5x) talents
 		if (item instanceof Armor){
@@ -700,15 +693,16 @@ public enum Talent {
 		}
 		// 3x/instant for Mage (see Wand.wandUsed())
 		if (item instanceof Wand){
-			factor *= 1f + 2.0f*hero.pointsInTalent(SCHOLARS_INTUITION);
+			factor *= hero.pointsInTalent(SCHOLARS_INTUITION) >= 1 ? MazeTower.T1_SCHOLAR_WAND_ID : 1f; //Maze Tower
 		}
 		// 3x/instant speed with Huntress talent (see MissileWeapon.proc)
-		if (item instanceof MissileWeapon){
-			factor *= 1f + 2.0f*hero.pointsInTalent(SURVIVALISTS_INTUITION);
+		//Maze Tower: 생존자의 직감은 투척 무기 대신 활 계열
+		if (item instanceof WornShortbow){
+			factor *= hero.pointsInTalent(SURVIVALISTS_INTUITION) >= 1 ? MazeTower.T1_SURVIVAL_BOW_ID : 1f;
 		}
 		// 2x/instant for Rogue (see onItemEqupped), also id's type on equip/on pickup
 		if (item instanceof Ring){
-			factor *= 1f + hero.pointsInTalent(THIEFS_INTUITION);
+			factor *= hero.pointsInTalent(THIEFS_INTUITION) >= 1 ? MazeTower.T1_THIEF_RING_ID : 1f; //Maze Tower
 		}
 		return factor;
 	}
@@ -836,10 +830,10 @@ public enum Talent {
 
 	public static void onItemEquipped( Hero hero, Item item ){
 		boolean identify = false;
-		if (hero.pointsInTalent(VETERANS_INTUITION) == 2 && item instanceof Armor){
+		if (hero.pointsInTalent(VETERANS_INTUITION) >= 1 && item instanceof Armor){ //Maze Tower: 1레벨부터
 			identify = true;
 		}
-		if (hero.hasTalent(THIEFS_INTUITION) && item instanceof Ring){
+		if (MazeTower.ORIGINAL_TALENTS && hero.hasTalent(THIEFS_INTUITION) && item instanceof Ring){ //Maze Tower: 도둑의 직감은 착용 감정 없음
 			if (hero.pointsInTalent(THIEFS_INTUITION) == 2){
 				identify = true;
 			}
@@ -865,7 +859,8 @@ public enum Talent {
 	}
 
 	public static void onItemCollected( Hero hero, Item item ){
-		if (hero.pointsInTalent(THIEFS_INTUITION) == 2){
+		SproutEffects.onItemCollected(hero, item); //Maze Tower: 직감 2레벨 - 저주 여부
+		if (MazeTower.ORIGINAL_TALENTS && hero.pointsInTalent(THIEFS_INTUITION) == 2){
 			if (item instanceof Ring) ((Ring) item).setKnown();
 		}
 	}
@@ -874,24 +869,26 @@ public enum Talent {
 
 		if (hero.hasTalent(Talent.PROVOKED_ANGER)
 			&& hero.buff(ProvokedAngerTracker.class) != null){
-			dmg += 1 + 2*hero.pointsInTalent(Talent.PROVOKED_ANGER);
+			dmg += MazeTower.T1_PROVOKED_DMG[Math.min(2, hero.pointsInTalent(Talent.PROVOKED_ANGER))]; //Maze Tower
 			hero.buff(ProvokedAngerTracker.class).detach();
 		}
 
 		if (hero.hasTalent(Talent.LINGERING_MAGIC)
 				&& hero.buff(LingeringMagicTracker.class) != null){
-			dmg += Random.IntRange(hero.pointsInTalent(Talent.LINGERING_MAGIC) , 2);
+			dmg += MazeTower.T1_LINGERING_DMG[Math.min(2, hero.pointsInTalent(Talent.LINGERING_MAGIC))]; //Maze Tower
 			hero.buff(LingeringMagicTracker.class).detach();
 		}
 
 		if (hero.hasTalent(Talent.SUCKER_PUNCH)
 				&& enemy instanceof Mob && ((Mob) enemy).surprisedBy(hero)
 				&& enemy.buff(SuckerPunchTracker.class) == null){
-			dmg += Random.IntRange(hero.pointsInTalent(Talent.SUCKER_PUNCH) , 2);
+			dmg += MazeTower.T1_SUCKER_DMG[Math.min(2, hero.pointsInTalent(Talent.SUCKER_PUNCH))]; //Maze Tower
 			Buff.affect(enemy, SuckerPunchTracker.class);
 		}
 
-		if (hero.hasTalent(Talent.FOLLOWUP_STRIKE) && enemy.isAlive() && enemy.alignment == Char.Alignment.ENEMY) {
+		//Maze Tower: 격투술 - 활 근접 평타 피해 +
+		dmg += SproutEffects.brawlBonus(hero, enemy);
+		if (MazeTower.ORIGINAL_TALENTS && hero.hasTalent(Talent.FOLLOWUP_STRIKE) && enemy.isAlive() && enemy.alignment == Char.Alignment.ENEMY) {
 			if (hero.belongings.attackingWeapon() instanceof MissileWeapon) {
 				Buff.prolong(hero, FollowupStrikeTracker.class, 5f).object = enemy.id();
 			} else if (hero.buff(FollowupStrikeTracker.class) != null

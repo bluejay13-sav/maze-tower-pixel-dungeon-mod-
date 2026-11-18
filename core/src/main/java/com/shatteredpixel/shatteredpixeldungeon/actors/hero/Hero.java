@@ -904,6 +904,7 @@ public class Hero extends Char {
 			
 			resting = false;
 			Mana.get(this).focusReady = false; //Maze Tower: 대기·탐색 외 행동이면 집중 해제
+			Mana.get(this).cycleTurns = 0; //Maze Tower: 마나 순환도 끊긴다
 			
 			ready = false;
 			
@@ -2565,6 +2566,7 @@ public class Hero extends Char {
 		boolean circular = pointsInTalent(Talent.WIDE_SEARCH) == 1;
 		int distance = heroClass == HeroClass.ROGUE ? 2 : 1;
 		if (hasTalent(Talent.WIDE_SEARCH)) distance++;
+		distance += SproutEffects.searchBonus(this); //Maze Tower: 숲의 감각
 		
 		boolean foresight = buff(Foresight.class) != null;
 		boolean foresightScan = foresight && !Dungeon.level.mapped[pos];
