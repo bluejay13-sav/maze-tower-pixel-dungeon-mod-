@@ -11,7 +11,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
-import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
@@ -19,7 +18,6 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.watabou.noosa.audio.Sample;
-import com.watabou.noosa.particles.Emitter;
 
 import java.util.ArrayList;
 
@@ -73,9 +71,6 @@ public class BloomCore extends Item {
 			core.angularSpeed = -70;
 			core.show(hero.sprite, 2.0f);
 
-			Emitter e = hero.sprite.centerEmitter();
-			e.pos(e.x-2, e.y-6, 4, 4);
-			e.start(Speck.factory(Speck.STAR), 0.05f, 20);
 
 			GLog.p( Messages.get(this, "used", tree.slots.size()) );
 			StatusPane.talentBlink = 10f;

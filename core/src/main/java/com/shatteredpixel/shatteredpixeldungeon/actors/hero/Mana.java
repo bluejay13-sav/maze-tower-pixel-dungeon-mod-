@@ -8,7 +8,6 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
-import com.shatteredpixel.shatteredpixeldungeon.effects.TalentEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
@@ -75,12 +74,9 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	//대기(휴식·탐색 포함)로 턴을 넘겼을 때 호출한다
 	public static void onWait( Hero hero, float turns ){
 		Mana m = get(hero);
-		int before = m.cur();
 		//명상: 대기 시 마나 회복 배율
 		m.gain(Math.round(MazeTower.MANA_PER_WAIT_TURN * turns * BloomEffects.waitManaMulti(hero)));
 		m.focusReady = true;
-		//마나가 실제로 찼으면 푸른 입자가 피어오른다
-		if (m.cur() > before) TalentEffects.manaRegen(hero);
 	}
 
 	// ===== 스킬 버튼 (화면 오른쪽 아래 행동 버튼) =====

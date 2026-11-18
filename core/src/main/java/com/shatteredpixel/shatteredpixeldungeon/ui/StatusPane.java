@@ -63,10 +63,6 @@ public class StatusPane extends Component {
 	//Maze Tower: 마나 바 두께
 	private static final float MANA_BAR_H_LARGE = 2;
 	private static final float MANA_BAR_H_SMALL = 2;
-	//마나 바 차오름 연출
-	private float shownMana = -1;
-	private float manaGlow = 0;
-	private static final float MANA_GLOW_TIME = 0.4f;
 
 	private Image shieldHP;
 	private Image hp;
@@ -372,20 +368,7 @@ public class StatusPane extends Component {
 
 		//Maze Tower: 마나 바 갱신
 		Mana m = Mana.get(Dungeon.hero);
-		//마나 바가 목표값까지 부드럽게 차오르고, 늘어날 때 잠깐 밝게 빛난다
-		float manaTarget = m.cur() / (float)m.max();
-		if (shownMana < 0) shownMana = manaTarget;
-		if (manaTarget > shownMana + 0.001f && manaGlow <= 0) manaGlow = MANA_GLOW_TIME;
-		shownMana += (manaTarget - shownMana) * Math.min(1f, Game.elapsed * 8f);
-		if (Math.abs(manaTarget - shownMana) < 0.002f) shownMana = manaTarget;
-		mana.size(manaBg.width() * shownMana, manaBg.height());
-		if (manaGlow > 0){
-			manaGlow -= Game.elapsed;
-			float g = Math.max(0, manaGlow / MANA_GLOW_TIME) * 0.6f;
-			mana.ra = mana.ga = mana.ba = g;
-		} else {
-			mana.ra = mana.ga = mana.ba = 0;
-		}
+		mana.size(manaBg.width() * m.cur() / (float)m.max(), manaBg.height());
 		m.refreshSkillButton(); //장착한 검이 바뀌면 스킬 버튼 그림 갱신
 		BloomEffects.updateHeroFx(Dungeon.hero); //흘리기 보호막, 준비 완료 빛, 가득 찬 마나 기운
 

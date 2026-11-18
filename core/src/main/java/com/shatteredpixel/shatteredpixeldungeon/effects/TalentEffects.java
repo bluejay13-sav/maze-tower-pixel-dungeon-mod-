@@ -9,7 +9,6 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ManaWispParticle;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
@@ -116,12 +115,6 @@ public class TalentEffects {
 		} else {
 			hero.sprite.showStatus(0x4488FF, "+" + amount);
 		}
-	}
-
-	//마나 회복(대기): 몸에서 푸른 입자가 위로 피어오른다 (젖음 물방울은 아래로 떨어져 구분된다)
-	public static void manaRegen( Char hero ){
-		if (!visible(hero)) return;
-		hero.sprite.emitter().burst(ManaWispParticle.FACTORY, 5);
 	}
 
 	//마나 장막: 발동 순간 보호막이 번쩍이고 사라진다

@@ -11,7 +11,6 @@ import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -23,7 +22,6 @@ import com.watabou.noosa.Game;
 import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
-import com.watabou.noosa.particles.Emitter;
 import com.watabou.noosa.ui.Component;
 
 import java.util.ArrayList;
@@ -221,13 +219,6 @@ public class BloomTalentsPane extends ScrollPane {
 			flashTime = FLASH_DURATION;
 		}
 
-		private void burstStars( int n ){
-			Emitter emitter = (Emitter) content.recycle(Emitter.class);
-			emitter.revive();
-			emitter.pos(x + width/2f, y + TalentButton.WIDTH/2f);
-			emitter.burst(Speck.factory(Speck.STAR), n);
-		}
-
 		private void restoreColors(){
 			bg.resetColor();
 			if (icon != null) icon.resetColor();
@@ -242,7 +233,6 @@ public class BloomTalentsPane extends ScrollPane {
 				appearDelay -= Game.elapsed;
 				if (appearDelay < 0){
 					appearTime = APPEAR_DURATION;
-					burstStars(8);
 					Sample.INSTANCE.play(Assets.Sounds.CHARMS, 0.6f, 1.4f);
 				}
 			}
@@ -314,24 +304,17 @@ public class BloomTalentsPane extends ScrollPane {
 		}
 	}
 
-	//특성을 골라 칸이 채워질 때: 번쩍이며 별
+	//특성을 골라 칸이 채워질 때: 번쩍
 	public void chosen(int index){
 		if (index < 0 || index >= slotButtons.size()) return;
-		SlotButton b = slotButtons.get(index);
-		b.flash();
-		b.burstStars(14);
+		slotButtons.get(index).flash();
 		Sample.INSTANCE.play(Assets.Sounds.LEVELUP, 0.8f, 1.0f);
 	}
 
-	//강화했을 때 별 효과
+	//강화했을 때: 번쩍
 	public void celebrate(int index){
 		if (index < 0 || index >= slotButtons.size()) return;
-		SlotButton b = slotButtons.get(index);
-		b.flash();
+		slotButtons.get(index).flash();
 		Sample.INSTANCE.play(Assets.Sounds.LEVELUP, 0.7f, 1.2f);
-		Emitter emitter = (Emitter) content.recycle(Emitter.class);
-		emitter.revive();
-		emitter.pos(b.left() + b.width()/2f, b.top() + TalentButton.WIDTH);
-		emitter.burst(Speck.factory(Speck.STAR), 12);
 	}
 }
