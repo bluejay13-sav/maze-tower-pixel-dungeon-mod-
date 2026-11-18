@@ -26,6 +26,9 @@ public class MazeTower {
 	//원작 서브클래스(텐구의 가면)를 얻을 수 있는지 여부
 	public static final boolean ORIGINAL_SUBCLASS = false;
 
+	//원작 엔딩(아뮬렛을 주운 뒤 머무르기·귀환 길)을 쓸지. false면 아뮬렛을 주우면 그 자리에서 승리
+	public static final boolean ORIGINAL_ENDING = false;
+
 	//원작 갑옷 능력(왕의 왕관)을 얻을 수 있는지 여부
 	public static final boolean ORIGINAL_ARMOR_ABILITY = false;
 

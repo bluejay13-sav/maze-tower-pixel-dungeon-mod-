@@ -13,7 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
-import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
@@ -23,14 +23,13 @@ import java.util.ArrayList;
 
 //Maze Tower: 개화의 핵. 5층 보스(구)가 떨어뜨린다.
 //들고 있는 동안 Lv7~11 레벨업마다 선택권·포인트가 쌓이고(표시만), 사용하면 사라지며 2차 줄이 열린다.
-//아이콘은 임시로 원작 숙련의 서 그림을 재사용한다.
 public class BloomCore extends Item {
 
 	private static final String AC_USE = "USE";
 
 	{
 		stackable = false;
-		image = ItemSpriteSheet.MASTERY;
+		image = MazeItemSprites.BLOOM_CORE; //docs/sprites의 그림 (assets/sprites/maze_bloom_core.png)
 		defaultAction = AC_USE;
 		unique = true;
 	}

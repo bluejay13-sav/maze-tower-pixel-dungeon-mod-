@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BadgeBanner;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
@@ -120,6 +121,11 @@ public class AmuletScene extends PixelScene {
 		btnStay.icon(Icons.CLOSE.get());
 		btnStay.setSize( WIDTH, BTN_HEIGHT );
 		add( btnStay );
+		//Maze Tower: 아뮬렛을 주우면 그 자리에서 승리로 끝난다. 머무르기(귀환 길)는 없다.
+		if (!MazeTower.ORIGINAL_ENDING){
+			btnStay.visible = false;
+			btnStay.active = false;
+		}
 
 		RectF insets = getCommonInsets();
 		int w = (int) (Camera.main.width - insets.left + insets.right);
@@ -158,6 +164,7 @@ public class AmuletScene extends PixelScene {
 	
 	@Override
 	protected void onBackPressed() {
+		if (!MazeTower.ORIGINAL_ENDING) return; //Maze Tower: 뒤로 가기로 게임에 돌아가지 않는다
 		if (btnExit.isActive()) {
 			InterlevelScene.mode = InterlevelScene.Mode.CONTINUE;
 			Game.switchScene(InterlevelScene.class);

@@ -246,7 +246,19 @@ public class ItemSprite extends MovieClip {
 		return this;
 	}
 
+	//Maze Tower: 새 아이템 그림은 따로 된 PNG 파일을 그린다 (MazeItemSprites)
+	private boolean mazeTexture = false;
+
 	public void frame( int image ){
+		if (MazeItemSprites.has(image)){
+			texture( MazeItemSprites.file(image) ); //그림 전체가 한 칸
+			mazeTexture = true;
+			perspectiveRaise = 5 / 16f;
+			return;
+		} else if (mazeTexture){
+			texture( Assets.Sprites.ITEMS ); //재사용된 스프라이트를 원작 아이템 그림으로 되돌린다
+			mazeTexture = false;
+		}
 		frame( ItemSpriteSheet.film.get( image ));
 
 		float height = ItemSpriteSheet.film.height( image );
