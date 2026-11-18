@@ -15,6 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SkillEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -38,6 +39,8 @@ public class SwordSkill {
 	public final float accMulti;     //명중 배율 (Char.INFINITE_ACCURACY면 반드시 명중)
 	public final boolean ignoreDefense;
 	public final float elementChanceMulti;
+	//기습 상태의 적에게 쓰면 이 배율로 바뀐다 (0 = 해당 없음, 급소 찌르기)
+	public float surpriseDmg = 0f;
 
 	private SwordSkill(String nameKey, int hits, float dmgPerHit, float accMulti, boolean ignoreDefense, float elementChanceMulti){
 		this.nameKey = nameKey;
@@ -63,6 +66,11 @@ public class SwordSkill {
 		if (c == Scimitar.class)       return new SwordSkill("flurry", MazeTower.SKILL_SCIMITAR_HITS, MazeTower.SKILL_SCIMITAR_DMG, 1f, false, 1f);
 		if (c == Katana.class)         return new SwordSkill("crescent", MazeTower.SKILL_KATANA_HITS, MazeTower.SKILL_KATANA_DMG, MazeTower.SKILL_KATANA_ACCURACY, false, 1f);
 		if (c == RunicBlade.class)     return new SwordSkill("phantom", 1, MazeTower.SKILL_RUNIC_BLADE_DMG, 1f, true, MazeTower.SKILL_RUNIC_BLADE_ELEMENT_CHANCE);
+		if (c == WornDagger.class){
+			SwordSkill s = basic("vital", MazeTower.SKILL_WORN_DAGGER_DMG);
+			s.surpriseDmg = MazeTower.SKILL_WORN_DAGGER_SURPRISE_DMG;
+			return s;
+		}
 		return null;
 	}
 
@@ -94,7 +102,9 @@ public class SwordSkill {
 				? Messages.get(SwordSkill.class, "dmg_multi", Math.round(dmgPerHit*100), hits, Math.round(dmgPerHit*hits*100))
 				: Messages.get(SwordSkill.class, "dmg_single", Math.round(dmgPerHit*100));
 		String desc = Messages.get(SwordSkill.class, "info", name(), hitsTxt, (Dungeon.hero != null ? manaCost(Dungeon.hero) : MazeTower.SKILL_MANA_COST));
-		String extra = Messages.get(SwordSkill.class, nameKey + "_desc");
+		String extra = surpriseDmg > 0
+				? Messages.get(SwordSkill.class, nameKey + "_desc", Math.round(surpriseDmg*100))
+				: Messages.get(SwordSkill.class, nameKey + "_desc");
 		if (!extra.isEmpty() && !extra.startsWith("!!!")) desc += " " + extra;
 		return desc;
 	}
@@ -149,6 +159,8 @@ public class SwordSkill {
 			ActionIndicator.shake(); //마나 부족: 스킬 버튼 흔들림
 			return;
 		}
+		//급소 찌르기: 기습 상태인지는 휘두르기 전에 본다
+		final boolean surprise = skill.surpriseDmg > 0 && enemy instanceof Mob && ((Mob)enemy).surprisedBy(hero, true);
 		BloomEffects.beginSkill(hero, enemy, cost); //마나가 가득 찼는지, 집중 상태 기록
 		Mana.get(hero).spend(cost);
 
@@ -157,19 +169,19 @@ public class SwordSkill {
 			@Override
 			public void call() {
 				AttackIndicator.target(enemy);
-				doHit(hero, wep, skill, enemy, 0);
+				doHit(hero, wep, skill, enemy, 0, surprise);
 			}
 		});
 	}
 
 	//타격 한 번. 여러 번 때리는 스킬은 타격 사이에 MazeTower.SKILL_HIT_INTERVAL초 텀을 둔다.
 	//(그동안 주인공은 행동 중이라 다른 누구도 움직이지 않는다)
-	private static void doHit(final Hero hero, final MeleeWeapon wep, final SwordSkill skill, final Char enemy, final int index){
+	private static void doHit(final Hero hero, final MeleeWeapon wep, final SwordSkill skill, final Char enemy, final int index, final boolean surprise){
 		hero.belongings.abilityWeapon = wep;
 
-		SkillEffects.hit(skill.nameKey, hero, enemy, index);
+		SkillEffects.hit(skill.nameKey, hero, enemy, index, surprise);
 		active = skill;
-		if (hero.attack(enemy, skill.dmgPerHit, 0, skill.accMulti)){
+		if (hero.attack(enemy, surprise ? skill.surpriseDmg : skill.dmgPerHit, 0, skill.accMulti)){
 			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 		}
 		active = null;
@@ -179,7 +191,7 @@ public class SwordSkill {
 				@Override
 				protected void onComplete() {
 					super.onComplete();
-					doHit(hero, wep, skill, enemy, index + 1);
+					doHit(hero, wep, skill, enemy, index + 1, surprise);
 				}
 			};
 			hero.sprite.parent.add(wait);

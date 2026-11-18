@@ -796,7 +796,7 @@ public class Hero extends Char {
 
 		if (!RingOfForce.fightingUnarmed(this)) {
 			
-			return delay * belongings.attackingWeapon().delayFactor( this );
+			return delay * belongings.attackingWeapon().delayFactor( this ) / classAttackSpeed(); //Maze Tower: 도적 공격 속도
 			
 		} else {
 			//Normally putting furor speed on unarmed attacks would be unnecessary
@@ -814,8 +814,13 @@ public class Hero extends Char {
 				delay = ((Weapon)belongings.weapon).augment.delayFactor(delay);
 			}
 
-			return delay/speed;
+			return delay/(speed * classAttackSpeed()); //Maze Tower: 도적 공격 속도
 		}
+	}
+
+	//Maze Tower: 직업 고유 공격 속도 (도적 1.3배)
+	public float classAttackSpeed(){
+		return heroClass == HeroClass.ROGUE ? MazeTower.ROGUE_ATTACK_SPEED : 1f;
 	}
 
 	@Override

@@ -55,6 +55,14 @@ public class MazeTower {
 	//합성하지 않은 마법봉을 쓸 때 드는 마나 (모든 직업)
 	public static final int LOOSE_WAND_MANA_COST = 15;
 
+	// ===== 도적과 단검 =====
+
+	//급소 찌르기 (낡은 단검): 평타 피해의 1.5배, 기습 상태(원작 surprisedBy)의 적에게는 2.3배
+	public static final float SKILL_WORN_DAGGER_DMG = 1.5f;
+	public static final float SKILL_WORN_DAGGER_SURPRISE_DMG = 2.3f;
+	//도적의 공격 속도 배율 (1.3 = 30% 빠름, 공격에 드는 시간이 1/1.3)
+	public static final float ROGUE_ATTACK_SPEED = 1.3f;
+
 	// ===== 연출 =====
 
 	//그림자검: 평타가 끝난 뒤 잔상 일격까지의 텀 (초)
