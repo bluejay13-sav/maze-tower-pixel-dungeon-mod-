@@ -306,6 +306,26 @@ public class TalentsPane extends ScrollPane {
 				}
 			}
 
+			//Maze Tower: 제목 + 별이 한 줄에 다 안 들어가면 제목만 윗줄에 두고, 별은 그 아래 줄에 가운데로 놓는다.
+			//별이 많으면 (기본 포인트 수 또는 들어가는 만큼씩) 여러 줄로 나눈다.
+			if (!MazeTower.ORIGINAL_TALENTS && !stars.isEmpty() && titleWidth > width - 4){
+				title.setPos(x + (width - title.width())/2f, y);
+				int baseRow = Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier];
+				int perRow = Math.max(1, Math.min(baseRow, (int)((width - 4) / 6)));
+				float rowTop = title.bottom() + 2;
+				for (int i = 0; i < stars.size(); i += perRow){
+					int inRow = Math.min(perRow, stars.size() - i);
+					float rowLeft = x + (width - (inRow*6 - 1))/2f;
+					for (int j = 0; j < inRow; j++){
+						Image star = stars.get(i + j);
+						star.x = rowLeft + j*6;
+						star.y = rowTop;
+						PixelScene.align(star);
+					}
+					rowTop += 6;
+				}
+			}
+
 			//Maze Tower: 무작위 버튼은 별 옆이 아니라 별보다 살짝 아래 오른쪽에 둔다.
 			//그 줄은 버튼이 사라져도 비워 두어(특성을 올려도 높이가 바뀌지 않게) 특성 버튼은 그 아래에 놓는다.
 			float buttonTop = title.bottom() + 4;
