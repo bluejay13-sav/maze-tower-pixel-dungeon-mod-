@@ -20,7 +20,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 ## 진행 상태
 테스트 빌드 10단계 모두 완료(사용자 점검 플레이 통과). 아래 명세는 실제 구현과 사용자 결정에 맞춰 갱신되어 있다.
 이펙트 단계(11~14)도 완료. 사용자와 함께 여러 번 조정했고, 명세 9번은 최종 구현 기준으로 적혀 있다.
-직업 단계(15~19)도 완료. 20단계(전사 3차 검투사), 21단계(전사 4차 결실)도 완료. 다음 작업은 아래 "앞으로의 진행 단계"를 따르고, 단계마다 시작 전에 사용자와 기획을 확정한다.
+직업 단계(15~19)도 완료. 20단계(전사 3차 검투사), 21단계(전사 4차 결실), 22단계(클리어 조건·전직 아이템 그림)도 완료. 다음 작업은 아래 "앞으로의 진행 단계"를 따르고, 단계마다 시작 전에 사용자와 기획을 확정한다.
 (구현)·(결정) 표시는 원래 명세와 달라졌거나 명세에 없던 것을 구현·결정한 부분이다.
 
 ## 준비
@@ -282,7 +282,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 | 특성 선택 | 칸이 채워질 때 한 번 번쩍 |
 | 특성 강화 | (결정) **번쩍임 없음**, 레벨업 소리만 |
 
-**새 그림이 필요한 것 (나중에)**: 정전기·젖음 아이콘, 2차 특성 아이콘 24개. (전직 아이템 3종은 명세 15번) 그 전까지는 임시 그림을 쓴다.
+**새 그림이 필요한 것 (나중에)**: 정전기·젖음 아이콘, 2차 특성 아이콘 24개. (전직 아이템 3종은 22단계에서 넣음) 그 전까지는 임시 그림을 쓴다.
 
 ### 10. 알려진 동작과 한계
 - 집중 특성의 "대기·탐색 후"는 대기·탐색 뒤 이동·공격 같은 다른 행동을 하면 풀린다. 아이템 사용으로는 풀리지 않는다.
@@ -493,6 +493,8 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 아뮬렛 이름·그림·설명은 지금은 원작 그대로. 마탑 설정에 맞게 바꾸는 것은 나중에(26단계 글 바꾸기 때 함께 검토).
 - 엔딩 문구도 26단계에서 바꾼다.
 - 클리어한 캐릭터를 따로 저장하는 기능은 지금 만들지 않는다(나중에 새 모드를 만들 때 추가).
+- (구현) 아뮬렛 화면에서 머무르기 버튼을 숨기고 뒤로 가기도 막았다(`AmuletScene`, `MazeTower.ORIGINAL_ENDING`). "끝내기"만 남는다.
+- (구현) 원작에는 "승천"이라는 도전 과제 항목이 따로 없다. 승천은 아뮬렛을 들고 위로 돌아갈 때 시작되므로(`HallsBossLevel`), 머무르기를 없애 시작될 수 없다.
 
 ### 15. 전직 아이템 외형 (22단계에 함께)
 원작 16×16 아이템 그림 크기, 원작 도트 느낌에 맞춘다. 세 아이템 모두 새 그림이고, 지금 쓰는 원작 숙련의 서 그림(임시)을 대체한다. 벚꽃 → 벚꽃나무 → 버찌로 이어지는 설정이다.
@@ -506,6 +508,8 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - (결정) 개화의 핵은 꽃 한 송이. 만개의 핵은 유리구슬 없이 나무만. 결실의 핵은 검푸른 버찌(황금사과안 철회).
 - (결정) 만개의 핵 연출: **마법이 깃든 벚꽃나무** 느낌. 벚꽃잎이 **나선형 궤적을 따라 듬성듬성 흩날리며 나무를 휘감는다**(줄로 이어지지 않고 띄엄띄엄, 나무 앞을 지날 때는 나무를 조금 가려도 됨, 나무 가운데에도 몇 점 지나감, 입자는 나무 꼭대기보다 높이 올라가지 않음)(아래 앞 → 오른쪽으로 올라감 → 나무 뒤 → 왼쪽에서 나와 위쪽 앞). 꼬리는 흐린 연보라, 머리로 갈수록 밝은 분홍·흰빛이고, 보라·하늘·금빛 마법 입자가 조금 섞인다. 그림에도 이 궤적을 찍어 두고, 바닥에 떨어져 있을 때는 원작 `Item.emitter()` 방식으로 꽃잎 입자가 같은 나선을 따라 돈다(나무 뒤를 지날 때는 흐리게). 은은하게, 별(Speck.STAR)은 쓰지 않는다.
 - 초안 그림(16×16 PNG)이 `docs/sprites/`에 있다: `bloom_core_flower.png`(개화), `fullbloom_core.png`(만개), `fruit_core.png`(결실). 이 그림을 게임 아이템 그림으로 넣는다. 사용자가 고친 그림으로 바꿀 수 있게 넣은 위치를 알려 준다.
+- (구현) 게임 그림 파일: `core/src/main/assets/sprites/maze_bloom_core.png`, `maze_fullbloom_core.png`, `maze_fruit_core.png`. 같은 이름의 16×16 PNG로 덮어쓰고 다시 빌드하면 바뀐다. 원작 items.png에 없는 그림은 `sprites/MazeItemSprites`에 번호를 정하고, `ItemSprite.frame`이 그 번호를 보면 따로 된 PNG를 그린다.
+- (구현) 만개의 핵 꽃잎 입자: `effects/particles/BloomPetalParticle` (원작 `Item.emitter()` 방식, 가방 안에서도 보일 수 있음).
 
 ## 구현 순서 (단계마다 사용자 확인) — 모두 완료
 
@@ -541,7 +545,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 
 20. **전사 3차 전직 (만개, 검투사)**: 명세 12번 — 완료
 21. **전사 4차 전직 (결실, 영웅의 도약 / 인내)**: 명세 13번 — 완료
-22. **클리어 조건과 전직 아이템 외형**: 명세 14번, 15번
+22. **클리어 조건과 전직 아이템 외형**: 명세 14번, 15번 — 완료
 23. **원작의 다른 무기 처리**: 검·단검·활·지팡이 외 원작 무기(스킬 없음)를 드랍에서 뺄지, 임시로 쓰게 둘지
 24. **전사로 26층 통과 플레이**: 한 판 전체 점검, 어디가 쉽고 어려운지 기록
 25. **몬스터 난이도 상향**: 24번 결과를 보고 조정. 구역별 체력·공격력·명중 배율을 `MazeTower.java` 상수로 둔다
@@ -587,6 +591,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 1차 특성(발아) 효과: `actors/hero/SproutEffects.java` + 원작 특성 자리(`Talent`, `BrokenSeal`, `Wand`, `Mob`, `RegularLevel`, `HighGrass`, `Plant`, `Level`, `Hero.search`)에서 `T1_*` 수치 사용
 - 3차 검투사: `actors/hero/GladiatorEffects.java` (특성 4개·필살기 스킬 취급), `items/FullBloomCore.java`, `ui/FinisherIndicator.java`(필살기 버튼). 원작 수정: `Combo`(필살기·야성·향상된 콤보), `BrokenSeal`(재사용 대기 턴 감소·방어막), `Hero.talentPointsAvailable`(3차 포인트), `Tengu`(만개의 핵 드랍), `WndChooseSubclass`(3차 목록), `GameScene`(필살기 버튼 배치), `SwordSkill`(스킬 타격 연속 타격)
 - 4차 결실: `items/FruitCore.java`. 원작 수정: `HeroicLeap`(최대 거리·몸통 박치기·충격파·이중 도약), `Endure`(무시하기·지속적인 응징·가시갑옷·아이콘), `ArmorAbility.desc`(안내 문구), `DwarfKing`(결실의 핵 드랍), `WndChooseAbility`(4차 목록), `RatKing`(결실의 핵 제외), `Hero.talentPointsAvailable`(4차 포인트), `TalentsPane`(줄별 별 개수 `MazeTower.tierRegularPoints`)
+- 클리어·그림: `scenes/AmuletScene`(머무르기 없음), `sprites/MazeItemSprites` + `ItemSprite.frame`(새 아이템 그림), `effects/particles/BloomPetalParticle`(만개의 핵 꽃잎)
 - 빙결 미루기: `ElementalReactions.beginDefer/endDefer` (`Char.attack`, `Char.damage`에서 호출)
 - 2차 특성 상태 아이콘: `BloomEffects`의 `ComboTracker`·`FlowTracker`·`EchoTracker`·`ParryTracker`
 - 치트: `windows/WndCheats.java`
