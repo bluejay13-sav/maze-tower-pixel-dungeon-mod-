@@ -41,19 +41,24 @@ public class SproutEffects {
 			hero.HP = Math.min(hero.HP + healing, hero.HT);
 			hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healing), FloatingText.HEALING);
 		}
-		if (hearty >= 2) addMealMana(hero, T1_HEARTY_MANA);
+		Mana m = Mana.get(hero);
+		int before = m.max();
+		if (hearty >= 1 && m.heartyMeals < T1_MEAL_MANA_TIMES) m.heartyMeals++;
 
 		int empower = pts(hero, Talent.EMPOWERING_MEAL);
-		if (empower >= 1) addMealMana(hero, T1_EMPOWER_MANA[empower]);
+		if (empower >= 1 && m.empowerMeals < T1_MEAL_MANA_TIMES) m.empowerMeals++;
+		int gained = m.max() - before;
+		if (gained > 0) hero.sprite.showStatus(0x66AAFF, "+" + gained);
 	}
 
-	//먹을 때마다 최대 마나 +n, 최대 T1_MEAL_MANA_TIMES회 (영구)
-	private static void addMealMana(Hero hero, int n){
-		Mana m = Mana.get(hero);
-		if (m.mealTimes >= T1_MEAL_MANA_TIMES) return;
-		m.mealTimes++;
-		m.mealBonus += n;
-		hero.sprite.showStatus(0x66AAFF, "+" + n);
+	//식사로 오른 최대 마나 = 특성을 찍은 뒤 먹은 횟수(최대 T1_MEAL_MANA_TIMES) × 지금 레벨의 1회 증가량.
+	//특성 레벨이 오르면 지난 식사분도 새 수치로 다시 계산되어 손해가 없다.
+	//푸짐한 식사는 1레벨에 먹은 것도 세어 두었다가 2레벨이 되면 한꺼번에 반영된다.
+	public static int mealManaBonus(Hero hero, Mana m){
+		int bonus = 0;
+		if (pts(hero, Talent.HEARTY_MEAL) >= 2) bonus += m.heartyMeals * T1_HEARTY_MANA;
+		bonus += m.empowerMeals * T1_EMPOWER_MANA[pts(hero, Talent.EMPOWERING_MEAL)];
+		return bonus;
 	}
 
 	// ===== 투지 =====

@@ -116,7 +116,7 @@ public class MazeTower {
 	public static final int[]   T1_NATURE_AID_BARK   = {0, 2, 4};      //자연의 도움: 나무껍질
 	public static final int[]   T1_NATURE_AID_TIME   = {0, 3, 5};      //  나무껍질이 1씩 줄어드는 간격(턴)
 	public static final int[]   T1_SENSES_SEARCH     = {0, 1, 2};      //숲의 감각: 탐색 범위 +
-	public static final int     T1_SENSES_TRACK      = 5;              //숲의 감각 2: 이 거리 안의 가장 가까운 적 1마리를 늘 본다
+	public static final int     T1_SENSES_TRACK      = 4;              //숲의 감각 2: 이 거리 안의 가장 가까운 적 1마리를 늘 본다
 
 	// ===== 연출 =====
 

@@ -2566,7 +2566,11 @@ public class Hero extends Char {
 		boolean circular = pointsInTalent(Talent.WIDE_SEARCH) == 1;
 		int distance = heroClass == HeroClass.ROGUE ? 2 : 1;
 		if (hasTalent(Talent.WIDE_SEARCH)) distance++;
-		distance += SproutEffects.searchBonus(this); //Maze Tower: 숲의 감각
+		//Maze Tower: 숲의 감각 - 범위를 넓히고 주인공을 중심으로 둥글게 탐색한다
+		if (SproutEffects.searchBonus(this) > 0){
+			distance += SproutEffects.searchBonus(this);
+			circular = true;
+		}
 		
 		boolean foresight = buff(Foresight.class) != null;
 		boolean foresightScan = foresight && !Dungeon.level.mapped[pos];
