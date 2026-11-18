@@ -489,6 +489,7 @@ public abstract class Char extends Actor {
 				dmg *= 0.67f;
 			}
 
+			ElementalReactions.beginDefer(enemy); //Maze Tower: 적중 시 효과의 빙결은 피해 뒤에
 			int effectiveDamage = enemy.defenseProc( this, Math.round(dmg) );
 			//do not trigger on-hit logic if defenseProc returned a negative value
 			if (effectiveDamage >= 0) {
@@ -515,10 +516,12 @@ public abstract class Char extends Actor {
 			// If the enemy is already dead, interrupt the attack.
 			// This matters as defence procs can sometimes inflict self-damage, such as armor glyphs.
 			if (!enemy.isAlive()){
+				ElementalReactions.endDefer(enemy); //Maze Tower
 				return true;
 			}
 
 			enemy.damage( effectiveDamage, this );
+			ElementalReactions.endDefer(enemy); //Maze Tower: 피해가 들어간 뒤 미뤄 둔 빙결
 
 			if (buff(FireImbue.class) != null)  buff(FireImbue.class).proc(enemy);
 			if (buff(FrostImbue.class) != null) buff(FrostImbue.class).proc(enemy);
@@ -847,6 +850,9 @@ public abstract class Char extends Actor {
 			return;
 		}
 
+		//Maze Tower: 이 피해 처리 중에 생긴 빙결은 피해가 끝난 뒤에 건다
+		ElementalReactions.beginDefer(this);
+
 		//Maze Tower: 전격 피해를 받으면 정전기
 		ElementalReactions.onDamage(this, dmg, src);
 		//Maze Tower: 지팡이 스킬(합성된 마법봉) 피해에 2차 스킬 특성 적용
@@ -994,6 +1000,7 @@ public abstract class Char extends Actor {
 			b.set(bleedAmt, bleedSrc);
 			sprite.showStatus(CharSprite.WARNING, Messages.titleCase(b.name()) + " " + dmg);
 			Splash.at( sprite.center(), -PointF.PI / 2, PointF.PI / 6, sprite.blood(), 10 );
+			ElementalReactions.endDefer(this); //Maze Tower
 			return;
 		}
 
@@ -1087,6 +1094,9 @@ public abstract class Char extends Actor {
 		} else if (HP == 0 && buff(DeathMark.DeathMarkTracker.class) != null){
 			DeathMark.processFearTheReaper(this);
 		}
+
+		//Maze Tower: 미뤄 둔 빙결을 이제 건다
+		ElementalReactions.endDefer(this);
 	}
 
 	//these are misc. sources of physical damage which do not apply armor, they get a different icon

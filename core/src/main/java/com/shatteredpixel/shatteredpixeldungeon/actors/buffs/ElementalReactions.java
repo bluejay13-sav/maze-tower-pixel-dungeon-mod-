@@ -73,6 +73,36 @@ public class ElementalReactions {
 		return e;
 	}
 
+	// ===== 피해 먼저, 빙결은 나중에 =====
+	//원작은 피해를 받으면 빙결이 풀린다. 공격의 적중 시 효과(지팡이 냉기, 서리 베기 등)로 빙결이 걸려도
+	//곧바로 그 공격의 피해에 깨지지 않도록, 공격·피해 처리 중에 생긴 빙결은 피해가 끝난 뒤에 건다.
+	private static Char deferTarget = null;
+	private static int deferDepth = 0;
+	private static boolean pendingFreeze = false;
+
+	//Char.attack(적중 처리 시작)과 Char.damage(시작)에서 호출
+	public static void beginDefer( Char ch ){
+		if (deferTarget == null){
+			deferTarget = ch;
+			deferDepth = 0;
+			pendingFreeze = false;
+		}
+		if (deferTarget == ch) deferDepth++;
+	}
+
+	//Char.attack(피해 뒤)과 Char.damage(끝)에서 호출. 가장 바깥에서 끝날 때 미뤄 둔 빙결을 건다.
+	public static void endDefer( Char ch ){
+		if (deferTarget != ch) return;
+		deferDepth--;
+		if (deferDepth > 0) return;
+		boolean freeze = pendingFreeze;
+		deferTarget = null;
+		pendingFreeze = false;
+		if (freeze && ch.isAlive() && ch.buff(Frost.class) == null){
+			applyFreeze(ch);
+		}
+	}
+
 	//빙결이 풀릴 때 원작이 거는 냉기로는 다시 얼리지 않는다 (Frost.detach)
 	public static boolean suppressFreeze = false;
 
@@ -326,6 +356,15 @@ public class ElementalReactions {
 
 	//빙결 생성: 눈보라 + 원작 IceBlock (Frost가 붙으면 자동으로 얼음 덩어리가 생긴다)
 	private static void freeze( Char ch ){
+		//공격·피해 처리 중이면 피해가 끝난 뒤에 얼린다 (endDefer)
+		if (deferTarget == ch){
+			pendingFreeze = true;
+			return;
+		}
+		applyFreeze(ch);
+	}
+
+	private static void applyFreeze( Char ch ){
 		announce(ch, "freeze", 0x66AAFF);
 		if (seen(ch)){
 			ch.sprite.emitter().burst(SnowParticle.FACTORY, 20);

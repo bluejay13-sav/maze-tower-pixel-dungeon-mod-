@@ -27,6 +27,8 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
+import com.watabou.noosa.Image;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.tweeners.Delayer;
 import com.watabou.utils.Bundle;
@@ -572,6 +574,13 @@ public class BloomEffects {
 		public int target = -1;
 		public int count = 0;
 
+		//상태 아이콘: 쌓인 횟수 / 필요 횟수
+		@Override public int icon() { return count > 0 ? BuffIndicator.COMBO : BuffIndicator.NONE; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(1f, 0.85f, 0.3f); }
+		@Override public String iconTextDisplay() { return Integer.toString(count); }
+		@Override public String desc() { return Messages.get(this, "desc", count, comboNeed()); }
+		private static int comboNeed(){ int c = Dungeon.hero == null ? -1 : lvl(Dungeon.hero, COMBO); return c >= 0 ? T_COMBO_HITS[c] : T_COMBO_HITS[0]; }
+
 		@Override
 		public void storeInBundle(Bundle bundle) {
 			super.storeInBundle(bundle);
@@ -592,6 +601,15 @@ public class BloomEffects {
 		{ type = buffType.POSITIVE; }
 		public int charges = 1;
 
+		//상태 아이콘: 남은 강화 평타 수
+		@Override public int icon() { return BuffIndicator.MOMENTUM; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(0.5f, 0.8f, 1f); }
+		@Override public String iconTextDisplay() { return Integer.toString(charges); }
+		@Override public String desc() {
+			int f = Dungeon.hero == null ? 0 : Math.max(0, lvl(Dungeon.hero, FLOW));
+			return Messages.get(this, f >= 1 ? "desc_sure" : "desc", Math.round(T_FLOW_DMG * 100), charges);
+		}
+
 		@Override
 		public void storeInBundle(Bundle bundle) {
 			super.storeInBundle(bundle);
@@ -608,11 +626,28 @@ public class BloomEffects {
 	//잔향: 남은 턴
 	public static class EchoTracker extends FlavourBuff {
 		{ type = buffType.POSITIVE; }
+
+		//상태 아이콘: 남은 턴
+		@Override public int icon() { return BuffIndicator.RECHARGING; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(0.4f, 0.6f, 1f); }
+		@Override public float iconFadePercent() { return Math.max(0, (T_ECHO_TURNS[2] - visualcooldown()) / T_ECHO_TURNS[2]); }
+		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
+		@Override public String desc() {
+			int e = Dungeon.hero == null ? 0 : Math.max(0, lvl(Dungeon.hero, ECHO));
+			return Messages.get(this, "desc", T_ECHO_MANA[e], dispTurns());
+		}
 	}
 
 	//흘리기: 다음 피격 1회
 	public static class ParryTracker extends Buff {
 		{ type = buffType.POSITIVE; }
+
+		//상태 아이콘: 다음 피격 1회 피해 감소
+		@Override public int icon() { return BuffIndicator.DUEL_GUARD; }
+		@Override public String desc() {
+			int p = Dungeon.hero == null ? 0 : Math.max(0, lvl(Dungeon.hero, PARRY));
+			return Messages.get(this, "desc", Math.round(T_PARRY_REDUCE[p] * 100));
+		}
 	}
 
 	//무기를 들고 있는지 (평타 판정 보조)

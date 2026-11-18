@@ -19,6 +19,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
@@ -133,6 +134,13 @@ public class WndCheats extends Window {
 			@Override
 			protected void onClick() {
 				give(new PotionOfStrength().identify());
+			}
+		});
+
+		addButton(new RedButton(Messages.get(this, "wand"), 7){
+			@Override
+			protected void onClick() {
+				give(Generator.randomUsingDefaults(Generator.Category.WAND).identify());
 			}
 		});
 
