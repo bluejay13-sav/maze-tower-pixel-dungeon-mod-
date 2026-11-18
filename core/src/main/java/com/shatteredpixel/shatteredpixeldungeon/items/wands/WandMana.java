@@ -5,8 +5,11 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
@@ -49,10 +52,18 @@ public class WandMana {
 		return false;
 	}
 
-	//실제로 쏘는 순간: 마나를 쓴다
-	public static void onZap( Hero hero, Wand wand ){
+	//실제로 쏘는 순간: 지팡이 스킬이면 2차 스킬 특성을 시작하고, 마나를 쓴다
+	public static void onZap( Hero hero, Wand wand, int targetCell ){
 		int cost = manaCost(hero, wand);
+		if (isStaffWand(hero, wand) && SwordSkill.heroUsesSkills(hero)){
+			BloomEffects.beginStaffSkill(hero, wand, Actor.findChar(targetCell), cost);
+		}
 		if (cost > 0) Mana.get(hero).spend(cost);
+	}
+
+	//쏘기가 끝났을 때 (Wand.wandUsed)
+	public static void afterZap( Wand wand ){
+		BloomEffects.endStaffSkill(Dungeon.hero, wand);
 	}
 
 	// ===== 이름과 설명 =====

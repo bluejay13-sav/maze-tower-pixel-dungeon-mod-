@@ -849,6 +849,8 @@ public abstract class Char extends Actor {
 
 		//Maze Tower: 전격 피해를 받으면 정전기
 		ElementalReactions.onDamage(this, dmg, src);
+		//Maze Tower: 지팡이 스킬(합성된 마법봉) 피해에 2차 스킬 특성 적용
+		dmg = BloomEffects.onStaffSkillDamage(this, dmg, src);
 
 		if (!(src instanceof LifeLink || src instanceof Hunger) && buff(LifeLink.class) != null){
 			HashSet<LifeLink> links = buffs(LifeLink.class);

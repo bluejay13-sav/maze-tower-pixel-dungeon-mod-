@@ -143,8 +143,40 @@ public class BloomEffects {
 	private static boolean inShadow = false; //그림자검 추가 공격 중
 
 	public static int onHeroAttackProc(Hero hero, Char enemy, int damage){
+		return processHit(hero, enemy, damage, isSkill());
+	}
+
+	// =====================================================================
+	// 지팡이 스킬 (마법사): 합성된 마법봉 발사도 스킬로 친다
+	// =====================================================================
+
+	//지금 스킬로 쏘고 있는 지팡이의 마법봉 (쏘는 동안만)
+	public static Object staffSkillWand = null;
+
+	//쏘는 순간 (WandMana.onZap): 마나를 쓰기 전에 호출
+	public static void beginStaffSkill(Hero hero, Object wand, Char target, int cost){
+		beginSkill(hero, target, cost);
+		staffSkillWand = wand;
+	}
+
+	//쏘기가 끝났을 때 (Wand.wandUsed): 처치 시 마나 반환, 흐름·잔향·흘리기
+	public static void endStaffSkill(Hero hero, Object wand){
+		if (wand == null || staffSkillWand != wand) return;
+		staffSkillWand = null;
+		endSkill(hero);
+	}
+
+	//지팡이 마법봉이 준 피해 (Char.damage): 스킬 특성의 피해 배율과 적중 시 효과
+	public static int onStaffSkillDamage(Char target, int dmg, Object src){
+		if (staffSkillWand == null || src != staffSkillWand || dmg <= 0) return dmg;
+		Hero hero = Dungeon.hero;
+		if (hero == null || target == hero || target.alignment == Char.Alignment.ALLY) return dmg;
+		return processHit(hero, target, dmg, true);
+	}
+
+	//평타·스킬 적중 한 번 처리 (검 스킬·평타는 Hero.attackProc, 지팡이 스킬은 Char.damage에서 온다)
+	private static int processHit(Hero hero, Char enemy, int damage, boolean skill){
 		if (enemy == null || enemy == hero) return damage;
-		boolean skill = isSkill();
 		float dmg = damage;
 		float bonus = 1f;
 

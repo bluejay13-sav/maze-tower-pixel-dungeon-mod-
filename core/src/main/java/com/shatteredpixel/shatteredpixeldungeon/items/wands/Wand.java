@@ -465,6 +465,7 @@ public abstract class Wand extends Item {
 	}
 
 	public void wandUsed() {
+		WandMana.afterZap(this); //Maze Tower: 지팡이 스킬 끝 (처치 시 마나 반환, 흐름·잔향·흘리기)
 		if (!isIdentified()) {
 			float uses = Math.min( availableUsesToID, Talent.itemIDSpeedFactor(Dungeon.hero, this) );
 			availableUsesToID -= uses;
@@ -728,7 +729,7 @@ public abstract class Wand extends Item {
 				if (curWand.tryToZap(curUser, target)) {
 					
 					curUser.busy();
-					WandMana.onZap(curUser, curWand); //Maze Tower: 쏘는 순간 마나 소모
+					WandMana.onZap(curUser, curWand, cell); //Maze Tower: 쏘는 순간 마나 소모, 지팡이 스킬 시작
 
 					//backup barrier logic
 					//This triggers before the wand zap, mostly so the barrier helps vs skeletons
