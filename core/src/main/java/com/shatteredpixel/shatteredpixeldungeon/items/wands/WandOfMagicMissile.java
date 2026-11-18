@@ -59,7 +59,8 @@ public class WandOfMagicMissile extends DamageWand {
 		if (ch != null) {
 
 			wandProc(ch, chargesPerCast());
-			ch.damage(damageRoll(), this);
+			//Maze Tower: 지팡이에 합성된 기본 마법봉이면 지팡이 평타 피해의 100% (마탄 발사)
+			ch.damage(WandMana.magicMissileDamage(curUser, this, damageRoll()), this);
 			Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, Random.Float(0.87f, 1.15f) );
 
 			ch.sprite.burst(0xFFFFFFFF, buffedLvl() / 2 + 2);

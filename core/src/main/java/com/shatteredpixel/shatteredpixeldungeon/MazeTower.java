@@ -47,6 +47,14 @@ public class MazeTower {
 	//여러 번 때리는 스킬(연격, 반월베기)의 타격 사이 텀 (초, 화면 연출용)
 	public static final float SKILL_HIT_INTERVAL = 0.24f;
 
+	// ===== 마법사와 마법봉 =====
+
+	//마법사 지팡이 스킬(마탄 발사)의 피해 = 지팡이 평타 피해의 몇 배 (1 = 100%)
+	public static final float MAGE_BOLT_DMG = 1.0f;
+	//지팡이 스킬은 마나(SKILL_MANA_COST, 절약 특성 적용) + 지팡이 충전 1을 쓴다
+	//합성하지 않은 마법봉을 쓸 때 드는 마나 (모든 직업)
+	public static final int LOOSE_WAND_MANA_COST = 15;
+
 	// ===== 연출 =====
 
 	//그림자검: 평타가 끝난 뒤 잔상 일격까지의 텀 (초)

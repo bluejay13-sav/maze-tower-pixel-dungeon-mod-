@@ -295,6 +295,11 @@ public class MagesStaff extends MeleeWeapon {
 		}
 	}
 
+	//Maze Tower: 지팡이에 합성된 마법봉 (마나 스킬 판정용)
+	public Wand imbuedWand(){
+		return wand;
+	}
+
 	public Class<?extends Wand> wandClass(){
 		return wand != null ? wand.getClass() : null;
 	}

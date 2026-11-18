@@ -41,6 +41,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandMana;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Crystal;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -384,8 +385,12 @@ public class MeleeWeapon extends Weapon {
 		//Maze Tower: 검 스킬 설명
 		} else if (SwordSkill.heroUsesSkills(Dungeon.hero) && SwordSkill.forWeapon(this) != null){
 			info += "\n\n" + SwordSkill.forWeapon(this).desc();
+		//Maze Tower: 마법사 지팡이 스킬 설명
+		} else if (SwordSkill.heroUsesSkills(Dungeon.hero) && this instanceof MagesStaff){
+			String s = WandMana.staffSkillDesc(Dungeon.hero, (MagesStaff)this);
+			if (!s.isEmpty()) info += "\n\n" + s;
 		}
-		
+
 		return info;
 	}
 	

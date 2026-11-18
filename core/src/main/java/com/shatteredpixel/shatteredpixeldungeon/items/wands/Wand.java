@@ -154,6 +154,11 @@ public abstract class Wand extends Item {
 			return false;
 		}
 
+		//Maze Tower: 마나 확인 (지팡이 스킬은 스킬 비용, 합성 안 된 마법봉은 15)
+		if (!WandMana.canZap(owner, this)){
+			return false;
+		}
+
 		//if we're using wild magic, then assume we have charges
 		if ( owner.buff(WildMagic.WildMagicTracker.class) != null || curCharges >= chargesPerCast()){
 			return true;
@@ -293,6 +298,10 @@ public abstract class Wand extends Item {
 		String desc = super.info();
 
 		desc += "\n\n" + statsDesc();
+
+		//Maze Tower: 합성하지 않은 마법봉은 마나 15
+		String manaNote = WandMana.looseWandDesc(Dungeon.hero, this);
+		if (!manaNote.isEmpty()) desc += "\n\n" + manaNote;
 
 		if (resinBonus == 1){
 			desc += "\n\n" + Messages.get(Wand.class, "resin_one");
@@ -719,6 +728,7 @@ public abstract class Wand extends Item {
 				if (curWand.tryToZap(curUser, target)) {
 					
 					curUser.busy();
+					WandMana.onZap(curUser, curWand); //Maze Tower: 쏘는 순간 마나 소모
 
 					//backup barrier logic
 					//This triggers before the wand zap, mostly so the barrier helps vs skeletons

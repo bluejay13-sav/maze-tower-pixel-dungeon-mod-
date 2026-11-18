@@ -9,6 +9,9 @@ import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandMana;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -105,7 +108,13 @@ public class Mana extends Buff implements ActionIndicator.Action {
 		if (!SwordSkill.heroUsesSkills(hero)) return null;
 		KindOfWeapon w = hero.belongings.weapon();
 		if (w instanceof MeleeWeapon && SwordSkill.forWeapon(w) != null) return (MeleeWeapon)w;
+		//마법사 지팡이: 합성된 마법봉을 쏘는 것이 스킬
+		if (w instanceof MagesStaff && ((MagesStaff)w).imbuedWand() != null) return (MeleeWeapon)w;
 		return null;
+	}
+
+	private static Wand staffWand(MeleeWeapon w){
+		return w instanceof MagesStaff ? ((MagesStaff)w).imbuedWand() : null;
 	}
 
 	//장착한 검이 바뀌었으면 버튼을 갱신한다. 상태창(StatusPane)이 매 프레임 호출한다.
@@ -128,13 +137,20 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	private boolean lastAffordable = true;
 
 	private boolean canAfford(){
-		return !(target instanceof Hero) || cur() >= SwordSkill.manaCost((Hero)target);
+		if (!(target instanceof Hero)) return true;
+		if (cur() < SwordSkill.manaCost((Hero)target)) return false;
+		//지팡이 스킬은 충전도 1 있어야 한다
+		Wand sw = staffWand(skillWeapon());
+		return sw == null || sw.curCharges >= 1;
 	}
 
 	@Override
 	public String actionName() {
 		MeleeWeapon w = skillWeapon();
-		return w == null ? "" : SwordSkill.forWeapon(w).name();
+		if (w == null) return "";
+		Wand sw = staffWand(w);
+		if (sw != null) return WandMana.skillName(sw);
+		return SwordSkill.forWeapon(w).name();
 	}
 
 	@Override
@@ -163,7 +179,9 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	@Override
 	public void doAction() {
 		MeleeWeapon w = skillWeapon();
-		if (w != null) w.execute((Hero)target, MeleeWeapon.AC_ABILITY);
+		if (w == null) return;
+		if (w instanceof MagesStaff) w.execute((Hero)target, MagesStaff.AC_ZAP); //지팡이: 합성된 마법봉 발사
+		else w.execute((Hero)target, MeleeWeapon.AC_ABILITY);
 	}
 
 	private static final String MANA = "mana";
