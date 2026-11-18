@@ -85,7 +85,8 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 | 4 | 카타나 (Katana) | 반월베기 | 115% × 2회 (총 230%) | 명중 +30% |
 | 4 | 룬 블레이드 (RunicBlade) | 무형검 | 190% | 방어 무시, 속성 특성 발동 확률 2배 |
 
-- 모든 스킬은 단일 대상, 인접한 적에게 사용.
+- 모든 스킬은 단일 대상, 인접한 적에게 사용. (예외: 사냥꾼의 조준 사격은 떨어진 적에게도 쓴다. 명세 11번)
+- (구현) 단검·활 스킬(급소 찌르기·조준 사격)도 같은 `SwordSkill` 표에 들어 있다. 마법사 지팡이 스킬은 `WandMana`.
 - (구현) 장착한 검이 있으면 화면 오른쪽 아래 행동 버튼(검 그림 + 마나 비용)으로 쓴다. 장착한 검을 퀵슬롯에 넣어도 스킬이 나간다.
 - (참고) 원작에서 레이피어는 1티어다. 무기 티어는 원작 그대로 두었다.
 - 원작 Sword, Greatsword 등 위 7종 외 검은 테스트 빌드에서는 그대로 둔다(정리는 나중에).
@@ -210,8 +211,8 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 검 7종 소환, 강화 주문서 소환
 - 원하는 층으로 이동
 - 젖음·정전기·화상·냉각 상태를 적에게 걸기
-- (추가) 마나 비우기, 힘의 물약 얻기, 2차 특성 바로 얻기(분류 → 특성 → 레벨, 포인트 불필요), 마법봉 무작위 얻기(감정됨)
-- (구현) 게임 메뉴(≡)의 "치트 (테스트)" 버튼. `desktop:debug`로 실행할 때만 보인다.
+- (추가) 마나 비우기, 힘의 물약 얻기, 2차 특성 바로 얻기(분류 → 특성 → 레벨, 포인트 불필요), 마법봉 무작위 얻기(감정됨), 단검·활·화살 50·투창 2개 얻기(직업 무기 시험용)
+- (구현) 게임 메뉴(≡)의 "치트 (테스트)" 버튼. `desktop:debug`로 실행할 때만 보인다. 버튼이 많아 화면에 들어가도록 버튼 높이를 15로 줄였다.
 
 ### 9. 이펙트 (최종 구현 기준)
 - 원작 이펙트(`effects/`, `effects/particles/`)를 최대한 재사용한다. 새 그림이 필요한 것은 따로 표시했다.
@@ -227,6 +228,9 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 | 연격 | 시미터 | (결정) 타격마다 다른 모양: 사선 → 반대 사선(X자) → 크고 두꺼운 마무리 가로베기 + 불똥. 타격마다 적이 번쩍 |
 | 반월베기 | 카타나 | (결정) 첫 타는 작은 반달 + 은색 가루 조금, 둘째 타는 반대 방향으로 더 크고 두꺼운 반달 + 은색 가루 많이 |
 | 무형검 | 룬 블레이드 | 푸른 마탄(MagicMissile)이 날아가고 푸른 칼날 궤적 + 마법 입자 |
+| 급소 찌르기 | 낡은 단검 | 바로 앞에서 짧고 빠르게 찌르는 작은 화살촉 + 불똥 하나. 기습이면 짙은 핏빛 작은 반달(solid) + 피 3방울. 기습이 아니면 피가 튀지 않는다 |
+| 조준 사격 | 낡은 단궁 | 화살(MissileSprite)이 날아가 닿을 때 불똥 + 번쩍임, 적이 1칸 밀려남 |
+| 마탄 발사 | 마법사의 지팡이 | 원작 마법 화살 마법봉 이펙트 그대로 |
 - (결정) 여러 번 때리는 스킬(연격·반월베기)은 **타격 사이에 0.24초 텀**(`SKILL_HIT_INTERVAL`)을 두고, 타격마다 이펙트·피해 숫자가 따로 나온다. 텀 동안 적은 움직이지 않는다(연출만 늘어나고 턴 계산은 같다).
 
 **상태이상**
@@ -420,8 +424,8 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 
 ## 직업 구현 순서 (단계마다 사용자 확인)
 
-15. **직업 다시 열기**: 4직업 선택, 결투가·성직자 숨기기, 원작 직업 특성 대신 1차(발아) 줄, 전사 인장 복귀
-16. **마법사**: 지팡이 마탄 발사 스킬(마나 + 충전), 마법봉 합성 시 스킬 변경, 합성 안 된 마법봉 마나 15
+15. **직업 다시 열기**: 4직업 선택, 결투가·성직자 숨기기, 원작 직업 특성 대신 1차(발아) 줄, 전사 인장 복귀 — 완료
+16. **마법사**: 지팡이 마탄 발사 스킬(마나 + 충전), 마법봉 합성 시 스킬 변경, 합성 안 된 마법봉 마나 15 — 완료 (마법봉별 스킬은 나중에)
 17. **도적**: 낡은 단검, 급소 찌르기, 공격 속도 1.3배 — 완료
 18. **사냥꾼**: 낡은 단궁, 거리별 평타, 화살과 회수, 조준 사격, 투척 무기 분해 — 완료
 19. **1차 특성 20개**: 직업별로 하나씩 확인 — 완료
@@ -449,6 +453,14 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 2차 특성 효과: `actors/hero/BloomEffects.java` (원작 코드에는 호출 한 줄씩만 넣음)
 - 2차 UI: `ui/BloomTalentsPane.java`, `windows/WndBloomChoice.java`, `windows/WndBloomTalent.java`
 - 원소 반응: `actors/buffs/ElementalReactions.java`, `StaticCharge.java`(정전기), `Wet.java`(젖음)
+- 직업 무기:
+  - 마법사: `items/wands/WandMana.java` (지팡이 스킬·마법봉 마나), `MagesStaff.imbuedWand()` 추가
+  - 도적: `items/weapon/melee/WornDagger.java` (원작 Dagger를 물려받음)
+  - 사냥꾼: `items/weapon/melee/WornShortbow.java` (거리별 평타·화살 쏘기·밀쳐내기), `items/Arrow.java` (화살, 박힌 화살 `Arrow.Stuck`, 투척 무기 분해)
+  - 원작 수정: `Hero.actAttack`·`onAttackComplete` (활 원거리 평타), `Hero.attackDelay` (도적 공격 속도), `HeroClass` (시작 장비), `MissileWeapon` (분해 행동), `MissileSprite` (화살 회전 없음)
+- 1차 특성(발아) 효과: `actors/hero/SproutEffects.java` + 원작 특성 자리(`Talent`, `BrokenSeal`, `Wand`, `Mob`, `RegularLevel`, `HighGrass`, `Plant`, `Level`, `Hero.search`)에서 `T1_*` 수치 사용
+- 빙결 미루기: `ElementalReactions.beginDefer/endDefer` (`Char.attack`, `Char.damage`에서 호출)
+- 2차 특성 상태 아이콘: `BloomEffects`의 `ComboTracker`·`FlowTracker`·`EchoTracker`·`ParryTracker`
 - 치트: `windows/WndCheats.java`
 - 이펙트:
   - `effects/SlashTrail.java` (베기 궤적: 초승달·고리, 빛/solid, 가루 뿌리기)
