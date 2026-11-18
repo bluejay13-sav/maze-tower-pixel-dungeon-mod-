@@ -148,6 +148,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Quarterstaff;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.RoundShield;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sai;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Scimitar;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortbow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
@@ -1493,7 +1494,17 @@ public class Hero extends Char {
 
 			}
 			//attack target cleared on onAttackComplete
-			sprite.attack( attackTarget.pos );
+			//Maze Tower: 활로 인접하지 않은 적을 공격하면 화살을 쏜다
+			if (WornShortbow.isShot(this, attackTarget)){
+				WornShortbow.fireAnimation(this, attackTarget, new Callback() {
+					@Override
+					public void call() {
+						onAttackComplete();
+					}
+				});
+			} else {
+				sprite.attack( attackTarget.pos );
+			}
 
 			return false;
 
@@ -2402,8 +2413,12 @@ public class Hero extends Char {
 		boolean wasEnemy = attackTarget.alignment == Alignment.ENEMY
 				|| (attackTarget instanceof Mimic && attackTarget.alignment == Alignment.NEUTRAL);
 
+		//Maze Tower: 활 - 원거리면 화살 1발을 쓰고 원거리 피해, 근접이면 맞힌 적을 밀쳐낸다
+		final boolean bow = WornShortbow.equipped(this) != null;
+		final boolean shot = WornShortbow.beginShot(this, attackTarget, bow && !Dungeon.level.adjacent(pos, attackTarget.pos));
 		final boolean hit = attack(attackTarget);
 		final Char target = attackTarget;
+		if (bow) WornShortbow.endShot(this, target, hit, shot, !shot);
 
 		//Maze Tower: 생명탈취, 그림자검. 그림자검이 발동하면 잠시 텀을 둔 뒤 잔상 일격을 하고 나서
 		//아래 마무리(턴 소모 등)를 이어서 한다. 그동안 주인공은 행동 중이라 아무도 움직이지 않는다.

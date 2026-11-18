@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.sprites;
 
+import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyLance;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GnollGeomancer;
@@ -101,6 +102,7 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 		ANGULAR_SPEEDS.put(Trident.class,       0);
 		
 		ANGULAR_SPEEDS.put(SpiritBow.SpiritArrow.class,       0);
+		ANGULAR_SPEEDS.put(Arrow.class,                       0); //Maze Tower: 화살
 		ANGULAR_SPEEDS.put(ScorpioSprite.ScorpioShot.class,   0);
 		ANGULAR_SPEEDS.put(HolyLance.HolyLanceVFX.class,      0);
 		

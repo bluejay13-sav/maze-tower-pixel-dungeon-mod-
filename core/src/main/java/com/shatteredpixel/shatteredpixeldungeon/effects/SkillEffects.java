@@ -20,6 +20,7 @@ import com.watabou.utils.PointF;
 //  반월베기 반달 모양 궤적 + 은색 가루, 타격마다 방향이 바뀜 (2타)
 //  무형검   푸른 마탄 칼날
 //  급소 찌르기 짧고 빠른 화살촉, 기습이면 핏빛 반달 + 피
+//  조준 사격 화살이 닿을 때 불똥과 번쩍임
 public class SkillEffects {
 
 	private static final int WHITE = 0xFFFFFF;
@@ -44,6 +45,7 @@ public class SkillEffects {
 			case "crescent": crescent(hero, enemy, index); break;
 			case "phantom":  phantom(hero, enemy); break;
 			case "vital":    vital(hero, enemy, surprise); break;
+			case "aimed":    aimed(enemy); break;
 		}
 	}
 
@@ -89,6 +91,12 @@ public class SkillEffects {
 		});
 	}
 
+	//조준 사격: 화살(MissileSprite)이 날아가 닿는 순간 불똥과 번쩍임
+	private static void aimed( Char enemy ){
+		enemy.sprite.centerEmitter().burst(SparkParticle.FACTORY, 3);
+		enemy.sprite.flash();
+	}
+
 	//급소 찌르기: 바로 앞에서 짧고 빠르게 찌르는 작은 화살촉 + 불똥 하나.
 	//기습이면 찔린 자리에 짙은 핏빛 반달이 짧게 남고 피가 튄다.
 	private static void vital( Char hero, final Char enemy, final boolean surprise ){
@@ -104,9 +112,9 @@ public class SkillEffects {
 				if (enemy.sprite == null || enemy.sprite.parent == null) return;
 				enemy.sprite.centerEmitter().burst(SparkParticle.FACTORY, 1);
 				if (surprise){
-					new SlashTrail(6, 3, d - 1.0f, 2.0f, 0f, 0.05f, 0.22f)
+					new SlashTrail(5, 2, d - 0.9f, 1.8f, 0f, 0.05f, 0.16f)
 							.solid().trailColor(VITAL_RED).show(layer(enemy), enemy.sprite.center());
-					Splash.at(enemy.sprite.center(), d, 0.6f, enemy.sprite.blood(), 6);
+					Splash.at(enemy.sprite.center(), d, 0.5f, enemy.sprite.blood(), 3);
 				}
 			}
 		});

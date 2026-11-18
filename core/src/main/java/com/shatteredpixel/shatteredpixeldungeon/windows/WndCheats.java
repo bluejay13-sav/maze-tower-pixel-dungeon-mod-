@@ -20,6 +20,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornDagger;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortbow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSpear;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
@@ -47,7 +51,7 @@ import com.watabou.utils.DeviceCompat;
 public class WndCheats extends Window {
 
 	private static final int WIDTH      = 120;
-	private static final int BTN_HEIGHT = 16;
+	private static final int BTN_HEIGHT = 15;
 	private static final int GAP        = 1;
 
 	//검 계열 소환 시 한 번에 주는 강화 주문서 수
@@ -134,6 +138,16 @@ public class WndCheats extends Window {
 			@Override
 			protected void onClick() {
 				give(new PotionOfStrength().identify());
+			}
+		});
+
+		addButton(new RedButton(Messages.get(this, "class_weapons"), 7){
+			@Override
+			protected void onClick() {
+				give(new WornDagger().identify());
+				give(new WornShortbow().identify());
+				give(new Arrow().quantity(50));
+				give(new ThrowingSpear().quantity(2).identify());
 			}
 		});
 

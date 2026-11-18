@@ -63,6 +63,26 @@ public class MazeTower {
 	//도적의 공격 속도 배율 (1.3 = 30% 빠름, 공격에 드는 시간이 1/1.3)
 	public static final float ROGUE_ATTACK_SPEED = 1.3f;
 
+	// ===== 사냥꾼과 활 =====
+
+	//낡은 단궁 (1티어): 근접 피해(인접한 적)와 원거리 피해를 따로 가진다. 강화 1당 증가량은 _SCALE
+	public static final int BOW_MELEE_MIN = 1, BOW_MELEE_MIN_SCALE = 1;
+	public static final int BOW_MELEE_MAX = 4, BOW_MELEE_MAX_SCALE = 1;
+	public static final int BOW_RANGED_MIN = 2, BOW_RANGED_MIN_SCALE = 1;
+	public static final int BOW_RANGED_MAX = 8, BOW_RANGED_MAX_SCALE = 2;
+	//2칸 거리 원거리 평타의 명중 배율 (0.7 = -30%). 3칸 이상은 패널티 없음
+	public static final float BOW_CLOSE_RANGE_ACCURACY = 0.7f;
+	//조준 사격: 원거리 피해의 1배, 맞으면 1칸 밀쳐냄 (화살 1발)
+	public static final float SKILL_AIMED_SHOT_DMG = 1.0f;
+	//근접 평타·조준 사격이 밀쳐내는 거리
+	public static final int BOW_KNOCKBACK = 1;
+	//사냥꾼 시작 화살
+	public static final int HUNTRESS_START_ARROWS = 100;
+	//적에게 박힌 화살이 그 적이 죽을 때 떨어질 확률 (화살마다)
+	public static final float ARROW_RECOVER_CHANCE = 0.3f;
+	//투척 무기 분해: 1개당 (티어 × 이 값)발, 저주받은 것은 절반
+	public static final int ARROWS_PER_THROWN_TIER = 5;
+
 	// ===== 연출 =====
 
 	//그림자검: 평타가 끝난 뒤 잔상 일격까지의 텀 (초)

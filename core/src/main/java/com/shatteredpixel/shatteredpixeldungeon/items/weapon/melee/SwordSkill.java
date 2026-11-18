@@ -18,6 +18,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SkillEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -41,6 +42,8 @@ public class SwordSkill {
 	public final float elementChanceMulti;
 	//기습 상태의 적에게 쓰면 이 배율로 바뀐다 (0 = 해당 없음, 급소 찌르기)
 	public float surpriseDmg = 0f;
+	//화살을 쏘는 원거리 스킬인지 (조준 사격): 인접하지 않아도 되고, 화살 1발을 쓰고, 맞으면 밀쳐낸다
+	public boolean ranged = false;
 
 	private SwordSkill(String nameKey, int hits, float dmgPerHit, float accMulti, boolean ignoreDefense, float elementChanceMulti){
 		this.nameKey = nameKey;
@@ -66,6 +69,11 @@ public class SwordSkill {
 		if (c == Scimitar.class)       return new SwordSkill("flurry", MazeTower.SKILL_SCIMITAR_HITS, MazeTower.SKILL_SCIMITAR_DMG, 1f, false, 1f);
 		if (c == Katana.class)         return new SwordSkill("crescent", MazeTower.SKILL_KATANA_HITS, MazeTower.SKILL_KATANA_DMG, MazeTower.SKILL_KATANA_ACCURACY, false, 1f);
 		if (c == RunicBlade.class)     return new SwordSkill("phantom", 1, MazeTower.SKILL_RUNIC_BLADE_DMG, 1f, true, MazeTower.SKILL_RUNIC_BLADE_ELEMENT_CHANCE);
+		if (c == WornShortbow.class){
+			SwordSkill s = basic("aimed", MazeTower.SKILL_AIMED_SHOT_DMG);
+			s.ranged = true;
+			return s;
+		}
 		if (c == WornDagger.class){
 			SwordSkill s = basic("vital", MazeTower.SKILL_WORN_DAGGER_DMG);
 			s.surpriseDmg = MazeTower.SKILL_WORN_DAGGER_SURPRISE_DMG;
@@ -87,6 +95,12 @@ public class SwordSkill {
 
 	//지금 처리 중인 스킬. 스킬 타격 중에만 null이 아니다.
 	public static SwordSkill active = null;
+
+	//급소 찌르기를 기습이 아닌 상태로 쓰는 중이면 맞을 때 피가 튀지 않는다 (핏빛 연출은 기습 전용)
+	private static boolean noBlood = false;
+	public static boolean hidingHitBlood(){
+		return active != null && noBlood;
+	}
 
 	//방어 무시 타격 중인지 (Char.attack에서 확인)
 	public static boolean ignoringDefense(){
@@ -148,8 +162,19 @@ public class SwordSkill {
 			GLog.w(Messages.get(SwordSkill.class, "no_target"));
 			return;
 		}
-		//모든 스킬은 인접한 단일 대상
-		if (!Dungeon.level.adjacent(hero.pos, enemy.pos)){
+		if (skill.ranged){
+			//조준 사격: 화살이 있어야 하고, 화살길이 열려 있어야 한다
+			if (Arrow.count(hero) <= 0){
+				GLog.w(Messages.get(SwordSkill.class, "no_arrows"));
+				ActionIndicator.shake();
+				return;
+			}
+			if (!WornShortbow.clearShot(hero.pos, enemy.pos)){
+				GLog.w(Messages.get(SwordSkill.class, "no_path"));
+				return;
+			}
+		//나머지 스킬은 인접한 단일 대상
+		} else if (!Dungeon.level.adjacent(hero.pos, enemy.pos)){
 			GLog.w(Messages.get(SwordSkill.class, "not_adjacent"));
 			return;
 		}
@@ -165,13 +190,15 @@ public class SwordSkill {
 		Mana.get(hero).spend(cost);
 
 		hero.busy();
-		hero.sprite.attack(enemy.pos, new Callback() {
+		Callback strike = new Callback() {
 			@Override
 			public void call() {
 				AttackIndicator.target(enemy);
 				doHit(hero, wep, skill, enemy, 0, surprise);
 			}
-		});
+		};
+		if (skill.ranged) WornShortbow.fireAnimation(hero, enemy, strike); //화살이 날아가 닿으면 타격
+		else              hero.sprite.attack(enemy.pos, strike);
 	}
 
 	//타격 한 번. 여러 번 때리는 스킬은 타격 사이에 MazeTower.SKILL_HIT_INTERVAL초 텀을 둔다.
@@ -181,10 +208,15 @@ public class SwordSkill {
 
 		SkillEffects.hit(skill.nameKey, hero, enemy, index, surprise);
 		active = skill;
-		if (hero.attack(enemy, surprise ? skill.surpriseDmg : skill.dmgPerHit, 0, skill.accMulti)){
+		noBlood = skill.surpriseDmg > 0 && !surprise;
+		boolean shot = skill.ranged && WornShortbow.beginShot(hero, enemy, true); //화살 1발, 원거리 피해
+		boolean hit = hero.attack(enemy, surprise ? skill.surpriseDmg : skill.dmgPerHit, 0, skill.accMulti);
+		if (hit){
 			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 		}
+		if (skill.ranged) WornShortbow.endShot(hero, enemy, hit, shot, true); //박힌 화살, 밀쳐내기
 		active = null;
+		noBlood = false;
 
 		if (index + 1 < skill.hits && enemy.isAlive() && hero.isAlive() && hero.sprite != null && hero.sprite.parent != null){
 			Delayer wait = new Delayer(MazeTower.SKILL_HIT_INTERVAL){

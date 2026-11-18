@@ -567,7 +567,7 @@ public abstract class Char extends Actor {
 			}
 
 			if (enemy.sprite != null) {
-				enemy.sprite.bloodBurstA(sprite.center(), effectiveDamage);
+				if (!SwordSkill.hidingHitBlood()) enemy.sprite.bloodBurstA(sprite.center(), effectiveDamage); //Maze Tower: 기습 아닌 급소 찌르기는 피 없음
 				enemy.sprite.flash();
 			}
 

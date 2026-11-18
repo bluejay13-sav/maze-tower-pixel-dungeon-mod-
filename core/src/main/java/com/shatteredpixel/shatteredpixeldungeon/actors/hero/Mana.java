@@ -8,6 +8,8 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortbow;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandMana;
@@ -139,6 +141,8 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	private boolean canAfford(){
 		if (!(target instanceof Hero)) return true;
 		if (cur() < SwordSkill.manaCost((Hero)target)) return false;
+		//조준 사격은 화살도 1발 있어야 한다
+		if (skillWeapon() instanceof WornShortbow && Arrow.count((Hero)target) <= 0) return false;
 		//지팡이 스킬은 충전도 1 있어야 한다
 		Wand sw = staffWand(skillWeapon());
 		return sw == null || sw.curCharges >= 1;

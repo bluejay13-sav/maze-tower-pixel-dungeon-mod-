@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles;
 
+import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -171,10 +172,22 @@ abstract public class MissileWeapon extends Weapon {
 		return super.upgrade();
 	}
 
+	//Maze Tower: 사냥꾼은 투척 무기를 분해해 화살을 얻는다 (티어 × 5발, 저주받은 것은 절반)
+	public static final String AC_DISASSEMBLE = "DISASSEMBLE";
+
+	@Override
+	public void execute( Hero hero, String action ) {
+		super.execute( hero, action );
+		if (action.equals(AC_DISASSEMBLE) && Arrow.canDisassemble(hero, this)){
+			Arrow.disassemble(hero, this);
+		}
+	}
+
 	@Override
 	public ArrayList<String> actions( Hero hero ) {
 		ArrayList<String> actions = super.actions( hero );
 		actions.remove( AC_EQUIP );
+		if (Arrow.canDisassemble(hero, this)) actions.add(AC_DISASSEMBLE); //Maze Tower: 사냥꾼 투척 무기 분해
 		return actions;
 	}
 	
