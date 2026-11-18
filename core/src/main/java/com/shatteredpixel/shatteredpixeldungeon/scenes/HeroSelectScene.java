@@ -159,6 +159,7 @@ public class HeroSelectScene extends PixelScene {
 				Dungeon.daily = Dungeon.dailyReplay = false;
 				Dungeon.initSeed();
 				ActionIndicator.clearAction();
+				com.shatteredpixel.shatteredpixeldungeon.ui.FinisherIndicator.clearAction(null); //Maze Tower
 				InterlevelScene.mode = InterlevelScene.Mode.DESCEND;
 
 				Game.switchScene( InterlevelScene.class );
@@ -761,6 +762,7 @@ public class HeroSelectScene extends PixelScene {
 								Dungeon.daily = true;
 								Dungeon.initSeed();
 								ActionIndicator.clearAction();
+								com.shatteredpixel.shatteredpixeldungeon.ui.FinisherIndicator.clearAction(null); //Maze Tower
 								InterlevelScene.mode = InterlevelScene.Mode.DESCEND;
 
 								Game.switchScene( InterlevelScene.class );

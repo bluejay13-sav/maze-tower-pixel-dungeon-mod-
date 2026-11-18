@@ -48,7 +48,7 @@ public class BloomEffects {
 	}
 
 	private static boolean isSkill(){
-		return SwordSkill.active != null;
+		return SwordSkill.active != null || GladiatorEffects.finisherActive; //검투사 필살기도 스킬
 	}
 
 	// =====================================================================
@@ -468,7 +468,7 @@ public class BloomEffects {
 		if (r < 0 || damage <= 0) return;
 
 		float chance = T_SHOCK_CHANCE[r];
-		if (isSkill()) chance *= SwordSkill.active.elementChanceMulti; //룬 블레이드 무형검
+		if (SwordSkill.active != null) chance *= SwordSkill.active.elementChanceMulti; //룬 블레이드 무형검
 		boolean onWater = Wet.onWater(enemy);
 		if (!(r >= 2 && onWater) && Random.Float() >= chance) return;
 

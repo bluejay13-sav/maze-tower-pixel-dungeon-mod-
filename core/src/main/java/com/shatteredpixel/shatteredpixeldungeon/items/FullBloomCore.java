@@ -1,0 +1,95 @@
+/*
+ * Maze Tower (가칭 미궁의 마탑)
+ * Shattered Pixel Dungeon 기반 아종. GPLv3.
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.items;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndChooseSubclass;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
+import com.watabou.noosa.audio.Sample;
+
+//Maze Tower: 만개의 핵 (3차 전직). 10층 보스(텐구)가 떨어뜨린다.
+//사용하면 원작 텐구의 가면처럼 서브클래스 선택 창이 열린다. 지금은 전사 검투사 하나만 보인다.
+//그림은 22단계에서 바꾼다. 그때까지는 임시로 원작 숙련의 서 그림 + 분홍빛.
+public class FullBloomCore extends TengusMask {
+
+	private static final String AC_USE = "WEAR"; //원작 텐구의 가면 행동을 그대로 쓴다
+
+	{
+		image = ItemSpriteSheet.MASTERY;
+	}
+
+	private static final ItemSprite.Glowing PINK = new ItemSprite.Glowing( 0xFF88CC, 2f );
+
+	@Override
+	public ItemSprite.Glowing glowing() {
+		return PINK;
+	}
+
+	@Override
+	public void execute( Hero hero, String action ) {
+		if (action.equals( AC_USE )) {
+			if (hero.subClass != HeroSubClass.NONE){
+				GLog.w(Messages.get(this, "already"));
+				return;
+			}
+			if (MazeTower.fullBloomPaths(hero.heroClass).length == 0){
+				GLog.w(Messages.get(this, "not_ready"));
+				return;
+			}
+			curUser = hero;
+			GameScene.show( new WndChooseSubclass( this, hero ) );
+			return;
+		}
+		super.execute( hero, action );
+	}
+
+	@Override
+	public void choose( HeroSubClass way ) {
+
+		detach( curUser.belongings.backpack );
+		Catalog.countUse( getClass() );
+
+		curUser.spend( Actor.TICK );
+		curUser.busy();
+
+		curUser.subClass = way;
+		Talent.initSubclassTalents(curUser);
+
+		curUser.sprite.operate( curUser.pos );
+		Sample.INSTANCE.play( Assets.Sounds.MASTERY );
+
+		//만개: 개화보다 크고 진한 꽃잎 빛 + 가운데 금빛 (별은 쓰지 않는다)
+		Flare petals = new Flare(12, 56);
+		petals.color(0xFF7FC8, true);
+		petals.angularSpeed = 30;
+		petals.show(curUser.sprite, 3.0f);
+		Flare inner = new Flare(8, 34);
+		inner.color(0xFFC2E6, true);
+		inner.angularSpeed = -50;
+		inner.show(curUser.sprite, 2.6f);
+		Flare core = new Flare(6, 20);
+		core.color(0xFFE38A, true);
+		core.angularSpeed = 80;
+		core.show(curUser.sprite, 2.2f);
+
+		GLog.p( Messages.get(this, "used", Messages.titleCase(way.title())) );
+		StatusPane.talentBlink = 10f;
+		WndHero.lastIdx = 1;
+	}
+}

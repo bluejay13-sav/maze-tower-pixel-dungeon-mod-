@@ -6,6 +6,7 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 
 //Maze Tower 전용 설정과 수치를 한곳에 모아 둔다.
 //수치는 모두 시작값이므로 여기서 바꾸면 된다.
@@ -231,5 +232,44 @@ public class MazeTower {
 	//1차 포인트를 주는 레벨 구간 (1차 능력은 미완성, 쌓이기만 한다)
 	public static final int FIRST_TIER_FIRST_LEVEL = 2;
 	public static final int FIRST_TIER_LAST_LEVEL  = 6;
+
+	// ===== 3차 전직 (만개) =====
+
+	//10층 보스(텐구)가 만개의 핵을 떨어뜨리는지
+	public static final boolean TENGU_DROPS_FULLBLOOM_CORE = true;
+
+	//만개의 핵으로 고를 수 있는 3차 전직 (지금은 전사 검투사 하나만)
+	public static HeroSubClass[] fullBloomPaths( HeroClass cls ){
+		if (cls == HeroClass.WARRIOR) return new HeroSubClass[]{HeroSubClass.GLADIATOR};
+		return new HeroSubClass[0];
+	}
+
+	//3차 특성 최대 레벨 (0레벨 = 효과 없음, 1~4레벨)
+	public static final int T3_MAX_TALENT_LEVEL = 4;
+
+	// ===== 검투사 (배열은 [0레벨, 1레벨, 2레벨, 3레벨, 4레벨]) =====
+
+	//야성: 적을 처치한 뒤 연속 타격이 유지되는 턴 (0레벨 = 원작 15턴)
+	public static final float[] T3_FERAL_TIME = {15f, 25f, 35f, 45f, 60f};
+
+	//향상된 콤보: 레벨별 효과가 켜지는 연속 타격 수
+	public static final int T3_COMBO_CLOBBER = 6;   //1레벨: 밀쳐내기 3칸 + 혼란 + 낭떠러지
+	public static final int T3_COMBO_PARRY   = 9;   //2레벨: 받아치기가 1턴 동안 모든 공격 반격
+	public static final int T3_COMBO_FURY    = 12;  //3레벨: 분노 폭발이 적 방어력 일부 무시
+	public static final int T3_COMBO_REFUND  = 15;  //4레벨: 초기화 필살기로 처치하면 절반 돌려받음
+	public static final int   T3_CLOBBER_DIST      = 3;
+	public static final float T3_CLOBBER_VERTIGO   = 3f;
+	public static final float T3_FURY_ARMOR_IGNORE = 0.10f;
+
+	//치명적인 방어: 필살기로 처치하면 인장 재사용 대기 감소(턴), 4레벨은 인장 방어막 + 최대 체력 비율
+	public static final int[] T3_LETHAL_COOLDOWN  = {0, 40, 80, 120, 120};
+	public static final float T3_LETHAL_SHIELD_HP = 0.10f;
+
+	//기술 연계: 무기 스킬 적중 후 연속 타격 +, 4레벨은 필살기로 처치하면 마나 +
+	public static final int[] T3_SKILL_LINK      = {0, 1, 2, 3, 3};
+	public static final int   T3_SKILL_LINK_MANA = 45;
+
+	//으깨기 범위 (대상 중심 칸 수. 원작은 주인공 중심 3칸 = 7×7)
+	public static final int CRUSH_RADIUS = 2;
 
 }

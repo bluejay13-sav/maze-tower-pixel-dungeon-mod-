@@ -11,6 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -26,7 +27,7 @@ import com.watabou.noosa.ui.Component;
 
 import java.util.ArrayList;
 
-//Maze Tower: 상태창 특성 탭. 원작 TalentsPane 대신 1차(비어 있음) / 2차(6칸) 줄을 보여 준다.
+//Maze Tower: 상태창 특성 탭. 원작 TalentsPane 대신 1차(발아) / 2차(개화, 6칸) / 3차(만개) 줄을 보여 준다.
 public class BloomTalentsPane extends ScrollPane {
 
 	private static final int SLOTS_PER_ROW = 3;
@@ -39,6 +40,12 @@ public class BloomTalentsPane extends ScrollPane {
 	private RenderedTextBlock secondTitle;
 	private RenderedTextBlock secondInfo;
 	private final ArrayList<SlotButton> slotButtons = new ArrayList<>();
+
+	//3차(만개) 줄: 만개의 핵을 쓰면 원작 특성 줄(3단계)로 보여 준다
+	private ColorBlock sep3;
+	private TalentsPane.TalentTierPane thirdTier;
+	private RenderedTextBlock thirdTitle;
+	private RenderedTextBlock thirdInfo;
 
 	public BloomTalentsPane() {
 		super(new Component());
@@ -84,6 +91,20 @@ public class BloomTalentsPane extends ScrollPane {
 			}
 		}
 		tree.seenSlots = Math.max(tree.seenSlots, tree.slots.size());
+
+		//3차(만개) 줄
+		sep3 = part(new ColorBlock(1, 1, 0xFF000000));
+		thirdTier = null;
+		thirdTitle = null;
+		thirdInfo = null;
+		if (hero.subClass != HeroSubClass.NONE && !hero.talents.get(2).isEmpty()){
+			thirdTier = part(new TalentsPane.TalentTierPane(hero.talents.get(2), 3, TalentButton.Mode.UPGRADE));
+			thirdTier.title.text(Messages.get(this, "tier3_open", Messages.titleCase(hero.subClass.title())));
+		} else {
+			thirdTitle = part(PixelScene.renderTextBlock(Messages.get(this, "tier3"), 9));
+			thirdTitle.hardlight(Window.TITLE_COLOR);
+			thirdInfo = part(PixelScene.renderTextBlock(Messages.get(this, "tier3_locked"), 6));
+		}
 	}
 
 	//고르기·강화 후 다시 그린다
@@ -128,6 +149,22 @@ public class BloomTalentsPane extends ScrollPane {
 		}
 		int rows = (slotButtons.size() + SLOTS_PER_ROW - 1) / SLOTS_PER_ROW;
 		top += rows*(TalentButton.HEIGHT + 4);
+
+		sep3.x = 0;
+		sep3.y = top;
+		sep3.size(width, 1);
+		top += 3;
+		if (thirdTier != null){
+			thirdTier.setRect(0, top, width, 0);
+			top = thirdTier.bottom() + 4;
+		} else {
+			top += 1;
+			thirdTitle.setPos((width - thirdTitle.width())/2f, top);
+			top = thirdTitle.bottom() + 3;
+			thirdInfo.maxWidth((int)width - 4);
+			thirdInfo.setPos(2, top);
+			top = thirdInfo.bottom() + 4;
+		}
 
 		content.setSize(width, Math.max(height, top));
 	}

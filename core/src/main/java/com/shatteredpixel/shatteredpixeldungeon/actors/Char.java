@@ -136,6 +136,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Vorpal
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.GladiatorEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sickle;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.ShockingDart;
@@ -406,6 +407,7 @@ public abstract class Char extends Actor {
 				}
 
 				//Maze Tower: 방어 무시 스킬 (룬 블레이드 무형검)
+				dr = GladiatorEffects.reduceDefense(dr); //Maze Tower: 향상된 콤보 3레벨 (분노 폭발)
 				if (SwordSkill.ignoringDefense() || BloomEffects.skillIgnoresDefense()){ //집중 2레벨 포함
 					dr = 0;
 				}

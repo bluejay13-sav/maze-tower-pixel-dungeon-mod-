@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
@@ -68,7 +69,7 @@ public class WndChooseSubclass extends Window {
 						super.onSelect(index);
 						if (index == 0){
 							WndChooseSubclass.this.hide();
-							HeroSubClass cls = Random.oneOf(hero.heroClass.subClasses());
+							HeroSubClass cls = Random.oneOf(paths(hero)); //Maze Tower
 							tome.choose(cls);
 							GameScene.show(new WndInfoSubclass(hero.heroClass, cls));
 						}
@@ -93,13 +94,13 @@ public class WndChooseSubclass extends Window {
 		add(random);
 
 		RenderedTextBlock message = PixelScene.renderTextBlock( 6 );
-		message.text( Messages.get(this, "message"), WIDTH );
+		message.text( Messages.get(this, MazeTower.ORIGINAL_SUBCLASS ? "message" : "maze_message"), WIDTH ); //Maze Tower
 		message.setPos( titlebar.left(), titlebar.bottom() + GAP );
 		add( message );
 
 		float pos = message.bottom() + 3*GAP;
 
-		for (HeroSubClass subCls : hero.heroClass.subClasses()){
+		for (HeroSubClass subCls : paths(hero)){ //Maze Tower
 			RedButton btnCls = new RedButton( subCls.shortDesc(), 6 ) {
 				@Override
 				protected void onClick() {
@@ -148,5 +149,10 @@ public class WndChooseSubclass extends Window {
 		add( btnCancel );
 		
 		resize( WIDTH, (int)btnCancel.bottom() );
+	}
+
+	//Maze Tower: 만개의 핵으로 고를 수 있는 3차 전직만 보인다
+	private static HeroSubClass[] paths(Hero hero){
+		return MazeTower.ORIGINAL_SUBCLASS ? hero.heroClass.subClasses() : MazeTower.fullBloomPaths(hero.heroClass);
 	}
 }

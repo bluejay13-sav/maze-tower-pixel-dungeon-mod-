@@ -216,6 +216,10 @@ public class Tengu extends Mob {
 		if (MazeTower.ORIGINAL_SUBCLASS && Dungeon.hero.subClass == HeroSubClass.NONE) {
 			Dungeon.level.drop( new TengusMask(), pos ).sprite.drop();
 		}
+		//Maze Tower: 대신 만개의 핵(3차 전직)을 떨어뜨린다
+		if (MazeTower.TENGU_DROPS_FULLBLOOM_CORE && Dungeon.hero.subClass == HeroSubClass.NONE) {
+			Dungeon.level.drop( new com.shatteredpixel.shatteredpixeldungeon.items.FullBloomCore(), pos ).sprite.drop();
+		}
 		
 		GameScene.bossSlain();
 		super.die( cause );

@@ -12,13 +12,16 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Combo;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
+import com.shatteredpixel.shatteredpixeldungeon.items.FullBloomCore;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornDagger;
@@ -69,10 +72,15 @@ public class WndCheats extends Window {
 	public WndCheats(){
 		super();
 
-		addButton(new RedButton(Messages.get(this, "bloom_core"), 7){
+		addPair(new RedButton(Messages.get(this, "bloom_core"), 7){
 			@Override
 			protected void onClick() {
 				give(new BloomCore());
+			}
+		}, new RedButton(Messages.get(this, "fullbloom_core"), 7){
+			@Override
+			protected void onClick() {
+				give(new FullBloomCore());
 			}
 		});
 
@@ -91,22 +99,39 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addButton(new RedButton(Messages.get(this, "level_up"), 7){
+		addPair(new RedButton(Messages.get(this, "level_up"), 7){
 			@Override
 			protected void onClick() {
 				Hero hero = Dungeon.hero;
 				hero.earnExp(hero.maxExp() - hero.exp, WndCheats.class);
 			}
+		}, new RedButton(Messages.get(this, "level_up5"), 7){
+			@Override
+			protected void onClick() {
+				Hero hero = Dungeon.hero;
+				for (int i = 0; i < 5; i++) hero.earnExp(hero.maxExp() - hero.exp, WndCheats.class);
+			}
 		});
 
-		addButton(new RedButton(Messages.get(this, "fill_mana"), 7){
+		addButton(new RedButton(Messages.get(this, "combo"), 7){
+			@Override
+			protected void onClick() {
+				Hero hero = Dungeon.hero;
+				if (hero.subClass != HeroSubClass.GLADIATOR){
+					GLog.w(Messages.get(WndCheats.class, "not_gladiator"));
+					return;
+				}
+				Combo c = Buff.affect(hero, Combo.class);
+				c.mazeRestore(c.getComboCount() + 5, 15f); //시험하기 편하게 15턴 유지
+			}
+		});
+
+		addPair(new RedButton(Messages.get(this, "fill_mana"), 7){
 			@Override
 			protected void onClick() {
 				Mana.get(Dungeon.hero).fill();
 			}
-		});
-
-		addButton(new RedButton(Messages.get(this, "empty_mana"), 7){
+		}, new RedButton(Messages.get(this, "empty_mana"), 7){
 			@Override
 			protected void onClick() {
 				Mana m = Mana.get(Dungeon.hero);
@@ -201,6 +226,16 @@ public class WndCheats extends Window {
 		});
 
 		resize(WIDTH, (int)pos);
+	}
+
+	//버튼 두 개를 한 줄에 반씩
+	private void addPair(RedButton a, RedButton b){
+		add(a);
+		add(b);
+		float y = pos > 0 ? pos += GAP : 0;
+		a.setRect(0, y, (WIDTH - GAP)/2f, BTN_HEIGHT);
+		b.setRect((WIDTH + GAP)/2f, y, (WIDTH - GAP)/2f, BTN_HEIGHT);
+		pos += BTN_HEIGHT;
 	}
 
 	private void addButton(RedButton btn){

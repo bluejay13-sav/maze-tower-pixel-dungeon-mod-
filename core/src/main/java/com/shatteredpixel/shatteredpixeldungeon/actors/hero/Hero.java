@@ -393,6 +393,12 @@ public class Hero extends Char {
 	}
 
 	public int talentPointsAvailable(int tier){
+		//Maze Tower: 3차(만개) 줄은 만개의 핵을 쓰면 열리고, Lv13~20 레벨 포인트 + 물약 포인트
+		if (!MazeTower.ORIGINAL_TALENTS && tier == 3){
+			if (subClass == HeroSubClass.NONE) return 0;
+			int levels = Math.max(0, Math.min(lvl, Talent.tierLevelThresholds[4] - 1) - Talent.tierLevelThresholds[3] + 1);
+			return levels + bonusTalentPoints(3) - talentPointsSpent(3);
+		}
 		if (lvl < (Talent.tierLevelThresholds[tier] - 1)
 			|| (tier == 3 && subClass == HeroSubClass.NONE)
 			|| (tier == 4 && armorAbility == null)) {
@@ -407,7 +413,9 @@ public class Hero extends Char {
 	public int bonusTalentPoints(int tier){
 		//Maze Tower: 신성한 영감의 물약은 1차 줄에 +1씩(최대 +3) 준다. 그 값은 BloomTree에 저장된다.
 		if (!MazeTower.ORIGINAL_TALENTS){
-			return tier == 1 ? BloomTree.get(this).firstTierBonus : 0;
+			if (tier == 1) return BloomTree.get(this).firstTierBonus;
+			if (tier == 3 && subClass != HeroSubClass.NONE) return BloomTree.get(this).thirdTierBonus; //3차(만개) 줄
+			return 0;
 		}
 		if (lvl < (Talent.tierLevelThresholds[tier]-1)
 				|| (tier == 3 && subClass == HeroSubClass.NONE)
@@ -623,7 +631,9 @@ public class Hero extends Char {
 		Combo.ParryTracker parry = buff(Combo.ParryTracker.class);
 		if (parry != null){
 			parry.parried = true;
-			if (buff(Combo.class) == null || buff(Combo.class).getComboCount() < 9 || pointsInTalent(Talent.ENHANCED_COMBO) < 2){
+			if (MazeTower.ORIGINAL_TALENTS
+					? (buff(Combo.class) == null || buff(Combo.class).getComboCount() < 9 || pointsInTalent(Talent.ENHANCED_COMBO) < 2)
+					: (buff(Combo.class) == null || !GladiatorEffects.parryEmpowered(this, buff(Combo.class).getComboCount()))){ //Maze Tower: 향상된 콤보 2레벨
 				parry.detach();
 			}
 			return Messages.get(Monk.class, "parried");
@@ -2132,7 +2142,10 @@ public class Hero extends Char {
 				Sample.INSTANCE.play( Assets.Sounds.LEVELUP );
 				//Maze Tower: 원작 특성 대신 1차(발아) 줄만 쓰므로 1차 포인트를 주는 레벨(2~6)에서만 알린다
 				if ((MazeTower.ORIGINAL_TALENTS && lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1])
-						|| (!MazeTower.ORIGINAL_TALENTS && lvl < Talent.tierLevelThresholds[2])){
+						|| (!MazeTower.ORIGINAL_TALENTS && lvl < Talent.tierLevelThresholds[2])
+						//Maze Tower: 3차(만개) 포인트를 주는 레벨(13~20), 만개의 핵을 쓴 뒤
+						|| (!MazeTower.ORIGINAL_TALENTS && subClass != HeroSubClass.NONE
+							&& lvl >= Talent.tierLevelThresholds[3] && lvl < Talent.tierLevelThresholds[4])){
 					GLog.newLine();
 					GLog.p( Messages.get(this, "new_talent") );
 					StatusPane.talentBlink = 10f;

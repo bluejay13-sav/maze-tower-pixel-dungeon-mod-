@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Combo;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.GladiatorEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.HoldFast;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
@@ -95,7 +96,8 @@ public class BrokenSeal extends Item {
 
 	public int maxShield( int armTier, int armLvl ){
 		// 5-15, based on equip tier and iron will
-		return 3 + 2*armTier + MazeTower.T1_IRON_WILL[Math.min(2, Dungeon.hero.pointsInTalent(Talent.IRON_WILL))]; //Maze Tower: 강철의 의지
+		return 3 + 2*armTier + MazeTower.T1_IRON_WILL[Math.min(2, Dungeon.hero.pointsInTalent(Talent.IRON_WILL))]
+				+ GladiatorEffects.sealShieldBonus(Dungeon.hero); //Maze Tower: 강철의 의지, 치명적인 방어 4레벨
 	}
 
 	@Override
@@ -358,6 +360,12 @@ public class BrokenSeal extends Item {
 
 		public void reduceCooldown(float percentage){
 			cooldown -= Math.round(COOLDOWN_START*percentage);
+			cooldown = Math.max(cooldown, -COOLDOWN_START);
+		}
+
+		//Maze Tower: 치명적인 방어 - 재사용 대기를 턴 수로 줄인다
+		public void reduceCooldownTurns(int turns){
+			cooldown -= turns;
 			cooldown = Math.max(cooldown, -COOLDOWN_START);
 		}
 

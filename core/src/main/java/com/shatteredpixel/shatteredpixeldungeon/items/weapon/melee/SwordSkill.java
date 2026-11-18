@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.GladiatorEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
@@ -190,6 +191,7 @@ public class SwordSkill {
 		BloomEffects.beginSkill(hero, enemy, cost); //마나가 가득 찼는지, 집중 상태 기록
 		Mana.get(hero).spend(cost);
 		SproutEffects.onSkillUsed(hero); //1차 특성: 투지
+		GladiatorEffects.onSkillStart(); //3차 검투사: 기술 연계용 적중 기록
 
 		hero.busy();
 		Callback strike = new Callback() {
@@ -211,12 +213,14 @@ public class SwordSkill {
 		SkillEffects.hit(skill.nameKey, hero, enemy, index, surprise);
 		active = skill;
 		noBlood = skill.surpriseDmg > 0 && !surprise;
+		boolean wasEnemy = GladiatorEffects.wasEnemy(enemy);
 		boolean shot = skill.ranged && WornShortbow.beginShot(hero, enemy, true); //화살 1발, 원거리 피해
 		boolean hit = hero.attack(enemy, surprise ? skill.surpriseDmg : skill.dmgPerHit, 0, skill.accMulti);
 		if (hit){
 			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 		}
 		if (skill.ranged) WornShortbow.endShot(hero, enemy, hit, shot, true); //박힌 화살, 밀쳐내기
+		GladiatorEffects.onSkillHit(hero, enemy, hit, wasEnemy); //검투사: 타격 한 번마다 연속 타격 +1
 		active = null;
 		noBlood = false;
 
@@ -236,6 +240,7 @@ public class SwordSkill {
 
 	private static void finish(Hero hero, MeleeWeapon wep){
 		BloomEffects.endSkill(hero); //처치 시 마나 반환, 흐름·잔향·흘리기
+		GladiatorEffects.onSkillEnd(hero); //검투사 기술 연계: 타격이 끝난 뒤 연속 타격 +
 
 		Invisibility.dispel();
 		hero.belongings.abilityWeapon = wep;

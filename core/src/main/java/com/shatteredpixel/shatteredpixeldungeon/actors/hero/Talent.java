@@ -106,7 +106,8 @@ public enum Talent {
 	//Berserker T3
 	ENDLESS_RAGE(11, 3), DEATHLESS_FURY(12, 3), ENRAGED_CATALYST(13, 3),
 	//Gladiator T3
-	CLEAVE(14, 3), LETHAL_DEFENSE(15, 3), ENHANCED_COMBO(16, 3),
+	//Maze Tower: 3차 특성은 1~4레벨 (원작 3). 야성=CLEAVE
+	CLEAVE(14, 4), LETHAL_DEFENSE(15, 4), ENHANCED_COMBO(16, 4),
 	//Heroic Leap T4
 	BODY_SLAM(17, 4), IMPACT_WAVE(18, 4), DOUBLE_JUMP(19, 4),
 	//Shockwave T4
@@ -206,7 +207,9 @@ public enum Talent {
 
 	//Maze Tower: 1차(발아) 특성 중 원작에 없는 것 (아이콘은 임시로 원작 아이콘 재사용)
 	GRIT(12),       //전사 투지
-	MANA_CYCLE(40); //마법사 마나 순환
+	MANA_CYCLE(40), //마법사 마나 순환
+	//Maze Tower: 3차(만개) 특성 중 원작에 없는 것
+	SKILL_LINK(7, 4); //검투사 기술 연계
 
 	public static class ImprovisedProjectileCooldown extends FlavourBuff{
 		public int icon() { return BuffIndicator.TIME; }
@@ -1116,6 +1119,7 @@ public enum Talent {
 				break;
 			case GLADIATOR:
 				Collections.addAll(tierTalents, CLEAVE, LETHAL_DEFENSE, ENHANCED_COMBO);
+				if (!MazeTower.ORIGINAL_TALENTS) tierTalents.add(SKILL_LINK); //Maze Tower: 기술 연계
 				break;
 			case BATTLEMAGE:
 				Collections.addAll(tierTalents, EMPOWERED_STRIKE, MYSTICAL_CHARGE, EXCESS_CHARGE);

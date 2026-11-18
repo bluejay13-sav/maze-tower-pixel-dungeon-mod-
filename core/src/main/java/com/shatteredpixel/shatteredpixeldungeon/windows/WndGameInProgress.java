@@ -123,6 +123,7 @@ public class WndGameInProgress extends Window {
 				Dungeon.hero = null;
 				Dungeon.daily = Dungeon.dailyReplay = false;
 				ActionIndicator.clearAction();
+				com.shatteredpixel.shatteredpixeldungeon.ui.FinisherIndicator.clearAction(null); //Maze Tower
 				InterlevelScene.mode = InterlevelScene.Mode.CONTINUE;
 				ShatteredPixelDungeon.switchScene(InterlevelScene.class);
 			}

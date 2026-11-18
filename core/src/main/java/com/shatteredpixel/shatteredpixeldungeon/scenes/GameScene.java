@@ -94,6 +94,7 @@ import com.shatteredpixel.shatteredpixeldungeon.tiles.TerrainFeaturesTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.WallBlockingTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.WallOcclusionTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.FinisherIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Banner;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
@@ -216,6 +217,7 @@ public class GameScene extends PixelScene {
 	private AttackIndicator attack;
 	private LootIndicator loot;
 	private ActionIndicator action;
+	private FinisherIndicator finisher; //Maze Tower: 검투사 필살기 버튼
 	private ResumeIndicator resume;
 
 	{
@@ -518,6 +520,11 @@ public class GameScene extends PixelScene {
 		action = new ActionIndicator();
 		action.camera = uiCamera;
 		add( action );
+
+		//Maze Tower: 검투사 필살기 버튼 (무기 스킬 버튼과 따로)
+		finisher = new FinisherIndicator();
+		finisher.camera = uiCamera;
+		add( finisher );
 
 		loot = new LootIndicator();
 		loot.camera = uiCamera;
@@ -933,6 +940,7 @@ public class GameScene extends PixelScene {
 		if (updateTags){
 			tagAttack = attack.active;
 			tagLoot = loot.visible;
+			tagFinisher = finisher.visible; //Maze Tower
 			tagAction = action.visible;
 			tagResume = resume.visible;
 
@@ -941,15 +949,18 @@ public class GameScene extends PixelScene {
 		} else if (tagAttack != attack.active ||
 				tagLoot != loot.visible ||
 				tagAction != action.visible ||
+				tagFinisher != finisher.visible || //Maze Tower
 				tagResume != resume.visible) {
 
 			boolean tagAppearing = (attack.active && !tagAttack) ||
 									(loot.visible && !tagLoot) ||
 									(action.visible && !tagAction) ||
+									(finisher.visible && !tagFinisher) || //Maze Tower
 									(resume.visible && !tagResume);
 
 			tagAttack = attack.active;
 			tagLoot = loot.visible;
+			tagFinisher = finisher.visible; //Maze Tower
 			tagAction = action.visible;
 			tagResume = resume.visible;
 
@@ -984,6 +995,7 @@ public class GameScene extends PixelScene {
 	private boolean tagAttack    = false;
 	private boolean tagLoot      = false;
 	private boolean tagAction    = false;
+	private boolean tagFinisher  = false; //Maze Tower
 	private boolean tagResume    = false;
 
 	public static void layoutTags() {
@@ -1046,6 +1058,13 @@ public class GameScene extends PixelScene {
 			scene.action.setRect( tagLeft, pos - Tag.SIZE, tagWidth, Tag.SIZE );
 			scene.action.flip(tagsOnLeft);
 			pos = scene.action.top();
+		}
+
+		//Maze Tower: 필살기 버튼은 무기 스킬 버튼 위
+		if (scene.tagFinisher) {
+			scene.finisher.setRect( tagLeft, pos - Tag.SIZE, tagWidth, Tag.SIZE );
+			scene.finisher.flip(tagsOnLeft);
+			pos = scene.finisher.top();
 		}
 
 		if (scene.tagResume) {

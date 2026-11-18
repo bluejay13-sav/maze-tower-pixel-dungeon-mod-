@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
@@ -165,7 +166,7 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 
 	}
 
-	//Maze Tower: 열려 있는 줄(1차/2차) 중 하나를 골라 포인트 +1. 줄마다 물약으로 최대 +3.
+	//Maze Tower: 열려 있는 줄(1차/2차/3차) 중 하나를 골라 포인트 +1. 줄마다 물약으로 최대 +3.
 	private void mazeDrink(final Hero hero){
 		final BloomTree tree = BloomTree.get(hero);
 		final int max = MazeTower.DIVINE_MAX_PER_ROW;
@@ -173,10 +174,11 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 		//1차 줄은 항상 열려 있고, 2차 줄은 개화의 핵을 쓰면 열린다
 		final boolean[] enabled = new boolean[]{
 				tree.firstTierBonus < max,
-				tree.unlocked && tree.bonusPoints < max
+				tree.unlocked && tree.bonusPoints < max,
+				hero.subClass != HeroSubClass.NONE && tree.thirdTierBonus < max //3차(만개) 줄은 만개의 핵을 쓰면 열린다
 		};
 
-		if (!enabled[0] && !enabled[1]){
+		if (!enabled[0] && !enabled[1] && !enabled[2]){
 			GLog.w(Messages.get(this, "maze_no_more"));
 			return;
 		}
@@ -188,7 +190,10 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 				Messages.get(PotionOfDivineInspiration.class, "maze_row1", tree.firstTierBonus, max),
 				tree.unlocked
 						? Messages.get(PotionOfDivineInspiration.class, "maze_row2", tree.bonusPoints, max)
-						: Messages.get(PotionOfDivineInspiration.class, "maze_row2_locked")
+						: Messages.get(PotionOfDivineInspiration.class, "maze_row2_locked"),
+				hero.subClass != HeroSubClass.NONE
+						? Messages.get(PotionOfDivineInspiration.class, "maze_row3", tree.thirdTierBonus, max)
+						: Messages.get(PotionOfDivineInspiration.class, "maze_row3_locked")
 		){
 			@Override
 			protected boolean enabled(int index) {
@@ -201,7 +206,8 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 				if (index == -1) return;
 
 				if (index == 0) tree.firstTierBonus += MazeTower.DIVINE_POINTS_PER_POTION;
-				else            tree.bonusPoints    += MazeTower.DIVINE_POINTS_PER_POTION;
+				else if (index == 1) tree.bonusPoints += MazeTower.DIVINE_POINTS_PER_POTION;
+				else            tree.thirdTierBonus += MazeTower.DIVINE_POINTS_PER_POTION;
 
 				if (!identifiedByUse) {
 					curItem.detach(curUser.belongings.backpack);
@@ -212,7 +218,7 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 				curUser.sprite.operate(curUser.pos);
 				curUser.spendAndNext(1f);
 
-				if (tree.hasPending(hero)){
+				if (tree.hasPending(hero) || hero.talentPointsAvailable(1) > 0 || hero.talentPointsAvailable(3) > 0){
 					StatusPane.talentBlink = 10f;
 					WndHero.lastIdx = 1;
 				}
@@ -224,7 +230,9 @@ public class PotionOfDivineInspiration extends ExoticPotion {
 				new Flare( 6, 32 ).color(0xFFFF00, true).show( curUser.sprite, 2f );
 				GLog.p(Messages.get(PotionOfDivineInspiration.class, "maze_bonus",
 						MazeTower.DIVINE_POINTS_PER_POTION,
-						index == 0 ? Messages.get(BloomTalentsPane.class, "tier1") : Messages.get(BloomTalentsPane.class, "tier2")));
+						index == 0 ? Messages.get(BloomTalentsPane.class, "tier1")
+						: index == 1 ? Messages.get(BloomTalentsPane.class, "tier2")
+						: Messages.get(BloomTalentsPane.class, "tier3")));
 
 				if (!anonymous) {
 					Catalog.countUse(PotionOfDivineInspiration.class);

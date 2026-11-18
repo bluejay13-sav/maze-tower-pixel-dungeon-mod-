@@ -38,6 +38,9 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.ui.FinisherIndicator;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.GladiatorEffects;
 import com.shatteredpixel.shatteredpixeldungeon.ui.AttackIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.HeroIcon;
@@ -96,13 +99,17 @@ public class Combo extends Buff implements ActionIndicator.Action {
 		}
 
 		if (!enemy.isAlive() || (enemy.buff(Corruption.class) != null && enemy.HP == enemy.HT)){
-			comboTime = 15f + 15f*((Hero)target).pointsInTalent(Talent.CLEAVE);
+			if (MazeTower.ORIGINAL_TALENTS) {
+				comboTime = 15f + 15f*((Hero)target).pointsInTalent(Talent.CLEAVE);
+			} else {
+				comboTime = Math.max(comboTime, GladiatorEffects.killComboTime((Hero)target)); //Maze Tower: 야성
+			}
 			initialComboTime = comboTime;
 		}
 
 		if ((getHighestMove() != null)) {
 
-			ActionIndicator.setAction( this );
+			FinisherIndicator.setAction( this );
 			Badges.validateMasteryCombo( count );
 
 			GLog.p( Messages.get(this, "combo", count) );
@@ -117,10 +124,34 @@ public class Combo extends Buff implements ActionIndicator.Action {
 		comboTime += time;
 	}
 
+	//Maze Tower: 기술 연계 - 스킬 타격이 끝난 뒤 연속 타격을 더한다 (유지 시간은 그대로)
+	public void mazeAddCount( int amount ){
+		count += amount;
+		if (getHighestMove() != null) {
+			FinisherIndicator.setAction(this);
+			Badges.validateMasteryCombo( count );
+		}
+		FinisherIndicator.refresh();
+		BuffIndicator.refreshHero();
+	}
+
+	//Maze Tower: 향상된 콤보 4레벨 - 처치 후 연속 타격 일부를 돌려받는다
+	public void mazeRestore( int amount, float time ){
+		count = amount;
+		comboTime = Math.max(comboTime, time);
+		initialComboTime = comboTime;
+		clobberUsed = false;
+		parryUsed = false;
+		if (getHighestMove() != null) FinisherIndicator.setAction(this);
+		FinisherIndicator.refresh();
+		BuffIndicator.refreshHero();
+		GLog.p( Messages.get(this, "combo", count) );
+	}
+
 	@Override
 	public void detach() {
 		super.detach();
-		ActionIndicator.clearAction(this);
+		FinisherIndicator.clearAction(this);
 	}
 
 	@Override
@@ -167,7 +198,7 @@ public class Combo extends Buff implements ActionIndicator.Action {
 		clobberUsed = bundle.getBoolean(CLOBBER_USED);
 		parryUsed = bundle.getBoolean(PARRY_USED);
 
-		if (getHighestMove() != null) ActionIndicator.setAction(this);
+		if (getHighestMove() != null) FinisherIndicator.setAction(this);
 	}
 
 	@Override
@@ -227,6 +258,25 @@ public class Combo extends Buff implements ActionIndicator.Action {
 		}
 
 		public String desc(int count){
+			//Maze Tower: 향상된 콤보 기준이 다르고 도약이 없다. 으깨기는 5×5.
+			if (!MazeTower.ORIGINAL_TALENTS){
+				Hero hero = Dungeon.hero;
+				switch (this){
+					case CLOBBER: default:
+						return Messages.get(this, name() + (GladiatorEffects.clobberEmpowered(hero, count) ? ".empower_desc" : ".desc"));
+					case SLAM:
+						return Messages.get(this, name() + ".desc", count*20);
+					case PARRY:
+						return Messages.get(this, name() + (GladiatorEffects.parryEmpowered(hero, count) ? ".empower_desc" : ".desc"));
+					case CRUSH:
+						return Messages.get(this, name() + ".maze_desc", count*25);
+					case FURY:
+						if (GladiatorEffects.furyEmpowered(hero, count)){
+							return Messages.get(this, name() + ".maze_empower_desc", Math.round(MazeTower.T3_FURY_ARMOR_IGNORE*100));
+						}
+						return Messages.get(this, name() + ".desc");
+				}
+			}
 			switch (this){
 				case CLOBBER: default:
 					if (count >= 7 && Dungeon.hero.pointsInTalent(Talent.ENHANCED_COMBO) >= 1){
@@ -347,6 +397,13 @@ public class Combo extends Buff implements ActionIndicator.Action {
 		boolean wasAlly = enemy.alignment == target.alignment;
 		Hero hero = (Hero) target;
 
+		//Maze Tower: 필살기는 스킬 공격으로 친다 (2차 스킬 특성, 1차 투지). 분노 폭발은 첫 타격에서 시작.
+		boolean firstHit = moveBeingUsed != ComboMove.FURY || count > 0;
+		if (firstHit){
+			mazeStartCount = count;
+			if (!MazeTower.ORIGINAL_TALENTS) GladiatorEffects.onFinisherStart(hero, enemy);
+		}
+
 		float dmgMulti = 1f;
 		int dmgBonus = 0;
 
@@ -367,7 +424,10 @@ public class Combo extends Buff implements ActionIndicator.Action {
 		}
 
 		int oldPos = enemy.pos;
-		if (hero.attack(enemy, dmgMulti, dmgBonus, Char.INFINITE_ACCURACY)){
+		GladiatorEffects.beginFinisherHit(hero, moveBeingUsed, mazeStartCount); //Maze Tower
+		boolean landed = hero.attack(enemy, dmgMulti, dmgBonus, Char.INFINITE_ACCURACY);
+		GladiatorEffects.endFinisherHit(); //Maze Tower
+		if (landed){
 			//special on-hit effects
 			switch (moveBeingUsed) {
 				case CLOBBER:
@@ -377,9 +437,13 @@ public class Combo extends Buff implements ActionIndicator.Action {
 					trajectory = new Ballistica(trajectory.collisionPos, trajectory.path.get(trajectory.path.size() - 1), Ballistica.PROJECTILE);
 					//knock them back along that ballistica, ensuring they don't fall into a pit
 					int dist = 2;
-					if (enemy.isAlive() && count >= 7 && hero.pointsInTalent(Talent.ENHANCED_COMBO) >= 1) {
-						dist++;
-						Buff.prolong(enemy, Vertigo.class, 3);
+					//Maze Tower: 향상된 콤보 1레벨 기준 연속 타격 6 (원작 7)
+					boolean empowered = MazeTower.ORIGINAL_TALENTS
+							? count >= 7 && hero.pointsInTalent(Talent.ENHANCED_COMBO) >= 1
+							: GladiatorEffects.clobberEmpowered(hero, count);
+					if (enemy.isAlive() && empowered) {
+						dist = MazeTower.ORIGINAL_TALENTS ? dist+1 : MazeTower.T3_CLOBBER_DIST;
+						Buff.prolong(enemy, Vertigo.class, MazeTower.ORIGINAL_TALENTS ? 3 : MazeTower.T3_CLOBBER_VERTIGO);
 					} else if (!enemy.flying) {
 						while (dist > trajectory.dist ||
 								(dist > 0 && Dungeon.level.pit[trajectory.path.get(dist)])) {
@@ -396,7 +460,12 @@ public class Combo extends Buff implements ActionIndicator.Action {
 					break;
 				case CRUSH:
 					WandOfBlastWave.BlastWave.blast(enemy.pos);
-					PathFinder.buildDistanceMap(target.pos, BArray.not(Dungeon.level.solid, null), 3);
+					//Maze Tower: 범위를 대상 중심 2칸(5×5)으로 (원작은 주인공 중심 3칸, 7×7)
+					if (MazeTower.ORIGINAL_TALENTS) {
+						PathFinder.buildDistanceMap(target.pos, BArray.not(Dungeon.level.solid, null), 3);
+					} else {
+						PathFinder.buildDistanceMap(enemy.pos, BArray.not(Dungeon.level.solid, null), MazeTower.CRUSH_RADIUS);
+					}
 					for (Char ch : Actor.chars()) {
 						if (ch != enemy && ch.alignment == Char.Alignment.ENEMY
 								&& PathFinder.distance[ch.pos] < Integer.MAX_VALUE) {
@@ -414,7 +483,11 @@ public class Combo extends Buff implements ActionIndicator.Action {
 							ch.sprite.flash();
 
 							if (!ch.isAlive() && hero.hasTalent(Talent.LETHAL_DEFENSE)) {
-								Buff.affect(hero, BrokenSeal.WarriorShield.class).reduceCooldown(hero.pointsInTalent(Talent.LETHAL_DEFENSE)/3f);
+								if (MazeTower.ORIGINAL_TALENTS) {
+									Buff.affect(hero, BrokenSeal.WarriorShield.class).reduceCooldown(hero.pointsInTalent(Talent.LETHAL_DEFENSE)/3f);
+								} else {
+									GladiatorEffects.onFinisherKill(hero); //Maze Tower: 치명적인 방어
+								}
 							}
 						}
 					}
@@ -431,7 +504,7 @@ public class Combo extends Buff implements ActionIndicator.Action {
 		switch(moveBeingUsed){
 			case CLOBBER:
 				clobberUsed = true;
-				if (getHighestMove() == null) ActionIndicator.clearAction(Combo.this);
+				if (getHighestMove() == null) FinisherIndicator.clearAction(Combo.this);
 				hero.spendAndNext(hero.attackDelay());
 				break;
 
@@ -459,25 +532,38 @@ public class Combo extends Buff implements ActionIndicator.Action {
 				} else {
 					furyHitsLeft = 0;
 					Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
-					ActionIndicator.clearAction(Combo.this);
+					FinisherIndicator.clearAction(Combo.this);
 					hero.next();
 				}
 				break;
 
 			default:
 				detach();
-				ActionIndicator.clearAction(Combo.this);
+				FinisherIndicator.clearAction(Combo.this);
 				hero.spendAndNext(hero.attackDelay());
 				break;
 		}
 
-		if (!enemy.isAlive() || (!wasAlly && enemy.alignment == target.alignment)) {
+		boolean killed = !enemy.isAlive() || (!wasAlly && enemy.alignment == target.alignment);
+		if (killed) {
 			if (hero.hasTalent(Talent.LETHAL_DEFENSE)){
-				Buff.affect(hero, BrokenSeal.WarriorShield.class).reduceCooldown(hero.pointsInTalent(Talent.LETHAL_DEFENSE)/3f);
+				if (MazeTower.ORIGINAL_TALENTS) {
+					Buff.affect(hero, BrokenSeal.WarriorShield.class).reduceCooldown(hero.pointsInTalent(Talent.LETHAL_DEFENSE)/3f);
+				} else {
+					GladiatorEffects.onFinisherKill(hero); //Maze Tower: 치명적인 방어
+				}
 			}
 		}
 
+		//Maze Tower: 필살기가 끝났으면 (분노 폭발은 마지막 타격) 스킬 마무리, 기술 연계·향상된 콤보 4레벨
+		if (!MazeTower.ORIGINAL_TALENTS && (moveBeingUsed != ComboMove.FURY || furyHitsLeft == 0)){
+			boolean resets = moveBeingUsed == ComboMove.SLAM || moveBeingUsed == ComboMove.CRUSH || moveBeingUsed == ComboMove.FURY;
+			GladiatorEffects.onFinisherEnd(hero, enemy, mazeStartCount, resets, killed);
+		}
+
 	}
+
+	private static int mazeStartCount = 0; //Maze Tower: 필살기를 쓰기 직전의 연속 타격
 
 	private CellSelector.Listener listener = new CellSelector.Listener() {
 
@@ -492,7 +578,8 @@ public class Combo extends Buff implements ActionIndicator.Action {
 				GLog.w(Messages.get(Combo.class, "bad_target"));
 
 			} else if (!((Hero)target).canAttack(enemy)){
-				if (((Hero) target).pointsInTalent(Talent.ENHANCED_COMBO) < 3
+				if (!MazeTower.ORIGINAL_TALENTS //Maze Tower: 향상된 콤보의 원작 도약은 없다
+					|| ((Hero) target).pointsInTalent(Talent.ENHANCED_COMBO) < 3
 					|| Dungeon.level.distance(target.pos, enemy.pos) > 1 + target.buff(Combo.class).count/3){
 					GLog.w(Messages.get(Combo.class, "bad_target"));
 				} else {
