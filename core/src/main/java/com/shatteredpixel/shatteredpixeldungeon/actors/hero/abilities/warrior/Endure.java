@@ -82,24 +82,55 @@ public class Endure extends ArmorAbility {
 		public int damageBonus = 0;
 		public int hitsLeft = 0;
 
+		//Maze Tower: 버티는 동안에도 아이콘을 보여 주고, 남은 턴을 숫자로 표시한다
+		//(버티는 동안 = 회색빛 방패, 끝난 뒤 추가 피해를 줄 수 있는 동안 = 붉은 방패)
+		private float enduringLeft(){
+			return Math.max(0, visualcooldown() - MazeTower.T4_ENDURE_AFTER);
+		}
+
 		@Override
 		public int icon() {
+			if (!MazeTower.ORIGINAL_TALENTS) return BuffIndicator.ARMOR;
 			return enduring ? BuffIndicator.NONE : BuffIndicator.ARMOR;
 		}
 
 		@Override
 		public void tintIcon(Image icon) {
+			if (!MazeTower.ORIGINAL_TALENTS && enduring){
+				icon.hardlight(0.6f, 0.75f, 1f);
+				return;
+			}
 			icon.hardlight(1, 0, 0);
 		}
 
 		@Override
 		public float iconFadePercent() {
+			if (!MazeTower.ORIGINAL_TALENTS){
+				if (enduring) return Math.max(0, (3f - enduringLeft()) / 3f);
+				return Math.max(0, (MazeTower.T4_ENDURE_AFTER - visualcooldown()) / MazeTower.T4_ENDURE_AFTER);
+			}
 			return Math.max(0, (10f - visualcooldown()) / 10f);
 		}
 
 		@Override
+		public String iconTextDisplay() {
+			if (!MazeTower.ORIGINAL_TALENTS && enduring) return Integer.toString((int)Math.ceil(enduringLeft()));
+			return super.iconTextDisplay();
+		}
+
+		@Override
 		public String desc() {
+			if (!MazeTower.ORIGINAL_TALENTS){
+				if (enduring) return Messages.get(this, "maze_desc_enduring", dispTurns(enduringLeft()), damageBonus);
+				return Messages.get(this, "maze_desc", damageBonus, hitsLeft, dispTurns(visualcooldown()));
+			}
 			return Messages.get(this, "desc", damageBonus, hitsLeft);
+		}
+
+		@Override
+		public String name() {
+			if (!MazeTower.ORIGINAL_TALENTS && enduring) return Messages.get(this, "maze_name_enduring");
+			return super.name();
 		}
 
 		public float adjustDamageTaken(float damage){
@@ -171,8 +202,9 @@ public class Endure extends ArmorAbility {
 		//Maze Tower: 가시갑옷 - 버티는 동안 받은 피해(경감 전, 방어력 계산 전)의 일부를 주변 1칸의 적에게
 		private void thorns(Hero hero, float damage){
 			int lvl = Math.min(4, hero.pointsInTalent(Talent.EVEN_THE_ODDS));
-			int amt = Math.round(damage * MazeTower.T4_THORNS[lvl]);
-			if (amt <= 0) return;
+			if (lvl <= 0) return;
+			//반올림해 0이 되어도 피해 0이 들어갔다고 숫자를 보여 준다
+			int amt = Math.max(0, Math.round(damage * MazeTower.T4_THORNS[lvl]));
 			for (int i : PathFinder.NEIGHBOURS8){
 				Char ch = Actor.findChar(target.pos + i);
 				if (ch != null && ch.alignment == Char.Alignment.ENEMY && ch.isAlive()){
