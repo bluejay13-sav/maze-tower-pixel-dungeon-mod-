@@ -155,6 +155,7 @@ public class MazeTower {
 	public static final int   SKILL_KATANA_HITS         = 2;
 	public static final float SKILL_KATANA_ACCURACY     = 1.30f; //명중 +30%
 	public static final float SKILL_RUNIC_BLADE_DMG     = 1.90f; //무형검, 방어 무시
+	public static final int   SKILL_RUNIC_BLADE_RANGE   = 3;     //무형검: 이 칸 수 안의 적에게 쓸 수 있다 (마탄이 닿아야 함)
 	public static final float SKILL_RUNIC_BLADE_ELEMENT_CHANCE = 2f; //속성 특성 발동 확률 배수 (7단계 특성에서 사용)
 
 	// ===== 2차 전직 (개화의 핵) =====
@@ -432,7 +433,13 @@ public class MazeTower {
 	public static final int   CRYSTAL_WATER_TILES  = 14;  //수정 거인 보스방에 숨은 물 칸 수
 	public static final int   CRYSTAL_FIRE_PYLONS  = 2;   //수정 거인: 수정 기둥을 이만큼 부수기 전까지 화상 면역
 	public static final float CRYSTAL_MELT_DMG_TAKEN = 1.3f; //수정 거인: 수정이 녹은 동안 받는 피해 배율 (방어력 0과 함께)
+	public static final float CRYSTAL_PILLAR_DMG_TAKEN = 0.3f; //수정 거인: 수정 기둥을 CRYSTAL_FIRE_PYLONS개 부수기 전까지 받는 피해 배율 (70% 감소)
 	public static final float PROP_FADE_TIME       = 0.3f; //부적 철창·광맥·수정 기둥이 부서진 뒤 사라지는 시간(초, 원작 몬스터는 3초)
+
+	// ===== 전직의 핵을 지닌 보스 몸 주위 벚꽃잎 (5층 희미하게 / 10층 조금 선명하게 / 20층 선명하게) =====
+	public static final float[] BOSS_PETAL_ALPHA    = {0.35f, 0.6f, 0.9f};   //꽃잎 진하기
+	public static final float[] BOSS_PETAL_INTERVAL = {0.35f, 0.22f, 0.13f}; //꽃잎이 나오는 간격(초)
+	public static final float   BOSS_PETAL_MOVE_INTERVAL = 0.4f;           //움직이는 동안은 간격에 이 배율 (더 자주)
 
 	// ===== 적에게 둘러싸였을 때 =====
 	public static final int   CROWD_ENEMIES      = 3;   //주인공을 노리는 적이 이만큼 이상이면

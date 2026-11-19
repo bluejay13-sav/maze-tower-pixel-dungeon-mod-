@@ -100,6 +100,17 @@ public class MazeBossSprites {
 		s.play(change);
 	}
 
+	//전직의 핵을 지닌 보스 몸 주위의 벚꽃잎 (5층 희미하게, 10층 조금 선명하게, 20층 선명하게). CharSprite.link에서 부른다
+	public static void attachPetals( CharSprite s, com.shatteredpixel.shatteredpixeldungeon.actors.Char ch ){
+		if (!MazeBosses.ENABLED || s.parent == null) return;
+		int level;
+		if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo)            level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT;
+		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu)     level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.MEDIUM;
+		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing) level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.VIVID;
+		else return;
+		s.parent.add(new com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.Petals(s, level));
+	}
+
 	public static MovieClip.Animation anim( TextureFilm film, int fps, boolean loop, int... frames ){
 		Object[] idx = new Object[frames.length];
 		for (int i = 0; i < frames.length; i++) idx[i] = frames[i];

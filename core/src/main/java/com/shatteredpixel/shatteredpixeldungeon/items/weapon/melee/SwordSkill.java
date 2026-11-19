@@ -46,6 +46,8 @@ public class SwordSkill {
 	public float surpriseDmg = 0f;
 	//화살을 쏘는 원거리 스킬인지 (조준 사격): 인접하지 않아도 되고, 화살 1발을 쓰고, 맞으면 밀쳐낸다
 	public boolean ranged = false;
+	//근접 스킬이 닿는 거리 (1 = 인접. 무형검은 MazeTower.SKILL_RUNIC_BLADE_RANGE칸, 마탄이 날아가 닿을 수 있어야 한다)
+	public int reach = 1;
 
 	private SwordSkill(String nameKey, int hits, float dmgPerHit, float accMulti, boolean ignoreDefense, float elementChanceMulti){
 		this.nameKey = nameKey;
@@ -70,7 +72,11 @@ public class SwordSkill {
 		if (c == Rapier.class)         return new SwordSkill("thrust", 1, MazeTower.SKILL_RAPIER_DMG, Char.INFINITE_ACCURACY, false, 1f);
 		if (c == Scimitar.class)       return new SwordSkill("flurry", MazeTower.SKILL_SCIMITAR_HITS, MazeTower.SKILL_SCIMITAR_DMG, 1f, false, 1f);
 		if (c == Katana.class)         return new SwordSkill("crescent", MazeTower.SKILL_KATANA_HITS, MazeTower.SKILL_KATANA_DMG, MazeTower.SKILL_KATANA_ACCURACY, false, 1f);
-		if (c == RunicBlade.class)     return new SwordSkill("phantom", 1, MazeTower.SKILL_RUNIC_BLADE_DMG, 1f, true, MazeTower.SKILL_RUNIC_BLADE_ELEMENT_CHANCE);
+		if (c == RunicBlade.class){
+			SwordSkill s = new SwordSkill("phantom", 1, MazeTower.SKILL_RUNIC_BLADE_DMG, 1f, true, MazeTower.SKILL_RUNIC_BLADE_ELEMENT_CHANCE);
+			s.reach = MazeTower.SKILL_RUNIC_BLADE_RANGE;
+			return s;
+		}
 		if (c == WornShortbow.class){
 			SwordSkill s = basic("aimed", MazeTower.SKILL_AIMED_SHOT_DMG);
 			s.ranged = true;
@@ -173,6 +179,13 @@ public class SwordSkill {
 			}
 			if (!WornShortbow.clearShot(hero.pos, enemy.pos)){
 				GLog.w(Messages.get(SwordSkill.class, "no_path"));
+				return;
+			}
+		//무형검: reach칸 안, 마탄이 날아가 닿을 수 있는 적
+		} else if (skill.reach > 1){
+			if (Dungeon.level.distance(hero.pos, enemy.pos) > skill.reach
+					|| new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(hero.pos, enemy.pos, com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.PROJECTILE).collisionPos != enemy.pos){
+				GLog.w(Messages.get(SwordSkill.class, "not_in_reach", skill.reach));
 				return;
 			}
 		//나머지 스킬은 인접한 단일 대상

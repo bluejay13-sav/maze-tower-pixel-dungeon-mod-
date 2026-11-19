@@ -545,6 +545,11 @@ public class DM300 extends Mob {
 		}
 		//Maze Tower: 수정 거인 - 수정이 녹은 동안 받는 피해 증가
 		if (GolemAbilities.crystal() && meltTurns > 0) dmg = Math.round(dmg * MazeTower.CRYSTAL_MELT_DMG_TAKEN);
+		//Maze Tower: 수정 거인 - 수정 기둥을 CRYSTAL_FIRE_PYLONS개 부수기 전까지 받는 피해 감소
+		if (GolemAbilities.crystal() && Dungeon.level instanceof CavesBossLevel
+				&& ((CavesBossLevel)Dungeon.level).mazePylonsBroken() < MazeTower.CRYSTAL_FIRE_PYLONS){
+			dmg = Math.round(dmg * MazeTower.CRYSTAL_PILLAR_DMG_TAKEN);
+		}
 
 		int preHP = HP;
 		super.damage(dmg, src);

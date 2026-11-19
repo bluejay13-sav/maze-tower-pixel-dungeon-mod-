@@ -389,7 +389,14 @@ public class CavesBossLevel extends Level {
 	public void unseal() {
 		super.unseal();
 
-		blobs.get(PylonEnergy.class).fullyClear();
+		if (blobs.get(PylonEnergy.class) != null) blobs.get(PylonEnergy.class).fullyClear(); //Maze Tower: 기둥 전기가 한 번도 생기지 않았을 수 있다
+
+		//Maze Tower: 보스가 쓰러지면 남은 수정 기둥도 무너진다 (적 편이라 남아 있으면 쉬기를 막는다)
+		for (Mob m : mobs.toArray(new Mob[0])){
+			if (m instanceof Pylon && ((Pylon) m).mazeDormant){
+				m.die(null);
+			}
+		}
 
 		set( entrance(), Terrain.ENTRANCE );
 		int i = gate.top*width();
@@ -479,7 +486,7 @@ public class CavesBossLevel extends Level {
 		}
 		int finalPylonsRemaining = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 1 : 2;
 		if (pylonsRemaining > finalPylonsRemaining) {
-			blobs.get(PylonEnergy.class).fullyClear();
+			if (blobs.get(PylonEnergy.class) != null) blobs.get(PylonEnergy.class).fullyClear(); //Maze Tower: 기둥 전기가 한 번도 생기지 않았을 수 있다
 		}
 	}
 

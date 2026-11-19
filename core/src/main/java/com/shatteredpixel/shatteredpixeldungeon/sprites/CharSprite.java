@@ -153,6 +153,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 		ch.sprite = this;
 		
 		place( ch.pos );
+		MazeBossSprites.attachPetals(this, ch); //Maze Tower: 전직의 핵을 지닌 보스 몸 주위 벚꽃잎
 		turnTo( ch.pos, Random.Int( Dungeon.level.length() ) );
 		renderShadow = true;
 		
