@@ -159,6 +159,7 @@ public class PrisonBossLevel extends Level {
 		
 		state = State.START;
 		setMapStart();
+		MazeDeco.thin(this); //Maze Tower: 보스층 장식 줄이기
 		
 		return true;
 	}
@@ -372,6 +373,7 @@ public class PrisonBossLevel extends Level {
 	}
 	
 	private void cleanMapState(){
+		MazeDeco.thin(this); //Maze Tower: 보스층 장식 줄이기
 		buildFlagMaps();
 		cleanWalls();
 		

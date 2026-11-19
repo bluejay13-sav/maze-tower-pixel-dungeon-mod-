@@ -64,9 +64,19 @@ public class SapFloor extends Blob {
 		return s != null && s.volume > 0 && cell >= 0 && cell < s.cur.length && s.cur[cell] > 0;
 	}
 
-	//층을 만들 때 수액 웅덩이 묶음을 깐다 (SewerLevel.createMobs). 1층 1묶음 ~ 4층 4묶음, 묶음당 2~4칸
+	//층을 만들 때 수액 웅덩이를 깐다 (SewerLevel.createMobs). 층과 상관없이 SAP_FLOOR_LEVEL_CHANCE 확률로 한 묶음, 묶음당 2~4칸
 	public static void place( Level level ){
-		int patches = Math.max(0, Math.min(MazeTower.SAP_FLOOR_PATCHES_MAX, Dungeon.depth * MazeTower.SAP_FLOOR_PATCHES_PER_DEPTH));
+		//원작 층 생성의 난수 흐름을 바꾸지 않도록 따로 된 난수를 쓴다 (같은 시드면 원작과 같은 층)
+		Random.pushGenerator(Dungeon.seedCurDepth() ^ 0x5A9F100DL);
+		try {
+			placeInner(level);
+		} finally {
+			Random.popGenerator();
+		}
+	}
+
+	private static void placeInner( Level level ){
+		int patches = Random.Float() < MazeTower.SAP_FLOOR_LEVEL_CHANCE ? 1 : 0;
 		if (patches <= 0) return;
 
 		//입구·출구 근처에는 두지 않는다
@@ -107,7 +117,7 @@ public class SapFloor extends Blob {
 	@Override
 	public void use( BlobEmitter emitter ) {
 		super.use( emitter );
-		emitter.add(new TileFxLayer(this, BossEffects.Fx.ROOT_SAP, 3, 0.9f));
+		emitter.add(new TileFxLayer(this, BossEffects.Fx.ROOT_SAP, 3, 0.9f).connect());
 	}
 
 	@Override

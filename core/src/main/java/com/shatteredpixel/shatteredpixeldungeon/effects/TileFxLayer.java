@@ -25,6 +25,19 @@ public class TileFxLayer extends Group {
 	private final int fps;
 	private final float alpha;
 	private boolean shaded = false;
+	private boolean connect = false;
+	//connect(): 붙어 있는 칸 사이(가로·세로)에 같은 그림을 반 칸 어긋나게 하나 더 깔아 이어져 보이게 한다
+	private final HashMap<Integer, MovieClip> bridges = new HashMap<>();
+	//connect()일 때는 모든 칸이 같은 박자로 움직이도록 프레임을 직접 고른다 (따로 움직이면 이음매가 깜빡인다)
+	private com.watabou.noosa.TextureFilm film;
+	private int syncFrame = 0;
+
+	private void sync( MovieClip c ){
+		if (!connect) return;
+		if (film == null) film = new com.watabou.noosa.TextureFilm(c.texture, fx.w, fx.h);
+		c.paused = true;
+		c.frame(film.get(syncFrame));
+	}
 	private float time = 0;
 	private final HashMap<Integer, MovieClip> clips = new HashMap<>();
 	//칸마다 [밝기, 진하기, 일렁임 위상]
@@ -42,11 +55,38 @@ public class TileFxLayer extends Group {
 		return this;
 	}
 
+	public TileFxLayer connect(){
+		connect = true;
+		return this;
+	}
+
+	//key = 칸 * 2 + (0 오른쪽, 1 아래)
+	private void bridge( int cell, int dir, boolean has, int w ){
+		int key = cell * 2 + dir;
+		MovieClip b = bridges.get(key);
+		if (has && b == null){
+			b = BossEffects.clip(fx, fps, true);
+			float half = DungeonTilemap.SIZE / 2f;
+			b.x = (cell % w) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - fx.w) / 2f + (dir == 0 ? half : 0);
+			b.y = (cell / w) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - fx.h) / 2f + (dir == 1 ? half : 0);
+			b.alpha(alpha);
+			addToBack(b);
+			bridges.put(key, b);
+		} else if (!has && b != null){
+			b.killAndErase();
+			bridges.remove(key);
+			b = null;
+		}
+		if (b != null) b.visible = Dungeon.level.heroFOV[cell] || Dungeon.level.heroFOV[cell + (dir == 0 ? 1 : w)];
+		if (b != null) sync(b);
+	}
+
 	@Override
 	public synchronized void update() {
 		super.update();
 		if (blob.cur == null || Dungeon.level == null) return;
 		time += Game.elapsed;
+		syncFrame = (int)(time * fps) % fx.frames;
 		int w = Dungeon.level.width();
 		for (int i = 0; i < blob.cur.length; i++){
 			boolean has = blob.cur[i] > 0;
@@ -74,8 +114,15 @@ public class TileFxLayer extends Group {
 				shades.remove(i);
 				c = null;
 			}
+			if (connect){
+				boolean right = has && (i % w) < w - 1 && blob.cur[i + 1] > 0;
+				boolean down  = has && i + w < blob.cur.length && blob.cur[i + w] > 0;
+				bridge(i, 0, right, w);
+				bridge(i, 1, down, w);
+			}
 			if (c != null){
 				c.visible = Dungeon.level.heroFOV[i];
+				sync(c);
 				if (shaded){
 					float[] s = shades.get(i);
 					//남은 양이 적을수록 옅어지고, 칸마다 다른 박자로 천천히 일렁인다

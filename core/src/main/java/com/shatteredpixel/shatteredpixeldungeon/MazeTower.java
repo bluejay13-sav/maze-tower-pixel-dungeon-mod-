@@ -442,14 +442,15 @@ public class MazeTower {
 	public static final float   BOSS_PETAL_MOVE_INTERVAL = 0.4f;           //움직이는 동안은 간격에 이 배율 (더 자주)
 
 	// ===== 구역 외형 (28단계, 명세 20번) =====
-	public static final int   SAP_FLOOR_PATCHES_PER_DEPTH = 1; //뿌리 지하 수액 웅덩이: 층 × 이만큼 묶음 (1층 1 ~ 4층 4)
-	public static final int   SAP_FLOOR_PATCHES_MAX = 4;
+	public static final float SAP_FLOOR_LEVEL_CHANCE = 0.5f; //뿌리 지하 일반 층마다 수액 웅덩이 한 묶음이 생길 확률 (층과 상관없이 같다)
 	public static final int   SAP_FLOOR_SIZE_MIN    = 2;     //한 묶음의 칸 수
 	public static final int   SAP_FLOOR_SIZE_MAX    = 4;
-	public static final float SEAL_GRASS            = 0.12f; //봉인의 회랑 잔디 (원작 0.20, 뿌리 지하는 0.20 그대로)
-	public static final int   HEART_FLOOR_DECO_DENOM = 55;   //탑의 심장 바닥 살점 (작을수록 많다, 원작 80)
-	public static final float HEART_FLOOR_ALT2_CHANCE = 12f; //탑의 심장 바닥에 작은 혹·핏줄(FLOOR_ALT_2)이 섞이는 확률 % (원작 5)
+	public static final float SEAL_GRASS            = 0.20f; //봉인의 회랑 잔디 (원작과 같은 0.20)
+	public static final int   HEART_FLOOR_DECO_DENOM = 80;   //탑의 심장 바닥 살점 (작을수록 많다, 원작과 같은 80)
+	public static final float HEART_FLOOR_ALT2_CHANCE = 5f;  //탑의 심장 바닥에 작은 혹·핏줄(FLOOR_ALT_2)이 섞이는 확률 % (원작과 같은 5)
 	public static final int   REGION_FX_CHANCE      = 150;   //구역 분위기 이펙트: 주인공이 행동할 때마다 1/이 값
+	public static final float BOSS_WALL_DECO_KEEP  = 0.3f; //5·10층 보스층: 벽 장식 중 남기는 비율
+	public static final float BOSS_FLOOR_DECO_KEEP = 0.3f; //5·10층 보스층: 바닥 장식 중 남기는 비율
 
 	// ===== 몬스터 전체 세기 =====
 	//원작 몬스터 수치에 곱한다. 30단계 난이도 조정 때 구역별로 나눌 수 있다.

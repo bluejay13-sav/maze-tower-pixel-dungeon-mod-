@@ -131,6 +131,7 @@ public class SewerBossLevel extends SewerLevel {
 
 	@Override
 	protected void createMobs() {
+		MazeDeco.thin(this); //Maze Tower: 보스층 장식 줄이기
 	}
 	
 	public Actor addRespawner() {
