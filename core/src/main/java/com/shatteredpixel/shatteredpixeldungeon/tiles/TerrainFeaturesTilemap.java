@@ -41,7 +41,7 @@ public class TerrainFeaturesTilemap extends DungeonTilemap {
 	private SparseArray<Trap> traps;
 
 	public TerrainFeaturesTilemap(SparseArray<Plant> plants, SparseArray<Trap> traps) {
-		super(Assets.Environment.TERRAIN_FEATURES);
+		super(com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.features(Assets.Environment.TERRAIN_FEATURES)); //Maze Tower: 역행 중 분홍 잔디
 
 		this.plants = plants;
 		this.traps = traps;
