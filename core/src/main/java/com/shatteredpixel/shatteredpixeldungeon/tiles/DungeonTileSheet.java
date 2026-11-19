@@ -527,6 +527,9 @@ public class DungeonTileSheet {
 		//Maze Tower: 탑의 심장은 작은 혹과 핏줄(FLOOR_ALT_2)이 바닥에 더 자주 섞인다 (원작 5%)
 		float alt2 = (Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel) ? com.shatteredpixel.shatteredpixeldungeon.MazeTower.HEART_FLOOR_ALT2_CHANCE : 5f;
 		tileAltVisuals.put(FLOOR, new tileAlt(new float[]{52.5f, alt2}, FLOOR_ALT_1, FLOOR_ALT_2));
+		//Maze Tower: 뿌리 지하 특수 바닥의 두 번째 그림에는 벚꽃잎이 있어서, 반반 깔리면 꽃잎이 너무 많다. 뿌리 지하에서만 드물게
+		float spAlt = (Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel) ? com.shatteredpixel.shatteredpixeldungeon.MazeTower.ROOT_SP_PETAL_CHANCE : 50f;
+		tileAltVisuals.put(FLOOR_SP, new tileAlt(new float[]{spAlt}, FLOOR_SP_ALT));
 		if (Dungeon.level instanceof MiningLevel){
 			if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL){
 				tileAltVisuals.put(FLAT_MINE_CRYSTAL,       new tileAlt(new float[]{66.7f, 33.3f}, FLAT_MINE_CRYSTAL_ALT, FLAT_MINE_CRYSTAL_ALT_2));
