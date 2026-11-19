@@ -149,7 +149,7 @@ public abstract class Mob extends Char {
 			//modify health for ascension challenge if applicable, only on first add
 			float percent = HP / (float) HT;
 			HT = Math.round(HT * AscensionChallenge.statModifier(this));
-			HT = Math.max(1, Math.round(HT * com.shatteredpixel.shatteredpixeldungeon.MazeTower.mobStatMulti(this, com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOB_HP_MULTI))); //Maze Tower: 잡몹 약하게
+			HT = Math.max(1, Math.round(HT * com.shatteredpixel.shatteredpixeldungeon.MazeTower.mobStatMulti(this, com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOB_HP_MULTI, com.shatteredpixel.shatteredpixeldungeon.MazeTower.BOSS_HP_MULTI))); //Maze Tower: 잡몹·보스 약하게
 			HP = Math.round(HT * percent);
 			firstAdded = false;
 		}

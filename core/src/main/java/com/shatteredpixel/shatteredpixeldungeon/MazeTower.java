@@ -441,22 +441,26 @@ public class MazeTower {
 	public static final float[] BOSS_PETAL_INTERVAL = {0.35f, 0.22f, 0.13f}; //꽃잎이 나오는 간격(초)
 	public static final float   BOSS_PETAL_MOVE_INTERVAL = 0.4f;           //움직이는 동안은 간격에 이 배율 (더 자주)
 
-	// ===== 잡몹 전체 세기 (보스·보스가 부른 몹은 제외) =====
+	// ===== 몬스터 전체 세기 =====
 	//원작 몬스터 수치에 곱한다. 30단계 난이도 조정 때 구역별로 나눌 수 있다.
 	public static final float MOB_HP_MULTI  = 0.8f;  //체력
 	public static final float MOB_DMG_MULTI = 0.8f;  //근접 공격 피해
 	public static final float MOB_ACC_MULTI = 0.9f;  //명중
+	//보스 (BOSS 속성). 보스가 부른 몹·움직이지 않는 것(철창·광맥·기둥·돌무더기)은 원작 그대로
+	public static final float BOSS_HP_MULTI  = 0.8f;
+	public static final float BOSS_DMG_MULTI = 0.8f;
+	public static final float BOSS_ACC_MULTI = 0.9f;
 
-	//잡몹(적 편, 보스·보스 부하 아님)이면 multi, 아니면 1
-	public static float mobStatMulti( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch, float multi ){
+	//적 편 몬스터의 세기 배율: 보스면 bossMulti, 잡몹이면 mobMulti, 보스 부하·움직이지 않는 것·그 밖은 1
+	public static float mobStatMulti( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch, float mobMulti, float bossMulti ){
 		if (!(ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob)) return 1f;
 		if (ch.alignment != com.shatteredpixel.shatteredpixeldungeon.actors.Char.Alignment.ENEMY) return 1f;
-		if (com.shatteredpixel.shatteredpixeldungeon.actors.Char.hasProp(ch, com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.BOSS)
-				|| com.shatteredpixel.shatteredpixeldungeon.actors.Char.hasProp(ch, com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.BOSS_MINION)
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.Char.hasProp(ch, com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.BOSS)) return bossMulti;
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.Char.hasProp(ch, com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.BOSS_MINION)
 				|| com.shatteredpixel.shatteredpixeldungeon.actors.Char.hasProp(ch, com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.IMMOVABLE)){
 			return 1f;
 		}
-		return multi;
+		return mobMulti;
 	}
 
 	// ===== 적에게 둘러싸였을 때 =====
