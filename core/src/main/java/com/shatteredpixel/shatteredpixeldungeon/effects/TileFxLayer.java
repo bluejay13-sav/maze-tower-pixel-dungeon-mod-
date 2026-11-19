@@ -25,18 +25,18 @@ public class TileFxLayer extends Group {
 	private final int fps;
 	private final float alpha;
 	private boolean shaded = false;
-	private boolean connect = false;
-	//connect(): 붙어 있는 칸 사이(가로·세로)에 같은 그림을 반 칸 어긋나게 하나 더 깔아 이어져 보이게 한다
-	private final HashMap<Integer, MovieClip> bridges = new HashMap<>();
-	//connect()일 때는 모든 칸이 같은 박자로 움직이도록 프레임을 직접 고른다 (따로 움직이면 이음매가 깜빡인다)
+	//connect(connFx): 붙어 있는 수액이 경계 없이 하나로 이어져 보이게 한다.
+	//connFx는 이웃 방향(위 1, 오른쪽 2, 아래 4, 왼쪽 8)마다 테두리를 빼고 칸 끝까지 이어지는 모양 + 대각선(오른쪽 위 16, 오른쪽 아래 32, 왼쪽 아래 64, 왼쪽 위 128) 모서리 채움, 256줄 × 프레임 그림이다.
+	//칸마다 이웃을 보고 맞는 줄을 고르고, 모든 칸이 같은 박자로 움직이도록 프레임을 직접 고른다.
+	private BossEffects.Fx connFx = null;
 	private com.watabou.noosa.TextureFilm film;
 	private int syncFrame = 0;
 
-	private void sync( MovieClip c ){
-		if (!connect) return;
-		if (film == null) film = new com.watabou.noosa.TextureFilm(c.texture, fx.w, fx.h);
+	private void sync( MovieClip c, int mask ){
+		if (connFx == null) return;
+		if (film == null) film = new com.watabou.noosa.TextureFilm(c.texture, connFx.w, connFx.h);
 		c.paused = true;
-		c.frame(film.get(syncFrame));
+		c.frame(film.get(mask * connFx.frames + syncFrame));
 	}
 	private float time = 0;
 	private final HashMap<Integer, MovieClip> clips = new HashMap<>();
@@ -55,30 +55,9 @@ public class TileFxLayer extends Group {
 		return this;
 	}
 
-	public TileFxLayer connect(){
-		connect = true;
+	public TileFxLayer connect( BossEffects.Fx connFx ){
+		this.connFx = connFx;
 		return this;
-	}
-
-	//key = 칸 * 2 + (0 오른쪽, 1 아래)
-	private void bridge( int cell, int dir, boolean has, int w ){
-		int key = cell * 2 + dir;
-		MovieClip b = bridges.get(key);
-		if (has && b == null){
-			b = BossEffects.clip(fx, fps, true);
-			float half = DungeonTilemap.SIZE / 2f;
-			b.x = (cell % w) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - fx.w) / 2f + (dir == 0 ? half : 0);
-			b.y = (cell / w) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - fx.h) / 2f + (dir == 1 ? half : 0);
-			b.alpha(alpha);
-			addToBack(b);
-			bridges.put(key, b);
-		} else if (!has && b != null){
-			b.killAndErase();
-			bridges.remove(key);
-			b = null;
-		}
-		if (b != null) b.visible = Dungeon.level.heroFOV[cell] || Dungeon.level.heroFOV[cell + (dir == 0 ? 1 : w)];
-		if (b != null) sync(b);
 	}
 
 	@Override
@@ -92,7 +71,7 @@ public class TileFxLayer extends Group {
 			boolean has = blob.cur[i] > 0;
 			MovieClip c = clips.get(i);
 			if (has && c == null){
-				c = BossEffects.clip(fx, fps, true);
+				c = BossEffects.clip(connFx != null ? connFx : fx, fps, true);
 				//칸보다 큰 그림은 칸 가운데에 맞춘다
 				c.x = (i % w) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - fx.w) / 2f;
 				c.y = (i / w) * DungeonTilemap.SIZE + (DungeonTilemap.SIZE - fx.h) / 2f;
@@ -114,15 +93,22 @@ public class TileFxLayer extends Group {
 				shades.remove(i);
 				c = null;
 			}
-			if (connect){
-				boolean right = has && (i % w) < w - 1 && blob.cur[i + 1] > 0;
-				boolean down  = has && i + w < blob.cur.length && blob.cur[i + w] > 0;
-				bridge(i, 0, right, w);
-				bridge(i, 1, down, w);
-			}
 			if (c != null){
 				c.visible = Dungeon.level.heroFOV[i];
-				sync(c);
+				if (connFx != null){
+					int mask = 0;
+					if (i - w >= 0 && blob.cur[i - w] > 0)                         mask |= 1; //위
+					if ((i % w) < w - 1 && blob.cur[i + 1] > 0)                  mask |= 2; //오른쪽
+					if (i + w < blob.cur.length && blob.cur[i + w] > 0)           mask |= 4; //아래
+					if ((i % w) > 0 && blob.cur[i - 1] > 0)                      mask |= 8; //왼쪽
+					//대각선 (양옆이 모두 이어질 때만 모서리를 채운다)
+					boolean l = (i % w) > 0, r = (i % w) < w - 1;
+					if (r && i - w + 1 >= 0 && blob.cur[i - w + 1] > 0)                mask |= 16;  //오른쪽 위
+					if (r && i + w + 1 < blob.cur.length && blob.cur[i + w + 1] > 0)   mask |= 32;  //오른쪽 아래
+					if (l && i + w - 1 < blob.cur.length && blob.cur[i + w - 1] > 0)   mask |= 64;  //왼쪽 아래
+					if (l && i - w - 1 >= 0 && blob.cur[i - w - 1] > 0)                mask |= 128; //왼쪽 위
+					sync(c, mask);
+				}
 				if (shaded){
 					float[] s = shades.get(i);
 					//남은 양이 적을수록 옅어지고, 칸마다 다른 박자로 천천히 일렁인다

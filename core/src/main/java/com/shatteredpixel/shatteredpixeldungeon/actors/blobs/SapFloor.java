@@ -124,7 +124,7 @@ public class SapFloor extends Blob {
 	@Override
 	public void use( BlobEmitter emitter ) {
 		super.use( emitter );
-		emitter.add(new TileFxLayer(this, BossEffects.Fx.ROOT_SAP, 3, 0.9f).connect());
+		emitter.add(new TileFxLayer(this, BossEffects.Fx.ROOT_SAP, 3, 0.9f).connect(BossEffects.Fx.ROOT_SAP_CONN));
 	}
 
 	@Override

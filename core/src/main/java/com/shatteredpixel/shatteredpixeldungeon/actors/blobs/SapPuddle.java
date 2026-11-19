@@ -72,7 +72,7 @@ public class SapPuddle extends Blob {
 	@Override
 	public void use( BlobEmitter emitter ) {
 		super.use( emitter );
-		emitter.add(new TileFxLayer(this, BossEffects.Fx.SAP_PUDDLE, 4, 0.85f).connect()); //Maze Tower: 붙어 있는 수액은 이어져 보인다
+		emitter.add(new TileFxLayer(this, BossEffects.Fx.SAP_PUDDLE, 4, 0.85f).connect(BossEffects.Fx.SAP_PUDDLE_CONN)); //Maze Tower: 붙어 있는 수액은 이어져 보인다
 	}
 
 	@Override

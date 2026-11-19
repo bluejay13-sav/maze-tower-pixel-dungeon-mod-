@@ -23,6 +23,8 @@ public class BossEffects {
 		SAP_SLAM   ("sprites/maze_fx5_slam.png",         48, 48, 5),
 		SAP_PUDDLE ("sprites/maze_fx5_sap_puddle.png",   16, 16, 3),
 		ROOT_SAP   ("sprites/maze_sap_puddle.png",       16, 16, 2), //뿌리 지하 수액 웅덩이 바닥
+		ROOT_SAP_CONN   ("sprites/maze_sap_puddle_conn.png",     16, 16, 2), //위 그림의 이어지는 모양 256줄 (위1·오른쪽2·아래4·왼쪽8 + 대각선 16·32·64·128)
+		SAP_PUDDLE_CONN ("sprites/maze_fx5_sap_puddle_conn.png", 16, 16, 3), //5층 수액의 이어지는 모양 256줄
 		REGION_SOUL      ("sprites/maze_fx_region_soul.png",      16, 24, 6), //봉인의 회랑 분위기
 		REGION_MAGIC     ("sprites/maze_fx_region_magic.png",     16, 16, 8), //잊힌 마도시 분위기
 		REGION_HEARTBEAT ("sprites/maze_fx_region_heartbeat.png", 48, 48, 8), //탑의 심장 분위기
