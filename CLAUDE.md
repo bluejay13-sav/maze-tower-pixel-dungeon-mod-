@@ -649,7 +649,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 ### 22. 보스 (24단계 구현)
 - 모든 마탑 보스 처리는 `MazeBosses.ENABLED`로 켜고 끈다. 이름·설명은 `MazeBosses.textKey`(`Char.name`, `Mob.description`에서 사용). 대사(yell)는 원작 그대로, 27단계에서 바꾼다.
 - 그림: 명세 19번 시트를 `MazeBossSprites`가 원작 보스 그림 클래스(Goo·Tengu·DM300·King·Yog Sprite)에 입힌다. (결정) 모든 보스 시트의 공격 마지막 칸(8번)은 하얗게 칠해져 눈이 아파 쓰지 않는다(공격 = 6, 7, 7, 0). 탑의 주인은 변신 기능이 없어 지금은 처음 모습(날개 없음, 보석 6개 빛남)만 쓴다. 변신을 넣을 때 `MazeBossSprites.setMasterPhase(sprite, n)`을 부른다(p1~p5 시트 + fade, 6은 p6 시트 + fade → awaken).
-- (결정) 전직의 핵을 지닌 보스 몸 주위에 벚꽃잎이 흩날린다. 5층 희미하게, 10층 조금 선명하게, 20층 선명하게. 움직이는 동안 더 자주(`BOSS_PETAL_*`, `effects/particles/BossPetalParticle`, `CharSprite.link`에서 붙임).
+- (결정) 전직의 핵을 지닌 보스 몸 주위에 벚꽃잎이 흩날린다. 5·10·20층 모두 같은 정도로 희미하게(10·20층이 과해서 5층에 맞춤). 움직이는 동안 더 자주(`BOSS_PETAL_*`, `effects/particles/BossPetalParticle`, `CharSprite.link`에서 붙임).
 - 15층은 마도 골렘 / 수정 거인, 20층은 망령 왕 / 마도시의 여제 중 하나가 던전 시드로 정해진다(`MazeBosses.crystalGiant`·`empress`). 치트 "보스 바꾸기"로 고를 수 있다(저장 안 됨).
 
 **5층 썩은 수액 덩어리 (원작 구)**
