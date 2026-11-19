@@ -35,7 +35,9 @@ public class Assets {
 		//Maze Tower: 잔디·장식 겹침 그림. 탑의 심장 줄의 원작 버섯을 검은 잔디로 (역행 중에는 분홍 잔디). 원작: terrain_features.png
 		public static final String TERRAIN_FEATURES = "environment/maze_terrain_features.png";
 		public static final String TERRAIN_FEATURES_RETURN = "environment/maze_terrain_features_return.png";
-		public static final String RAISED_TERRAIN = "environment/raised_terrain.png";
+		//Maze Tower: 키 큰 풀 윗부분 그림. 탑의 심장 줄의 원작 버섯을 검은 잔디로 (역행 중에는 분홍). 원작: raised_terrain.png
+		public static final String RAISED_TERRAIN = "environment/maze_raised_terrain.png";
+		public static final String RAISED_TERRAIN_RETURN = "environment/maze_raised_terrain_return.png";
 
 		public static final String VISUAL_GRID          = "environment/visual_grid.png";
 		public static final String WALL_BLOCKING        = "environment/wall_blocking.png";

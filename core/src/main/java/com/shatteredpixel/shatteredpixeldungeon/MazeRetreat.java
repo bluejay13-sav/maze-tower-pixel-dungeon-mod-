@@ -172,6 +172,7 @@ public class MazeRetreat {
 
 	public static String features( String tex ){
 		if ((active() || pendingBegin) && Assets.Environment.TERRAIN_FEATURES.equals(tex)) return Assets.Environment.TERRAIN_FEATURES_RETURN;
+		if ((active() || pendingBegin) && Assets.Environment.RAISED_TERRAIN.equals(tex)) return Assets.Environment.RAISED_TERRAIN_RETURN;
 		return tex;
 	}
 

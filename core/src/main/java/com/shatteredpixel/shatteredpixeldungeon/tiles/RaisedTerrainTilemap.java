@@ -30,7 +30,7 @@ import java.util.HashSet;
 public class RaisedTerrainTilemap extends DungeonTilemap {
 	
 	public RaisedTerrainTilemap() {
-		super(Assets.Environment.RAISED_TERRAIN);
+		super(com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.features(Assets.Environment.RAISED_TERRAIN)); //Maze Tower: 역행 중 분홍 잔디
 		skipCells.clear();
 		map( Dungeon.level.map, Dungeon.level.width() );
 	}
