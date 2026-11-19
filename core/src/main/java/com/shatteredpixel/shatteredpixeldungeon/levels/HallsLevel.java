@@ -155,10 +155,11 @@ public class HallsLevel extends RegularLevel {
 		switch (tile) {
 			case Terrain.WATER:
 				return Messages.get(HallsLevel.class, "water_name");
+			//Maze Tower: 탑의 심장의 잔디 (원작 잉걸불이끼·잉걸불버섯). 역행 중에는 분홍 잔디
 			case Terrain.GRASS:
-				return Messages.get(HallsLevel.class, "grass_name");
+				return Messages.get(HallsLevel.class, com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active() ? "maze_return_grass_name" : "grass_name");
 			case Terrain.HIGH_GRASS:
-				return Messages.get(HallsLevel.class, "high_grass_name");
+				return Messages.get(HallsLevel.class, com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active() ? "maze_return_high_grass_name" : "high_grass_name");
 			case Terrain.STATUE:
 			case Terrain.STATUE_SP:
 				return Messages.get(HallsLevel.class, "statue_name");
