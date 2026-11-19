@@ -72,6 +72,13 @@ public class GooSprite extends MobSprite {
 		
 		die = new Animation( 10, false );
 		die.frames( frames, 5, 6, 7 );
+
+		//Maze Tower: 썩은 수액 덩어리 그림 (부풀기 = 공격 프레임)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
+			TextureFilm f = MazeBossSprites.apply(this, MazeBossSprites.Look.SAP);
+			pump = MazeBossSprites.anim(f, 12, true, 6, 7);
+			pumpAttack = MazeBossSprites.anim(f, 15, false, 6, 7, 8);
+		}
 		
 		play(idle);
 

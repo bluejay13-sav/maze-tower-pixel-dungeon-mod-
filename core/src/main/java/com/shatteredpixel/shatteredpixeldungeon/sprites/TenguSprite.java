@@ -50,6 +50,7 @@ public class TenguSprite extends MobSprite {
 		
 		die = new Animation( 8, false );
 		die.frames( frames, 8, 9, 10, 10, 10, 10, 10, 10 );
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) MazeBossSprites.apply(this, MazeBossSprites.Look.WARDEN); //Maze Tower: 그림자 간수 그림
 		
 		play( run );
 		isMoving = true;
@@ -98,6 +99,11 @@ public class TenguSprite extends MobSprite {
 				reset( this, cell, new TenguShuriken(), new Callback() {
 					@Override
 					public void call() {
+						//Maze Tower: 사슬 맞음
+						if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
+							com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects.atCell(
+									com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects.Fx.CHAIN_HIT, cell, 15, false);
+						}
 						ch.onAttackComplete();
 					}
 				} );
@@ -128,6 +134,7 @@ public class TenguSprite extends MobSprite {
 	public static class TenguShuriken extends Item {
 		{
 			image = ItemSpriteSheet.SHURIKEN;
+			if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) image = MazeItemSprites.WARDEN_CHAIN; //Maze Tower: 사슬
 		}
 	}
 }

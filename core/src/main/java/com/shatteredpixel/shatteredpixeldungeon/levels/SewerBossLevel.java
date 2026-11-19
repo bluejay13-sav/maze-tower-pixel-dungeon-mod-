@@ -151,6 +151,11 @@ public class SewerBossLevel extends SewerLevel {
 				}
 			}
 		Random.popGenerator();
+
+		//Maze Tower: 썩은 수액 덩어리의 약점 - 맵 어딘가에 횃불 하나
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
+			drop(new com.shatteredpixel.shatteredpixeldungeon.items.BossTorch(), randomDropCell());
+		}
 	}
 
 	@Override

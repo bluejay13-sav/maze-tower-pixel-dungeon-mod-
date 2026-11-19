@@ -24,15 +24,22 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeBosses;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapPuddle;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.LockedFloor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Ooze;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
 import com.shatteredpixel.shatteredpixeldungeon.items.keys.WornKey;
@@ -66,6 +73,76 @@ public class Goo extends Mob {
 	private int pumpedUp = 0;
 	private int healInc = 1;
 
+	// ===== Maze Tower: 5층 썩은 수액 덩어리 (기획 문서) =====
+	//  - 물리 피해(무기·투척·스킬·필살기·4차 능력 = 출처가 캐릭터인 피해)를 80% 덜 받는다
+	//  - 횃불을 맞으면(torched) 체력이 절반이 될 때까지 계속 불타고, 그동안 물리 피해 감소가 사라지며 방어력 0,
+	//    수액을 더는 만들지 못한다. 체력이 절반 아래면 불이 꺼지고 물리 피해를 30% 더 받는다.
+	//  - 불타는 동안 회복하지 못한다. 젖음에 걸리지 않는다.
+	//  - 힘을 모아 내리칠 때 주변에 수액 웅덩이(SapPuddle)를 남기고, 수액 위에서 물처럼 회복, 수액 칸으로 옮기면 체력 +10
+	private boolean torched = false;
+
+	{
+		if (MazeBosses.ENABLED) immunities.add(Wet.class);
+	}
+
+	private boolean maze(){
+		return MazeBosses.ENABLED;
+	}
+
+	//BossTorch가 맞혔을 때. 이미 불붙어 있거나 체력이 절반 아래면 효과 없음(false)
+	public boolean torchHit(){
+		if (!maze() || torched || HP*2 <= HT) return false;
+		torched = true;
+		Buff.affect(this, Burning.class).reignite(this);
+		if (sprite != null){
+			sprite.emitter().burst(FlameParticle.FACTORY, 20);
+			sprite.showStatus(CharSprite.WARNING, Messages.get(this, "maze_torched_status"));
+		}
+		GLog.p(Messages.get(this, "maze_torched"));
+		return true;
+	}
+
+	//물리 피해 배율
+	private float physicalMulti(){
+		if (HP*2 <= HT) return 1f + MazeTower.SAP_HALF_PHYS_BONUS;
+		if (torched)    return 1f;
+		return 1f - MazeTower.SAP_PHYS_REDUCE;
+	}
+
+	//내려칠 때 주변 3×3의 빈 바닥 몇 칸에 수액 웅덩이
+	private void spillSap(){
+		if (!maze() || torched) return;
+		java.util.ArrayList<Integer> cells = new java.util.ArrayList<>();
+		for (int n : PathFinder.NEIGHBOURS9){
+			int c = pos + n;
+			if (Dungeon.level.passable[c] && !Dungeon.level.pit[c] && !Dungeon.level.solid[c]) cells.add(c);
+		}
+		int count = Random.IntRange(MazeTower.SAP_PUDDLE_MIN, MazeTower.SAP_PUDDLE_MAX);
+		while (count-- > 0 && !cells.isEmpty()){
+			int c = cells.remove(Random.Int(cells.size()));
+			GameScene.add(Blob.seed(c, MazeTower.SAP_PUDDLE_TURNS, SapPuddle.class));
+		}
+	}
+
+	//물 또는 수액 위
+	private boolean onHealingGround(){
+		return !flying && (Dungeon.level.water[pos] || (maze() && SapPuddle.at(pos)));
+	}
+
+	@Override
+	public void move( int step, boolean travelling ) {
+		super.move(step, travelling);
+		//수액 칸으로 옮기면 체력 +10 (불타는 동안은 회복하지 못한다)
+		if (maze() && SapPuddle.at(pos) && HP < HT && buff(Burning.class) == null){
+			int heal = Math.min(MazeTower.SAP_MOVE_HEAL, HT - HP);
+			HP += heal;
+			if (Dungeon.level.heroFOV[pos] && sprite != null){
+				sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), FloatingText.HEALING);
+				BossEffects.atCellBottom(BossEffects.Fx.SAP_HEAL, pos, 10, false);
+			}
+		}
+	}
+
 	@Override
 	public int damageRoll() {
 		int min = 1;
@@ -97,6 +174,7 @@ public class Goo extends Mob {
 
 	@Override
 	public int drRoll() {
+		if (maze() && torched) return 0; //Maze Tower: 횃불에 맞아 불타는 동안 방어력 0
 		return super.drRoll() + Random.NormalIntRange(0, 2);
 	}
 
@@ -108,7 +186,21 @@ public class Goo extends Mob {
 			sprite.idle();
 		}
 
-		if (!flying && Dungeon.level.water[pos] && HP < HT) {
+		//Maze Tower: 횃불 효과 - 체력이 절반이 될 때까지 계속 불탄다
+		if (maze() && torched){
+			if (HP*2 <= HT){
+				torched = false;
+				Buff.detach(this, Burning.class);
+				if (Dungeon.level.heroFOV[pos]) GLog.p(Messages.get(this, "maze_torch_out"));
+			} else if (buff(Burning.class) == null){
+				Buff.affect(this, Burning.class).reignite(this);
+			}
+		}
+
+		//Maze Tower: 물뿐 아니라 수액 위에서도 회복하고, 불타는 동안은 회복하지 못한다
+		boolean heals = maze() ? onHealingGround() && buff(Burning.class) == null
+				: !flying && Dungeon.level.water[pos];
+		if (heals && HP < HT) {
 			HP += healInc;
 			Statistics.qualifiedForBossChallengeBadge = false;
 
@@ -182,6 +274,7 @@ public class Goo extends Mob {
 		if (pumpedUp == 1) {
 			pumpedUp++;
 			((GooSprite)sprite).pumpUp( pumpedUp );
+			if (maze() && Dungeon.level.heroFOV[pos]) BossEffects.onChar(BossEffects.Fx.SAP_CHARGE, sprite, 8, false); //Maze Tower: 힘 모으기
 
 			spend( attackDelay() );
 
@@ -218,6 +311,7 @@ public class Goo extends Mob {
 				spend( attackDelay() );
 			}
 
+			if (maze() && Dungeon.level.heroFOV[pos]) BossEffects.onChar(BossEffects.Fx.SAP_CHARGE, sprite, 8, false); //Maze Tower: 힘 모으기
 			((GooSprite)sprite).pumpUp( pumpedUp );
 
 			if (Dungeon.level.heroFOV[pos]) {
@@ -231,6 +325,11 @@ public class Goo extends Mob {
 
 	@Override
 	public boolean attack( Char enemy, float dmgMulti, float dmgBonus, float accMulti ) {
+		//Maze Tower: 힘을 모아 내리치면 3×3 내려치기 이펙트와 수액 웅덩이
+		if (maze() && pumpedUp > 0){
+			if (Dungeon.level.heroFOV[pos]) BossEffects.atCell(BossEffects.Fx.SAP_SLAM, pos, 15, false);
+			spillSap();
+		}
 		boolean result = super.attack( enemy, dmgMulti, dmgBonus, accMulti );
 		if (pumpedUp > 0) {
 			pumpedUp = 0;
@@ -267,6 +366,10 @@ public class Goo extends Mob {
 			Dungeon.level.seal();
 		}
 		boolean bleeding = (HP*2 <= HT);
+		//Maze Tower: 물리 피해 (출처가 캐릭터: 무기·투척·스킬·필살기·4차 능력) 배율
+		if (maze() && src instanceof Char){
+			dmg = Math.round(dmg * physicalMulti());
+		}
 		super.damage(dmg, src);
 		if ((HP*2 <= HT) && !bleeding){
 			BossHealthBar.bleed(true);
@@ -341,6 +444,7 @@ public class Goo extends Mob {
 
 		bundle.put( PUMPEDUP , pumpedUp );
 		bundle.put( HEALINC, healInc );
+		bundle.put( "maze_torched", torched ); //Maze Tower
 	}
 
 	@Override
@@ -353,6 +457,7 @@ public class Goo extends Mob {
 		if ((HP*2 <= HT)) BossHealthBar.bleed(true);
 
 		healInc = bundle.getInt(HEALINC);
+		torched = bundle.getBoolean("maze_torched"); //Maze Tower
 	}
 	
 }

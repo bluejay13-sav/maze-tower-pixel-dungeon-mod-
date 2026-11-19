@@ -80,6 +80,13 @@ public class DM300Sprite extends MobSprite {
 			die.frames(frames, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10);
 		}
 
+		//Maze Tower: 마도 골렘 / 수정 거인 그림 (기 모으기·내려치기·쏘기 = 공격 프레임)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
+			TextureFilm f = MazeBossSprites.apply(this, MazeBossSprites.look15());
+			charge = MazeBossSprites.anim(f, 4, true, 6, 7);
+			slam = attack.clone();
+		}
+
 		if (curAnim != charge) play(idle);
 	}
 

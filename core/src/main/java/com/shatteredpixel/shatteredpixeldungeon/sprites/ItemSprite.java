@@ -252,6 +252,9 @@ public class ItemSprite extends MovieClip {
 	public void frame( int image ){
 		if (MazeItemSprites.has(image)){
 			texture( MazeItemSprites.file(image) ); //그림 전체가 한 칸
+			if (MazeItemSprites.frameWidth(image) > 0){
+				frame( 0, 0, MazeItemSprites.frameWidth(image), (int)texture.height ); //여러 프레임 그림이면 첫 프레임만
+			}
 			mazeTexture = true;
 			perspectiveRaise = 5 / 16f;
 			return;

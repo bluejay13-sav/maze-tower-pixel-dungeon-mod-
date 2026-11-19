@@ -240,6 +240,15 @@ public class PrisonBossLevel extends Level {
 	}
 	
 	private static final Rect arena = new Rect(3, 1, 18, 16);
+
+	//Maze Tower: 그림자 간수 2단계 보스방의 벽 기둥과 부적 철창 자리
+	private static final Point[] MAZE_PILLARS = new Point[]{
+			new Point(8, 6), new Point(13, 6), new Point(8, 11), new Point(13, 11),
+			new Point(10, 9), new Point(11, 9)
+	};
+	private static final Point[] MAZE_CAGES = new Point[]{
+			new Point(5, 6), new Point(16, 6), new Point(5, 11), new Point(16, 11)
+	};
 	
 	private void setMapArena(){
 		transitions.clear();
@@ -248,6 +257,12 @@ public class PrisonBossLevel extends Level {
 		
 		Painter.fill(this, arena, Terrain.WALL);
 		Painter.fillEllipse(this, arena, 1, Terrain.EMPTY);
+		//Maze Tower: 만개 광선을 막을 수 있게 벽 기둥을 세운다 (벽이 많은 구조)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
+			for (Point p : MAZE_PILLARS){
+				if (map[pointToCell(p)] == Terrain.EMPTY) Painter.set(this, p, Terrain.WALL);
+			}
+		}
 	
 	}
 	
@@ -499,6 +514,18 @@ public class PrisonBossLevel extends Level {
 				tengu.pos = (arena.left + arena.width()/2) + width()*(arena.top+2);
 				GameScene.add( tengu, 1 );
 				tengu.notice();
+
+				//Maze Tower: 부적 철창 4개 (영혼 해방)
+				if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
+					for (Point p : MAZE_CAGES){
+						int c = pointToCell(p);
+						if (passable[c] && Actor.findChar(c) == null){
+							com.shatteredpixel.shatteredpixeldungeon.actors.mobs.SoulCage cage = new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.SoulCage();
+							cage.pos = c;
+							GameScene.add(cage);
+						}
+					}
+				}
 
 				CellEmitter.get( tengu.pos ).burst( Speck.factory( Speck.WOOL ), 6 );
 				

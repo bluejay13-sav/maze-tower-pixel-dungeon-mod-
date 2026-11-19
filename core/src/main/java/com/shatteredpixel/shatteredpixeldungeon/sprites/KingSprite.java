@@ -44,6 +44,7 @@ public class KingSprite extends MobSprite {
 		
 		die = new Animation( 8, false );
 		die.frames( frames, 12, 13, 14, 15 );
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) MazeBossSprites.apply(this, MazeBossSprites.look20()); //Maze Tower: 망령 왕 / 마도시의 여제 그림
 		
 		play( idle );
 	}

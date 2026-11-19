@@ -48,6 +48,7 @@ public class YogSprite extends MobSprite {
 		
 		die = new Animation( 10, false );
 		die.frames( frames, 0, 7, 8, 9 );
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) MazeBossSprites.apply(this, MazeBossSprites.Look.MASTER); //Maze Tower: 탑의 주인 그림
 		
 		play( idle );
 	}

@@ -389,4 +389,25 @@ public class MazeTower {
 	public static final float FLOWER_WALL_RATIO      = 0.5f;   //벽 꽃 비율 = 바닥 꽃 비율의 절반
 	public static final float BLOOM_CHANCE           = 0.15f;  //주인공이 움직일 때 근처에서 꽃이 피어나는 확률
 
+
+	// ===== 보스 (24단계, MazeBosses) =====
+
+	//5층 썩은 수액 덩어리
+	public static final float SAP_PHYS_REDUCE     = 0.80f; //물리 피해 감소 (횃불을 맞기 전, 체력 절반 위)
+	public static final float SAP_HALF_PHYS_BONUS = 0.30f; //체력 절반 아래: 물리 피해를 더 받는다
+	public static final int   SAP_PUDDLE_MIN      = 3;     //내려칠 때 수액 웅덩이 칸 수
+	public static final int   SAP_PUDDLE_MAX      = 4;
+	public static final int   SAP_PUDDLE_TURNS    = 30;    //수액 웅덩이 지속
+	public static final int   SAP_MOVE_HEAL       = 10;    //수액 칸으로 옮기면 회복
+
+	//10층 그림자 간수
+	public static final float TALISMAN_ROOT_TURNS   = 2f;  //봉인 부적: 맞은 대상 속박
+	public static final int   WARDEN_SOULS          = 4;   //영혼 해방: 불러내는 죄수의 영혼 수
+	public static final int   WARDEN_SOUL_RECAST_DEAD = 3; //이만큼 쓰러지면 다시 쓸 수 있다
+	public static final int   CAGE_HP               = 30;  //부적 철창 체력
+	public static final int   WARDEN_BEAMS          = 6;   //만개 광선 갈래 수 (8방향 중 무작위)
+	public static final int   WARDEN_BEAM_CHARGE    = 2;   //만개 광선 기 모으기 턴
+	public static final int   WARDEN_BEAM_MIN       = 5;   //만개 광선 피해 = MIN + 층 ~ MAX + 2×층 (원작 폭탄과 같음)
+	public static final int   WARDEN_BEAM_MAX       = 10;
+
 }

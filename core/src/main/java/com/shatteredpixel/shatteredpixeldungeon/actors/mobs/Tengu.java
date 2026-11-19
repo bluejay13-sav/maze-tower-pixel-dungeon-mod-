@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeBosses;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -65,6 +66,8 @@ import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites;
+import com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.TenguSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
@@ -280,6 +283,7 @@ public class Tengu extends Mob {
 				move( newPos );
 				
 				if (level.heroFOV[newPos]) CellEmitter.get( newPos ).burst( Speck.factory( Speck.WOOL ), 6 );
+				if (MazeBosses.ENABLED && level.heroFOV[newPos]) BossEffects.atCell(BossEffects.Fx.TELEPORT, newPos, 12, false); //Maze Tower: 순간이동
 				Sample.INSTANCE.play( Assets.Sounds.PUFF );
 
 				float fill = 0.9f - 0.5f*((HP-(HT/2f))/(HT/2f));
@@ -312,6 +316,7 @@ public class Tengu extends Mob {
 				if (arenaJumps < 4) arenaJumps++;
 				
 				if (level.heroFOV[newPos]) CellEmitter.get( newPos ).burst( Speck.factory( Speck.WOOL ), 6 );
+				if (MazeBosses.ENABLED && level.heroFOV[newPos]) BossEffects.atCell(BossEffects.Fx.TELEPORT, newPos, 12, false); //Maze Tower: 순간이동
 				Sample.INSTANCE.play( Assets.Sounds.PUFF );
 				
 			}
@@ -497,6 +502,17 @@ public class Tengu extends Mob {
 	}
 	
 	public boolean useAbility(){
+		//Maze Tower: 그림자 간수 2단계 마법 (봉인 부적·영혼 해방·만개 광선, WardenAbilities)
+		if (MazeBosses.ENABLED){
+			int ability = WardenAbilities.choose(abilitiesUsed, lastAbility);
+			boolean thrown = WardenAbilities.perform(this, ability);
+			if (targetAbilityUses() - abilitiesUsed >= 4) spend(TICK);
+			else spend(2 * TICK);
+			lastAbility = ability;
+			abilitiesUsed++;
+			return !thrown;
+		}
+
 		boolean abilityUsed = false;
 		int abilityToUse = -1;
 		
@@ -645,6 +661,11 @@ public class Tengu extends Mob {
 							if (dmg > 0) {
 								ch.damage(dmg, Bomb.class);
 							}
+							//Maze Tower: 봉인 부적 - 맞은 대상 속박
+							if (MazeBosses.ENABLED && ch.isAlive()){
+								Buff.prolong(ch, Roots.class, MazeTower.TALISMAN_ROOT_TURNS);
+								if (Dungeon.level.heroFOV[ch.pos]) BossEffects.onChar(BossEffects.Fx.BIND, ch.sprite, 6, false);
+							}
 
 							if (ch == Dungeon.hero){
 								Statistics.qualifiedForBossChallengeBadge = false;
@@ -667,6 +688,7 @@ public class Tengu extends Mob {
 						}
 					}
 				}
+				if (MazeBosses.ENABLED && Dungeon.level.heroFOV[bombPos]) BossEffects.atCell(BossEffects.Fx.TALISMAN_BOOM, bombPos, 12, false); //Maze Tower
 				Sample.INSTANCE.play(Assets.Sounds.BLAST);
 				detach();
 				return true;
@@ -719,6 +741,7 @@ public class Tengu extends Mob {
 				unique = true;
 				
 				image = ItemSpriteSheet.TENGU_BOMB;
+				if (MazeBosses.ENABLED) image = MazeItemSprites.TALISMAN; //Maze Tower: 봉인 부적
 			}
 			
 			@Override
