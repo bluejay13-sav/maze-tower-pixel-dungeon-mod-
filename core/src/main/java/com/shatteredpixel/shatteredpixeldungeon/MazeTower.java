@@ -441,6 +441,24 @@ public class MazeTower {
 	public static final float[] BOSS_PETAL_INTERVAL = {0.35f, 0.22f, 0.13f}; //꽃잎이 나오는 간격(초)
 	public static final float   BOSS_PETAL_MOVE_INTERVAL = 0.4f;           //움직이는 동안은 간격에 이 배율 (더 자주)
 
+	// ===== 잡몹 전체 세기 (보스·보스가 부른 몹은 제외) =====
+	//원작 몬스터 수치에 곱한다. 30단계 난이도 조정 때 구역별로 나눌 수 있다.
+	public static final float MOB_HP_MULTI  = 0.8f;  //체력
+	public static final float MOB_DMG_MULTI = 0.8f;  //근접 공격 피해
+	public static final float MOB_ACC_MULTI = 0.9f;  //명중
+
+	//잡몹(적 편, 보스·보스 부하 아님)이면 multi, 아니면 1
+	public static float mobStatMulti( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch, float multi ){
+		if (!(ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob)) return 1f;
+		if (ch.alignment != com.shatteredpixel.shatteredpixeldungeon.actors.Char.Alignment.ENEMY) return 1f;
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.Char.hasProp(ch, com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.BOSS)
+				|| com.shatteredpixel.shatteredpixeldungeon.actors.Char.hasProp(ch, com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.BOSS_MINION)
+				|| com.shatteredpixel.shatteredpixeldungeon.actors.Char.hasProp(ch, com.shatteredpixel.shatteredpixeldungeon.actors.Char.Property.IMMOVABLE)){
+			return 1f;
+		}
+		return multi;
+	}
+
 	// ===== 적에게 둘러싸였을 때 =====
 	public static final int   CROWD_ENEMIES      = 3;   //주인공을 노리는 적이 이만큼 이상이면
 	public static final float CROWD_ATTACK_SPEED = 3f;  //적의 공격 동작을 이 배율로 빠르게 (연출만, 턴 계산은 같다)

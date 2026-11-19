@@ -429,6 +429,7 @@ public abstract class Char extends Actor {
 			} else {
 				dmg = damageRoll();
 			}
+			dmg *= com.shatteredpixel.shatteredpixeldungeon.MazeTower.mobStatMulti(this, com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOB_DMG_MULTI); //Maze Tower: 잡몹 약하게
 
 			dmg = dmg*dmgMulti;
 
@@ -637,6 +638,7 @@ public abstract class Char extends Actor {
 
 	public static boolean hit( Char attacker, Char defender, float accMulti, boolean magic ) {
 		float acuStat = attacker.attackSkill( defender );
+		acuStat *= com.shatteredpixel.shatteredpixeldungeon.MazeTower.mobStatMulti(attacker, com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOB_ACC_MULTI); //Maze Tower: 잡몹 약하게
 		float defStat = defender.defenseSkill( attacker );
 
 		if (defender instanceof Hero && ((Hero) defender).damageInterrupt){
