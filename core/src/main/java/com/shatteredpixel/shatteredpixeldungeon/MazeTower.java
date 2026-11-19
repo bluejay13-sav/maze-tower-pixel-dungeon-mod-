@@ -355,8 +355,9 @@ public class MazeTower {
 	public static final int   ROCK_COUNT_MAX      = 4;   //최대
 	public static final float ROCK_COUNT_UP_EVERY = 20f; //붕괴 뒤 이 턴마다 1개씩 늘어난다
 	public static final float ROCK_WARN_TURNS     = 1f;  //경고 그림자가 먼저 보이는 턴
-	public static final int   ROCK_DMG_MIN        = 6;   //원작 DM-300 낙석과 같다
-	public static final int   ROCK_DMG_MAX        = 12;
+	//낙석 피해 = 맞은 대상 최대 체력의 25% + 30 (방어 무시: 방어력으로 줄지 않는다)
+	public static final float ROCK_DMG_HP_PCT     = 0.25f;
+	public static final int   ROCK_DMG_FLAT       = 30;
 	//아래층일수록 낙석이 잦다: 빈도 배율 = 1 + (26 - 층) × 0.06 → 26층 1배, 1층 2.5배
 	public static final float COLLAPSE_DEPTH_SCALE = 0.06f;
 	public static float rockFrequency( int depth ){

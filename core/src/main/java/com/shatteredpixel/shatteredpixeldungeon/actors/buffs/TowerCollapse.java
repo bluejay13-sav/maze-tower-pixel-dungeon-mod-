@@ -168,7 +168,7 @@ public class TowerCollapse extends Buff {
 		rockCounter = bundle.getFloat(ROCKS);
 	}
 
-	//낙석 하나: 경고 그림자를 보여 주다가 떨어진다. 피해는 원작 DM-300 낙석과 같다(마비는 없음).
+	//낙석: 경고 그림자를 보여 주다가 떨어진다. 피해는 최대 체력의 25% + 30 (방어 무시, 마비 없음).
 	public static class TowerRockFall extends FlavourBuff {
 
 		private int[] cells;
@@ -198,7 +198,8 @@ public class TowerCollapse extends Buff {
 		}
 
 		private void hit( Char ch ){
-			ch.damage(Random.NormalIntRange(MazeTower.ROCK_DMG_MIN, MazeTower.ROCK_DMG_MAX), this);
+			//최대 체력의 25% + 30. Char.damage로 바로 넣으므로 방어력으로 줄지 않는다
+			ch.damage(Math.round(ch.HT * MazeTower.ROCK_DMG_HP_PCT) + MazeTower.ROCK_DMG_FLAT, this);
 			if (ch == Dungeon.hero && !ch.isAlive()){
 				Dungeon.fail(this);
 				GLog.n(Messages.get(TowerCollapse.class, "rock_kill"));
