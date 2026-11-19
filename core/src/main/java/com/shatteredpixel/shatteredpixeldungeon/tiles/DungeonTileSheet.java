@@ -524,6 +524,9 @@ public class DungeonTileSheet {
 	}
 
 	public static void updateAltVariants(){
+		//Maze Tower: 탑의 심장은 작은 혹과 핏줄(FLOOR_ALT_2)이 바닥에 더 자주 섞인다 (원작 5%)
+		float alt2 = (Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel) ? com.shatteredpixel.shatteredpixeldungeon.MazeTower.HEART_FLOOR_ALT2_CHANCE : 5f;
+		tileAltVisuals.put(FLOOR, new tileAlt(new float[]{52.5f, alt2}, FLOOR_ALT_1, FLOOR_ALT_2));
 		if (Dungeon.level instanceof MiningLevel){
 			if (Blacksmith.Quest.Type() == Blacksmith.Quest.CRYSTAL){
 				tileAltVisuals.put(FLAT_MINE_CRYSTAL,       new tileAlt(new float[]{66.7f, 33.3f}, FLAT_MINE_CRYSTAL_ALT, FLAT_MINE_CRYSTAL_ALT_2));

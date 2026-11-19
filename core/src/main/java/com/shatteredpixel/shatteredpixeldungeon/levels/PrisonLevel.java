@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -109,7 +110,7 @@ public class PrisonLevel extends RegularLevel {
 	protected Painter painter() {
 		return new PrisonPainter()
 				.setWater(feeling == Feeling.WATER ? 0.90f : 0.30f, 4)
-				.setGrass(feeling == Feeling.GRASS ? 0.80f : 0.20f, 3)
+				.setGrass(feeling == Feeling.GRASS ? 0.80f : MazeTower.SEAL_GRASS, 3) //Maze Tower: 봉인의 회랑은 잔디가 적다 (원작 0.20)
 				.setTraps(nTraps(), trapClasses(), trapChances());
 	}
 	

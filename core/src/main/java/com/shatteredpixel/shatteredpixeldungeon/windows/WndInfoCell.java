@@ -74,7 +74,7 @@ public class WndInfoCell extends Window {
 		} else {
 
 			if (tile == Terrain.WATER) {
-				Image water = new Image(Dungeon.level.waterTex());
+				Image water = new Image(com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.water(Dungeon.level.waterTex()) /*Maze Tower*/);
 				water.frame(0, 0, DungeonTilemap.SIZE, DungeonTilemap.SIZE);
 				return water;
 			} else {

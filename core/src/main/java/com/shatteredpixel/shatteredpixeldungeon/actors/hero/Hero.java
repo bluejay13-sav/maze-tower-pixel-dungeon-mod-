@@ -877,6 +877,7 @@ public class Hero extends Char {
 		
 		//calls to dungeon.observe will also update hero's local FOV.
 		fieldOfView = Dungeon.level.heroFOV;
+		com.shatteredpixel.shatteredpixeldungeon.effects.RegionAmbience.onHeroTurn(); //Maze Tower: 구역 분위기 이펙트
 
 		if (buff(Endure.EndureTracker.class) != null){
 			buff(Endure.EndureTracker.class).endEnduring();

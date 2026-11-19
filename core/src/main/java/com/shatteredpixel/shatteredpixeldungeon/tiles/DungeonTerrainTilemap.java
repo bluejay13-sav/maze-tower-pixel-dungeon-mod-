@@ -32,7 +32,7 @@ public class DungeonTerrainTilemap extends DungeonTilemap {
 	static DungeonTerrainTilemap instance;
 
 	public DungeonTerrainTilemap(){
-		super(Dungeon.level.tilesTex());
+		super(com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.tiles(Dungeon.level.tilesTex()) /*Maze Tower*/);
 
 		map( Dungeon.level.map, Dungeon.level.width() );
 

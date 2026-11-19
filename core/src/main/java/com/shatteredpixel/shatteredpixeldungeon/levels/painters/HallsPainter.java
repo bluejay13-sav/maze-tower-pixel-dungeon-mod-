@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.levels.painters;
 
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
@@ -48,7 +50,7 @@ public class HallsPainter extends RegularPainter {
 					}
 				}
 				
-				if (Random.Int( 80 ) < count) {
+				if (Random.Int( MazeTower.HEART_FLOOR_DECO_DENOM ) < count) { //Maze Tower: 탑의 심장은 바닥 살점이 조금 더 많다 (원작 80)
 					map[i] = Terrain.EMPTY_DECO;
 				}
 				

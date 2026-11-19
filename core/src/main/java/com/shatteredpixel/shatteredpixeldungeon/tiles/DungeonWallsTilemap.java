@@ -31,7 +31,7 @@ public class DungeonWallsTilemap extends DungeonTilemap {
 	public static HashSet<Integer> skipCells = new HashSet<>();
 
 	public DungeonWallsTilemap(){
-		super(Dungeon.level.tilesTex());
+		super(com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.tiles(Dungeon.level.tilesTex()) /*Maze Tower*/);
 		skipCells.clear();
 		map( Dungeon.level.map, Dungeon.level.width() );
 	}

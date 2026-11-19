@@ -39,20 +39,24 @@ public class Assets {
 		public static final String WALL_BLOCKING        = "environment/wall_blocking.png";
 		public static final String OCCLUSION_SHADOWS    = "environment/occlusion_shadows.png";
 
-		public static final String TILES_SEWERS = "environment/tiles_sewers.png";
-		public static final String TILES_PRISON = "environment/tiles_prison.png";
-		public static final String TILES_CAVES  = "environment/tiles_caves.png";
-		public static final String TILES_CITY   = "environment/tiles_city.png";
-		public static final String TILES_HALLS  = "environment/tiles_halls.png";
+		//Maze Tower: 마탑 구역 그림 (명세 20번). 원작: tiles_sewers, tiles_prison, tiles_caves, tiles_city, tiles_halls
+		public static final String TILES_SEWERS = "environment/maze_tiles_root.png";  //뿌리 지하
+		public static final String TILES_PRISON = "environment/maze_tiles_seal.png";  //봉인의 회랑
+		public static final String TILES_CAVES  = "environment/maze_tiles_vein.png";  //마력 광맥
+		public static final String TILES_CITY   = "environment/maze_tiles_city2.png"; //잊힌 마도시
+		public static final String TILES_HALLS  = "environment/maze_tiles_heart.png"; //탑의 심장
+		public static final String TILES_HALLS_RETURN = "environment/maze_tiles_heart_return.png"; //탑의 심장 (역행 중)
 
 		public static final String TILES_CAVES_CRYSTAL  = "environment/tiles_caves_crystal.png";
 		public static final String TILES_CAVES_GNOLL    = "environment/tiles_caves_gnoll.png";
 
-		public static final String WATER_SEWERS = "environment/water0.png";
-		public static final String WATER_PRISON = "environment/water1.png";
-		public static final String WATER_CAVES  = "environment/water2.png";
-		public static final String WATER_CITY   = "environment/water3.png";
-		public static final String WATER_HALLS  = "environment/water4.png";
+		//Maze Tower: 마탑 구역 물 (원작: water0~water4)
+		public static final String WATER_SEWERS = "environment/maze_water_root.png";
+		public static final String WATER_PRISON = "environment/maze_water_seal.png";
+		public static final String WATER_CAVES  = "environment/maze_water_vein.png";
+		public static final String WATER_CITY   = "environment/maze_water_city.png";
+		public static final String WATER_HALLS  = "environment/maze_water_heart.png";
+		public static final String WATER_HALLS_RETURN = "environment/maze_water_heart_return.png";
 
 		public static final String CARPET           = "environment/custom_tiles/carpet.png";
 		public static final String RAT_KING_ROOM    = "environment/custom_tiles/rat_king_room.png";

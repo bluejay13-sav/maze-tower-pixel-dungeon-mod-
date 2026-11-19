@@ -441,6 +441,16 @@ public class MazeTower {
 	public static final float[] BOSS_PETAL_INTERVAL = {0.35f, 0.22f, 0.13f}; //꽃잎이 나오는 간격(초)
 	public static final float   BOSS_PETAL_MOVE_INTERVAL = 0.4f;           //움직이는 동안은 간격에 이 배율 (더 자주)
 
+	// ===== 구역 외형 (28단계, 명세 20번) =====
+	public static final int   SAP_FLOOR_PATCHES_PER_DEPTH = 1; //뿌리 지하 수액 웅덩이: 층 × 이만큼 묶음 (1층 1 ~ 4층 4)
+	public static final int   SAP_FLOOR_PATCHES_MAX = 4;
+	public static final int   SAP_FLOOR_SIZE_MIN    = 2;     //한 묶음의 칸 수
+	public static final int   SAP_FLOOR_SIZE_MAX    = 4;
+	public static final float SEAL_GRASS            = 0.12f; //봉인의 회랑 잔디 (원작 0.20, 뿌리 지하는 0.20 그대로)
+	public static final int   HEART_FLOOR_DECO_DENOM = 55;   //탑의 심장 바닥 살점 (작을수록 많다, 원작 80)
+	public static final float HEART_FLOOR_ALT2_CHANCE = 12f; //탑의 심장 바닥에 작은 혹·핏줄(FLOOR_ALT_2)이 섞이는 확률 % (원작 5)
+	public static final int   REGION_FX_CHANCE      = 150;   //구역 분위기 이펙트: 주인공이 행동할 때마다 1/이 값
+
 	// ===== 몬스터 전체 세기 =====
 	//원작 몬스터 수치에 곱한다. 30단계 난이도 조정 때 구역별로 나눌 수 있다.
 	public static final float MOB_HP_MULTI  = 0.8f;  //체력

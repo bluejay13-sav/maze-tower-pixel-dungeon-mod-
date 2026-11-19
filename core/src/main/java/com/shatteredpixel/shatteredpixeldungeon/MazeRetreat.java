@@ -156,4 +156,15 @@ public class MazeRetreat {
 		PathFinder.buildDistanceMap(to, ok);
 		return PathFinder.distance[from] != Integer.MAX_VALUE;
 	}
+
+	//역행 중(또는 막 시작하려는 중)에는 탑의 심장 그림을 역행 버전으로 (명세 20번)
+	public static String tiles( String tex ){
+		if ((active() || pendingBegin) && Assets.Environment.TILES_HALLS.equals(tex)) return Assets.Environment.TILES_HALLS_RETURN;
+		return tex;
+	}
+
+	public static String water( String tex ){
+		if ((active() || pendingBegin) && Assets.Environment.WATER_HALLS.equals(tex)) return Assets.Environment.WATER_HALLS_RETURN;
+		return tex;
+	}
 }

@@ -34,7 +34,7 @@ public class Wet extends Buff {
 	}
 
 	public static boolean onWater( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch ){
-		return ElementalReactions.validPos(ch) && Dungeon.level.water[ch.pos] && !ch.flying;
+		return ElementalReactions.validPos(ch) && (Dungeon.level.water[ch.pos] || com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.at(ch.pos)) && !ch.flying; //Maze Tower: 수액 웅덩이 바닥도 젖는다
 	}
 
 	@Override

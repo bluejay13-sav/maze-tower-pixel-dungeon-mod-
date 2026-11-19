@@ -128,7 +128,7 @@ public class AlchemyScene extends PixelScene {
 
 		water = new SkinnedBlock(
 				w, h,
-				Dungeon.level.waterTex() ){
+				com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.water(Dungeon.level.waterTex()) /*Maze Tower*/ ){
 			
 			@Override
 			protected NoosaScript script() {

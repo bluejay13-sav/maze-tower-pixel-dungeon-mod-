@@ -261,7 +261,7 @@ public class GameScene extends PixelScene {
 		water = new SkinnedBlock(
 			Dungeon.level.width() * DungeonTilemap.SIZE,
 			Dungeon.level.height() * DungeonTilemap.SIZE,
-			Dungeon.level.waterTex() ){
+			com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.water(Dungeon.level.waterTex()) /*Maze Tower*/ ){
 
 			@Override
 			protected NoosaScript script() {
