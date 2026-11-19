@@ -6,6 +6,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -25,8 +26,10 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.noosa.particles.PixelParticle;
@@ -186,11 +189,12 @@ public class StaffSkills {
 		final ArrayList<Char> hits = new ArrayList<>();
 		if (main != null && main != hero) hits.add(main);
 
-		//대상 주변의 다른 적에게 연쇄 (대상 포함 최대 THUNDER_MAX_TARGETS)
+		//대상 주변의 다른 적과 주인공에게 연쇄 (대상 포함 최대 THUNDER_MAX_TARGETS)
+		//(결정) 주인공도 적과 똑같이 연쇄 대상이 된다. 피해는 젖어 있으면 그대로, 아니면 절반.
 		if (main != null){
 			ArrayList<Char> near = new ArrayList<>();
 			for (Char c : Actor.chars()){
-				if (c != main && c != hero && c.alignment == Char.Alignment.ENEMY && c.isAlive()
+				if (c != main && (c == hero || c.alignment == Char.Alignment.ENEMY) && c.isAlive()
 						&& Dungeon.level.distance(main.pos, c.pos) <= THUNDER_CHAIN_RANGE){
 					near.add(c);
 				}
@@ -222,23 +226,39 @@ public class StaffSkills {
 		Sample.INSTANCE.play( Assets.Sounds.LIGHTNING );
 		PixelScene.shake(2, 0.3f);
 
+		//번개가 보이는 순간 바로 피해가 들어간다 (번개가 사라질 때까지 기다리지 않는다)
 		hero.sprite.parent.addToFront( new Lightning( arcs, new Callback() {
 			@Override
 			public void call() {
-				for (Char c : hits){
-					if (!c.isAlive()) continue;
-					if (c.sprite != null){
-						c.sprite.centerEmitter().burst(SparkParticle.FACTORY, c == main ? 12 : 4);
-						c.sprite.flash();
-					}
-					c.damage(Math.round(staff.damageRoll(hero) * STAFF_THUNDER_DMG * finalMulti), wand);
-					//정전기는 피해와 상관없이 모두에게 (불붙은 대상은 이 순간 폭발 반응)
-					if (c.isAlive()) Buff.prolong(c, StaticCharge.class, STATIC_TURNS);
-				}
-				if (main == null) Dungeon.level.pressCell(cell);
-				done.call();
+				done.call(); //번개 연출이 끝나면 턴을 넘긴다
 			}
 		}) );
+
+		for (Char c : hits){
+			if (!c.isAlive()) continue;
+			if (c.sprite != null){
+				c.sprite.centerEmitter().burst(SparkParticle.FACTORY, c == main ? 12 : 4);
+				c.sprite.flash();
+			}
+			int dmg = Math.round(staff.damageRoll(hero) * STAFF_THUNDER_DMG * finalMulti);
+			if (c == hero){
+				//주인공: 젖어 있으면 그대로, 아니면 절반
+				boolean wet = Wet.onWater(hero) || hero.buff(Wet.class) != null;
+				if (!wet) dmg = Math.round(dmg * THUNDER_SELF_DRY_MULTI);
+				PixelScene.shake(2, 0.3f);
+				hero.damage(dmg, wand);
+				if (!hero.isAlive()){
+					Badges.validateDeathFromFriendlyMagic();
+					Dungeon.fail( wand );
+					GLog.n(Messages.get(WandOfLightning.class, "ondeath"));
+				}
+			} else {
+				c.damage(dmg, wand);
+			}
+			//정전기는 피해와 상관없이 모두에게 (불붙은 적은 이 순간 폭발 반응)
+			if (c.isAlive()) Buff.prolong(c, StaticCharge.class, STATIC_TURNS);
+		}
+		if (main == null) Dungeon.level.pressCell(cell);
 	}
 
 	// ===== 날아가는 궤적 (원작 막대 이펙트에 더하는 한 가지) =====

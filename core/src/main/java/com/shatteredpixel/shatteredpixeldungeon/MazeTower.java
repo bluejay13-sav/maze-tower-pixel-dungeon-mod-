@@ -66,6 +66,7 @@ public class MazeTower {
 	public static final float STAFF_THUNDER_DMG        = 1.6f; //번개 합성: 낙뢰 (대상)
 	public static final int   THUNDER_MAX_TARGETS      = 3;    //낙뢰: 대상 포함 최대 연쇄 수
 	public static final int   THUNDER_CHAIN_RANGE      = 1;    //낙뢰: 대상 주변 칸
+	public static final float THUNDER_SELF_DRY_MULTI   = 0.5f; //낙뢰가 주인공에게 번졌을 때, 젖지 않았으면 절반 (젖었으면 그대로)
 	//지팡이 스킬은 마나(SKILL_MANA_COST, 절약 특성 적용) + 지팡이 충전 1을 쓴다
 	//합성하지 않은 마법봉을 쓸 때 드는 마나 (모든 직업)
 	public static final int LOOSE_WAND_MANA_COST = 15;
