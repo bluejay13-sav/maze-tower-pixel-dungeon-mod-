@@ -22,7 +22,8 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 
 //Maze Tower: 마법봉·지팡이와 마나.
 //  - 지팡이에 합성된 마법봉으로 쏘는 것 = 마법사 스킬: 마나(스킬 비용, 절약 적용) + 원작 충전
-//    기본 마법봉(마법 화살)이면 피해는 지팡이 평타 피해의 100% (마탄 발사)
+//    처음 받은 지팡이의 기본 마탄은 지팡이 평타 피해의 MAGE_BOLT_DMG (마탄 발사).
+//    직접 합성한 막대는 StaffSkills의 합성 스킬 (강화 마탄·화염 창·서리 화살·낙뢰, 나머지는 원작 효과)
 //  - 합성하지 않은 마법봉: 마나 15 + 원작 충전 (모든 직업)
 //원작 Wand.tryToZap에서 마나가 충분한지 보고, 실제로 쏘는 순간(Wand.zapper) 마나를 쓴다.
 public class WandMana {
@@ -72,6 +73,17 @@ public class WandMana {
 
 	//스킬 이름: 기본 마법봉은 '마탄 발사', 다른 마법봉은 '(마법봉 이름) 발사'
 	public static String skillName( Wand wand ){
+		//23단계: 합성한 막대에 따라 스킬 이름이 바뀐다 (StaffSkills)
+		MagesStaff staff = equippedStaff(Dungeon.hero);
+		if (staff != null && staff.imbuedWand() == wand){
+			switch (StaffSkills.kind(staff)){
+				case EMPOWERED_BOLT: return Messages.get(WandMana.class, "skill_empowered");
+				case FIRE_LANCE:     return Messages.get(WandMana.class, "skill_fire_lance");
+				case FROST_ARROW:    return Messages.get(WandMana.class, "skill_frost_arrow");
+				case THUNDER:        return Messages.get(WandMana.class, "skill_thunder");
+				default: break;
+			}
+		}
 		if (wand instanceof WandOfMagicMissile) return Messages.get(WandMana.class, "skill_mm");
 		return Messages.get(WandMana.class, "skill_wand", wand.name());
 	}
@@ -80,10 +92,26 @@ public class WandMana {
 	public static String staffSkillDesc( Hero hero, MagesStaff staff ){
 		Wand w = staff.imbuedWand();
 		if (w == null) return "";
-		String effect = w instanceof WandOfMagicMissile
-				? Messages.get(WandMana.class, "staff_mm_effect", Math.round(MazeTower.MAGE_BOLT_DMG * 100))
-				: Messages.get(WandMana.class, "staff_wand_effect");
+		String effect;
+		switch (StaffSkills.kind(staff)){
+			case BASE_BOLT:
+				effect = Messages.get(WandMana.class, "staff_mm_effect", pct(MazeTower.MAGE_BOLT_DMG)); break;
+			case EMPOWERED_BOLT:
+				effect = Messages.get(WandMana.class, "staff_empowered_effect", pct(MazeTower.STAFF_EMPOWERED_BOLT_DMG)); break;
+			case FIRE_LANCE:
+				effect = Messages.get(WandMana.class, "staff_fire_lance_effect", pct(MazeTower.STAFF_FIRE_LANCE_DMG), MazeTower.FIRE_LANCE_LENGTH); break;
+			case FROST_ARROW:
+				effect = Messages.get(WandMana.class, "staff_frost_arrow_effect", pct(MazeTower.STAFF_FROST_ARROW_DMG), Math.round(MazeTower.FROSTBITE_TURNS)); break;
+			case THUNDER:
+				effect = Messages.get(WandMana.class, "staff_thunder_effect", pct(MazeTower.STAFF_THUNDER_DMG), MazeTower.THUNDER_MAX_TARGETS); break;
+			default:
+				effect = Messages.get(WandMana.class, "staff_wand_effect"); break;
+		}
 		return Messages.get(WandMana.class, "staff_desc", skillName(w), SwordSkill.manaCost(hero), effect);
+	}
+
+	private static int pct( float multi ){
+		return Math.round(multi * 100);
 	}
 
 	//합성하지 않은 마법봉 설명에 붙는 마나 안내
@@ -92,7 +120,7 @@ public class WandMana {
 		return Messages.get(WandMana.class, "loose_desc", MazeTower.LOOSE_WAND_MANA_COST);
 	}
 
-	//마탄 발사: 지팡이에 합성된 기본 마법봉(마법 화살)의 피해를 지팡이 평타 피해의 100%로
+	//마탄 발사: 처음 받은 지팡이의 기본 마탄 피해를 지팡이 평타 피해의 MAGE_BOLT_DMG(150%)로
 	public static int magicMissileDamage( Char owner, Wand wand, int original ){
 		if (!(owner instanceof Hero)) return original;
 		Hero hero = (Hero)owner;

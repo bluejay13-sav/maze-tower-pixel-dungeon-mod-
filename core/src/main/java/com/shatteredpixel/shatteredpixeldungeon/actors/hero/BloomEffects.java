@@ -14,6 +14,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frostbite;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
@@ -189,7 +190,7 @@ public class BloomEffects {
 		if (w >= 0 && hasNegativeStatus(enemy)) bonus += T_WEAK_POINT_DMG[w];
 
 		//서리 베기 2레벨: 냉각·빙결 적이 받는 피해
-		if (lvl(hero, FROST_SLASH) >= 2 && (enemy.buff(Chill.class) != null || enemy.buff(Frost.class) != null)){
+		if (lvl(hero, FROST_SLASH) >= 2 && (enemy.buff(Chill.class) != null || enemy.buff(Frost.class) != null || enemy.buff(Frostbite.class) != null)){
 			bonus += T_FROST_SLASH_BONUS;
 		}
 

@@ -1117,6 +1117,15 @@ public abstract class Level implements Bundlable {
 		GameScene.updateMap( cell );
 	}
 
+	//Maze Tower: 물을 만드는 아이템(폭풍 구름의 물약, 아쿠아 블라스트 등)으로 생긴 물에서도 젖음이 생긴다.
+	//(원작 젖음은 움직여서 물에 들어갈 때 붙는다. 서 있던 칸이 물이 되면 여기서 붙인다)
+	private static void wetCharAt( int cell ){
+		com.shatteredpixel.shatteredpixeldungeon.actors.Char ch = com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(cell);
+		if (ch != null && ch.isAlive() && com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet.onWater(ch)){
+			com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet.class);
+		}
+	}
+
 	public boolean setCellToWater( boolean includeTraps, int cell ){
 		Point p = cellToPoint(cell);
 
@@ -1140,12 +1149,14 @@ public abstract class Level implements Bundlable {
 				|| terr == Terrain.EMPTY_DECO){
 			set(cell, Terrain.WATER);
 			GameScene.updateMap(cell);
+			wetCharAt(cell); //Maze Tower: 새로 생긴 물 위의 대상도 젖는다
 			return true;
 		} else if (includeTraps && (terr == Terrain.SECRET_TRAP ||
 				terr == Terrain.TRAP || terr == Terrain.INACTIVE_TRAP)){
 			set(cell, Terrain.WATER);
 			Dungeon.level.traps.remove(cell);
 			GameScene.updateMap(cell);
+			wetCharAt(cell); //Maze Tower
 			return true;
 		}
 

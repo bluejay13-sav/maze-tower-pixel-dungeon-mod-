@@ -99,6 +99,8 @@ public class WandOfLightning extends DamageWand {
 			} else {
 				ch.damage(Math.round(damageRoll() * multiplier), this);
 			}
+			//Maze Tower: 튄 번개를 맞은 대상 모두에게 정전기 (피해가 0이어도)
+			if (ch.isAlive()) FlavourBuff.prolong(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge.class, com.shatteredpixel.shatteredpixeldungeon.MazeTower.STATIC_TURNS);
 		}
 	}
 

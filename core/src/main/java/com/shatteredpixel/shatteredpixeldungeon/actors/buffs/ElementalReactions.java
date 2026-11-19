@@ -150,7 +150,8 @@ public class ElementalReactions {
 			burning.pendingReaction = PENDING_THAW;
 			return false;
 		}
-		if (ch.buff(Chill.class) != null){
+		//혹한도 냉기로 판정한다 (혹한은 지우지 않는다)
+		if (ch.buff(Chill.class) != null || ch.buff(Frostbite.class) != null){
 			Buff.detach(ch, Chill.class);
 			burning.pendingReaction = PENDING_STEAM;
 			return false;
@@ -181,6 +182,22 @@ public class ElementalReactions {
 		return false;
 	}
 
+	//혹한이 붙는 순간 (Frostbite.attachTo): 냉기처럼 반응하지만 혹한 자체는 지우지 않는다
+	public static void onFrostbite( Char ch ){
+		if (!reacts(ch)){
+			Buff.detach(ch, Burning.class); //주인공·아군은 원작 냉기처럼 화상만 지운다
+			return;
+		}
+		if (ch.buff(Burning.class) != null){
+			steamFromBurning(ch, ch.buff(Burning.class));
+			return;
+		}
+		if (!suppressFreeze && isWet(ch) && ch.buff(Frost.class) == null){
+			Buff.detach(ch, Wet.class);
+			freeze(ch); //젖은 적은 확정 빙결
+		}
+	}
+
 	//빙결이 붙기 직전 (Frost.attachTo)
 	public static boolean beforeFrost( Char ch ){
 		if (ch.isImmune(Frost.class)) return false;
@@ -205,8 +222,8 @@ public class ElementalReactions {
 			return true;
 		}
 		//냉기 상태로 젖으면: 냉기·젖음은 사라지고 얼어붙는다
-		if (reacts(ch) && ch.buff(Chill.class) != null && ch.buff(Frost.class) == null){
-			Buff.detach(ch, Chill.class);
+		if (reacts(ch) && (ch.buff(Chill.class) != null || ch.buff(Frostbite.class) != null) && ch.buff(Frost.class) == null){
+			Buff.detach(ch, Chill.class); //혹한은 남는다
 			freeze(ch);
 			return true;
 		}

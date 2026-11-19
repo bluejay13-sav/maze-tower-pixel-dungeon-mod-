@@ -497,7 +497,8 @@ public abstract class Wand extends Item {
 			}
 		}
 		
-		curCharges -= cursed ? 1 : chargesPerCast();
+		//Maze Tower: 지팡이 합성 스킬은 충전 1만 쓴다 (원작 화염 폭발은 최대 3)
+		curCharges -= cursed ? 1 : (StaffSkills.custom(Dungeon.hero, this) ? 1 : chargesPerCast());
 
 		//remove magic charge at a higher priority, if we are benefiting from it are and not the
 		//wand that just applied it
@@ -775,6 +776,14 @@ public abstract class Wand extends Item {
 										curWand.wandUsed();
 									}
 								});
+					} else if (StaffSkills.custom(curUser, curWand)) {
+						//Maze Tower: 지팡이 합성 스킬 (강화 마탄·화염 창·서리 화살·낙뢰)
+						StaffSkills.fire(curUser, curWand, target, new Callback() {
+							@Override
+							public void call() {
+								curWand.wandUsed();
+							}
+						});
 					} else {
 						curWand.fx(shot, new Callback() {
 							public void call() {

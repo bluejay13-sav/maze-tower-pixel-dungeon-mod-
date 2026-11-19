@@ -236,6 +236,7 @@ public class MagesStaff extends MeleeWeapon {
 			}
 		}
 
+		mazeImbued = true; //Maze Tower: 직접 합성한 막대
 		this.wand = null;
 
 		wand.resinBonus = 0;
@@ -299,6 +300,10 @@ public class MagesStaff extends MeleeWeapon {
 	public Wand imbuedWand(){
 		return wand;
 	}
+
+	//Maze Tower: 플레이어가 마법봉을 직접 합성했는지 (명세 16번).
+	//false면 처음 받은 지팡이의 기본 마탄(마탄 발사), true면 합성한 막대에 맞는 합성 스킬.
+	public boolean mazeImbued = false;
 
 	public Class<?extends Wand> wandClass(){
 		return wand != null ? wand.getClass() : null;
@@ -377,17 +382,20 @@ public class MagesStaff extends MeleeWeapon {
 	}
 
 	private static final String WAND = "wand";
+	private static final String MAZE_IMBUED = "maze_imbued";
 
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		bundle.put(WAND, wand);
+		bundle.put(MAZE_IMBUED, mazeImbued); //Maze Tower
 	}
 
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		wand = (Wand) bundle.get(WAND);
+		mazeImbued = bundle.getBoolean(MAZE_IMBUED); //Maze Tower
 		if (wand != null) {
 			wand.maxCharges = Math.min(wand.maxCharges + 1, 10);
 		}

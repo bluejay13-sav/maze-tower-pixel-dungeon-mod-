@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frostbite;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Combo;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
@@ -31,6 +32,12 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortbow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSpear;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.AquaBrew;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStormClouds;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFrost;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLightning;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfDivineInspiration;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Katana;
@@ -178,10 +185,17 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addButton(new RedButton(Messages.get(this, "strength"), 7){
+		addPair(new RedButton(Messages.get(this, "strength"), 7){
 			@Override
 			protected void onClick() {
 				give(new PotionOfStrength().identify());
+			}
+		}, new RedButton(Messages.get(this, "water_items"), 7){
+			@Override
+			protected void onClick() {
+				//물을 만드는 아이템: 폭풍 구름의 물약, 아쿠아 블라스트 (감정됨)
+				give(new PotionOfStormClouds().quantity(2).identify());
+				give(new AquaBrew().quantity(2).identify());
 			}
 		});
 
@@ -195,10 +209,19 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addButton(new RedButton(Messages.get(this, "wand"), 7){
+		addPair(new RedButton(Messages.get(this, "wand"), 7){
 			@Override
 			protected void onClick() {
 				give(Generator.randomUsingDefaults(Generator.Category.WAND).identify());
+			}
+		}, new RedButton(Messages.get(this, "skill_wands"), 7){
+			@Override
+			protected void onClick() {
+				//지팡이 합성 스킬 시험용: 마탄·화염 폭발·서리·번개 막대 (감정됨)
+				give(new WandOfMagicMissile().identify());
+				give(new WandOfFireblast().identify());
+				give(new WandOfFrost().identify());
+				give(new WandOfLightning().identify());
 			}
 		});
 
@@ -235,7 +258,8 @@ public class WndCheats extends Window {
 						Messages.get(WndCheats.class, "burning"),
 						Messages.get(WndCheats.class, "chill"),
 						Messages.get(WndCheats.class, "wet"),
-						Messages.get(WndCheats.class, "static")){
+						Messages.get(WndCheats.class, "static"),
+						Messages.get(WndCheats.class, "frostbite")){
 					@Override
 					protected void onSelect(int index) {
 						pickTarget(index);
@@ -346,6 +370,9 @@ public class WndCheats extends Window {
 						break;
 					case 3:
 						Buff.prolong(ch, StaticCharge.class, MazeTower.STATIC_TURNS);
+						break;
+					case 4:
+						Buff.affect(ch, Frostbite.class, MazeTower.FROSTBITE_TURNS);
 						break;
 				}
 			}

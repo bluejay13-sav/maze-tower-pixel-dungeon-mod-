@@ -49,6 +49,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FireImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frostbite;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ElementalReactions;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FrostImbue;
@@ -1199,6 +1200,8 @@ public abstract class Char extends Actor {
 			//slowed and chilled do not stack
 		} else if (buff( Chill.class ) != null) {
 			timeScale *= buff( Chill.class ).speedFactor();
+		} else if (buff( Frostbite.class ) != null) { //Maze Tower: 혹한은 냉기와 같은 느려짐
+			timeScale *= buff( Frostbite.class ).speedFactor();
 		}
 		if (buff( Speed.class ) != null) {
 			timeScale *= 2.0f;

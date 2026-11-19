@@ -53,8 +53,19 @@ public class MazeTower {
 
 	// ===== 마법사와 마법봉 =====
 
-	//마법사 지팡이 스킬(마탄 발사)의 피해 = 지팡이 평타 피해의 몇 배 (1 = 100%)
-	public static final float MAGE_BOLT_DMG = 1.0f;
+	//마법사 지팡이 스킬(마탄 발사, 합성하지 않은 지팡이)의 피해 = 지팡이 평타 피해의 몇 배 (1 = 100%)
+	public static final float MAGE_BOLT_DMG = 1.5f; //23단계: 100% → 150%
+
+	//지팡이 합성 스킬 (명세 16번). 피해는 모두 지팡이 평타 피해의 배율. 비용은 마나 30 + 지팡이 충전 1
+	public static final float STAFF_EMPOWERED_BOLT_DMG = 2.0f; //마탄 합성: 강화 마탄
+	public static final float STAFF_FIRE_LANCE_DMG     = 1.3f; //화염 폭발 합성: 화염 창
+	public static final int   FIRE_LANCE_LENGTH        = 3;    //화염 창: 적 뒤쪽으로 불이 붙는 칸 수 (일직선)
+	public static final int   FIRE_LANCE_FIRE          = 2;    //화염 창: 불 양 (원작 화염 폭발 충전 1회와 같음)
+	public static final float STAFF_FROST_ARROW_DMG    = 1.3f; //서리 합성: 서리 화살
+	public static final float FROSTBITE_TURNS          = 3f;   //혹한 지속
+	public static final float STAFF_THUNDER_DMG        = 1.6f; //번개 합성: 낙뢰 (대상)
+	public static final int   THUNDER_MAX_TARGETS      = 3;    //낙뢰: 대상 포함 최대 연쇄 수
+	public static final int   THUNDER_CHAIN_RANGE      = 1;    //낙뢰: 대상 주변 칸
 	//지팡이 스킬은 마나(SKILL_MANA_COST, 절약 특성 적용) + 지팡이 충전 1을 쓴다
 	//합성하지 않은 마법봉을 쓸 때 드는 마나 (모든 직업)
 	public static final int LOOSE_WAND_MANA_COST = 15;

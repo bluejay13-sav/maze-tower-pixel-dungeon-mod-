@@ -51,6 +51,11 @@ public class GeyserTrap extends Trap {
 	public int centerKnockBackDirection = -1;
 	public Object source = this;
 
+	//Maze Tower: 아쿠아 블라스트·간헐천처럼 물을 직접 맞히는 효과는 맞은 대상에게 바로 젖음 (명세 16번)
+	private static void wetByGeyser( Char ch ){
+		if (ch.isAlive()) Buff.affect(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet.class);
+	}
+
 	@Override
 	public void activate() {
 		Splash.at( DungeonTilemap.tileCenterToWorld( pos ), -PointF.PI/2, PointF.PI/2, 0x5bc1e3, 100, 0.01f);
@@ -93,6 +98,7 @@ public class GeyserTrap extends Trap {
 					if (ch.buff(Burning.class) != null){
 						ch.buff(Burning.class).detach();
 					}
+					wetByGeyser(ch); //Maze Tower: 물을 직접 맞으면 바로 젖는다
 
 					//trace a ballistica to our target (which will also extend past them)
 					Ballistica trajectory = new Ballistica(pos, ch.pos, Ballistica.STOP_TARGET);
@@ -141,6 +147,7 @@ public class GeyserTrap extends Trap {
 				if (ch.buff(Burning.class) != null){
 					ch.buff(Burning.class).detach();
 				}
+				wetByGeyser(ch); //Maze Tower
 				//trace a ballistica in the direction of our target
 				Ballistica trajectory = new Ballistica(pos, targetpos, Ballistica.MAGIC_BOLT);
 				//knock them back along that ballistica
