@@ -48,7 +48,7 @@ public class LastLevel extends Level {
 		color1 = 0x801500;
 		color2 = 0xa68521;
 
-		viewDistance = Math.min(4, viewDistance);
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active()) viewDistance = Math.min(4, viewDistance); //Maze Tower: 역행 중에는 시야 감소 없음
 	}
 
 	@Override
@@ -154,7 +154,7 @@ public class LastLevel extends Level {
 		Painter.fill( this, MID - 3, 10, 7, 5, Terrain.EMPTY);
 
 		feeling = Feeling.NONE;
-		viewDistance = 4;
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active()) viewDistance = 4; //Maze Tower: 역행 중에는 시야 감소 없음
 
 		CustomTilemap vis = new CustomFloor();
 		vis.setRect( 5, 0, 7, height - ROOM_TOP);

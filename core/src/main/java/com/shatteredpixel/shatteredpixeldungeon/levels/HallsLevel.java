@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.items.Torch;
@@ -63,7 +64,8 @@ public class HallsLevel extends RegularLevel {
 
 	{
 		
-		viewDistance = Math.min( 26 - Dungeon.depth, viewDistance );
+		//Maze Tower: 역행 중에는 탑의 심장의 시야 감소가 없다
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active()) viewDistance = Math.min( 26 - Dungeon.depth, viewDistance );
 		
 		color1 = 0x801500;
 		color2 = 0xa68521;
@@ -204,6 +206,8 @@ public class HallsLevel extends RegularLevel {
 	private static class Stream extends Group {
 		
 		private int pos;
+		//Maze Tower: 탑의 심장의 핏빛 물 위에는 원작 불꽃 대신 은은한 핏빛 방울이 가끔 튄다. 역행 중에는 아무것도 나오지 않는다.
+		private static final boolean MAZE = true;
 		
 		private float delay;
 		
@@ -213,6 +217,7 @@ public class HallsLevel extends RegularLevel {
 			this.pos = pos;
 			
 			delay = Random.Float( 2 );
+			if (MAZE) delay = Random.Float( MazeTower.HEART_BLOOD_DROP_DELAY_MAX );
 		}
 		
 		@Override
@@ -228,6 +233,16 @@ public class HallsLevel extends RegularLevel {
 				super.update();
 				
 				if ((delay -= Game.elapsed) <= 0) {
+					if (MAZE){
+						delay = Random.Float( MazeTower.HEART_BLOOD_DROP_DELAY_MIN, MazeTower.HEART_BLOOD_DROP_DELAY_MAX );
+						if (!com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active()){
+							PointF p = DungeonTilemap.tileToWorld( pos );
+							((BloodDrop)recycle( BloodDrop.class )).reset(
+								p.x + Random.Float( 3, DungeonTilemap.SIZE - 3 ),
+								p.y + Random.Float( 4, DungeonTilemap.SIZE - 2 ) );
+						}
+						return;
+					}
 					
 					delay = Random.Float( 2 );
 					
@@ -241,12 +256,43 @@ public class HallsLevel extends RegularLevel {
 		
 		@Override
 		public void draw() {
+			if (MAZE){ //핏빛 방울은 빛을 더하지 않고 그대로 칠한다
+				super.draw();
+				return;
+			}
 			Blending.setLightMode();
 			super.draw();
 			Blending.setNormalMode();
 		}
 	}
 	
+	//Maze Tower: 핏빛 물에서 톡 튀어 올랐다 떨어지는 작은 방울
+	public static class BloodDrop extends PixelParticle {
+
+		public BloodDrop() {
+			super();
+			lifespan = 0.7f;
+			acc.set( 0, 60 );
+		}
+
+		public void reset( float x, float y ) {
+			revive();
+			this.x = x;
+			this.y = y;
+			left = lifespan;
+			color( Random.oneOf( 0x7A0E14, 0x9A1A1E, 0x5E0A10 ) );
+			size( 1 );
+			speed.set( Random.Float( -4, 4 ), Random.Float( -22, -14 ) );
+		}
+
+		@Override
+		public void update() {
+			super.update();
+			float p = left / lifespan;
+			am = MazeTower.HEART_BLOOD_DROP_ALPHA * Math.min( 1f, p * 2f );
+		}
+	}
+
 	public static class FireParticle extends PixelParticle.Shrinking {
 		
 		public FireParticle() {

@@ -449,6 +449,10 @@ public class MazeTower {
 	public static final int   HEART_FLOOR_DECO_DENOM = 80;   //탑의 심장 바닥 살점 (작을수록 많다, 원작과 같은 80)
 	public static final float HEART_FLOOR_ALT2_CHANCE = 5f;  //탑의 심장 바닥에 작은 혹·핏줄(FLOOR_ALT_2)이 섞이는 확률 % (원작과 같은 5)
 	public static final int   REGION_FX_CHANCE      = 150;   //구역 분위기 이펙트: 주인공이 행동할 때마다 1/이 값
+	public static final float HEART_BLOOD_DROP_DELAY_MIN = 3f;  //탑의 심장 핏빛 물: 칸마다 방울이 튀는 간격(초, 원작 불꽃은 0~2초)
+	public static final float HEART_BLOOD_DROP_DELAY_MAX = 8f;
+	public static final float HEART_BLOOD_DROP_ALPHA     = 0.7f; //방울 진하기
+	public static final float SEWER_WALL_DECO_KEEP       = 0.35f; //뿌리 지하: 벽 장식(뿌리 단면) 중 남기는 비율 (물이 많은 층에서 너무 많아서)
 	public static final float BOSS_WALL_DECO_KEEP  = 0.3f; //5·10층 보스층: 벽 장식 중 남기는 비율
 	public static final float BOSS_FLOOR_DECO_KEEP = 0.3f; //5·10층 보스층: 바닥 장식 중 남기는 비율
 

@@ -52,6 +52,13 @@ public class MazeRetreat {
 		pendingBegin = false;
 		if (active()) return;
 
+		//역행 중에는 탑의 심장의 시야 감소가 없다 (지금 서 있는 층에도 바로)
+		if (Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel
+				|| Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel
+				|| Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.LastLevel){
+			Dungeon.level.viewDistance = Dungeon.isChallenged(Challenges.DARKNESS) ? 2 : 8;
+		}
+
 		//아뮬렛은 부서져 사라진다
 		for (Item i : hero.belongings.getAllItems(Amulet.class)){
 			i.detachAll(hero.belongings.backpack);

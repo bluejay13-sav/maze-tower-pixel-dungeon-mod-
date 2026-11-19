@@ -65,7 +65,7 @@ public class HallsBossLevel extends Level {
 		color1 = 0x801500;
 		color2 = 0xa68521;
 
-		viewDistance = Math.min(4, viewDistance);
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active()) viewDistance = Math.min(4, viewDistance); //Maze Tower: 역행 중에는 시야 감소 없음
 	}
 
 	private static final int WIDTH = 32;

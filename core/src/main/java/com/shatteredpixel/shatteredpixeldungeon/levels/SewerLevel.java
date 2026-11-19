@@ -142,6 +142,7 @@ public class SewerLevel extends RegularLevel {
 		Ghost.Quest.spawn( this, roomExit );
 		//Maze Tower: 뿌리 지하의 수액 웅덩이 바닥 (보스층 제외)
 		if (!(this instanceof SewerBossLevel)) com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.place(this);
+		if (!(this instanceof SewerBossLevel)) MazeDeco.thinWalls(this, com.shatteredpixel.shatteredpixeldungeon.MazeTower.SEWER_WALL_DECO_KEEP); //Maze Tower: 뿌리 단면 벽 장식 줄이기
 		super.createMobs();
 	}
 	

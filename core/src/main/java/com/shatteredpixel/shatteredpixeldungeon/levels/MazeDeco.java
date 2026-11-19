@@ -27,4 +27,18 @@ public class MazeDeco {
 			Random.popGenerator();
 		}
 	}
+
+	//뿌리 지하 일반 층: 물가 벽의 뿌리 단면(벽 장식)이 물이 많은 층에서 너무 많이 생겨서 일부만 남긴다
+	public static void thinWalls( Level level, float keep ){
+		Random.pushGenerator(Dungeon.seedCurDepth() ^ 0x5EEDL);
+		try {
+			for (int i = 0; i < level.length(); i++){
+				if (level.map[i] == Terrain.WALL_DECO && Random.Float() >= keep){
+					level.map[i] = Terrain.WALL;
+				}
+			}
+		} finally {
+			Random.popGenerator();
+		}
+	}
 }
