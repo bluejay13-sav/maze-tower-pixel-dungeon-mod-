@@ -72,9 +72,7 @@ public class HighGrass {
 				if(((Hero) ch).hasTalent(Talent.BARKSKIN)){
 					Barkskin.conditionallyAppend(ch, (((Hero) ch).lvl* ((Hero) ch).pointsInTalent(Talent.BARKSKIN))/3, 1 );
 				}
-				//Maze Tower: 탑의 심장(21~26층)에서는 사냥꾼이 밟아도 헤쳐나간 풀이 아니라 짧은 잔디가 된다
-				if (Dungeon.depth > 20) Level.set(pos, Terrain.GRASS);
-				else                    Level.set(pos, Terrain.FURROWED_GRASS);
+				Level.set(pos, Terrain.FURROWED_GRASS);
 				freezeTrample = true;
 			} else {
 				Level.set(pos, Terrain.GRASS);
