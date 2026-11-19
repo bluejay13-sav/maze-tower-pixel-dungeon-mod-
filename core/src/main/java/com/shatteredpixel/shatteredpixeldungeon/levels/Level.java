@@ -216,6 +216,10 @@ public abstract class Level implements Bundlable {
 	private static final String MOBS		= "mobs";
 	private static final String BLOBS		= "blobs";
 	private static final String FEELING		= "feeling";
+	private static final String MAZE_BOSS_POS = "maze_boss_pos";
+
+	//Maze Tower: 보스가 쓰러진 자리 (역행 중 그 자리에 흔적을 그린다, RetreatEffects)
+	public int mazeBossPos = -1;
 
 	public void create() {
 
@@ -453,6 +457,7 @@ public abstract class Level implements Bundlable {
 		}
 
 		feeling = bundle.getEnum( FEELING, Feeling.class );
+		mazeBossPos = bundle.contains(MAZE_BOSS_POS) ? bundle.getInt(MAZE_BOSS_POS) : -1; //Maze Tower
 		if (feeling == Feeling.DARK) {
 			viewDistance = Math.round(5 * viewDistance / 8f);
 		}
@@ -502,6 +507,7 @@ public abstract class Level implements Bundlable {
 		bundle.put( MOBS, mobs );
 		bundle.put( BLOBS, blobs.values() );
 		bundle.put( FEELING, feeling );
+		bundle.put( MAZE_BOSS_POS, mazeBossPos ); //Maze Tower
 		bundle.put( "mobs_to_spawn", mobsToSpawn.toArray(new Class[0]));
 		bundle.put( "respawner", respawner );
 		bundle.put( "targeted_cells", TargetedCell.cells.valueList() );
@@ -595,6 +601,11 @@ public abstract class Level implements Bundlable {
 	//returns true if we immediately transition, false otherwise
 	public boolean activateTransition(Hero hero, LevelTransition transition){
 		if (locked){
+			return false;
+		}
+		//Maze Tower: 역행 중에는 26층 쪽(이미 지나온 층)으로 가는 계단이 무너져 쓸 수 없다
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.blocksTransition(transition)){
+			com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w(Messages.get(com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.class, "stairs_collapsed"));
 			return false;
 		}
 
@@ -753,7 +764,7 @@ public abstract class Level implements Bundlable {
 
 	public float respawnCooldown(){
 		float cooldown;
-		if (Statistics.amuletObtained){
+		if (Statistics.amuletObtained && com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_ENDING){ //Maze Tower: 역행 중 적 수 증가 없음
 			if (Dungeon.depth == 1){
 				//very fast spawns on floor 1! 0/2/4/6/8/10/12, etc.
 				cooldown = (Dungeon.level.mobCount()) * (TIME_TO_RESPAWN / 25f);

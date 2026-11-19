@@ -575,6 +575,7 @@ public class Hero extends Char {
 		}
 
 		accuracy *= BloomEffects.accuracyMulti(this, target); //Maze Tower: 정밀타격, 흐름
+		accuracy *= AscensionChallenge.heroAccuracyMulti(); //Maze Tower: 아뮬렛의 저주 (역행 중 명중률 감소)
 
 		if (buff(Scimitar.SwordDance.class) != null){
 			accuracy *= 1.50f;

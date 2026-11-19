@@ -50,6 +50,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FireImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frostbite;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RetreatFrenzy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ElementalReactions;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FrostImbue;
@@ -463,6 +464,7 @@ public abstract class Char extends Actor {
 			}
 
 			dmg *= AscensionChallenge.statModifier(this);
+			dmg *= RetreatFrenzy.damageMulti(this); //Maze Tower: 광폭 (역행 중 적 공격력 +30%)
 
 			//friendly endure
 			Endure.EndureTracker endure = buff(Endure.EndureTracker.class);

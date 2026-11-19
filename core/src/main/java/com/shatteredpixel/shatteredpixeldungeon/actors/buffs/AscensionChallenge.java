@@ -23,6 +23,8 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
 
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeRetreat;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -103,6 +105,8 @@ public class AscensionChallenge extends Buff {
 	}
 
 	public static float statModifier(Char ch){
+		//Maze Tower: 아뮬렛의 저주는 적을 강화하지 않는다 (대신 광폭화, RetreatFrenzy)
+		if (!MazeTower.ORIGINAL_ENDING) return 1;
 		if (Dungeon.hero == null || Dungeon.hero.buff(AscensionChallenge.class) == null){
 			return 1;
 		}
@@ -126,6 +130,7 @@ public class AscensionChallenge extends Buff {
 
 	//distant mobs get constantly beckoned to the hero at 2+ stacks
 	public static void beckonEnemies(){
+		if (!MazeTower.ORIGINAL_ENDING) return; //Maze Tower: 없음
 		if (Dungeon.hero.buff(AscensionChallenge.class) != null
 				&& Dungeon.hero.buff(AscensionChallenge.class).stacks >= 2f){
 			for (Mob m : Dungeon.level.mobs){
@@ -138,6 +143,7 @@ public class AscensionChallenge extends Buff {
 
 	//mobs move at 2x speed when not hunting/fleeing at 4 stacks or higher
 	public static float enemySpeedModifier(Mob m){
+		if (!MazeTower.ORIGINAL_ENDING) return 1; //Maze Tower: 없음
 		if (Dungeon.hero.buff(AscensionChallenge.class) != null
 				&& m.alignment == Char.Alignment.ENEMY
 				&& Dungeon.hero.buff(AscensionChallenge.class).stacks >= 4f
@@ -148,10 +154,18 @@ public class AscensionChallenge extends Buff {
 		return 1;
 	}
 
+	//Maze Tower: 아뮬렛의 저주 - 스택마다 주인공 명중률 감소 (Hero.attackSkill)
+	public static float heroAccuracyMulti(){
+		if (MazeTower.ORIGINAL_ENDING || Dungeon.hero == null) return 1f;
+		AscensionChallenge c = Dungeon.hero.buff(AscensionChallenge.class);
+		if (c == null) return 1f;
+		return 1f - MazeTower.CURSE_ACC_PER_STACK * Math.min(c.stacks, MazeTower.CURSE_ACC_MAX_STACKS);
+	}
+
 	//hero speed is halved and capped at 1x at 6+ stacks
 	public static float modifyHeroSpeed(float speed){
 		if (Dungeon.hero.buff(AscensionChallenge.class) != null
-				&& Dungeon.hero.buff(AscensionChallenge.class).stacks >= 6f){
+				&& Dungeon.hero.buff(AscensionChallenge.class).stacks >= MazeTower.CURSE_SLOW_STACKS){
 			return Math.min(speed/2f, 1f);
 		}
 
@@ -267,14 +281,19 @@ public class AscensionChallenge extends Buff {
 
 				//clears any existing mobs from the level and adds one initial one
 				//this helps balance difficulty between levels with lots of mobs left, and ones with few
-				for (Mob mob : Dungeon.level.mobs.toArray( new Mob[0] )) {
-					if (!mob.reset()) {
-						Dungeon.level.mobs.remove( mob );
+				//Maze Tower: 아뮬렛의 저주는 적 수를 늘리지 않는다 (층에 남은 적 그대로)
+				if (MazeTower.ORIGINAL_ENDING) {
+					for (Mob mob : Dungeon.level.mobs.toArray(new Mob[0])) {
+						if (!mob.reset()) {
+							Dungeon.level.mobs.remove(mob);
+						}
 					}
+					Dungeon.level.spawnMob(12);
 				}
-				Dungeon.level.spawnMob(12);
 
 			}
+			//Maze Tower: 새 층의 붕괴 턴, 막힌 길(돌무더기)
+			if (!MazeTower.ORIGINAL_ENDING) MazeRetreat.onNewFloor(Dungeon.level, Dungeon.hero.pos);
 		}
 		if (Statistics.highestAscent < 20){
 			for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])){
@@ -298,6 +317,18 @@ public class AscensionChallenge extends Buff {
 						((DriedRose.GhostHero) ch).sayAppeared();
 					}
 				}
+			}
+		} else if (!MazeTower.ORIGINAL_ENDING){
+			//Maze Tower: 아뮬렛의 저주 안내 (느려짐·명중률 감소, 적을 죽이면 약해짐)
+			if (Dungeon.depth == 1){
+				GLog.n(Messages.get(this, "almost"));
+			} else if (stacks >= MazeTower.CURSE_SLOW_STACKS){
+				GLog.n(Messages.get(this, "maze_slow"));
+			} else if (stacks >= 2f){
+				GLog.n(Messages.get(this, "maze_accuracy"));
+			}
+			if (stacks > 4 && !stacksLowered){
+				GLog.h(Messages.get(this, "weaken_info_no_kills"));
 			}
 		} else {
 			if (Dungeon.depth == 1){
@@ -326,7 +357,8 @@ public class AscensionChallenge extends Buff {
 		beckonEnemies();
 
 		//hero starts progressively taking damage over time at 8+ stacks
-		if (stacks >= 8 && !Dungeon.bossLevel()){
+		//Maze Tower: 아뮬렛의 저주는 직접 피해를 주지 않는다
+		if (MazeTower.ORIGINAL_ENDING && stacks >= 8 && !Dungeon.bossLevel()){
 			damageInc += (stacks-4)/4f;
 			if (damageInc >= 1){
 				target.damage((int)damageInc, this);
@@ -368,6 +400,15 @@ public class AscensionChallenge extends Buff {
 
 	@Override
 	public String desc() {
+		//Maze Tower: 아뮬렛의 저주 설명
+		if (!MazeTower.ORIGINAL_ENDING){
+			String d = Messages.get(this, "maze_desc");
+			d += "\n\n" + Messages.get(this, "maze_desc_accuracy", Math.round((1f - heroAccuracyMulti()) * 100));
+			if (stacks >= MazeTower.CURSE_SLOW_STACKS) d += "\n" + Messages.get(this, "maze_desc_slow");
+			d += "\n" + Messages.get(this, "maze_desc_frenzy", Math.round(MazeTower.BERSERK_DMG * 100));
+			d += "\n\n" + Messages.get(this, "maze_desc_weaken");
+			return d;
+		}
 		String desc = Messages.get(this, "desc");
 		desc += "\n";
 		if (stacks < 2){

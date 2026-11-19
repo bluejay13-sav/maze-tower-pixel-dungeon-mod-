@@ -7,6 +7,9 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.MazeRetreat;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.TowerCollapse;
+import com.shatteredpixel.shatteredpixeldungeon.effects.RetreatEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -90,6 +93,30 @@ public class WndCheats extends Window {
 			@Override
 			protected void onClick() {
 				give(new FullBloomCore());
+			}
+		});
+
+		addPair(new RedButton(Messages.get(this, "retreat_start"), 7){
+			@Override
+			protected void onClick() {
+				//아뮬렛 없이 그 자리에서 역행 시작 (시험용)
+				if (MazeRetreat.active()){
+					GLog.w(Messages.get(WndCheats.class, "retreat_already"));
+					return;
+				}
+				hide();
+				MazeRetreat.begin(Dungeon.hero);
+				RetreatEffects.addOverlays((GameScene) com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon.scene());
+			}
+		}, new RedButton(Messages.get(this, "collapse_now"), 7){
+			@Override
+			protected void onClick() {
+				TowerCollapse c = Dungeon.hero.buff(TowerCollapse.class);
+				if (c == null){
+					GLog.w(Messages.get(WndCheats.class, "retreat_not_active"));
+					return;
+				}
+				c.cheatCollapse();
 			}
 		});
 

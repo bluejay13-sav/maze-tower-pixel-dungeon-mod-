@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.MazeRetreat;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BadgeBanner;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
@@ -69,17 +70,18 @@ public class AmuletScene extends PixelScene {
 		
 		RenderedTextBlock text = null;
 		if (!noText) {
-			text = renderTextBlock( Messages.get(this, "text"), 8 );
+			text = renderTextBlock( Messages.get(this, MazeTower.ORIGINAL_ENDING ? "text" : "maze_text"), 8 ); //Maze Tower: 습득 / 파괴 선택
 			text.maxWidth( PixelScene.landscape() ? 2*WIDTH-4 : WIDTH);
 		}
 		
 		amulet = new Image( Assets.Sprites.AMULET );
 		add( amulet );
 
-		btnExit = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "exit") ) {
+		btnExit = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, MazeTower.ORIGINAL_ENDING ? "exit" : "maze_take") ) { //Maze Tower: 습득 = 배드 엔딩
 			@Override
 			protected void onClick() {
-				Dungeon.win( Amulet.class );
+				//Maze Tower: 습득하면 아뮬렛의 힘에 타락해 탑의 새 주인이 된다 (랭킹에 "타락" 표시)
+				Dungeon.win( MazeTower.ORIGINAL_ENDING ? Amulet.class : MazeRetreat.Corrupted.class );
 				Dungeon.deleteGame( GamesInProgress.curSlot, true );
 				Badges.saveGlobal();
 				btnExit.enable(false);
@@ -110,10 +112,17 @@ public class AmuletScene extends PixelScene {
 		btnExit.setSize( WIDTH, BTN_HEIGHT );
 		add( btnExit );
 		
-		btnStay = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, "stay") ) {
+		btnStay = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(this, MazeTower.ORIGINAL_ENDING ? "stay" : "maze_destroy") ) { //Maze Tower: 파괴 = 역행 시작
 			@Override
 			protected void onClick() {
-				onBackPressed();
+				if (!MazeTower.ORIGINAL_ENDING){
+					//게임 화면으로 돌아가면 역행이 시작된다 (GameScene.create → MazeRetreat.begin)
+					MazeRetreat.pendingBegin = true;
+					InterlevelScene.mode = InterlevelScene.Mode.CONTINUE;
+					Game.switchScene(InterlevelScene.class);
+				} else {
+					onBackPressed();
+				}
 				btnExit.enable(false);
 				btnStay.enable(false);
 			}
@@ -121,11 +130,6 @@ public class AmuletScene extends PixelScene {
 		btnStay.icon(Icons.CLOSE.get());
 		btnStay.setSize( WIDTH, BTN_HEIGHT );
 		add( btnStay );
-		//Maze Tower: 아뮬렛을 주우면 그 자리에서 승리로 끝난다. 머무르기(귀환 길)는 없다.
-		if (!MazeTower.ORIGINAL_ENDING){
-			btnStay.visible = false;
-			btnStay.active = false;
-		}
 
 		RectF insets = getCommonInsets();
 		int w = (int) (Camera.main.width - insets.left + insets.right);

@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.levels;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeRetreat;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -145,7 +146,7 @@ public class SewerLevel extends RegularLevel {
 	@Override
 	public boolean activateTransition(Hero hero, LevelTransition transition) {
 		if (transition.type == LevelTransition.Type.SURFACE){
-			if (hero.belongings.getItem( Amulet.class ) == null) {
+			if (hero.belongings.getItem( Amulet.class ) == null && !MazeRetreat.active()) { //Maze Tower: 역행 중이면 아뮬렛 없이도 탈출 (진 엔딩)
 				Game.runOnRenderThread(new Callback() {
 					@Override
 					public void call() {
@@ -164,6 +165,7 @@ public class SewerLevel extends RegularLevel {
 					@Override
 					public void afterCreate() {
 						Badges.validateHappyEnd();
+						if (MazeRetreat.active()) MazeRetreat.markCleared(); //Maze Tower: 역행 클리어 기록
 						Dungeon.win( Amulet.class );
 						Dungeon.deleteGame( GamesInProgress.curSlot, true );
 						Badges.saveGlobal();

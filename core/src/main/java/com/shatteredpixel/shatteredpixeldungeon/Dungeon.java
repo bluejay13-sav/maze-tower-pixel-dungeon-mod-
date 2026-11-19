@@ -455,7 +455,8 @@ public class Dungeon {
 	public static boolean interfloorTeleportAllowed(){
 		if (Dungeon.level.locked
 				|| Dungeon.level instanceof MiningLevel || Dungeon.level instanceof VaultLevel
-				|| (Dungeon.hero != null && Dungeon.hero.belongings.getItem(Amulet.class) != null)){
+				|| (Dungeon.hero != null && Dungeon.hero.belongings.getItem(Amulet.class) != null)
+				|| MazeRetreat.active()){ //Maze Tower: 역행 중에는 층 사이 순간이동 불가
 			return false;
 		}
 		return true;

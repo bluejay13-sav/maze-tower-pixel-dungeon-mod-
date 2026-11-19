@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeRetreat;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.Rankings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
@@ -52,6 +53,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.EmoIcon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Ripple;
+import com.shatteredpixel.shatteredpixeldungeon.effects.RetreatEffects;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TargetedCell;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
@@ -788,6 +790,10 @@ public class GameScene extends PixelScene {
 		if (cata != null && cata.hasRolledTrinkets()){
 			addToFront(new TrinketCatalyst.WndTrinket(cata));
 		}
+
+		//Maze Tower: 아뮬렛을 파괴했으면 역행 시작, 역행 중이면 금·꽃·보스 흔적을 겹쳐 그린다
+		if (MazeRetreat.pendingBegin && Dungeon.hero.isAlive()) MazeRetreat.begin(Dungeon.hero);
+		if (MazeRetreat.active()) RetreatEffects.addOverlays(this);
 
 		if (!invVisible) toggleInvPane();
 		fadeIn();

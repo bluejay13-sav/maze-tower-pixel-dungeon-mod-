@@ -87,7 +87,7 @@ public class DemonSpawner extends Mob {
 			spawnRecorded = true;
 		}
 
-		if (Dungeon.hero.buff(AscensionChallenge.class) != null && spawnCooldown > 20){
+		if (Dungeon.hero.buff(AscensionChallenge.class) != null && com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_ENDING && spawnCooldown > 20){ //Maze Tower: 역행 중 적 수 증가 없음
 			spawnCooldown = 20;
 		}
 

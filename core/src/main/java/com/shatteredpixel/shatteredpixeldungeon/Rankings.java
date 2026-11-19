@@ -38,6 +38,8 @@ import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.MazeRetreat;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
 import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
@@ -515,6 +517,9 @@ public enum Rankings {
 		public String version;
 
 		public String desc(){
+			//Maze Tower: 습득(배드 엔딩)은 "타락", 역행 탈출은 진 엔딩
+			if (win && cause == MazeRetreat.Corrupted.class) return Messages.get(this, "maze_corrupted");
+			if (win && ascending && !MazeTower.ORIGINAL_ENDING) return Messages.get(this, "maze_escaped");
 			if (win){
 				if (ascending){
 					return Messages.get(this, "ascended");

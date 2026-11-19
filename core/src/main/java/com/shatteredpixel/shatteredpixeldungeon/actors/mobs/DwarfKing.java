@@ -547,6 +547,7 @@ public class DwarfKing extends Mob {
 
 	@Override
 	public void die(Object cause) {
+		Dungeon.level.mazeBossPos = pos; //Maze Tower: 보스가 쓰러진 자리 (역행 중 흔적)
 
 		GameScene.bossSlain();
 

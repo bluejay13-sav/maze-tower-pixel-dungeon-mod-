@@ -34,6 +34,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AllyBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.RetreatFrenzy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ChampionEnemy;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Corruption;
@@ -265,6 +266,7 @@ public abstract class Mob extends Char {
 	protected boolean act() {
 		
 		super.act();
+		RetreatFrenzy.apply(this); //Maze Tower: 역행 중 모든 적은 광폭 (도망치지 않음)
 		
 		boolean justAlerted = alerted;
 		alerted = false;

@@ -336,4 +336,49 @@ public class MazeTower {
 	public static final float   T4_ENDURE_AFTER = 10f; //인내가 끝난 뒤 추가 피해를 줄 수 있는 턴
 	public static final float[] T4_THORNS       = {0f, 0.06f, 0.09f, 0.12f, 0.15f};   //가시갑옷: 받은 피해 중 주변 적에게
 
+	// ===== 두 갈래 엔딩과 역행 (명세 14번, 21번) =====
+
+	//붕괴 제한: 층에 들어설 때마다 남은 턴이 새로 시작. 26층 150턴, 한 층 내려갈 때마다 3턴씩 줄어 1층 75턴
+	public static final int COLLAPSE_TURNS_TOP  = 150;
+	public static final int COLLAPSE_TURNS_STEP = 3;
+	public static int collapseTurns( int depth ){
+		return COLLAPSE_TURNS_TOP - (26 - depth) * COLLAPSE_TURNS_STEP;
+	}
+
+	//낙석 (붕괴 턴이 0이 된 뒤): 처음 8턴마다 1개, 10턴마다 간격 1턴씩 짧아져 최소 2턴. 간격은 층 배율로 나눈다
+	public static final float ROCK_START_INTERVAL = 8f;
+	public static final float ROCK_SPEEDUP_EVERY  = 10f;
+	public static final float ROCK_MIN_INTERVAL   = 2f;
+	public static final int   ROCK_RANGE          = 3;   //주인공 주변 몇 칸 안에 떨어지는지
+	public static final float ROCK_WARN_TURNS     = 1f;  //경고 그림자가 먼저 보이는 턴
+	public static final int   ROCK_DMG_MIN        = 6;   //원작 DM-300 낙석과 같다
+	public static final int   ROCK_DMG_MAX        = 12;
+	//아래층일수록 낙석이 잦다: 빈도 배율 = 1 + (26 - 층) × 0.06 → 26층 1배, 1층 2.5배
+	public static final float COLLAPSE_DEPTH_SCALE = 0.06f;
+	public static float rockFrequency( int depth ){
+		return 1f + (26 - depth) * COLLAPSE_DEPTH_SCALE;
+	}
+
+	//적 광폭화: 역행 중 모든 적. 공격력 +30%, 도망치지 않음
+	public static final float BERSERK_DMG = 0.30f;
+
+	//막힌 길: 돌무더기 (층마다 1~2개, 길을 완전히 막지 않는 칸에만)
+	public static final int RUBBLE_HP  = 40;
+	public static final int RUBBLE_MIN = 1;
+	public static final int RUBBLE_MAX = 2;
+
+	//아뮬렛의 저주 (원작 부적의 저주를 바꿈): 느려짐(원작 6스택), 명중률 감소, 적 광폭화, 적을 죽이면 약해짐
+	public static final float CURSE_ACC_PER_STACK  = 0.04f; //스택마다 명중률 감소
+	public static final int   CURSE_ACC_MAX_STACKS = 8;     //→ 최대 32%
+	public static final int   CURSE_SLOW_STACKS    = 6;     //이 스택부터 느려짐 (원작과 같음)
+
+	//역행 맵 연출
+	public static final float CRACK_FLOOR_PCT        = 0.08f;
+	public static final float CRACK_WALL_PCT         = 0.12f;
+	public static final float DUST_CHANCE            = 1f/20f; //매 턴 주인공 근처에 먼지
+	public static final float FLOWER_FLOOR_BASE      = 0.02f;  //바닥 꽃 비율 = 2% + (26 - 층) × 1%
+	public static final float FLOWER_FLOOR_PER_DEPTH = 0.01f;
+	public static final float FLOWER_WALL_RATIO      = 0.5f;   //벽 꽃 비율 = 바닥 꽃 비율의 절반
+	public static final float BLOOM_CHANCE           = 0.15f;  //주인공이 움직일 때 근처에서 꽃이 피어나는 확률
+
 }

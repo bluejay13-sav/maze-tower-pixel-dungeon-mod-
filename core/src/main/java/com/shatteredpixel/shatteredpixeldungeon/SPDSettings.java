@@ -235,6 +235,17 @@ public class SPDSettings extends GameSettings {
 	public static boolean intro() {
 		return getBoolean( KEY_INTRO, true );
 	}
+
+	//Maze Tower: 역행을 클리어한 적이 있는지 (나중에 익스트랙션 모드가 열린다)
+	public static final String KEY_MAZE_RETREAT_CLEARED = "maze_retreat_cleared";
+
+	public static void mazeRetreatCleared( boolean value ){
+		put( KEY_MAZE_RETREAT_CLEARED, value );
+	}
+
+	public static boolean mazeRetreatCleared(){
+		return getBoolean( KEY_MAZE_RETREAT_CLEARED, false );
+	}
 	
 	public static void lastClass( int value ) {
 		put( KEY_LAST_CLASS, value );

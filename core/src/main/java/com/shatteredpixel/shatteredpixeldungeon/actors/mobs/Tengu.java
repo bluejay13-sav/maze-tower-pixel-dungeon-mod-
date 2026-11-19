@@ -211,6 +211,7 @@ public class Tengu extends Mob {
 
 	@Override
 	public void die( Object cause ) {
+		Dungeon.level.mazeBossPos = pos; //Maze Tower: 보스가 쓰러진 자리 (역행 중 흔적)
 		
 		//Maze Tower: 원작 서브클래스(텐구의 가면)는 떨어뜨리지 않는다
 		if (MazeTower.ORIGINAL_SUBCLASS && Dungeon.hero.subClass == HeroSubClass.NONE) {
