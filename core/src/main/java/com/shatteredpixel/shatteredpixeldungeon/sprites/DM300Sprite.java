@@ -94,8 +94,15 @@ public class DM300Sprite extends MobSprite {
 
 		super.zap( cell );
 
+		//Maze Tower: 마도 골렘은 독가스를 쏘지 않고 그 자리에서 내려칠 준비, 수정 거인은 냉기 결정을 날린다
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.golem()){
+			((DM300)ch).onZapComplete();
+			return;
+		}
+		boolean crystal = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal();
+
 		MagicMissile.boltFromChar( parent,
-				MagicMissile.SPECK + Speck.TOXIC,
+				crystal ? MagicMissile.FROST : MagicMissile.SPECK + Speck.TOXIC,
 				this,
 				cell,
 				new Callback() {

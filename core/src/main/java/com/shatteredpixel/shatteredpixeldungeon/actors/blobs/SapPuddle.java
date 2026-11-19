@@ -13,13 +13,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TileFxLayer;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
-import com.watabou.noosa.Group;
-import com.watabou.noosa.MovieClip;
-
-import java.util.HashMap;
 
 //Maze Tower: 끈적한 수액 웅덩이 (5층 썩은 수액 덩어리). 보스가 내려칠 때 주변에 남는다.
 //수액 위의 다른 대상은 움직임이 느려지고(원작 다리 저림, 1턴씩 갱신), 보스는 수액 위에서 물처럼 회복한다.
@@ -62,7 +58,7 @@ public class SapPuddle extends Blob {
 	@Override
 	public void use( BlobEmitter emitter ) {
 		super.use( emitter );
-		emitter.add(new PuddleLayer(this));
+		emitter.add(new TileFxLayer(this, BossEffects.Fx.SAP_PUDDLE, 4, 0.85f));
 	}
 
 	@Override
@@ -70,36 +66,4 @@ public class SapPuddle extends Blob {
 		return Messages.get(this, "desc");
 	}
 
-	//칸마다 수액 웅덩이 그림을 깔고, 사라지면 지운다
-	private static class PuddleLayer extends Group {
-
-		private final SapPuddle blob;
-		private final HashMap<Integer, MovieClip> clips = new HashMap<>();
-
-		PuddleLayer( SapPuddle blob ){
-			this.blob = blob;
-		}
-
-		@Override
-		public synchronized void update() {
-			super.update();
-			if (blob.cur == null || Dungeon.level == null) return;
-			for (int i = 0; i < blob.cur.length; i++){
-				boolean has = blob.cur[i] > 0;
-				MovieClip c = clips.get(i);
-				if (has && c == null){
-					c = BossEffects.clip(BossEffects.Fx.SAP_PUDDLE, 4, true);
-					c.x = (i % Dungeon.level.width()) * DungeonTilemap.SIZE;
-					c.y = (i / Dungeon.level.width()) * DungeonTilemap.SIZE;
-					c.alpha(0.85f);
-					add(c);
-					clips.put(i, c);
-				} else if (!has && c != null){
-					c.killAndErase();
-					clips.remove(i);
-				}
-				if (c != null) c.visible = Dungeon.level.heroFOV[i] || Dungeon.level.visited[i];
-			}
-		}
-	}
 }

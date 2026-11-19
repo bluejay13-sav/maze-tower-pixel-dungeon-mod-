@@ -233,6 +233,8 @@ public abstract class Char extends Actor {
 	}
 
 	public String name(){
+		String mazeKey = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.textKey(this, "name"); //Maze Tower: 마탑 보스 이름
+		if (mazeKey != null) return Messages.get(this, mazeKey);
 		return Messages.get(this, "name");
 	}
 

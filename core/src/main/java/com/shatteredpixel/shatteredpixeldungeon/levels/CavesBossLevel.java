@@ -110,6 +110,9 @@ public class CavesBossLevel extends Level {
 	public static Rect mainArena = new Rect(5, 14, 28, 37);
 	public static Rect gate = new Rect(14, 13, 19, 14);
 	public static int[] pylonPositions = new int[]{ 4 + 13*WIDTH, 28 + 13*WIDTH, 4 + 37*WIDTH, 28 + 37*WIDTH };
+	//Maze Tower: 마도 골렘 보스방의 광맥 자리 (원작 기둥 자리 + 보스방 안쪽)
+	public static int[] MAZE_VEINS = new int[]{ 4 + 13*WIDTH, 28 + 13*WIDTH, 4 + 37*WIDTH, 28 + 37*WIDTH,
+			9 + 20*WIDTH, 23 + 20*WIDTH, 9 + 30*WIDTH, 23 + 30*WIDTH, 16 + 25*WIDTH };
 
 	private ArenaVisuals customArenaVisuals;
 
@@ -206,6 +209,26 @@ public class CavesBossLevel extends Level {
 
 	@Override
 	protected void createMobs() {
+		//Maze Tower: 마도 골렘은 기둥 대신 광맥, 수정 거인은 수정 기둥(원작 기둥) + 숨은 물
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.golem()){
+			for (int i : MAZE_VEINS){
+				if (!passable[i] || findMob(i) != null) continue;
+				com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ManaVein vein = new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ManaVein();
+				vein.pos = i;
+				mobs.add(vein);
+			}
+			return;
+		}
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal()){
+			int placed = 0, tries = 0;
+			while (placed < com.shatteredpixel.shatteredpixeldungeon.MazeTower.CRYSTAL_WATER_TILES && tries++ < 500){
+				int c = Random.IntRange(4, 28) + Random.IntRange(15, 36) * width();
+				if (map[c] == Terrain.EMPTY || map[c] == Terrain.EMPTY_DECO){
+					set(c, Terrain.WATER, this);
+					placed++;
+				}
+			}
+		}
 		for (int i : pylonPositions) {
 			Pylon pylon = new Pylon();
 			pylon.pos = i;

@@ -8,6 +8,9 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.MazeRetreat;
+import com.shatteredpixel.shatteredpixeldungeon.MazeBosses;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM300;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.TowerCollapse;
 import com.shatteredpixel.shatteredpixeldungeon.effects.RetreatEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -65,7 +68,7 @@ import com.watabou.utils.DeviceCompat;
 //이후 단계에서 개화의 핵, 마나, 젖음·정전기 항목을 여기에 추가한다.
 public class WndCheats extends Window {
 
-	private static final int WIDTH      = 120;
+	private static final int WIDTH      = 150; //버튼 두 개씩 놓으려고 넓힘
 	private static final int BTN_HEIGHT = 15;
 	private static final int GAP        = 1;
 
@@ -93,6 +96,21 @@ public class WndCheats extends Window {
 			@Override
 			protected void onClick() {
 				give(new FullBloomCore());
+			}
+		});
+
+		addPair(new RedButton(Messages.get(this, "boss15"), 7){
+			@Override
+			protected void onClick() {
+				//15층 보스를 마도 골렘 / 수정 거인으로 바꾼다 (시험용, 15층에 가기 전에 누른다)
+				MazeBosses.force15 = !MazeBosses.crystalGiant();
+				GLog.p(Messages.get(WndCheats.class, "boss_now", Messages.get(DM300.class, MazeBosses.crystalGiant() ? "maze_crystal_name" : "maze_golem_name")));
+			}
+		}, new RedButton(Messages.get(this, "boss20"), 7){
+			@Override
+			protected void onClick() {
+				MazeBosses.force20 = !MazeBosses.empress();
+				GLog.p(Messages.get(WndCheats.class, "boss_now", Messages.get(DwarfKing.class, MazeBosses.empress() ? "maze_empress_name" : "maze_wraith_name")));
 			}
 		});
 
@@ -137,15 +155,13 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addButton(new RedButton(Messages.get(this, "grant_talent"), 7){
+		addPair(new RedButton(Messages.get(this, "grant_talent"), 7){
 			@Override
 			protected void onClick() {
 				hide();
 				pickTalentCategory();
 			}
-		});
-
-		addButton(new RedButton(Messages.get(this, "divine_potion"), 7){
+		}, new RedButton(Messages.get(this, "divine_potion"), 7){
 			@Override
 			protected void onClick() {
 				give(new PotionOfDivineInspiration().identify());
@@ -192,7 +208,7 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addButton(new RedButton(Messages.get(this, "swords"), 7){
+		addPair(new RedButton(Messages.get(this, "swords"), 7){
 			@Override
 			protected void onClick() {
 				give(new WornShortsword().identify());
@@ -203,9 +219,7 @@ public class WndCheats extends Window {
 				give(new Katana().identify());
 				give(new RunicBlade().identify());
 			}
-		});
-
-		addButton(new RedButton(Messages.get(this, "upgrade"), 7){
+		}, new RedButton(Messages.get(this, "upgrade"), 7){
 			@Override
 			protected void onClick() {
 				give(new ScrollOfUpgrade().quantity(UPGRADE_SCROLLS_PER_CLICK).identify());

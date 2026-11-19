@@ -74,6 +74,8 @@ public class BlobImmunity extends FlavourBuff {
 		immunities.add( StenchGas.class );
 		immunities.add( StormCloud.class );
 		immunities.add( ToxicGas.class );
+		immunities.add( com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.class ); //Maze Tower: 마력 증기 (정화 물약으로 면역)
+		immunities.add( com.shatteredpixel.shatteredpixeldungeon.actors.blobs.FrostCrystals.class ); //Maze Tower: 냉기 결정
 		immunities.add( Web.class );
 
 		immunities.add(Tengu.FireAbility.FireBlob.class);

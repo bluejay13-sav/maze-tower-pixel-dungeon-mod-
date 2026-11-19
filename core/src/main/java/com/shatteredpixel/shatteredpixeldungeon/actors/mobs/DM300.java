@@ -25,6 +25,8 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeBosses;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -102,7 +104,43 @@ public class DM300 extends Mob {
 
 	@Override
 	public int drRoll() {
+		if (GolemAbilities.crystal() && meltTurns > 0) return 0; //Maze Tower: 수정 거인 - 수정이 녹아 방어력 0
 		return super.drRoll() + Random.NormalIntRange(0, 10);
+	}
+
+	// ===== Maze Tower: 15층 마도 골렘 / 수정 거인 (GolemAbilities) =====
+	private int meltTurns = 0;          //수정 거인: 수정이 다시 자라기까지 남은 턴
+	private boolean hadStatic = false;  //마도 골렘: 지난 턴에 정전기가 있었는지
+	public com.watabou.noosa.Visual stunFx = null;
+
+	//마도 골렘: 젖으면 5턴 기절
+	@Override
+	public synchronized boolean add( com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff buff ) {
+		boolean added = super.add(buff);
+		if (added && GolemAbilities.golem() && buff instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet){
+			GolemAbilities.stun(this, MazeTower.GOLEM_WET_STUN);
+		}
+		return added;
+	}
+
+	//매 턴: 골렘은 정전기가 끝나면 3턴 기절, 거인은 불타면 수정이 녹는다
+	private void mazeTick(){
+		if (stunFx != null && paralysed <= 0){
+			stunFx.killAndErase();
+			stunFx = null;
+		}
+		if (GolemAbilities.golem()){
+			boolean hasStatic = buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge.class) != null;
+			if (hadStatic && !hasStatic) GolemAbilities.stun(this, MazeTower.GOLEM_STATIC_STUN);
+			hadStatic = hasStatic;
+		} else if (GolemAbilities.crystal()){
+			if (buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning.class) != null){
+				if (meltTurns <= 0) GolemAbilities.melt(this);
+				meltTurns = MazeTower.CRYSTAL_MELT_TURNS;
+			} else if (meltTurns > 0){
+				meltTurns--;
+			}
+		}
 	}
 
 	public int pylonsActivated = 0;
@@ -138,6 +176,8 @@ public class DM300 extends Mob {
 		bundle.put(TURNS_SINCE_LAST_ABILITY, turnsSinceLastAbility);
 		bundle.put(ABILITY_COOLDOWN, abilityCooldown);
 		bundle.put(LAST_ABILITY, lastAbility);
+		bundle.put("maze_melt", meltTurns); //Maze Tower
+		bundle.put("maze_static", hadStatic);
 	}
 
 	@Override
@@ -149,6 +189,8 @@ public class DM300 extends Mob {
 		turnsSinceLastAbility = bundle.getInt(TURNS_SINCE_LAST_ABILITY);
 		abilityCooldown = bundle.getInt(ABILITY_COOLDOWN);
 		lastAbility = bundle.getInt(LAST_ABILITY);
+		meltTurns = bundle.getInt("maze_melt"); //Maze Tower
+		hadStatic = bundle.getBoolean("maze_static");
 
 		if (turnsSinceLastAbility != -1){
 			BossHealthBar.assignBoss(this);
@@ -158,6 +200,8 @@ public class DM300 extends Mob {
 
 	@Override
 	protected boolean act() {
+
+		if (MazeBosses.ENABLED) mazeTick(); //Maze Tower
 
 		if (paralysed > 0){
 			return super.act();
@@ -371,6 +415,14 @@ public class DM300 extends Mob {
 	}
 
 	public void ventGas( Char target ){
+		//Maze Tower: 독가스 대신 마도 골렘은 5×5 내려치기, 수정 거인은 냉기 결정
+		if (GolemAbilities.golem()){
+			GolemAbilities.slam(this, target);
+			return;
+		} else if (GolemAbilities.crystal()){
+			GolemAbilities.frost(this, target);
+			return;
+		}
 		Dungeon.hero.interrupt();
 
 		Ballistica trajectory = new Ballistica(pos, target.pos, Ballistica.STOP_TARGET);
@@ -493,6 +545,9 @@ public class DM300 extends Mob {
 			}
 		}
 
+		//Maze Tower: 마도 골렘은 기둥으로 충전하지 않는다 (체력이 깎여도 무적 단계 없음)
+		if (GolemAbilities.golem()) return;
+
 		int threshold;
 		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){
 			threshold = HT / 4 * (3 - pylonsActivated);
@@ -566,6 +621,7 @@ public class DM300 extends Mob {
 
 	@Override
 	public boolean isAlive() {
+		if (GolemAbilities.golem()) return super.isAlive(); //Maze Tower: 기둥 없음
 		return super.isAlive() || pylonsActivated < totalPylonsToActivate();
 	}
 
@@ -674,6 +730,9 @@ public class DM300 extends Mob {
 
 	{
 		immunities.add(Sleep.class);
+		//Maze Tower: 자기 마력 증기·냉기 결정에는 면역
+		immunities.add(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.class);
+		immunities.add(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.FrostCrystals.class);
 
 		resistances.add(Terror.class);
 		resistances.add(Charm.class);

@@ -410,4 +410,15 @@ public class MazeTower {
 	public static final int   WARDEN_BEAM_MIN       = 5;   //만개 광선 피해 = MIN + 층 ~ MAX + 2×층 (원작 폭탄과 같음)
 	public static final int   WARDEN_BEAM_MAX       = 10;
 
+	//15층 마도 골렘 / 수정 거인
+	public static final int   VEIN_HP              = 20;  //광맥 체력
+	public static final int   VAPOR_TURNS          = 15;  //마력 증기 지속
+	public static final int   VAPOR_MANA_DRAIN     = 10;  //마력 증기 안에서 턴당 마나 감소
+	public static final float GOLEM_WET_STUN       = 5f;  //마도 골렘이 젖으면 기절
+	public static final float GOLEM_STATIC_STUN    = 3f;  //마도 골렘의 정전기가 끝날 때 기절
+	public static final int   FROST_CRYSTAL_TURNS  = 20;  //냉기 결정 지속
+	public static final float FROST_CRYSTAL_CHILL  = 2f;  //결정 위에 서 있으면 냉기
+	public static final int   CRYSTAL_MELT_TURNS   = 50;  //수정 거인: 불에 녹은 수정이 다시 자라기까지
+	public static final int   CRYSTAL_WATER_TILES  = 14;  //수정 거인 보스방에 숨은 물 칸 수
+
 }

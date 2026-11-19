@@ -1188,6 +1188,8 @@ public abstract class Mob extends Char {
 	}
 	
 	public String description() {
+		String mazeKey = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.textKey(this, "desc"); //Maze Tower: 마탑 보스 설명
+		if (mazeKey != null) return Messages.get(this, mazeKey);
 		return Messages.get(this, "desc");
 	}
 
