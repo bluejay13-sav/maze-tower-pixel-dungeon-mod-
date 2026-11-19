@@ -338,11 +338,12 @@ public class MazeTower {
 
 	// ===== 두 갈래 엔딩과 역행 (명세 14번, 21번) =====
 
-	//붕괴 제한: 층에 들어설 때마다 남은 턴이 새로 시작. 26층 150턴, 한 층 내려갈 때마다 3턴씩 줄어 1층 75턴
-	public static final int COLLAPSE_TURNS_TOP  = 150;
-	public static final int COLLAPSE_TURNS_STEP = 3;
+	//붕괴 제한: 층에 들어설 때마다 남은 턴이 새로 시작. 26층 150턴, 한 층 내려갈 때마다 4.4턴씩 줄어 1층 40턴
+	public static final int   COLLAPSE_TURNS_TOP    = 150;
+	public static final int   COLLAPSE_TURNS_BOTTOM = 40;
 	public static int collapseTurns( int depth ){
-		return COLLAPSE_TURNS_TOP - (26 - depth) * COLLAPSE_TURNS_STEP;
+		float step = (COLLAPSE_TURNS_TOP - COLLAPSE_TURNS_BOTTOM) / 25f;
+		return Math.round(COLLAPSE_TURNS_TOP - (26 - depth) * step);
 	}
 
 	//낙석 (붕괴 턴이 0이 된 뒤): 처음 10턴마다 2개, 10턴마다 간격 1턴씩 짧아져 최소 4턴, 20턴마다 1개씩 늘어 최대 4개. 간격은 층 배율로 나눈다
