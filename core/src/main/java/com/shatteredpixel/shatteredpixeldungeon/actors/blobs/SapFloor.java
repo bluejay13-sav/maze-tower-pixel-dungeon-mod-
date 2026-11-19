@@ -58,6 +58,13 @@ public class SapFloor extends Blob {
 		}
 	}
 
+	//물 위에 깔리면 물을 대신한다 (SapPuddle과 같음)
+	@Override
+	public void seed( Level level, int cell, int amount ) {
+		super.seed( level, cell, amount );
+		SapPuddle.replaceWater( level, cell );
+	}
+
 	public static boolean at( int cell ){
 		if (Dungeon.level == null) return false;
 		SapFloor s = (SapFloor) Dungeon.level.blobs.get(SapFloor.class);
