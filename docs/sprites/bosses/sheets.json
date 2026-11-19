@@ -25,7 +25,7 @@
   ]
  },
  "b2_warden": {
-  "frame_w": 23,
+  "frame_w": 24,
   "frame_h": 24,
   "idle": [
    0,
@@ -100,7 +100,7 @@
   ]
  },
  "b5_wraithking": {
-  "frame_w": 24,
+  "frame_w": 22,
   "frame_h": 25,
   "idle": [
    0,
@@ -125,7 +125,7 @@
   ]
  },
  "b6_empress": {
-  "frame_w": 24,
+  "frame_w": 22,
   "frame_h": 23,
   "idle": [
    0,
@@ -151,7 +151,7 @@
  },
  "b7_master": {
   "frame_w": 32,
-  "frame_h": 24,
+  "frame_h": 27,
   "idle": [
    0,
    1
@@ -172,6 +172,37 @@
    10,
    11,
    12
-  ]
+  ],
+  "phase_sheets": [
+   "b7_master_p1_sheet.png",
+   "b7_master_p2_sheet.png",
+   "b7_master_p3_sheet.png",
+   "b7_master_p4_sheet.png",
+   "b7_master_p5_sheet.png",
+   "b7_master_p6_sheet.png"
+  ],
+  "phase_order": [
+   "warrior",
+   "cleric",
+   "rogue",
+   "mage",
+   "huntress",
+   "duelist"
+  ],
+  "fade": [
+   13,
+   14,
+   15,
+   16
+  ],
+  "awaken": {
+   "sheet": "b7_master_p6_sheet.png",
+   "frames": [
+    17,
+    18,
+    19,
+    20
+   ]
+  }
  }
 }
