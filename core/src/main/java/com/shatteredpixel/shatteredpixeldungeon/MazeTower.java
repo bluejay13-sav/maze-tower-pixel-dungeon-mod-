@@ -425,5 +425,28 @@ public class MazeTower {
 	public static final float FROST_CRYSTAL_CHILL  = 2f;  //결정 위에 서 있으면 냉기
 	public static final int   CRYSTAL_MELT_TURNS   = 50;  //수정 거인: 불에 녹은 수정이 다시 자라기까지
 	public static final int   CRYSTAL_WATER_TILES  = 14;  //수정 거인 보스방에 숨은 물 칸 수
+	public static final int   CRYSTAL_FIRE_PYLONS  = 2;   //수정 거인: 수정 기둥을 이만큼 부수기 전까지 화상 면역
+	public static final float CRYSTAL_MELT_DMG_TAKEN = 1.3f; //수정 거인: 수정이 녹은 동안 받는 피해 배율 (방어력 0과 함께)
+
+	// ===== 적에게 둘러싸였을 때 =====
+	public static final int   CROWD_ENEMIES      = 3;   //주인공을 노리는 적이 이만큼 이상이면
+	public static final float CROWD_ATTACK_SPEED = 3f;  //적의 공격 동작을 이 배율로 빠르게 (연출만, 턴 계산은 같다)
+
+	//주인공을 노리는 적(쫓는 중, 주인공 시야 안)이 CROWD_ENEMIES 이상일 때 그 적들의 공격 동작 속도
+	public static float crowdAttackSpeed( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch ){
+		if (!(ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob)
+				|| ch.alignment != com.shatteredpixel.shatteredpixeldungeon.actors.Char.Alignment.ENEMY
+				|| Dungeon.hero == null || Dungeon.level == null){
+			return 1f;
+		}
+		int n = 0;
+		for (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob m : Dungeon.level.mobs.toArray(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob[0])){
+			if (m.isAlive() && m.alignment == com.shatteredpixel.shatteredpixeldungeon.actors.Char.Alignment.ENEMY
+					&& m.state == m.HUNTING && Dungeon.level.heroFOV[m.pos]){
+				n++;
+			}
+		}
+		return n >= CROWD_ENEMIES ? CROWD_ATTACK_SPEED : 1f;
+	}
 
 }

@@ -241,7 +241,8 @@ public class CavesBossLevel extends Level {
 			}
 		}
 		for (int i : pylonPositions) {
-			Pylon pylon = new Pylon();
+			//Maze Tower: 수정 거인의 수정 기둥은 켜지기 전에도 때릴 수 있다
+			Pylon pylon = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal() ? Pylon.mazeCrystalPylon() : new Pylon();
 			pylon.pos = i;
 			mobs.add(pylon);
 		}
@@ -418,10 +419,28 @@ public class CavesBossLevel extends Level {
 
 	}
 
+	//Maze Tower: 켜지기 전에 부서진 수정 기둥 (보스의 충전은 그대로)
+	public void mazeDormantPylonBroken(){
+		if (customArenaVisuals != null) customArenaVisuals.updateState();
+	}
+
+	//Maze Tower: 부서진 기둥 수 (처음 4개)
+	public int mazePylonsBroken(){
+		int alive = 0;
+		for (Mob m : mobs) if (m instanceof Pylon && m.isAlive()) alive++;
+		return pylonPositions.length - alive;
+	}
+
+	//Maze Tower: 켤 수 있는 기둥이 남았는지
+	public boolean mazeHasPylonToActivate(){
+		for (Mob m : mobs) if (m instanceof Pylon && ((Pylon) m).inactive()) return true;
+		return false;
+	}
+
 	public void activatePylon(){
 		ArrayList<Pylon> pylons = new ArrayList<>();
 		for (Mob m : mobs){
-			if (m instanceof Pylon && m.alignment == Char.Alignment.NEUTRAL){
+			if (m instanceof Pylon && ((Pylon) m).inactive()){ //Maze Tower: 켜지기 전 수정 기둥 포함
 				pylons.add((Pylon) m);
 			}
 		}

@@ -77,7 +77,7 @@ public class GooSprite extends MobSprite {
 		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
 			TextureFilm f = MazeBossSprites.apply(this, MazeBossSprites.Look.SAP);
 			pump = MazeBossSprites.anim(f, 12, true, 6, 7);
-			pumpAttack = MazeBossSprites.anim(f, 15, false, 6, 7, 8);
+			pumpAttack = MazeBossSprites.anim(f, 15, false, MazeBossSprites.ATTACK); //하얀 8번 칸 없이
 		}
 		
 		play(idle);

@@ -28,6 +28,8 @@ public class MovieClip extends Image {
 	protected Animation curAnim;
 	protected int curFrame;
 	protected float frameTimer;
+	//Maze Tower: 동작 재생 속도 배율 (적에게 둘러싸였을 때 적 공격 동작을 빠르게)
+	public float animSpeed = 1f;
 	protected boolean finished;
 	
 	public boolean paused = false;
@@ -59,7 +61,7 @@ public class MovieClip extends Image {
 			
 			int lastFrame = curFrame;
 			
-			frameTimer += Game.elapsed;
+			frameTimer += Game.elapsed * animSpeed; //Maze Tower
 			while (frameTimer > curAnim.delay) {
 				frameTimer -= curAnim.delay;
 				if (curFrame >= curAnim.frames.length - 1) {

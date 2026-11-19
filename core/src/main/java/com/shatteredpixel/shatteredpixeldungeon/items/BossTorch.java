@@ -14,6 +14,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -23,7 +25,7 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.particles.Emitter;
 
 //Maze Tower: 횃불 (5층 보스방 입구 방에 하나). 한 번 던지면 사라지는 불붙이기 아이템.
-//맞은 대상에게 화상을 걸고, 바닥·벽에 던지면 떨어진 자리에 불이 붙는다.
+//맞은 대상에게 화상을 걸고, 바닥·벽에 던지면 떨어진 자리에, 문·길을 막은 나무에 던지면 그곳에 불이 붙는다.
 //썩은 수액 덩어리는 화상을 입으면(횃불이든 화염 마법이든) 약점이 드러난다 (Goo).
 //그림: core/src/main/assets/sprites/maze_p13_torch.png
 public class BossTorch extends Item {
@@ -51,6 +53,21 @@ public class BossTorch extends Item {
 		return e;
 	}
 
+	//던진 길에서 횃불이 부딪힌 바로 다음 칸(길을 막은 나무·바리케이드 등). 타는 것이면 거기에도 불을 붙인다
+	private int aimedBlock = -1;
+
+	@Override
+	public void cast( Hero user, int dst ) {
+		aimedBlock = -1;
+		Ballistica b = new Ballistica(user.pos, dst, Ballistica.PROJECTILE);
+		int idx = b.path.indexOf(b.collisionPos);
+		if (idx >= 0 && idx + 1 < b.path.size()){
+			int next = b.path.get(idx + 1);
+			if (Dungeon.level.flamable[next] && !Dungeon.level.passable[next]) aimedBlock = next;
+		}
+		super.cast(user, dst);
+	}
+
 	@Override
 	protected void onThrow( int cell ) {
 		//한 번 쓰면 사라진다
@@ -58,9 +75,16 @@ public class BossTorch extends Item {
 		if (ch != null && ch.isAlive()){
 			Buff.affect(ch, Burning.class).reignite(ch);
 		}
-		if (!Dungeon.level.solid[cell]){
+		//바닥, 그리고 문처럼 타는 칸에는 불이 붙는다
+		if (!Dungeon.level.solid[cell] || Dungeon.level.flamable[cell]){
 			GameScene.add(Blob.seed(cell, MazeTower.TORCH_FIRE, Fire.class));
 		}
+		//길을 막은 나무·바리케이드에 던졌으면 거기에도
+		if (aimedBlock != -1 && Dungeon.level.flamable[aimedBlock]){
+			GameScene.add(Blob.seed(aimedBlock, MazeTower.TORCH_FIRE, Fire.class));
+			if (Dungeon.level.heroFOV[aimedBlock]) CellEmitter.get(aimedBlock).burst(FlameParticle.FACTORY, 12);
+		}
+		aimedBlock = -1;
 		if (Dungeon.level.heroFOV[cell]) CellEmitter.get(cell).burst(FlameParticle.FACTORY, 12);
 		Sample.INSTANCE.play(Assets.Sounds.BURNING);
 	}

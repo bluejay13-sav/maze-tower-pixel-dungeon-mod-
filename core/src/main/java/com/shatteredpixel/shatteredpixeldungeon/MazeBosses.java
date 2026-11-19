@@ -43,6 +43,10 @@ public class MazeBosses {
 		if (boss instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM300){
 			return (crystalGiant() ? "maze_crystal_" : "maze_golem_") + what;
 		}
+		//수정 거인 판의 기둥은 수정 기둥
+		if (boss instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Pylon && crystalGiant()){
+			return "maze_crystal_" + what;
+		}
 		if (boss instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing){
 			return (empress() ? "maze_empress_" : "maze_wraith_") + what;
 		}

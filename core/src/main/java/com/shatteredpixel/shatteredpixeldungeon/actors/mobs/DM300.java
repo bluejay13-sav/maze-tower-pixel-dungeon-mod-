@@ -543,6 +543,8 @@ public class DM300 extends Mob {
 		if (!BossHealthBar.isAssigned()){
 			notice();
 		}
+		//Maze Tower: 수정 거인 - 수정이 녹은 동안 받는 피해 증가
+		if (GolemAbilities.crystal() && meltTurns > 0) dmg = Math.round(dmg * MazeTower.CRYSTAL_MELT_DMG_TAKEN);
 
 		int preHP = HP;
 		super.damage(dmg, src);
@@ -580,6 +582,17 @@ public class DM300 extends Mob {
 		return Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 3 : 2;
 	}
 
+	//Maze Tower: 수정 거인은 수정 기둥을 CRYSTAL_FIRE_PYLONS개 이상 부수기 전까지 화상에 면역
+	@Override
+	public boolean isImmune(Class effect) {
+		if (GolemAbilities.crystal() && effect == com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning.class
+				&& Dungeon.level instanceof CavesBossLevel
+				&& ((CavesBossLevel)Dungeon.level).mazePylonsBroken() < MazeTower.CRYSTAL_FIRE_PYLONS){
+			return true;
+		}
+		return super.isImmune(effect);
+	}
+
 	@Override
 	public boolean isInvulnerable(Class effect) {
 		if (supercharged && !invulnWarned){
@@ -590,6 +603,11 @@ public class DM300 extends Mob {
 	}
 
 	public void supercharge(){
+		//Maze Tower: 수정 기둥을 미리 다 부쉈으면 충전(무적) 없이 넘어간다
+		if (GolemAbilities.crystal() && !((CavesBossLevel)Dungeon.level).mazeHasPylonToActivate()){
+			pylonsActivated++;
+			return;
+		}
 		supercharged = true;
 		((CavesBossLevel)Dungeon.level).activatePylon();
 		pylonsActivated++;

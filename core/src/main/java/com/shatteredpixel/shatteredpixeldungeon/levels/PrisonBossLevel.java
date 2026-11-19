@@ -519,7 +519,17 @@ public class PrisonBossLevel extends Level {
 				if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
 					for (Point p : MAZE_CAGES){
 						int c = pointToCell(p);
-						if (passable[c] && Actor.findChar(c) == null){
+						//자리가 막혀 있으면 가장 가까운 빈 바닥에 놓아 언제나 4개가 생기게 한다
+						if (!passable[c] || Actor.findChar(c) != null){
+							int best = -1;
+							for (int i = 0; i < length(); i++){
+								if (!passable[i] || pit[i] || Actor.findChar(i) != null || !insideMap(i)) continue;
+								if (!arena.inside(cellToPoint(i))) continue;
+								if (best == -1 || trueDistance(c, i) < trueDistance(c, best)) best = i;
+							}
+							c = best;
+						}
+						if (c != -1){
 							com.shatteredpixel.shatteredpixeldungeon.actors.mobs.SoulCage cage = new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.SoulCage();
 							cage.pos = c;
 							GameScene.add(cage);

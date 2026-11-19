@@ -96,9 +96,11 @@ public class WardenAbilities {
 		return n;
 	}
 
-	//불러낸 영혼 4마리 중 3마리 이상 쓰러졌으면 (= 살아 있는 영혼 1마리 이하) 다시 쓸 수 있다
+	//영혼은 남은 철창 하나에 한 마리씩 나온다 (철창 4개면 4마리, 하나 부서질 때마다 1마리씩 줄어든다).
+	//지난번에 불러낸 영혼이 WARDEN_SOUL_RECAST_DEAD마리 이상 쓰러졌으면 다시 쓸 수 있다
 	public static boolean canReleaseSouls(){
-		return cagesLeft() > 0 && soulsAlive() <= MazeTower.WARDEN_SOULS - MazeTower.WARDEN_SOUL_RECAST_DEAD;
+		int cages = cagesLeft();
+		return cages > 0 && soulsAlive() <= Math.max(0, Math.min(cages, MazeTower.WARDEN_SOULS) - MazeTower.WARDEN_SOUL_RECAST_DEAD);
 	}
 
 	private static boolean releaseSouls( Tengu tengu ){
@@ -106,12 +108,10 @@ public class WardenAbilities {
 		for (Mob m : Dungeon.level.mobs) if (m instanceof SoulCage && m.isAlive()) cages.add((SoulCage)m);
 		if (cages.isEmpty()) return false;
 
-		int toSpawn = MazeTower.WARDEN_SOULS;
+		int toSpawn = Math.min(cages.size(), MazeTower.WARDEN_SOULS);
 		int spawned = 0;
-		int idx = 0;
-		while (spawned < toSpawn && idx < toSpawn * 3){
-			SoulCage cage = cages.get(idx % cages.size());
-			idx++;
+		for (SoulCage cage : cages){
+			if (spawned >= toSpawn) break;
 			ArrayList<Integer> cells = new ArrayList<>();
 			for (int n : PathFinder.NEIGHBOURS8){
 				int c = cage.pos + n;

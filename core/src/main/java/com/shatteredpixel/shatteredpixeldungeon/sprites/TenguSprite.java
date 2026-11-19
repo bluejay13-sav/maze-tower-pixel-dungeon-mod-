@@ -54,6 +54,9 @@ public class TenguSprite extends MobSprite {
 		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
 			TextureFilm f = MazeBossSprites.apply(this, MazeBossSprites.Look.WARDEN);
 			run = MazeBossSprites.anim(f, 15, false, 2, 3, 4, 5, 0);
+			//공격 마지막 칸(8번)은 하얗게 빛나는 그림이라 쓰지 않는다
+			attack = MazeBossSprites.anim(f, 15, false, 6, 7, 7, 0);
+			zap = attack.clone();
 		}
 		
 		play( run );

@@ -137,6 +137,8 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	
 	@Override
 	public void play(Animation anim) {
+		//Maze Tower: 빠른 공격 동작은 그 공격에만
+		if (anim != attack) animSpeed = 1f;
 		//Shouldn't interrupt the dying animation
 		if (curAnim == null || curAnim != die) {
 			super.play(anim);
@@ -261,6 +263,8 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 		animCallback = callback;
 		turnTo( ch.pos, cell );
 		play( attack );
+		//Maze Tower: 주인공이 적 여럿에게 둘러싸여 있으면 적의 공격 동작을 빠르게
+		animSpeed = com.shatteredpixel.shatteredpixeldungeon.MazeTower.crowdAttackSpeed(ch);
 	}
 	
 	public void operate( int cell ) {
