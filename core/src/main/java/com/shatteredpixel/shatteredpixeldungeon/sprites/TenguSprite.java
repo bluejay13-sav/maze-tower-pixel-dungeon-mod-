@@ -50,7 +50,11 @@ public class TenguSprite extends MobSprite {
 		
 		die = new Animation( 8, false );
 		die.frames( frames, 8, 9, 10, 10, 10, 10, 10, 10 );
-		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) MazeBossSprites.apply(this, MazeBossSprites.Look.WARDEN); //Maze Tower: 그림자 간수 그림
+		//Maze Tower: 그림자 간수 그림 (원작처럼 이동 동작은 반복하지 않는다: 순간이동이 동작 끝을 기다림)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
+			TextureFilm f = MazeBossSprites.apply(this, MazeBossSprites.Look.WARDEN);
+			run = MazeBossSprites.anim(f, 15, false, 2, 3, 4, 5, 0);
+		}
 		
 		play( run );
 		isMoving = true;
