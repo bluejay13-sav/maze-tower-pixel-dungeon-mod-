@@ -267,6 +267,15 @@ public class SurfaceScene extends PixelScene {
 		gameOver.setSize( SKY_WIDTH - FRAME_MARGIN_X * 2, BUTTON_HEIGHT );
 		gameOver.setPos( frame.x + FRAME_MARGIN_X * 2, frame.y + frame.height + 4 );
 		add( gameOver );
+
+		//Maze Tower: 진 엔딩 문구 (캐릭터 이름)
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_ENDING && Dungeon.hero != null){
+			com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock escaped = PixelScene.renderTextBlock(
+					Messages.get(this, "maze_escaped", Dungeon.hero.name()), 6);
+			escaped.maxWidth((int)(SKY_WIDTH - FRAME_MARGIN_X * 2));
+			escaped.setPos(frame.x + FRAME_MARGIN_X * 2 + (SKY_WIDTH - FRAME_MARGIN_X * 2 - escaped.width()) / 2f, gameOver.bottom() + 4);
+			add(escaped);
+		}
 		
 		fadeIn();
 	}

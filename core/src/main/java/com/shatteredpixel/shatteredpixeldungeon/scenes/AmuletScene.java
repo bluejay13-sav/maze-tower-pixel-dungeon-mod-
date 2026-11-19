@@ -70,7 +70,7 @@ public class AmuletScene extends PixelScene {
 		
 		RenderedTextBlock text = null;
 		if (!noText) {
-			text = renderTextBlock( Messages.get(this, MazeTower.ORIGINAL_ENDING ? "text" : "maze_text"), 8 ); //Maze Tower: 습득 / 파괴 선택
+			text = renderTextBlock( (MazeTower.ORIGINAL_ENDING ? Messages.get(this, "text") : Messages.get(this, "maze_text", Dungeon.hero.name())), 8 ); //Maze Tower: 습득 / 파괴 선택
 			text.maxWidth( PixelScene.landscape() ? 2*WIDTH-4 : WIDTH);
 		}
 		

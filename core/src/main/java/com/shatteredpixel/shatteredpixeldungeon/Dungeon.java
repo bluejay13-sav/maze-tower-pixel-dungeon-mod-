@@ -284,6 +284,8 @@ public class Dungeon {
 		Badges.reset();
 		
 		GamesInProgress.selectedClass.initHero( hero );
+		hero.mazeName = MazeNames.pending; //Maze Tower: 영웅 선택 화면에서 정한 이름
+		MazeNames.pending = "";
 	}
 
 	public static boolean isChallenged( int mask ) {

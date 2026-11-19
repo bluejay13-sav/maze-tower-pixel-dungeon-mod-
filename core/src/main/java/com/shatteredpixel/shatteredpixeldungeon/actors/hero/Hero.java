@@ -301,6 +301,7 @@ public class Hero extends Char {
 	private static final String DEFENSE		= "defenseSkill";
 	private static final String STRENGTH	= "STR";
 	private static final String LEVEL		= "lvl";
+	private static final String MAZE_NAME = "maze_name"; //Maze Tower
 	private static final String EXPERIENCE	= "exp";
 	private static final String HTBOOST     = "htboost";
 	
@@ -320,6 +321,7 @@ public class Hero extends Char {
 		bundle.put( STRENGTH, STR );
 		
 		bundle.put( LEVEL, lvl );
+		bundle.put( MAZE_NAME, mazeName ); //Maze Tower: 캐릭터 이름
 		bundle.put( EXPERIENCE, exp );
 		
 		bundle.put( HTBOOST, HTBoost );
@@ -331,6 +333,7 @@ public class Hero extends Char {
 	public void restoreFromBundle( Bundle bundle ) {
 
 		lvl = bundle.getInt( LEVEL );
+		mazeName = bundle.contains(MAZE_NAME) ? bundle.getString(MAZE_NAME) : ""; //Maze Tower
 		exp = bundle.getInt( EXPERIENCE );
 
 		HTBoost = bundle.getInt(HTBOOST);
@@ -440,10 +443,15 @@ public class Hero extends Char {
 		return subClass == null || subClass == HeroSubClass.NONE ? heroClass.title() : subClass.title();
 	}
 
+	//Maze Tower: 캐릭터 이름 (비어 있으면 직업 이름, MazeNames)
+	public String mazeName = "";
+
 	@Override
 	public String name(){
 		if (buff(HeroDisguise.class) != null) {
 			return buff(HeroDisguise.class).getDisguise().title();
+		} else if (mazeName != null && !mazeName.isEmpty()) {
+			return mazeName; //Maze Tower: 캐릭터 이름
 		} else {
 			return className();
 		}
@@ -2367,6 +2375,9 @@ public class Hero extends Char {
 				((DriedRose.GhostHero) c).sayHeroKilled();
 			}
 		}
+
+		//Maze Tower: 사망 메시지에 캐릭터 이름
+		GLog.n(Messages.get(Hero.class, "maze_fallen", Dungeon.hero.name()));
 
 		Game.runOnRenderThread(new Callback() {
 			@Override

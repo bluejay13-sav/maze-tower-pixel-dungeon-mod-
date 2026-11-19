@@ -173,7 +173,12 @@ public class WndRanking extends WndTabbed {
 			
 			IconTitle title = new IconTitle();
 			title.icon( HeroSprite.avatar( record.heroClass, record.armorTier ) );
-			title.label( Messages.get(this, "title", record.herolevel, heroClass ).toUpperCase( Locale.ENGLISH ) );
+			//Maze Tower: 캐릭터 이름을 정했으면 첫 줄에 이름 (영웅 정보 창과 같은 모양)
+			if (record.mazeName != null && !record.mazeName.isEmpty()){
+				title.label( (record.mazeName + "\n" + Messages.get(this, "title", record.herolevel, heroClass )).toUpperCase( Locale.ENGLISH ) );
+			} else {
+				title.label( Messages.get(this, "title", record.herolevel, heroClass ).toUpperCase( Locale.ENGLISH ) );
+			}
 			title.color(Window.TITLE_COLOR);
 			title.setRect( 0, 0, WIDTH, 0 );
 			add( title );

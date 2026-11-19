@@ -114,6 +114,7 @@ public enum Rankings {
 		rec.heroClass	= Dungeon.hero.heroClass;
 		rec.armorTier	= Dungeon.hero.tier();
 		rec.herolevel	= Dungeon.hero.lvl;
+		rec.mazeName	= Dungeon.hero.mazeName; //Maze Tower: 캐릭터 이름
 		if (Statistics.highestAscent == 0){
 			rec.depth = Statistics.deepestFloor;
 			rec.ascending = false;
@@ -487,6 +488,7 @@ public enum Rankings {
 		private static final String LEVEL	= "level";
 		private static final String DEPTH	= "depth";
 		private static final String ASCEND	= "ascending";
+		private static final String MAZE_NAME = "maze_name"; //Maze Tower
 		private static final String DATA	= "gameData";
 		private static final String ID      = "gameID";
 		private static final String SEED    = "custom_seed";
@@ -494,6 +496,9 @@ public enum Rankings {
 
 		private static final String DATE    = "date";
 		private static final String VERSION = "version";
+
+		//Maze Tower: 캐릭터 이름 (비어 있으면 직업 이름)
+		public String mazeName = "";
 
 		public Class cause;
 		public boolean win;
@@ -517,6 +522,12 @@ public enum Rankings {
 		public String version;
 
 		public String desc(){
+			//Maze Tower: 캐릭터 이름을 정했으면 앞에 붙인다
+			if (mazeName != null && !mazeName.isEmpty()) return mazeName + " - " + baseDesc();
+			return baseDesc();
+		}
+
+		private String baseDesc(){
 			//Maze Tower: 습득(배드 엔딩)은 "타락", 역행 탈출은 진 엔딩
 			if (win && cause == MazeRetreat.Corrupted.class) return Messages.get(this, "maze_corrupted");
 			if (win && ascending && !MazeTower.ORIGINAL_ENDING) return Messages.get(this, "maze_escaped");
@@ -557,6 +568,7 @@ public enum Rankings {
 			herolevel   = bundle.getInt( LEVEL );
 			depth       = bundle.getInt( DEPTH );
 			ascending   = bundle.getBoolean( ASCEND );
+			mazeName = bundle.contains(MAZE_NAME) ? bundle.getString(MAZE_NAME) : ""; //Maze Tower
 
 			if (bundle.contains( DATE )){
 				date = bundle.getString( DATE );
@@ -587,6 +599,7 @@ public enum Rankings {
 			bundle.put( LEVEL, herolevel );
 			bundle.put( DEPTH, depth );
 			bundle.put( ASCEND, ascending );
+			bundle.put( MAZE_NAME, mazeName ); //Maze Tower
 
 			bundle.put( DATE, date );
 			bundle.put( VERSION, version );

@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.MazeNames;
 import com.shatteredpixel.shatteredpixeldungeon.Rankings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -155,6 +156,26 @@ public class HeroSelectScene extends PixelScene {
 
 				if (GamesInProgress.selectedClass == null) return;
 
+				//Maze Tower: 시작하기 전에 캐릭터 이름을 정한다 (비워 두면 직업 이름)
+				ShatteredPixelDungeon.scene().addToFront( new WndTextInput(
+						Messages.get(HeroSelectScene.class, "maze_name_title"),
+						Messages.get(HeroSelectScene.class, "maze_name_desc",
+								Messages.titleCase(GamesInProgress.selectedClass.title()), MazeNames.MAX_LENGTH),
+						"",
+						MazeNames.MAX_LENGTH,
+						false,
+						Messages.get(HeroSelectScene.class, "maze_name_start"),
+						Messages.get(HeroSelectScene.class, "maze_name_cancel")){
+					@Override
+					public void onSelect(boolean positive, String text) {
+						if (!positive) return;
+						MazeNames.pending = MazeNames.clean(text);
+						startNewGame();
+					}
+				});
+			}
+
+			private void startNewGame(){
 				Dungeon.hero = null;
 				Dungeon.daily = Dungeon.dailyReplay = false;
 				Dungeon.initSeed();
