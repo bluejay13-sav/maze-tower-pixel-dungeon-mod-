@@ -198,6 +198,11 @@ public class Tengu extends Mob {
 
 				@Override
 				protected boolean act() {
+					//Maze Tower: 만개 광선을 모으는 동안은 순간이동도 미룬다
+					if (MazeBosses.ENABLED && buff(WardenAbilities.BloomBeam.class) != null){
+						spend( TICK );
+						return true;
+					}
 					Actor.remove(this);
 					jump();
 					return true;
@@ -394,12 +399,21 @@ public class Tengu extends Mob {
 	}
 
 	//tengu is always hunting, and can use simpler rules because he never moves
+	//Maze Tower: 주인공을 찾지 못한 턴 수
+	private int lostTurns = 0;
+
 	private class Hunting extends Mob.Hunting{
 		
 		@Override
 		public boolean act(boolean enemyInFOV, boolean justAlerted) {
 			
 			enemySeen = enemyInFOV;
+			if (enemyInFOV) lostTurns = 0; //Maze Tower
+			//Maze Tower: 만개 광선을 모으는 동안은 움직이지 않는다
+			if (MazeBosses.ENABLED && buff(WardenAbilities.BloomBeam.class) != null){
+				spend( TICK );
+				return true;
+			}
 			if (enemyInFOV && !isCharmedBy( enemy ) && canAttack( enemy )) {
 				
 				if (canUseAbility()){
@@ -432,6 +446,17 @@ public class Tengu extends Mob {
 			//Tengu is always hunting, so we don't lose enemy in this case
 			if (canUseAbility()){
 				return useAbility();
+			}
+
+			//Maze Tower: 2턴 동안 주인공을 찾지 못하면 아무 데로나 움직인다
+			if (MazeBosses.ENABLED && !enemyInFOV && ++lostTurns >= MazeTower.WARDEN_LOST_TURNS){
+				int step = WardenAbilities.wanderCell(Tengu.this);
+				if (step != -1){
+					sprite.move(pos, step);
+					move(step);
+					spend(1 / speed());
+					return true;
+				}
 			}
 
 			spend( TICK );
@@ -654,7 +679,7 @@ public class Tengu extends Mob {
 
 					if (PathFinder.distance[cell] < Integer.MAX_VALUE) {
 						Char ch = Actor.findChar(cell);
-						if (ch != null && !(ch instanceof Tengu)) {
+						if (ch != null && !(ch instanceof Tengu) && !WardenAbilities.spared(ch)) { //Maze Tower: 봉인 부적은 간수 편(영혼·철창)을 다치게 하지 않는다
 							int dmg = Random.NormalIntRange(5 + Dungeon.scalingDepth(), 10 + Dungeon.scalingDepth() * 2);
 							dmg -= ch.drRoll();
 

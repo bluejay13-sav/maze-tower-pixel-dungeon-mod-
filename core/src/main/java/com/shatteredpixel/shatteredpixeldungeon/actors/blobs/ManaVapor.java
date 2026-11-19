@@ -56,7 +56,7 @@ public class ManaVapor extends Blob {
 	@Override
 	public void use( BlobEmitter emitter ) {
 		super.use( emitter );
-		emitter.add(new TileFxLayer(this, BossEffects.Fx.MANA_VAPOR, 6, 0.8f));
+		emitter.add(new TileFxLayer(this, BossEffects.Fx.MANA_VAPOR, 6, 0.8f).shaded());
 	}
 
 	@Override

@@ -116,6 +116,8 @@ public class ElementalReactions {
 	}
 
 	public static boolean isWet( Char ch ){
+		//젖음에 면역이면 물 위에서도 젖지 않는다 (썩은 수액 덩어리 등)
+		if (ch.isImmune(Wet.class)) return false;
 		//빙결 상태면 물 위에 있어도 젖지 않은 것으로 본다
 		if (ch.buff(Frost.class) != null) return false;
 		return ch.buff(Wet.class) != null || Wet.onWater(ch);

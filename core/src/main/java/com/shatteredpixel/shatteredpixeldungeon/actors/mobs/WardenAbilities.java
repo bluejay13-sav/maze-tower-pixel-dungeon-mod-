@@ -39,6 +39,22 @@ public class WardenAbilities {
 	public static final int SOULS    = 1;
 	public static final int BEAM     = 2;
 
+	//간수의 공격(봉인 부적·만개 광선)이 다치게 하지 않는 대상: 간수 편(죄수의 영혼 등 적)과 부적 철창. 주인공(과 아군)만 다친다
+	public static boolean spared( Char ch ){
+		return com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED
+				&& (ch instanceof SoulCage || ch.alignment == Char.Alignment.ENEMY);
+	}
+
+	//주인공을 찾지 못할 때 움직일 옆 칸 (없으면 -1)
+	public static int wanderCell( Tengu tengu ){
+		ArrayList<Integer> cells = new ArrayList<>();
+		for (int n : PathFinder.NEIGHBOURS8){
+			int c = tengu.pos + n;
+			if (Dungeon.level.passable[c] && !Dungeon.level.pit[c] && !Dungeon.level.avoid[c] && Actor.findChar(c) == null) cells.add(c);
+		}
+		return cells.isEmpty() ? -1 : Random.element(cells);
+	}
+
 	public static int choose( int used, int last ){
 		boolean souls = canReleaseSouls();
 		if (used == 0) return TALISMAN;
@@ -119,12 +135,10 @@ public class WardenAbilities {
 	// ===== 만개 광선 =====
 
 	private static void startBeam( Tengu tengu ){
+		//8방향 전부 + 간수 주변 2칸
 		int[] dirs = new int[8];
 		for (int i = 0; i < 8; i++) dirs[i] = i;
-		com.watabou.utils.Random.shuffle(dirs);
-		int[] pick = new int[MazeTower.WARDEN_BEAMS];
-		System.arraycopy(dirs, 0, pick, 0, pick.length);
-		Buff.append(tengu, BloomBeam.class).setup(tengu.pos, pick);
+		Buff.append(tengu, BloomBeam.class).setup(tengu.pos, dirs);
 		tengu.sprite.zap(tengu.pos);
 		if (Dungeon.level.heroFOV[tengu.pos]){
 			BossEffects.onChar(BossEffects.Fx.BLOOM_CHARGE, tengu.sprite, 6, false);
@@ -136,6 +150,20 @@ public class WardenAbilities {
 	//PathFinder.NEIGHBOURS8 순서(왼위, 위, 오른위, 왼, 오른, 왼아래, 아래, 오른아래)의 가로·세로 방향
 	private static final int[] DX = {-1, 0, 1, -1, 1, -1, 0, 1};
 	private static final int[] DY = {-1, -1, -1, 0, 0, 1, 1, 1};
+
+	//간수 주변 MazeTower.WARDEN_BEAM_AREA칸 안의 바닥 칸들 (간수 자리 제외)
+	private static ArrayList<Integer> areaCells( int origin ){
+		ArrayList<Integer> cells = new ArrayList<>();
+		int w = Dungeon.level.width(), h = Dungeon.level.height();
+		int ox = origin % w, oy = origin / w, r = MazeTower.WARDEN_BEAM_AREA;
+		for (int y = oy - r; y <= oy + r; y++) for (int x = ox - r; x <= ox + r; x++){
+			if (x < 0 || y < 0 || x >= w || y >= h) continue;
+			int c = x + y * w;
+			if (c == origin || Dungeon.level.solid[c]) continue;
+			cells.add(c);
+		}
+		return cells;
+	}
 
 	//한 방향으로 벽 앞까지의 칸들
 	private static ArrayList<Integer> beamCells( int origin, int dir ){
@@ -176,6 +204,7 @@ public class WardenAbilities {
 					GameScene.targetedCell(c, 1f);
 				}
 			}
+			for (int c : areaCells(origin)) GameScene.targetedCell(c, 1f);
 		}
 
 		@Override
@@ -197,26 +226,39 @@ public class WardenAbilities {
 
 		private void fire(){
 			boolean seen = false;
+			java.util.HashSet<Integer> hit = new java.util.HashSet<>();
 			for (int d : dirs){
 				for (int c : beamCells(origin, d)){
 					if (Dungeon.level.heroFOV[c]){
 						seen = true;
 						beamVisual(c, d);
 					}
-					Char ch = Actor.findChar(c);
-					if (ch != null && !(ch instanceof Tengu)){
-						int dmg = Random.NormalIntRange(MazeTower.WARDEN_BEAM_MIN + Dungeon.scalingDepth(),
-								MazeTower.WARDEN_BEAM_MAX + 2 * Dungeon.scalingDepth());
-						ch.damage(dmg, this);
-						if (ch == Dungeon.hero && !ch.isAlive()){
-							Dungeon.fail(Tengu.class);
-						}
+					hit.add(c);
+				}
+			}
+			for (int c : areaCells(origin)){
+				if (Dungeon.level.heroFOV[c]) seen = true;
+				hit.add(c);
+			}
+			//간수 편(영혼)·부적 철창은 다치지 않는다
+			for (int c : hit){
+				Char ch = Actor.findChar(c);
+				if (ch != null && !(ch instanceof Tengu) && !spared(ch)){
+					int dmg = Random.NormalIntRange(MazeTower.WARDEN_BEAM_MIN + Dungeon.scalingDepth(),
+							MazeTower.WARDEN_BEAM_MAX + 2 * Dungeon.scalingDepth());
+					ch.damage(dmg, this);
+					if (ch == Dungeon.hero && !ch.isAlive()){
+						Dungeon.fail(Tengu.class);
 					}
 				}
 			}
 			if (seen){
 				PointF p = DungeonTilemap.tileCenterToWorld(origin);
-				BossEffects.at(BossEffects.Fx.BLOOM_BURST, p.x, p.y, 10, false);
+				//주변 2칸(5×5)을 덮도록 크게
+				MovieClip burst = BossEffects.at(BossEffects.Fx.BLOOM_BURST, p.x, p.y, 10, false);
+				float s = (2 * MazeTower.WARDEN_BEAM_AREA + 1) * DungeonTilemap.SIZE / 32f;
+				burst.origin.set(16, 16);
+				burst.scale.set(s);
 				PixelScene.shake(1, 0.3f);
 			}
 			Sample.INSTANCE.play(Assets.Sounds.RAY);

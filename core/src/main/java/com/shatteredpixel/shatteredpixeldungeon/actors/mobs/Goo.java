@@ -89,11 +89,11 @@ public class Goo extends Mob {
 		return MazeBosses.ENABLED;
 	}
 
-	//BossTorch가 맞혔을 때. 이미 불붙어 있거나 체력이 절반 아래면 효과 없음(false)
-	public boolean torchHit(){
+	//처음 불이 붙었을 때 (횃불·화염 마법 등 어떤 화상이든). 이미 불붙어 있거나 체력이 절반 아래면 효과 없음(false)
+	private boolean torchHit(){
 		if (!maze() || torched || HP*2 <= HT) return false;
 		torched = true;
-		Buff.affect(this, Burning.class).reignite(this);
+		if (buff(Burning.class) == null) Buff.affect(this, Burning.class).reignite(this);
 		if (sprite != null){
 			sprite.emitter().burst(FlameParticle.FACTORY, 20);
 			sprite.showStatus(CharSprite.WARNING, Messages.get(this, "maze_torched_status"));
@@ -186,7 +186,10 @@ public class Goo extends Mob {
 			sprite.idle();
 		}
 
-		//Maze Tower: 횃불 효과 - 체력이 절반이 될 때까지 계속 불탄다
+		//Maze Tower: 불이 붙으면(횃불이든 화염 마법이든) 약점이 드러나 체력이 절반이 될 때까지 계속 불탄다
+		if (maze() && !torched && buff(Burning.class) != null && HP*2 > HT){
+			torchHit();
+		}
 		if (maze() && torched){
 			if (HP*2 <= HT){
 				torched = false;

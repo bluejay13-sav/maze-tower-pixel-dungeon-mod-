@@ -1084,6 +1084,7 @@ public abstract class Char extends Actor {
 			if (src instanceof Electricity)                             icon = FloatingText.SHOCKING;
 			if (src instanceof Bleeding)                                icon = FloatingText.BLEEDING;
 			if (src instanceof ToxicGas)                                icon = FloatingText.TOXIC;
+			if (src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor) icon = FloatingText.TOXIC; //Maze Tower: 마력 증기도 독가스처럼 표시
 			if (src instanceof Corrosion)                               icon = FloatingText.CORROSION;
 			if (src instanceof Poison)                                  icon = FloatingText.POISON;
 			if (src instanceof Ooze)                                    icon = FloatingText.OOZE;

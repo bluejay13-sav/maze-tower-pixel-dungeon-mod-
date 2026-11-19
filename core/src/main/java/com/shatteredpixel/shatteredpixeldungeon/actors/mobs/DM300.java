@@ -203,6 +203,20 @@ public class DM300 extends Mob {
 
 		if (MazeBosses.ENABLED) mazeTick(); //Maze Tower
 
+		//Maze Tower: 마도 골렘은 주인공을 보기 전까지 움직이지 않는다
+		if (GolemAbilities.golem() && state != HUNTING && paralysed <= 0){
+			if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){
+				fieldOfView = new boolean[Dungeon.level.length()];
+			}
+			Dungeon.level.updateFieldOfView( this, fieldOfView );
+			if (!fieldOfView[Dungeon.hero.pos] || Dungeon.hero.invisible > 0){
+				spend( TICK );
+				return true;
+			}
+			beckon( Dungeon.hero.pos );
+			state = HUNTING;
+		}
+
 		if (paralysed > 0){
 			return super.act();
 		}
@@ -377,7 +391,7 @@ public class DM300 extends Mob {
 
 			if (Dungeon.level.heroFOV[pos]) {
 				if (buff(Barrier.class) == null) {
-					GLog.w(Messages.get(this, "shield"));
+					GLog.w(MazeBosses.ENABLED ? Messages.get(this, "maze_shield", name()) : Messages.get(this, "shield")); //Maze Tower: 보스 이름
 				}
 				Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 				sprite.emitter().start(SparkParticle.STATIC, 0.05f, 20);
@@ -570,7 +584,7 @@ public class DM300 extends Mob {
 	public boolean isInvulnerable(Class effect) {
 		if (supercharged && !invulnWarned){
 			invulnWarned = true;
-			GLog.w(Messages.get(this, "charging_hint"));
+			GLog.w(MazeBosses.ENABLED ? Messages.get(this, "maze_charging_hint", name()) : Messages.get(this, "charging_hint")); //Maze Tower: 보스 이름
 		}
 		return supercharged || super.isInvulnerable(effect);
 	}

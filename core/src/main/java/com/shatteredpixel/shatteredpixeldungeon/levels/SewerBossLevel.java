@@ -152,9 +152,14 @@ public class SewerBossLevel extends SewerLevel {
 			}
 		Random.popGenerator();
 
-		//Maze Tower: 썩은 수액 덩어리의 약점 - 맵 어딘가에 횃불 하나
+		//Maze Tower: 썩은 수액 덩어리의 약점 - 횃불 하나. 숨은 방에 놓이지 않게, 반드시 지나가는 입구 방에 둔다
 		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
-			drop(new com.shatteredpixel.shatteredpixeldungeon.items.BossTorch(), randomDropCell());
+			int torchPos;
+			int tries = 100;
+			do {
+				torchPos = pointToCell(roomEntrance.random());
+			} while (tries-- > 0 && (torchPos == entrance() || solid[torchPos] || !passable[torchPos] || heaps.get(torchPos) != null));
+			drop(new com.shatteredpixel.shatteredpixeldungeon.items.BossTorch(), torchPos);
 		}
 	}
 

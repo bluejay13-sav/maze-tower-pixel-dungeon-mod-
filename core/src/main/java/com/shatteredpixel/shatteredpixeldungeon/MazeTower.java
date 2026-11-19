@@ -400,18 +400,23 @@ public class MazeTower {
 	public static final int   SAP_PUDDLE_TURNS    = 30;    //수액 웅덩이 지속
 	public static final int   SAP_MOVE_HEAL       = 10;    //수액 칸으로 옮기면 회복
 
+	public static final int   TORCH_FIRE            = 4;   //횃불: 떨어진 자리에 붙는 불의 양
+
 	//10층 그림자 간수
 	public static final float TALISMAN_ROOT_TURNS   = 2f;  //봉인 부적: 맞은 대상 속박
 	public static final int   WARDEN_SOULS          = 4;   //영혼 해방: 불러내는 죄수의 영혼 수
 	public static final int   WARDEN_SOUL_RECAST_DEAD = 3; //이만큼 쓰러지면 다시 쓸 수 있다
 	public static final int   CAGE_HP               = 30;  //부적 철창 체력
-	public static final int   WARDEN_BEAMS          = 6;   //만개 광선 갈래 수 (8방향 중 무작위)
+	public static final int   WARDEN_BEAMS          = 8;   //만개 광선 갈래 수 (8방향 전부)
 	public static final int   WARDEN_BEAM_CHARGE    = 2;   //만개 광선 기 모으기 턴
+	public static final int   WARDEN_BEAM_AREA      = 2;   //만개 광선: 간수 주변 이 칸 수 안도 모두 맞는다
+	public static final int   WARDEN_LOST_TURNS     = 2;   //주인공을 이 턴 동안 못 찾으면 무작위로 돌아다닌다
 	public static final int   WARDEN_BEAM_MIN       = 5;   //만개 광선 피해 = MIN + 층 ~ MAX + 2×층 (원작 폭탄과 같음)
 	public static final int   WARDEN_BEAM_MAX       = 10;
 
 	//15층 마도 골렘 / 수정 거인
 	public static final int   VEIN_HP              = 20;  //광맥 체력
+	public static final int   VEIN_COUNT           = 15;  //마도 골렘 보스방에 무작위로 까는 광맥 수
 	public static final int   VAPOR_TURNS          = 15;  //마력 증기 지속
 	public static final int   VAPOR_MANA_DRAIN     = 10;  //마력 증기 안에서 턴당 마나 감소
 	public static final float GOLEM_WET_STUN       = 5f;  //마도 골렘이 젖으면 기절

@@ -226,9 +226,12 @@ public class WndHeroInfo extends WndTabbed {
 				info[i].maxWidth((int)width - 20);
 				info[i].setPos(20, pos);
 
+				//Maze Tower: 직업 설명 문단이 아이콘보다 많으면 아이콘 없이 (튕김 방지)
+				if (i < icons.length) {
 				icons[i].x = (20-icons[i].width())/2;
 				icons[i].y = info[i].top() + (info[i].height() - icons[i].height())/2;
 				PixelScene.align(icons[i]);
+				}
 
 				pos = info[i].bottom() + 4*MARGIN;
 			}
