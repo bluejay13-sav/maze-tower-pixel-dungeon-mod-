@@ -561,8 +561,8 @@ public class DM300 extends Mob {
 			}
 		}
 
-		//Maze Tower: 마도 골렘은 기둥으로 충전하지 않는다 (체력이 깎여도 무적 단계 없음)
-		if (GolemAbilities.golem()) return;
+		//Maze Tower: 마도 골렘·수정 거인은 기둥으로 충전하지 않는다 (체력이 깎여도 무적 단계·기둥 번개 없음)
+		if (GolemAbilities.golem() || GolemAbilities.crystal()) return;
 
 		int threshold;
 		if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){
@@ -653,7 +653,7 @@ public class DM300 extends Mob {
 
 	@Override
 	public boolean isAlive() {
-		if (GolemAbilities.golem()) return super.isAlive(); //Maze Tower: 기둥 없음
+		if (GolemAbilities.golem() || GolemAbilities.crystal()) return super.isAlive(); //Maze Tower: 기둥 충전 없음
 		return super.isAlive() || pylonsActivated < totalPylonsToActivate();
 	}
 

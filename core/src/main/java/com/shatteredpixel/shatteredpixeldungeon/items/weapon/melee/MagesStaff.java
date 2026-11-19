@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ArtifactRecharge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -105,7 +106,8 @@ public class MagesStaff extends MeleeWeapon {
 	public ArrayList<String> actions(Hero hero) {
 		ArrayList<String> actions = super.actions( hero );
 		actions.add(AC_IMBUE);
-		if (wand!= null && wand.curCharges > 0) {
+		//Maze Tower: 지팡이는 장착했을 때만 쏠 수 있다
+		if (wand!= null && wand.curCharges > 0 && (MazeTower.ORIGINAL_STAFF_ZAP || isEquipped(hero))) {
 			actions.add( AC_ZAP );
 		}
 		return actions;
@@ -113,6 +115,8 @@ public class MagesStaff extends MeleeWeapon {
 
 	@Override
 	public String defaultAction() {
+		//Maze Tower: 장착하지 않았으면 기본 행동은 장착
+		if (!MazeTower.ORIGINAL_STAFF_ZAP && Dungeon.hero != null && !isEquipped(Dungeon.hero)) return AC_EQUIP;
 		return AC_ZAP;
 	}
 
@@ -142,6 +146,12 @@ public class MagesStaff extends MeleeWeapon {
 			GameScene.selectItem(itemSelector);
 
 		} else if (action.equals(AC_ZAP)){
+
+			//Maze Tower: 장착하지 않은 지팡이로는 쏠 수 없다
+			if (!MazeTower.ORIGINAL_STAFF_ZAP && !isEquipped(hero)){
+				GLog.w(Messages.get(this, "maze_not_equipped"));
+				return;
+			}
 
 			if (wand == null) {
 				GameScene.show(new WndUseItem(null, this));

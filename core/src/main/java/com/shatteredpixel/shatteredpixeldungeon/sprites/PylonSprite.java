@@ -64,7 +64,8 @@ public class PylonSprite extends MobSprite {
 			activeIdle = idle.clone();
 			run = idle.clone();
 			attack = idle.clone();
-			die = idle.clone();
+			die = new Animation( 20, false ); //부서지면 빠르게 사라진다
+			die.frames( f, 0 );
 		}
 
 		play( idle );
@@ -98,6 +99,13 @@ public class PylonSprite extends MobSprite {
 			Sample.INSTANCE.play(Assets.Sounds.BLAST);
 		}
 		super.play(anim);
+	}
+
+	//Maze Tower: 수정 기둥은 부서지면 빠르게 사라진다
+	@Override
+	protected float fadeTime() {
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal()) return com.shatteredpixel.shatteredpixeldungeon.MazeTower.PROP_FADE_TIME;
+		return super.fadeTime();
 	}
 
 	@Override

@@ -32,6 +32,9 @@ public class MazeTower {
 	//원작 갑옷 능력(왕의 왕관)을 얻을 수 있는지 여부
 	public static final boolean ORIGINAL_ARMOR_ABILITY = false;
 
+	//원작처럼 장착하지 않은 마법사의 지팡이로도 쏠 수 있게 할지 (마탑: 장착해야만 쏜다)
+	public static final boolean ORIGINAL_STAFF_ZAP = false;
+
 	//원작 전사의 부서진 인장(방어막)을 시작 장비로 줄지 여부
 	public static final boolean WARRIOR_SEAL = true; //(결정) 직업 단계부터 다시 준다
 
@@ -411,6 +414,8 @@ public class MazeTower {
 	public static final int   WARDEN_BEAM_CHARGE    = 2;   //만개 광선 기 모으기 턴
 	public static final int   WARDEN_BEAM_AREA      = 2;   //만개 광선: 간수 주변 이 칸 수 안도 모두 맞는다
 	public static final int   WARDEN_LOST_TURNS     = 2;   //주인공을 이 턴 동안 못 찾으면 무작위로 돌아다닌다
+	public static final int   WARDEN_IDLE_CD_MIN    = 5;   //순간이동 직후 몫을 다 쓴 뒤에도 이 턴~MAX턴마다 스킬을 쓴다 (순간이동 직후엔 원작처럼 더 자주)
+	public static final int   WARDEN_IDLE_CD_MAX    = 8;
 	public static final int   WARDEN_BEAM_MIN       = 5;   //만개 광선 피해 = MIN + 층 ~ MAX + 2×층 (원작 폭탄과 같음)
 	public static final int   WARDEN_BEAM_MAX       = 10;
 
@@ -427,6 +432,7 @@ public class MazeTower {
 	public static final int   CRYSTAL_WATER_TILES  = 14;  //수정 거인 보스방에 숨은 물 칸 수
 	public static final int   CRYSTAL_FIRE_PYLONS  = 2;   //수정 거인: 수정 기둥을 이만큼 부수기 전까지 화상 면역
 	public static final float CRYSTAL_MELT_DMG_TAKEN = 1.3f; //수정 거인: 수정이 녹은 동안 받는 피해 배율 (방어력 0과 함께)
+	public static final float PROP_FADE_TIME       = 0.3f; //부적 철창·광맥·수정 기둥이 부서진 뒤 사라지는 시간(초, 원작 몬스터는 3초)
 
 	// ===== 적에게 둘러싸였을 때 =====
 	public static final int   CROWD_ENEMIES      = 3;   //주인공을 노리는 적이 이만큼 이상이면

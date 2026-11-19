@@ -489,6 +489,12 @@ public class Tengu extends Mob {
 		if (HP > HT/2) return false;
 		
 		if (abilitiesUsed >= targetAbilityUses()){
+			//Maze Tower: 순간이동 뒤에 정해진 횟수를 다 쓴 뒤에도 가끔(WARDEN_IDLE_CD_MIN~MAX턴마다) 스킬을 쓴다
+			if (MazeBosses.ENABLED){
+				abilityCooldown--;
+				if (abilityCooldown < 0) abilityCooldown = Random.IntRange(MazeTower.WARDEN_IDLE_CD_MIN, MazeTower.WARDEN_IDLE_CD_MAX);
+				return abilityCooldown == 0;
+			}
 			return false;
 		} else {
 			

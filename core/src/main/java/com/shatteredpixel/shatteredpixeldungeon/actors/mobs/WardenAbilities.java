@@ -277,11 +277,9 @@ public class WardenAbilities {
 			if (!diag){
 				angle = dx > 0 ? 0 : (dx < 0 ? 180 : (dy > 0 ? 90 : 270));
 			} else {
-				//대각 그림은 오른쪽 위(NE)를 향한다고 본다
-				if (dx > 0 && dy < 0)      angle = 0;
-				else if (dx > 0)           angle = 90;
-				else if (dy > 0)           angle = 180;
-				else                       angle = 270;
+				//대각 그림은 왼쪽 위 → 오른쪽 아래(\) 줄이다. 줄은 앞뒤가 같으므로
+				//\ 방향(오른쪽 아래·왼쪽 위)은 그대로, / 방향(오른쪽 위·왼쪽 아래)은 90도 돌린다
+				angle = (dx * dy > 0) ? 0 : 90;
 			}
 			((Visual)c).angle = angle;
 			GameScene.effect(c);

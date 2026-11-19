@@ -33,6 +33,11 @@ public class MobSprite extends CharSprite {
 
 	private static final float FADE_TIME	= 3f;
 	private static final float FALL_TIME	= 1f;
+
+	//Maze Tower: 쓰러진 뒤 사라지는 데 걸리는 시간 (철창·광맥·수정 기둥은 짧게)
+	protected float fadeTime(){
+		return FADE_TIME;
+	}
 	
 	@Override
 	public void update() {
@@ -46,7 +51,7 @@ public class MobSprite extends CharSprite {
 		super.onComplete( anim );
 		
 		if (anim == die && parent != null) {
-			parent.add( new AlphaTweener( this, 0, FADE_TIME ) {
+			parent.add( new AlphaTweener( this, 0, fadeTime() ) { //Maze Tower: 사라지는 시간을 그림마다 바꿀 수 있게
 				@Override
 				protected void onComplete() {
 					MobSprite.this.killAndErase();

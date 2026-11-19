@@ -85,17 +85,15 @@ public class SoulCage extends Mob {
 			run = idle.clone();
 			attack = idle.clone();
 			zap = idle.clone();
-			die = idle.clone();
+			//부서지면 곧바로 빠르게 사라진다 (MazeTower.PROP_FADE_TIME)
+			die = new Animation(20, false);
+			die.frames(f, 0);
 			play(idle);
 		}
 
 		@Override
-		public void onComplete( Animation anim ) {
-			if (anim == die){
-				killAndErase();
-				return;
-			}
-			super.onComplete(anim);
+		protected float fadeTime() {
+			return com.shatteredpixel.shatteredpixeldungeon.MazeTower.PROP_FADE_TIME;
 		}
 	}
 }
