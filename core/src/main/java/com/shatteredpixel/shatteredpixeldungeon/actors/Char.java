@@ -650,6 +650,12 @@ public abstract class Char extends Actor {
 			defStat = INFINITE_EVASION;
 		}
 
+		//Maze Tower: 무너진 돌무더기는 피할 수 없다 (반드시 맞는다)
+		if (defender instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rubble){
+			acuStat = INFINITE_ACCURACY;
+			defStat = 0;
+		}
+
 		//if accuracy or evasion are large enough, treat them as infinite.
 		//note that infinite evasion beats infinite accuracy
 		if (defStat >= INFINITE_EVASION){

@@ -79,6 +79,16 @@ public class MazeRetreat {
 		if (level instanceof RegularLevel && !Dungeon.bossLevel()){
 			placeRubble(level, arrival);
 		}
+		if (!Dungeon.bossLevel()) refillMobs(level);
+	}
+
+	//역행 중 층에 들어설 때 적을 다시 깐다: 원래 그 층 적 수(mobLimit)의 RETREAT_MOB_FILL 비율까지 (원작 승천보다 적게)
+	private static void refillMobs( Level level ){
+		int target = Math.round(level.mobLimit() * MazeTower.RETREAT_MOB_FILL);
+		int tries = 0;
+		while (level.mobCount() < target && tries++ < 30){
+			level.spawnMob(12);
+		}
 	}
 
 	//26층 쪽(이미 지나온 층)으로 가는 계단은 무너져 쓸 수 없다

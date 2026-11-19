@@ -68,7 +68,7 @@ public class TowerCollapse extends Buff {
 			turnsLeft--;
 			if (turnsLeft == 0){
 				GLog.n(Messages.get(this, "collapse"));
-				PixelScene.shake(3, 1f);
+				PixelScene.shake(2, 0.5f);
 				Sample.INSTANCE.play(Assets.Sounds.ROCKS);
 			}
 		} else {
@@ -102,12 +102,17 @@ public class TowerCollapse extends Buff {
 		return true;
 	}
 
-	//주인공 주변 몇 칸 안의 칸 하나에 경고 그림자 → 다음 턴에 돌이 떨어진다
+	//주인공 주변 몇 칸 안의 칸들에 경고 그림자 → 다음 턴에 돌이 떨어진다
+	//한 번에 떨어지는 돌 수는 붕괴 뒤 시간이 갈수록 늘어난다
 	private void dropRock(){
 		ArrayList<Integer> cells = RetreatEffects.floorCellsNear(target.pos, MazeTower.ROCK_RANGE);
 		if (cells.isEmpty()) return;
+		int count = Math.min(MazeTower.ROCK_COUNT_MAX,
+				MazeTower.ROCK_COUNT_START + (int)(sinceCollapse / MazeTower.ROCK_COUNT_UP_EVERY));
 		ArrayList<Integer> pos = new ArrayList<>();
-		pos.add(Random.element(cells));
+		while (pos.size() < count && !cells.isEmpty()){
+			pos.add(cells.remove(Random.Int(cells.size())));
+		}
 		Buff.append(target, TowerRockFall.class, MazeTower.ROCK_WARN_TURNS).setRockPositions(pos);
 	}
 
@@ -185,7 +190,7 @@ public class TowerCollapse extends Buff {
 					Char ch = Actor.findChar(c);
 					if (ch != null) hit(ch);
 				}
-				PixelScene.shake(2, 0.4f);
+				PixelScene.shake(0.6f, 0.15f); //살짝만 흔들린다
 				Sample.INSTANCE.play(Assets.Sounds.ROCKS, 0.8f);
 			}
 			detach();

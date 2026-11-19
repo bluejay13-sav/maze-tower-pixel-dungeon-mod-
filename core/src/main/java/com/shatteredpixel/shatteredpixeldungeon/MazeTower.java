@@ -345,11 +345,14 @@ public class MazeTower {
 		return COLLAPSE_TURNS_TOP - (26 - depth) * COLLAPSE_TURNS_STEP;
 	}
 
-	//낙석 (붕괴 턴이 0이 된 뒤): 처음 8턴마다 1개, 10턴마다 간격 1턴씩 짧아져 최소 2턴. 간격은 층 배율로 나눈다
-	public static final float ROCK_START_INTERVAL = 8f;
+	//낙석 (붕괴 턴이 0이 된 뒤): 처음 10턴마다 2개, 10턴마다 간격 1턴씩 짧아져 최소 4턴, 20턴마다 1개씩 늘어 최대 4개. 간격은 층 배율로 나눈다
+	public static final float ROCK_START_INTERVAL = 10f;
 	public static final float ROCK_SPEEDUP_EVERY  = 10f;
-	public static final float ROCK_MIN_INTERVAL   = 2f;
+	public static final float ROCK_MIN_INTERVAL   = 4f;
 	public static final int   ROCK_RANGE          = 3;   //주인공 주변 몇 칸 안에 떨어지는지
+	public static final int   ROCK_COUNT_START    = 2;   //한 번에 떨어지는 돌 수 (처음)
+	public static final int   ROCK_COUNT_MAX      = 4;   //최대
+	public static final float ROCK_COUNT_UP_EVERY = 20f; //붕괴 뒤 이 턴마다 1개씩 늘어난다
 	public static final float ROCK_WARN_TURNS     = 1f;  //경고 그림자가 먼저 보이는 턴
 	public static final int   ROCK_DMG_MIN        = 6;   //원작 DM-300 낙석과 같다
 	public static final int   ROCK_DMG_MAX        = 12;
@@ -362,8 +365,11 @@ public class MazeTower {
 	//적 광폭화: 역행 중 모든 적. 공격력 +30%, 도망치지 않음
 	public static final float BERSERK_DMG = 0.30f;
 
+	//역행 중 층에 들어설 때 적을 다시 깐다: 그 층 원래 적 수(mobLimit)의 이 비율까지 (원작 승천보다 적게)
+	public static final float RETREAT_MOB_FILL = 0.6f;
+
 	//막힌 길: 돌무더기 (층마다 1~2개, 길을 완전히 막지 않는 칸에만)
-	public static final int RUBBLE_HP  = 40;
+	public static final int RUBBLE_HP  = 100; //회피 불가 (반드시 맞는다)
 	public static final int RUBBLE_MIN = 1;
 	public static final int RUBBLE_MAX = 2;
 

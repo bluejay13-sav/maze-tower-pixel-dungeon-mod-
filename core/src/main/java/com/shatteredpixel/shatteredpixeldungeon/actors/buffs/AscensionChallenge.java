@@ -209,6 +209,13 @@ public class AscensionChallenge extends Buff {
 			chal.stacks -= 1;
 		}
 		chal.stacks = Math.max(0, chal.stacks);
+		//Maze Tower: 저주가 잠잠해졌지만 탑을 빠져나가기 전까지는 완전히 풀리지 않는다
+		if (!MazeTower.ORIGINAL_ENDING && chal.stacks <= 0 && oldStacks > 0){
+			chal.stacksLowered = true;
+			GLog.p(Messages.get(AscensionChallenge.class, "maze_calm"));
+			BuffIndicator.refreshHero();
+			return;
+		}
 		if (!chal.stacksLowered) {
 			chal.stacksLowered = true;
 			GLog.p(Messages.get(AscensionChallenge.class, "weaken"));

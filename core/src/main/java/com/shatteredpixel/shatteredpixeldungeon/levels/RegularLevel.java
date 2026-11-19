@@ -206,7 +206,7 @@ public abstract class RegularLevel extends Level {
 	@Override
 	public int mobLimit() {
 		if (Dungeon.depth <= 1){
-			if (!Statistics.amuletObtained || !com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_ENDING) return 0; //Maze Tower: 역행 중 1층 적 수 증가 없음
+			if (!Statistics.amuletObtained) return 0;
 			else                            return 10;
 		}
 
