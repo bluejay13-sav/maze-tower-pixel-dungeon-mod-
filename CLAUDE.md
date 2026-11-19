@@ -20,7 +20,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 ## 진행 상태
 테스트 빌드 10단계 모두 완료(사용자 점검 플레이 통과). 아래 명세는 실제 구현과 사용자 결정에 맞춰 갱신되어 있다.
 이펙트 단계(11~14)도 완료. 사용자와 함께 여러 번 조정했고, 명세 9번은 최종 구현 기준으로 적혀 있다.
-직업 단계(15~19)도 완료. 20단계(전사 3차 검투사), 21단계(전사 4차 결실), 22단계(클리어 조건·전직 아이템 그림), 23단계(원소·마법봉 보강, 지팡이 합성 스킬), 24-1단계(두 갈래 엔딩과 역행)도 완료. 원작의 다른 무기 처리는 보류. 다음 작업은 아래 "앞으로의 진행 단계"를 따르고, 단계마다 시작 전에 사용자와 기획을 확정한다.
+직업 단계(15~19)도 완료. 20단계(전사 3차 검투사), 21단계(전사 4차 결실), 22단계(클리어 조건·전직 아이템 그림), 23단계(원소·마법봉 보강, 지팡이 합성 스킬), 24-1단계(두 갈래 엔딩과 역행), 24-2단계(캐릭터 이름)도 완료. 원작의 다른 무기 처리는 보류. 다음 작업은 아래 "앞으로의 진행 단계"를 따르고, 단계마다 시작 전에 사용자와 기획을 확정한다.
 (구현)·(결정) 표시는 원래 명세와 달라졌거나 명세에 없던 것을 구현·결정한 부분이다.
 
 ## 준비
@@ -575,6 +575,8 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 비워 두면 직업 이름(예: 전사)을 기본값으로 쓴다. 최대 12글자, 한글·영어·숫자 허용, 앞뒤 공백은 지운다.
 - 이름은 저장 데이터에 남고 다음 곳에 보인다: 영웅 정보 창, 랭킹(랭킹 상세 포함), 사망·엔딩 메시지.
 - 나중에 익스트랙션의 캐릭터 보관함·무덤에서도 이 이름을 쓴다(지금은 저장만).
+- (구현) 영웅 선택 화면의 **시작** 버튼을 누르면 이름 입력 창이 뜬다("시작" / "취소"). 일일 도전은 묻지 않고 직업 이름. 이름 다듬기는 `MazeNames.clean`, 저장은 `Hero.mazeName`(번들 `maze_name`), 랭킹은 `Rankings.Record.mazeName`.
+- (구현) 보이는 곳: 영웅 정보 창 첫 줄(원작 `Hero.name()`을 덮어씀), 랭킹 목록 설명 앞 "이름 - "과 랭킹 상세 제목 첫 줄, 사망 기록 "(이름)의 여정이 여기서 끝났다...", 아뮬렛 선택 화면 첫머리, 탈출 엔딩 화면(`SurfaceScene`) 문구. 원작 NPC(유령·임프)·드워프 왕이 주인공을 부르는 자리에도 이 이름이 쓰인다.
 
 ### 18. 사진으로 캐릭터 꾸미기 (28-1단계 명세, 그림 작업 뒤)
 - **열리는 조건**: 역행을 처음 클리어한 뒤부터, 새 캐릭터를 만들 때 사진을 등록할 수 있다.
@@ -670,7 +672,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 22. **클리어 조건과 전직 아이템 외형**: 명세 14번, 15번 — 완료
 23. **원소·마법봉 보강과 마법사 지팡이 합성 스킬**: 명세 16번 — 완료
 24-1. **두 갈래 엔딩과 역행**: 명세 14번. 아뮬렛 습득(배드 엔딩) / 파괴(역행). 역행 규칙 확정 — 완료
-24-2. **캐릭터 이름**: 명세 17번
+24-2. **캐릭터 이름**: 명세 17번 — 완료
 24. **보스 구현**: 5·10·15·20·25층 보스를 마탑 컨셉에 맞게. 원작 패턴 유지 + 이름·설정 변경 + 마탑 패턴·약점 추가. 기획: Claude 문서 "마탑 보스 외형과 패턴 초안". 그림·동작·5~15층 이펙트는 명세 19번(준비됨). 20·25층 패턴과 이펙트는 기획 중
 25. **잡몹 구현**: 구역별 일반 몬스터를 마탑 컨셉에 맞게(이름·설정, 필요하면 패턴). 기획 예정
 26. **유물·반지·장신구 다듬기**: 원작 유물(피의 성배 등), 반지, 장신구(미믹 이빨 등)를 마탑 시스템(마나, 스킬, 원소 반응, 전직 특성)에 맞게. 대기로 마나를 얻는 규칙과 부딪히는 것(시간을 멈추거나 대기를 빠르게 하는 효과)을 먼저 점검
@@ -723,6 +725,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 클리어·그림: `scenes/AmuletScene`(머무르기 없음), `sprites/MazeItemSprites` + `ItemSprite.frame`(새 아이템 그림), `effects/particles/BloomPetalParticle`(만개의 핵 꽃잎)
 - 23단계: `items/wands/StaffSkills.java`(합성 스킬 4종), `actors/buffs/Frostbite.java`(혹한). 원작 수정: `Wand`(zapper 분기·충전 1), `WandMana`(스킬 이름·설명), `MagesStaff`(`mazeImbued`), `WandOfLightning`(정전기), `ElementalReactions`(혹한을 냉기로 판정), `Char.spend`(혹한 느려짐), `Level.setCellToWater`·`GeyserTrap`(젖음)
 - 24-1단계: `MazeRetreat.java`(엔딩·역행 시작·돌무더기 배치·적 다시 깔기), `actors/buffs/TowerCollapse.java`(붕괴 턴·낙석 `TowerRockFall`·먼지·꽃), `actors/buffs/RetreatFrenzy.java`(광폭), `actors/mobs/Rubble.java` + `sprites/RubbleSprite.java`(돌무더기), `effects/RetreatEffects.java`(맵 연출). 원작 수정: `AscensionChallenge`(아뮬렛의 저주), `AmuletScene`(습득/파괴), `Rankings`(타락·탈출 문구), `SewerLevel`(탈출), `Level`(계단 막기·`mazeBossPos`·재등장 속도), `Dungeon`(순간이동 막기), `Mob.act`·`Char.attack`(광폭), `Char.hit`(돌무더기 반드시 맞음), `Hero.attackSkill`(명중률 감소), `GameScene.create`(역행 시작·연출), `DemonSpawner`, 보스 4종 die
+- 24-2단계: `MazeNames.java`(이름 다듬기·시작할 때 이름). 원작 수정: `HeroSelectScene`(시작 버튼 → 이름 입력), `Dungeon.init`, `Hero`(`mazeName`·`name()`·사망 문구), `Rankings`·`WndRanking`(이름 표시), `AmuletScene`·`SurfaceScene`(엔딩 문구)
 - 빙결 미루기: `ElementalReactions.beginDefer/endDefer` (`Char.attack`, `Char.damage`에서 호출)
 - 2차 특성 상태 아이콘: `BloomEffects`의 `ComboTracker`·`FlowTracker`·`EchoTracker`·`ParryTracker`
 - 치트: `windows/WndCheats.java`
