@@ -455,7 +455,7 @@ public class CityBossLevel extends Level {
 	public static class CustomGroundVisuals extends CustomTilemap {
 
 		{
-			texture = Assets.Environment.CITY_BOSS;
+			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cityBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
 			tileW = 15;
 			tileH = 48;
 		}
@@ -680,7 +680,7 @@ public class CityBossLevel extends Level {
 	public static class CustomTerrainVisuals extends CustomTilemap {
 
 		{
-			texture = Assets.Environment.CITY_BOSS;
+			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cityBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
 			tileW = 15;
 			tileH = 48;
 		}
@@ -755,7 +755,7 @@ public class CityBossLevel extends Level {
 
 	public static class CustomWallVisuals extends CustomTilemap {
 		{
-			texture = Assets.Environment.CITY_BOSS;
+			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cityBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
 			tileW = 15;
 			tileH = 48;
 		}

@@ -52,4 +52,16 @@ public class MazeBosses {
 		}
 		return null;
 	}
+
+	//15층 보스방 그림: 그 판의 보스(마도 골렘 / 수정 거인)에 맞춘 마탑 그림
+	public static String cavesBossTex(){
+		if (!ENABLED) return Assets.Environment.CAVES_BOSS;
+		return crystalGiant() ? Assets.Environment.MAZE_CAVES_BOSS_CRYSTAL : Assets.Environment.MAZE_CAVES_BOSS_GOLEM;
+	}
+
+	//20층 보스방 그림: 그 판의 보스(망령 왕 / 마도시의 여제)에 맞춘 마탑 그림
+	public static String cityBossTex(){
+		if (!ENABLED) return Assets.Environment.CITY_BOSS;
+		return empress() ? Assets.Environment.MAZE_CITY_BOSS_EMPRESS : Assets.Environment.MAZE_CITY_BOSS_WRAITH;
+	}
 }

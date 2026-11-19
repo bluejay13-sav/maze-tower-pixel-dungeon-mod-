@@ -747,7 +747,7 @@ public class CavesBossLevel extends Level {
 	public static class CityEntrance extends CustomTilemap{
 
 		{
-			texture = Assets.Environment.CAVES_BOSS;
+			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cavesBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
 		}
 
 		private static short[] entryWay = new short[]{
@@ -805,7 +805,7 @@ public class CavesBossLevel extends Level {
 	public static class EntranceTerrain extends CustomTilemap {
 
 		{
-			texture = Assets.Environment.CAVES_BOSS;
+			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cavesBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
 		}
 
 		private static short[] entryWay = new short[]{
@@ -844,7 +844,7 @@ public class CavesBossLevel extends Level {
 	public static class EntranceOverhang extends CustomTilemap{
 
 		{
-			texture = Assets.Environment.CAVES_BOSS;
+			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cavesBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
 		}
 
 		private static short[] entryWay = new short[]{
@@ -888,7 +888,7 @@ public class CavesBossLevel extends Level {
 	public static class ArenaVisuals extends CustomTilemap {
 
 		{
-			texture = Assets.Environment.CAVES_BOSS;
+			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cavesBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
 		}
 
 		@Override

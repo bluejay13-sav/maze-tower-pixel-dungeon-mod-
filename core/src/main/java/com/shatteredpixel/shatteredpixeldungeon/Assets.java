@@ -72,6 +72,12 @@ public class Assets {
 		public static final String CAVES_BOSS       = "environment/custom_tiles/caves_boss.png";
 		public static final String CITY_QUEST       = "environment/custom_tiles/city_quest.png";
 		public static final String CITY_BOSS        = "environment/custom_tiles/city_boss.png";
+		//Maze Tower: 마탑 특수 방 그림 (원작 그림과 칸 배치가 같다)
+		public static final String MAZE_CAVES_BOSS_GOLEM   = "environment/custom_tiles/maze_caves_boss_golem.png";
+		public static final String MAZE_CAVES_BOSS_CRYSTAL = "environment/custom_tiles/maze_caves_boss_crystal.png";
+		public static final String MAZE_CITY_BOSS_WRAITH   = "environment/custom_tiles/maze_city_boss_wraith.png";
+		public static final String MAZE_CITY_BOSS_EMPRESS  = "environment/custom_tiles/maze_city_boss_empress.png";
+		public static final String MAZE_PRINCE_ROOM        = "environment/custom_tiles/maze_prince_room.png";
 		public static final String HALLS_SP         = "environment/custom_tiles/halls_special.png";
 	}
 	

@@ -126,10 +126,23 @@ public class RatKingRoom extends SecretRoom {
 		}
 	}
 
+	//Maze Tower: 쥐 왕의 방을 왕자의 방으로 (maze_prince_room.png: 0 침대, 1 침대 2, 2·3 책상, 4 의자, 5 책, 6 상자, 7 등불).
+	//가운데(쥐 왕 자리)는 침대, 석상 자리 8곳에는 가구를 놓는다. 석상의 솟은 부분·윗머리는 그리지 않는다.
+	public static final boolean MAZE_PRINCE = true;
+
+	//석상 자리(가운데에서 dx, dy = -2·0·2 칸)에 놓을 가구 번호
+	public static int princeFurniture( int dx, int dy ){
+		if (dx != 0 && dy != 0) return 7; //네 귀퉁이: 등불
+		if (dy < 0) return 5;               //위: 책
+		if (dx > 0) return 6;               //오른쪽: 상자
+		if (dy > 0) return 4;               //아래: 의자
+		return 1;                           //왼쪽: 침대 2
+	}
+
 	public static class RatKingRoomDeco extends CustomTilemap {
 
 		{
-			texture = Assets.Environment.RAT_KING_ROOM;
+			texture = MAZE_PRINCE ? Assets.Environment.MAZE_PRINCE_ROOM : Assets.Environment.RAT_KING_ROOM; //Maze Tower
 		}
 
 		@Override
@@ -140,7 +153,11 @@ public class RatKingRoom extends SecretRoom {
 			for (int y = 0; y < tileH; y++){
 				int cell = tileX + (tileY+y)*Dungeon.level.width();
 				for (int x = 0; x < tileW; x++){
-					if (x == 2 && y == 2){
+					if (MAZE_PRINCE && x == 2 && y == 2){
+						data[i] = 0; //Maze Tower: 가운데 침대
+					} else if (MAZE_PRINCE && Dungeon.level.map[cell] == Terrain.CUSTOM_DECO){
+						data[i] = princeFurniture(x - 2, y - 2); //Maze Tower: 가구
+					} else 					if (x == 2 && y == 2){
 						//center, pillow
 						data[i] = 3;
 					} else if (Dungeon.level.map[cell] == Terrain.CUSTOM_DECO){
@@ -164,6 +181,10 @@ public class RatKingRoom extends SecretRoom {
 				//custom visual for rat king statue examine
 				//TODO should make a method for this if we have to do it with any frequency
 				Image img = new Image(texture);
+				if (MAZE_PRINCE){ //Maze Tower: 살펴보기 그림도 그 자리의 가구
+					img.frame(princeFurniture(tileX - 2, tileY - 2) * 16, 0, 16, 16);
+					return img;
+				}
 				img.frame(64, 0, 16, 16);
 				return img;
 			} else {
@@ -210,7 +231,9 @@ public class RatKingRoom extends SecretRoom {
 			for (int y = 0; y < tileH; y++){
 				int cell = tileX + (tileY+y)*Dungeon.level.width();
 				for (int x = 0; x < tileW; x++){
-					if (Dungeon.level.map[cell] == Terrain.CUSTOM_DECO){
+					if (MAZE_PRINCE){
+						data[i] = -1; //Maze Tower: 가구는 솟은 부분이 없다
+					} else 					if (Dungeon.level.map[cell] == Terrain.CUSTOM_DECO){
 						//statue
 						data[i] = 1;
 					} else {
@@ -240,7 +263,9 @@ public class RatKingRoom extends SecretRoom {
 			for (int y = 0; y < tileH; y++){
 				int cell = tileX + (tileY+y)*Dungeon.level.width();
 				for (int x = 0; x < tileW; x++){
-					if (Dungeon.level.map[cell + Dungeon.level.width()] == Terrain.CUSTOM_DECO){
+					if (MAZE_PRINCE){
+						data[i] = -1; //Maze Tower: 가구는 윗머리가 없다
+					} else 					if (Dungeon.level.map[cell + Dungeon.level.width()] == Terrain.CUSTOM_DECO){
 						//statue overhang
 						data[i] = 2;
 					} else {
