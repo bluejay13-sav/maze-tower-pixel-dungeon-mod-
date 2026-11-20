@@ -1992,6 +1992,13 @@ public class Hero extends Char {
 			Dungeon.level.updateFieldOfView( this, fieldOfView );
 		}
 
+		//Maze Tower: 20층 망령 왕의 어둠 속에서는 한 칸씩만 움직인다 (먼 칸을 눌러도 걸어가지 않는다)
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing dk = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.find();
+		if (dk != null && dk.isDark() && cell != pos && !Dungeon.level.adjacent(pos, cell)){
+			GLog.w(Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.class, "one_step"));
+			return false;
+		}
+
 		if (!Dungeon.level.visited[cell] && !Dungeon.level.mapped[cell]
 				&& Dungeon.level.traps.get(cell) != null
 				&& Dungeon.level.traps.get(cell).visible

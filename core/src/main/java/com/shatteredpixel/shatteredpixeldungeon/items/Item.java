@@ -188,7 +188,7 @@ public class Item implements Bundlable {
 	}
 	
 	protected void onThrow( int cell ) {
-		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.noise(cell); //Maze Tower: 20층 망령 근위병은 던진 물건이 떨어진 쪽으로 간다
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.noise(cell, com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithGuard.NOISE_THROW); //Maze Tower: 20층 망령 근위병은 던진 물건이 떨어진 쪽으로 간다
 		Heap heap = Dungeon.level.drop( this, cell );
 		if (!heap.isEmpty()) {
 			heap.sprite.drop( cell );

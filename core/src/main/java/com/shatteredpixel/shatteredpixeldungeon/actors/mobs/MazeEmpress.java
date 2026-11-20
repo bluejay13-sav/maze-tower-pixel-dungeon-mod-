@@ -669,8 +669,12 @@ public class MazeEmpress extends Mob {
 		}
 		if (phase == 1) dmg = Math.round(dmg * MazeTower.EM_PETAL_TAKEN);   //꽃잎의 보호
 		if (phase == 3) dmg = Math.round(dmg * MazeTower.EM_PHASE3_TAKEN);  //시든 꽃관
+		//(결정) 단계가 넘어가는 피해는 다음 단계 최대 체력보다 1% 낮은 체력에서 멈춘다
+		float thr = phase == 1 ? MazeTower.EM_PHASE2_HP : phase == 2 ? MazeTower.EM_PHASE3_HP : 0f;
+		dmg = MazeBoss20.capPhaseDamage(this, dmg, thr);
 		int pre = HP;
 		super.damage(dmg, src);
+		MazeBoss20.settlePhaseHP(this, pre, thr);
 		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);
 		if (lock != null && !isImmune(src.getClass()) && !isInvulnerable(src.getClass())){
 			lock.addTime((pre - HP) / 3f);

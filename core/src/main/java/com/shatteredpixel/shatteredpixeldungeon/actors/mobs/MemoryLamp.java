@@ -165,19 +165,25 @@ public class MemoryLamp extends Mob {
 				idle = want;
 				if (curAnim != die) play(idle);
 			}
-			//켜진 등불 둘레 빛 (바닥에 반투명)
-			if (l.lit && glow == null && parent != null){
+			//켜진 등불 둘레 빛 (바닥에 반투명). (결정) 어둠 속에서 주인공 바로 옆에 있는 꺼진 등불은 희미하게 빛난다
+			WraithKing k = WraithKing.find();
+			boolean faint = !l.lit && !l.broken && k != null && k.isDark()
+					&& com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.adjacent(l.pos, com.shatteredpixel.shatteredpixeldungeon.Dungeon.hero.pos);
+			boolean glowOn = l.lit || faint;
+			if (glowOn && glow == null && parent != null){
 				glow = new Image("sprites/maze_fx20w_lamp_light.png");
 				PointF c = DungeonTilemap.tileCenterToWorld(l.pos);
 				glow.x = c.x - 24;
 				glow.y = c.y - 24;
-				glow.alpha(0.7f);
 				parent.addToBack(glow);
-			} else if (!l.lit && glow != null){
+			} else if (!glowOn && glow != null){
 				glow.killAndErase();
 				glow = null;
 			}
-			if (glow != null) glow.visible = visible;
+			if (glow != null){
+				glow.alpha(l.lit ? 0.7f : 0.22f + 0.08f * (float)Math.sin(com.watabou.noosa.Game.timeTotal * 3f));
+				glow.visible = visible;
+			}
 		}
 
 		@Override

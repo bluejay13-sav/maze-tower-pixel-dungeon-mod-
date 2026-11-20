@@ -517,12 +517,13 @@ public class MazeTower {
 	public static final int   B20_DEF           = 22;    //회피
 	public static final int   B20_ACC           = 26;    //명중
 	public static final int   B20_DR            = 10;    //방어 (0~10)
+	public static final float B20_PHASE_DROP    = 0.01f; //단계가 넘어가는 피해는 다음 단계 최대 체력보다 이만큼 낮은 체력에서 멈춘다
 	public static final int   B20_DMG_MIN       = 15;    //망령 왕 근접 피해
 	public static final int   B20_DMG_MAX       = 25;
 
 	//망령 왕
 	public static final float WK_PHASE2_HP      = 0.70f; //체력이 이 아래면 2단계 (어둠)
-	public static final float WK_PHASE3_HP      = 0.25f; //체력이 이 아래면 3단계 (깨진 왕관)
+	public static final float WK_PHASE3_HP      = 0.10f; //(결정, 바뀜 25%→10%) 체력이 이 아래면 3단계 (깨진 왕관, 기어다님)
 	public static final int   WK_ORB_INTERVAL   = 4;     //1단계: 이 턴마다 영혼 구슬
 	public static final int   WK_ORB_COUNT      = 2;     //한 번에 떨어지는 구슬 수
 	public static final float WK_ORB_HASTE      = 2f;    //주인공이 구슬을 먹으면 신속 (갱신만, 더하지 않음)
@@ -533,10 +534,13 @@ public class MazeTower {
 	public static final float WK_RAGE_ATK       = 1.0f;  //위의 추가 공격력 (+100%)
 	public static final int   WK_DARK_VIEW      = 1;     //어둠 속 주인공 시야
 	public static final int   WK_LAMPS          = 3;     //기억의 등불 수
+	public static final int   WK_LAMP_HERO_GAP  = 2;     //등불은 처음 생길 때 주인공 둘레 이 칸 안에는 생기지 않는다
+	public static final int   WK_LAMP_GAP       = 4;     //등불끼리 이 칸 수 이상 떨어진다 (서로 3칸 안에는 생기지 않음)
 	public static final int   WK_LAMP_TURNS     = 35;    //(결정, 바뀜 50→35) 등불이 켜져 있는 턴
 	public static final float WK_LAMP_STUN      = 3f;    //등불이 켜지면 왕 기절
 	public static final int   WK_ZOLT_INTERVAL  = 15;    //졸트라크 쿨타임
 	public static final int   WK_ZOLT_CHARGE    = 2;     //졸트라크 기 모으기 턴
+	public static final int   WK_ZOLT_DARK_CUT  = 2;     //어둠 속에서는 졸트라크 쿨타임이 이만큼 짧다 (15 → 13)
 	public static final int   WK_ZOLT_MIN       = 25;    //졸트라크 피해 (영혼 강화 전)
 	public static final int   WK_ZOLT_MAX       = 40;
 	public static final int   WK_GUARD_INTERVAL = 7;     //근위병 소환 쿨타임

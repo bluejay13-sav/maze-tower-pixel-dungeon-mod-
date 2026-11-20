@@ -5,6 +5,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -49,17 +50,30 @@ public class WraithGuard extends Mob {
 		return super.drRoll() + Random.NormalIntRange(0, MazeTower.WG_DR);
 	}
 
+	public static final int NOISE_STEP  = 1; //주인공 발소리
+	public static final int NOISE_THROW = 2; //던진 물건이 떨어진 소리 (먼저)
+
+	private int noisePriority = 0; //지금 쫓는 소리의 우선순위 (도착하면 0)
+
 	@Override
 	protected boolean act() {
 		WraithKing k = WraithKing.find();
-		viewDistance = (k != null && k.isDark()) ? MazeTower.WK_DARK_VIEW : 8;
+		boolean dark = k != null && k.isDark();
+		viewDistance = dark ? MazeTower.WK_DARK_VIEW : 8;
+		//쫓던 소리가 난 곳에 닿으면 다음 소리를 받는다
+		if (noisePriority > 0 && (pos == target || Dungeon.level.adjacent(pos, target))) noisePriority = 0;
 		return super.act();
 	}
 
-	//소리가 난 곳으로 간다
-	public void hear( int cell ){
-		if (state == SLEEPING || state == PASSIVE) state = WANDERING;
-		if (state == WANDERING) target = cell;
+	//(결정) 어둠 속에서는 소리를 따라간다: 던진 물건이 떨어진 칸이 먼저, 그다음이 주인공 발소리.
+	//던진 물건 쪽으로 가는 동안에는 발소리를 무시한다
+	public void hear( int cell, int priority ){
+		WraithKing k = WraithKing.find();
+		if (k == null || !k.isDark()) return;
+		if (priority < noisePriority) return;
+		noisePriority = priority;
+		if (state == SLEEPING || state == PASSIVE || state == HUNTING) state = WANDERING;
+		target = cell;
 	}
 
 	@Override

@@ -476,11 +476,33 @@ public class CityBossLevel extends Level {
 				int prev = lastHeroPos;
 				if (prev != -1 && prev != ch.pos && adjacent(prev, ch.pos)) lastHeroStep = ch.pos - prev;
 				lastHeroPos = ch.pos;
-				com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.noise(ch.pos); //근위병은 소리를 따라간다
+				com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.noise(ch.pos, com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithGuard.NOISE_STEP); //근위병은 소리를 따라간다
 				if (prev != -1 && prev != ch.pos) com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ElementTile.onHeroLeft(prev); //밟은 원소 타일은 사라진다
 				com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ElementTile.onHeroEnter(ch); //원소 상태로 반대 원소 타일에 들어서면 반응
 			}
 			com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.onOccupy(ch); //영혼 구슬
+		}
+	}
+
+	//Maze Tower: 망령 왕의 어둠 속에서 주인공 시야는 0 (자기 칸만). 단, 바로 옆 칸의 등불·푸른 눈·근위병은
+	//보이고 칠 수 있다 (등불은 희미하게 빛나고, 근위병은 푸른빛을 띤다)
+	@Override
+	public void updateFieldOfView( Char c, boolean[] fieldOfView ) {
+		super.updateFieldOfView( c, fieldOfView );
+		if (!mazeRoom || c != Dungeon.hero) return;
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing k = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.find();
+		if (k == null || !k.isDark()) return;
+		java.util.Arrays.fill(fieldOfView, false);
+		fieldOfView[c.pos] = true;
+		for (int n : com.watabou.utils.PathFinder.NEIGHBOURS8){
+			int cell = c.pos + n;
+			if (cell < 0 || cell >= length()) continue;
+			Char ch = com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(cell);
+			if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MemoryLamp
+					|| ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithEyes
+					|| ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithGuard){
+				fieldOfView[cell] = true;
+			}
 		}
 	}
 

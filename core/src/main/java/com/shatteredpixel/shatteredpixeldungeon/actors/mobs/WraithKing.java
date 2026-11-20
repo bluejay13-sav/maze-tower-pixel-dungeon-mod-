@@ -133,7 +133,41 @@ public class WraithKing extends Mob {
 	@Override
 	protected boolean canAttack( Char enemy ) {
 		if (phase == 1 || isDark()) return false; //1단계는 공격하지 않고, 어둠 속에서는 기습만
-		return super.canAttack(enemy);
+		//(결정) 밝은 상태에서는 원거리 공격: 영혼 화살이 닿는 곳이면 떨어져서도 쏜다
+		if (super.canAttack(enemy)) return true;
+		return new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(pos, enemy.pos,
+				com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.MAGIC_BOLT).collisionPos == enemy.pos;
+	}
+
+	@Override
+	protected boolean doAttack( Char enemy ) {
+		if (Dungeon.level.adjacent(pos, enemy.pos)) return super.doAttack(enemy);
+		//떨어진 적에게는 영혼 화살
+		boolean visible = Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[enemy.pos];
+		if (visible && sprite instanceof WraithKingSprite){
+			((WraithKingSprite) sprite).shootSoul(enemy.pos);
+			return false;
+		}
+		soulBolt();
+		return true;
+	}
+
+	//영혼 화살이 닿았다 (그림에서 부른다)
+	public void onSoulBoltHit(){
+		soulBolt();
+		next();
+	}
+
+	private void soulBolt(){
+		spend(attackDelay());
+		Char e = enemy;
+		if (e == null) return;
+		if (hit(this, e, false)){
+			e.damage(damageRoll(), this);
+			if (e == Dungeon.hero && !e.isAlive()) Dungeon.fail(this);
+		} else if (e.sprite != null){
+			e.sprite.showStatus(CharSprite.NEUTRAL, e.defenseVerb());
+		}
 	}
 
 	@Override
@@ -266,10 +300,7 @@ public class WraithKing extends Mob {
 		if (!SoulOrb.at(ch.pos)) return;
 		if (ch == Dungeon.hero){
 			SoulOrb.remove(SoulOrb.class, ch.pos);
-			//(결정) 신속 2턴. 남아 있으면 2턴으로 갱신만 한다
-			Haste h = ch.buff(Haste.class);
-			if (h != null) h.detach();
-			Buff.affect(ch, Haste.class, MazeTower.WK_ORB_HASTE);
+			//(결정, 바뀜) 주인공이 먹으면 구슬만 땅에서 사라진다 (신속 없음)
 			if (Dungeon.level.heroFOV[ch.pos]) BossEffects.atCell(BossEffects.Fx.WK_SOUL_ABSORB, ch.pos, 12, false);
 			Sample.INSTANCE.play(Assets.Sounds.DRINK, 0.6f, 1.4f);
 		} else if (ch instanceof WraithKing){
@@ -303,14 +334,23 @@ public class WraithKing extends Mob {
 	private void placeLamps(){
 		CityBossLevel l = level();
 		if (l == null) return;
+		//(결정, 바뀜) 벽에 붙은 칸에도 생길 수 있다. 처음 생길 때 주인공 둘레 2칸 안에는 생기지 않고,
+		//등불끼리는 서로 WK_LAMP_GAP칸 넘게 떨어진다(가까운 3칸 안에는 생기지 않음). 왕좌 칸 제외.
 		ArrayList<Integer> cells = new ArrayList<>();
 		for (int c : l.roomFloorCells()){
-			if (l.touchesWall(c) || c == l.mazeThrone() || Actor.findChar(c) != null) continue;
+			if (c == l.mazeThrone() || Actor.findChar(c) != null) continue;
+			if (Dungeon.level.distance(c, Dungeon.hero.pos) <= MazeTower.WK_LAMP_HERO_GAP) continue;
 			cells.add(c);
 		}
+		ArrayList<Integer> placed = new ArrayList<>();
 		for (int i = 0; i < MazeTower.WK_LAMPS && !cells.isEmpty(); i++){
+			int c = cells.remove(Random.Int(cells.size()));
+			boolean tooClose = false;
+			for (int p : placed) if (Dungeon.level.distance(p, c) < MazeTower.WK_LAMP_GAP) tooClose = true;
+			if (tooClose){ i--; continue; }
+			placed.add(c);
 			MemoryLamp lamp = new MemoryLamp();
-			lamp.pos = cells.remove(Random.Int(cells.size()));
+			lamp.pos = c;
 			GameScene.add(lamp);
 		}
 	}
@@ -382,20 +422,21 @@ public class WraithKing extends Mob {
 	}
 
 	//소리: 주인공이 움직이거나 무언가를 던지면 근위병이 그쪽으로
-	public static void noise( int cell ){
+	public static void noise( int cell, int priority ){
 		if (Dungeon.level == null) return;
 		for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])){
-			if (m instanceof WraithGuard) ((WraithGuard) m).hear(cell);
+			if (m instanceof WraithGuard) ((WraithGuard) m).hear(cell, priority);
 		}
 	}
 
 	// ----- 졸트라크 -----
 
 	private void startZoltraak(){
+		//(결정) 주인공 쪽으로 조준한다: 8방향(대각선 포함) 중 가장 가까운 방향
 		int dx = Dungeon.hero.pos % Dungeon.level.width() - pos % Dungeon.level.width();
 		int dy = Dungeon.hero.pos / Dungeon.level.width() - pos / Dungeon.level.width();
-		if (Math.abs(dx) >= Math.abs(dy)) zoltDir = dx >= 0 ? 0 : 2;
-		else                             zoltDir = dy >= 0 ? 1 : 3;
+		double a = Math.atan2(dy, dx);
+		zoltDir = (int)Math.floorMod(Math.round(a / (Math.PI / 4)), 8L);
 		zoltCharge = MazeTower.WK_ZOLT_CHARGE;
 		showZoltFx();
 		if (Dungeon.level.heroFOV[pos]) GLog.n(Messages.get(this, "zolt_charge"));
@@ -424,12 +465,21 @@ public class WraithKing extends Mob {
 		}
 	}
 
-	private static final int[] DX = {1, 0, -1, 0};
-	private static final int[] DY = {0, 1, 0, -1};
+	//8방향: 0 오른쪽, 1 오른쪽 아래, 2 아래, 3 왼쪽 아래, 4 왼쪽, 5 왼쪽 위, 6 위, 7 오른쪽 위
+	private static final int[] DX = {1, 1, 0, -1, -1, -1, 0, 1};
+	private static final int[] DY = {0, 1, 1, 1, 0, -1, -1, -1};
 
 	//폭 3칸, 벽에 막힐 때까지. lane[i] = 각 칸이 몇 번째 줄(-1, 0, 1)인지
 	private ArrayList<Integer> zoltCells(){
 		return zoltCells(null);
+	}
+
+	//옆 줄이 가운데 줄에서 떨어진 칸 (가로·세로는 직각 방향, 대각선은 가로 한 칸 / 세로 한 칸 옆의 나란한 대각선)
+	private int[] laneOffset( int k ){
+		int dx = DX[zoltDir], dy = DY[zoltDir];
+		if (k == 0) return new int[]{0, 0};
+		if (dx != 0 && dy != 0) return k < 0 ? new int[]{dx, 0} : new int[]{0, dy};
+		return new int[]{-dy * k, dx * k};
 	}
 
 	private ArrayList<Integer> zoltCells( ArrayList<Integer> lanes ){
@@ -437,10 +487,10 @@ public class WraithKing extends Mob {
 		int w = Dungeon.level.width();
 		int x0 = pos % w, y0 = pos / w;
 		int dx = DX[zoltDir], dy = DY[zoltDir];
-		int px = -dy, py = dx; //옆 방향
 		for (int k = -1; k <= 1; k++){
+			int[] o = laneOffset(k);
 			for (int i = (k == 0 ? 1 : 0); i < 40; i++){
-				int x = x0 + px * k + dx * i, y = y0 + py * k + dy * i;
+				int x = x0 + o[0] + dx * i, y = y0 + o[1] + dy * i;
 				if (x < 0 || y < 0 || x >= w || y >= Dungeon.level.height()) break;
 				int c = x + y * w;
 				if (Dungeon.level.solid[c]) break;
@@ -458,7 +508,7 @@ public class WraithKing extends Mob {
 			return true;
 		}
 		fireZoltraak();
-		zoltCd = MazeTower.WK_ZOLT_INTERVAL;
+		zoltCd = MazeTower.WK_ZOLT_INTERVAL - (isDark() ? MazeTower.WK_ZOLT_DARK_CUT : 0); //(결정) 어둠 속에서는 주기가 2턴 짧다
 		spend(TICK);
 		return true;
 	}
@@ -490,22 +540,23 @@ public class WraithKing extends Mob {
 		Sample.INSTANCE.play(Assets.Sounds.RAY);
 	}
 
-	//가로 그림을 세로 광선이면 90도 돌린다. 바깥 두 줄은 위쪽 줄 기준, 반대쪽 줄은 뒤집는다
+	//가로 그림을 광선 방향으로 돌린다(대각선은 45도 + 길게). 바깥 두 줄은 그림의 위쪽이 바깥을 향하게, 반대쪽 줄은 뒤집는다
 	private void beamVisual( int cell, int lane ){
-		boolean vertical = zoltDir == 1 || zoltDir == 3;
+		boolean diag = DX[zoltDir] != 0 && DY[zoltDir] != 0;
 		MovieClip c = BossEffects.clip(lane == 0 ? BossEffects.Fx.WK_ZOLT_CENTER : BossEffects.Fx.WK_ZOLT_EDGE, 15, false);
 		PointF p = DungeonTilemap.tileCenterToWorld(cell);
 		c.origin.set(8, 8);
 		c.x = p.x - 8;
 		c.y = p.y - 8;
-		if (vertical){
-			c.angle = 90;
-			//90도 돌리면 위쪽이 오른쪽이 된다: 왼쪽 줄(옆 방향 -x)은 뒤집는다
-			int px = -DY[zoltDir];
-			if (lane != 0 && lane * px < 0) c.scale.y = -1;
-		} else {
-			int py = DX[zoltDir];
-			if (lane != 0 && lane * py > 0) c.scale.y = -1; //아래쪽 줄
+		float angle = zoltDir * 45f;
+		c.angle = angle;
+		if (diag) c.scale.x = 1.42f;
+		if (lane != 0){
+			//돌린 뒤 그림의 위쪽 방향 = (sin, -cos). 이 줄이 그쪽에 있으면 그대로, 아니면 뒤집는다
+			double r = Math.toRadians(angle);
+			int[] o = laneOffset(lane);
+			double dot = o[0] * Math.sin(r) + o[1] * -Math.cos(r);
+			if (dot < 0) c.scale.y = -1;
 		}
 		GameScene.effect(c);
 	}
@@ -646,8 +697,12 @@ public class WraithKing extends Mob {
 		if (phase == 3 && src instanceof Char){
 			dmg = Math.round(dmg * MazeTower.WK_PHASE3_TAKEN);
 		}
+		//(결정) 단계가 넘어가는 피해는 다음 단계 최대 체력보다 1% 낮은 체력에서 멈춘다 (한 번에 여러 단계를 건너뛰거나 즉사하지 않게)
+		float thr = phase == 1 ? MazeTower.WK_PHASE2_HP : phase == 2 ? MazeTower.WK_PHASE3_HP : 0f;
+		dmg = MazeBoss20.capPhaseDamage(this, dmg, thr);
 		int pre = HP;
 		super.damage(dmg, src);
+		MazeBoss20.settlePhaseHP(this, pre, thr);
 		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);
 		if (lock != null && !isImmune(src.getClass()) && !isInvulnerable(src.getClass())){
 			lock.addTime((pre - HP) / 3f);
@@ -659,8 +714,8 @@ public class WraithKing extends Mob {
 		if (phase <= 2 && HP <= HT * MazeTower.WK_PHASE3_HP){
 			enterPhase3();
 		}
-		//(결정) 한 대 맞을 때마다 순간이동 (화상·독 같은 지속 피해는 제외)
-		if (isAlive() && pre != HP && !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff)
+		//(결정) 한 대 맞을 때마다 순간이동 (화상·독 같은 지속 피해는 제외). 기어다니는 3단계는 순간이동하지 못한다
+		if (phase != 3 && isAlive() && pre != HP && !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff)
 				&& !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob)){
 			hitTeleport();
 		}
@@ -785,6 +840,21 @@ public class WraithKing extends Mob {
 
 		private float reveal = 0;
 		private boolean hidden = false;
+
+		//원거리 공격: 지팡이를 휘둘러 푸른 영혼 화살 (원작 그림자 마탄)
+		public void shootSoul( final int cell ){
+			turnTo(ch.pos, cell);
+			play(zap);
+			com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile.boltFromChar(parent,
+					com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile.SHADOW, this, cell,
+					new com.watabou.utils.Callback() {
+						@Override
+						public void call() {
+							((WraithKing) ch).onSoulBoltHit();
+						}
+					});
+			com.watabou.noosa.audio.Sample.INSTANCE.play(Assets.Sounds.ZAP);
+		}
 
 		//어둠 속 기습: 그 칸에 잠깐 모습을 드러내 한 대 치고, 연출이 끝나면 숨은 자리로 옮긴다
 		public void strike( int at, int target ){
