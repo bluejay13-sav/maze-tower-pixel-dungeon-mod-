@@ -171,6 +171,7 @@ public class BloomAttack {
 			} else {
 				TalentEffects.comboStack(enemy, hc.count, B2_HEAVY_HITS);
 			}
+			com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.refreshHero(); //강타 준비 아이콘
 		}
 		return bonus;
 	}

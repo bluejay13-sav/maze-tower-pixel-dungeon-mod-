@@ -326,9 +326,10 @@ public class BloomTalentsPane extends ScrollPane {
 			bg.x = x;
 			bg.y = y;
 			if (awakeGlow != null){
-				awakeGlow.x = x - 1;
-				awakeGlow.y = y - 1;
-				awakeGlow.size(TalentButton.WIDTH + 2, TalentButton.HEIGHT + 2);
+				//칸 테두리 안쪽에만 (은은하게)
+				awakeGlow.x = x + 1;
+				awakeGlow.y = y + 1;
+				awakeGlow.size(TalentButton.WIDTH - 2, TalentButton.HEIGHT - 2);
 			}
 
 			if (icon != null){
@@ -370,9 +371,9 @@ public class BloomTalentsPane extends ScrollPane {
 			if (awakeGlow != null){
 				glowTime += Game.elapsed;
 				float b = 0.5f + 0.5f * (float)Math.sin(glowTime * 2.2f);
-				awakeGlow.alpha(0.2f + 0.45f * b);
+				awakeGlow.alpha(0.1f + 0.25f * b);
 				if (appearTime <= 0 && flashTime <= 0){
-					bg.hardlight(1f, 0.8f - 0.15f * b, 0.92f - 0.07f * b);
+					bg.hardlight(1f, 0.9f - 0.1f * b, 0.96f - 0.04f * b);
 				}
 			}
 

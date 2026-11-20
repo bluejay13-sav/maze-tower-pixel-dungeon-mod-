@@ -53,7 +53,24 @@ public class BuffIcon extends Image {
 		buff.tintIcon(this);
 	}
 
+	//Maze Tower: 2차 특성 상태 아이콘 (작은 것 buffs2_small.png, 큰 것은 그 특성 아이콘)
+	private static TextureFilm mazeLargeFilm;
+
 	public void refresh(int icon){
+		if (icon >= BuffIndicator.MAZE2){
+			int i = icon - BuffIndicator.MAZE2;
+			if (large){
+				texture(Assets.Interfaces.MAZE_TALENT2_ICONS);
+				if (mazeLargeFilm == null) mazeLargeFilm = new TextureFilm(texture, LRG_SIZE, LRG_SIZE);
+				frame(mazeLargeFilm.get(BuffIndicator.B2_LARGE[i]));
+			} else {
+				texture(Assets.Interfaces.MAZE_BUFFS2_SMALL);
+				frame(i * 8, 0, SML_SIZE, SML_SIZE);
+			}
+			return;
+		}
+		//원작 아이콘으로 돌아올 때를 위해 원작 그림으로 되돌린다
+		texture(large ? Assets.Interfaces.BUFFS_LARGE : Assets.Interfaces.BUFFS_SMALL);
 		if (large){
 			if (largeFilm == null) largeFilm = new TextureFilm(texture, LRG_SIZE, LRG_SIZE);
 			frame(largeFilm.get(icon));

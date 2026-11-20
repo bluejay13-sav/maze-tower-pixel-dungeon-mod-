@@ -137,6 +137,27 @@ public class BuffIndicator extends Component {
 	public static final int SEAL_SHIELD = 84;
 	public static final int THROWN_WEP  = 85;
 
+	//Maze Tower: 2차 특성 상태 아이콘 (buffs2_small.png 7×7, 큰 아이콘은 그 특성 아이콘 talent2_icons.png 16×16).
+	//원작 아이콘 번호와 겹치지 않게 MAZE2 + 번호. 그리는 곳은 BuffIcon.
+	public static final int MAZE2           = 1000;
+	public static final int B2_MARK         = MAZE2 + 0;
+	public static final int B2_MOMENTUM     = MAZE2 + 1;
+	public static final int B2_GALE         = MAZE2 + 2;
+	public static final int B2_HEAVY        = MAZE2 + 3;
+	public static final int B2_CHARGE       = MAZE2 + 4;
+	public static final int B2_DISENGAGE    = MAZE2 + 5;
+	public static final int B2_SURE         = MAZE2 + 6;
+	public static final int B2_FOCUS        = MAZE2 + 7;
+	public static final int B2_FLOW         = MAZE2 + 8;
+	public static final int B2_ECHO         = MAZE2 + 9;
+	public static final int B2_PARRY        = MAZE2 + 10;
+	public static final int B2_DUEL         = MAZE2 + 11;
+	public static final int B2_MELEE        = MAZE2 + 12;
+	public static final int B2_CYCLE        = MAZE2 + 13;
+	public static final int B2_MEDITATION   = MAZE2 + 14;
+	//작은 아이콘 번호 → 큰 아이콘(특성 아이콘) 번호
+	public static final int[] B2_LARGE = {3, 20, 2, 1, 4, 24, 8, 11, 18, 19, 16, 22, 21, 27, 30};
+
 	public static final int SIZE_SMALL  = 7;
 	public static final int SIZE_LARGE  = 16;
 	

@@ -238,8 +238,21 @@ public class BloomEffects {
 	// 계속 켜져 있는 연출 (상태창이 매 프레임 호출)
 	// =====================================================================
 
+	private static <T extends BloomBuffs.Sense> void syncSense(Hero hero, BloomTalent t, Class<T> cls){
+		T s = hero.buff(cls);
+		if (lvl(hero, t) >= 0 && hero.isAlive()){
+			if (s == null) s = Buff.affect(hero, cls);
+			if (s != null) s.recheck();
+		} else if (s != null){
+			s.detach();
+		}
+	}
+
 	public static void updateHeroFx(Hero hero){
 		if (hero == null) return;
+		//결투·난전 아이콘 (조건이 맞을 때만 보인다)
+		syncSense(hero, DUEL, BloomBuffs.DuelSense.class);
+		syncSense(hero, MELEE, BloomBuffs.MeleeSense.class);
 		Mana m = hero.buff(Mana.class);
 		//흘리기 대기 중: 보호막
 		boolean parry = hero.buff(ParryTracker.class) != null && lvl(hero, PARRY) >= 0;
@@ -442,8 +455,7 @@ public class BloomEffects {
 			return Math.round(B2_FLOW_DMG[f] * next * 100);
 		}
 
-		@Override public int icon() { return lastKind == 0 ? BuffIndicator.NONE : BuffIndicator.MOMENTUM; }
-		@Override public void tintIcon(Image icon) { icon.hardlight(0.5f, 0.8f, 1f); }
+		@Override public int icon() { return lastKind == 0 ? BuffIndicator.NONE : BuffIndicator.B2_FLOW; }
 		@Override public String iconTextDisplay() { return stacks > 0 ? Integer.toString(stacks) : ""; }
 		@Override public String desc() {
 			return Messages.get(this, lastKind == 2 ? "desc_skill" : "desc_normal", nextPct(), stacks);
@@ -481,8 +493,7 @@ public class BloomEffects {
 			skillDamage = bundle.getInt("skill_damage");
 		}
 
-		@Override public int icon() { return BuffIndicator.RECHARGING; }
-		@Override public void tintIcon(Image icon) { icon.hardlight(0.4f, 0.6f, 1f); }
+		@Override public int icon() { return BuffIndicator.B2_ECHO; }
 		@Override public float iconFadePercent() { return Math.max(0, (B2_ECHO_TURNS - visualcooldown()) / B2_ECHO_TURNS); }
 		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
 		@Override public String desc() {
@@ -495,7 +506,7 @@ public class BloomEffects {
 	public static class ParryTracker extends Buff {
 		{ type = buffType.POSITIVE; }
 
-		@Override public int icon() { return BuffIndicator.DUEL_GUARD; }
+		@Override public int icon() { return BuffIndicator.B2_PARRY; }
 		@Override public String desc() {
 			int p = Dungeon.hero == null ? 0 : Math.max(0, lvl(Dungeon.hero, PARRY));
 			return Messages.get(this, "desc", Math.round(B2_PARRY_REDUCE[p] * 100));
