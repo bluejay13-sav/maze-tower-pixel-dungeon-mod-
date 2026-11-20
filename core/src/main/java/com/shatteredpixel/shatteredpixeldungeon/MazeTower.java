@@ -528,9 +528,9 @@ public class MazeTower {
 	public static final int   WK_ORB_COUNT      = 2;     //한 번에 떨어지는 구슬 수
 	public static final float WK_ORB_HASTE      = 2f;    //주인공이 구슬을 먹으면 신속 (갱신만, 더하지 않음)
 	public static final float WK_SOUL_ATK       = 0.05f; //영혼 1개당 공격력
-	public static final int   WK_SOUL_GUARDS    = 6;     //(결정, 다시 6) 영혼이 이만큼 이상이면 어두워질 때 근위병 3마리
-	public static final int   WK_SOUL_NOWARN    = 12;    //(결정, 다시 12) 영혼이 이만큼 이상이면 인간을 죽이는 마법 경고 없음
-	public static final int   WK_SOUL_RAGE      = 18;    //(결정, 다시 18) 영혼이 이만큼 이상이면 공격력 추가
+	public static final int   WK_SOUL_GUARDS    = 5;     //(결정, 바뀜 6→5) 영혼이 이만큼 이상이면 어두워질 때 근위병 3마리
+	public static final int   WK_SOUL_NOWARN    = 11;    //(결정, 바뀜 12→11) 영혼이 이만큼 이상이면 인간을 죽이는 마법 경고 없음
+	public static final int   WK_SOUL_RAGE      = 16;    //(결정, 바뀜 18→16) 영혼이 이만큼 이상이면 공격력 추가
 	public static final float WK_RAGE_ATK       = 1.0f;  //위의 추가 공격력 (+100%)
 	public static final int   WK_DARK_VIEW      = 1;     //어둠 속 주인공 시야
 	public static final int   WK_LAMPS          = 3;     //기억의 등불 수
@@ -547,7 +547,7 @@ public class MazeTower {
 	public static final int   WK_ZOLT_MIN       = 25;    //졸트라크 피해 (영혼 강화 전)
 	public static final int   WK_ZOLT_MAX       = 40;
 	public static final int   WK_GUARD_INTERVAL = 7;     //근위병 소환 쿨타임
-	public static final int   WK_DARK_GUARDS    = 3;     //어두워질 때 추가 근위병 (영혼 6개 이상)
+	public static final int   WK_DARK_GUARDS    = 3;     //어두워질 때 추가 근위병 (영혼 5개 이상)
 	public static final int   WK_AMBUSH_INTERVAL = 3;    //기습 쿨타임 (어두운 동안)
 	public static final float WK_AMBUSH_ARMOR_IGNORE = 0.5f; //기습 일격은 주인공 방어력의 이만큼을 무시한다
 	public static final float WK_EYES_ALPHA     = 0.35f; //어둠 속 푸른 눈의 진하기 (원작 미믹처럼 알아채기 어렵게)
