@@ -55,5 +55,21 @@ public class WraithPillarTops extends DungeonWallsTilemap {
 		visible = dark;
 		float s = FogOfWar.visitedShade();
 		rm = gm = bm = s;
+		liftHero(dark);
+	}
+
+	//(결정) 어두운 동안 기둥 그림은 안개 위(캐릭터 층보다 위)에 있어서, 주인공이 기둥 바로 아래 칸에 서면 머리가 기둥에 가려 끊겨 보였다.
+	//그래서 어두운 동안에는 주인공 그림도 안개 위 층으로 올려(기둥보다 나중에 그려지게) 기둥 앞에 서 있는 것처럼 보이게 한다.
+	//밝아지면 원래 캐릭터 층으로 돌려놓는다
+	private boolean heroLifted = false;
+
+	private void liftHero( boolean dark ){
+		if (Dungeon.hero == null || Dungeon.hero.sprite == null) return;
+		com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite hs = Dungeon.hero.sprite;
+		if (dark == heroLifted || hs.parent == null) return;
+		hs.parent.erase(hs);
+		if (dark) GameScene.effectOverFog(hs);
+		else      GameScene.addMobSpriteBack(hs);
+		heroLifted = dark;
 	}
 }

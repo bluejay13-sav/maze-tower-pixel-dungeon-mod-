@@ -761,6 +761,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
   - (결정) 어두운 동안 주인공이 움직여도 지나온 칸·옆 칸이 탐색되지 않는다(언제나 깜깜, 주인공 칸만 보임). 기둥(왕좌 포함)은 보인다(`CityBossLevel.mazeAfterObserve` ← `Dungeon.observe`, `mazeShownPillar` → `FogOfWar`).
   - (결정) 어두운 동안 기둥(왕좌 포함) 칸은 깜깜하게 두고, 기둥 몸통·윗면·왕좌를 모두 안개 위에 같은 밝기로 그린다(`tiles/WraithPillarBodies`, `effects/WraithPillarTops`·`WraithThrone`, 밝기 `FogOfWar.visitedShade`). 몸통만 안개 아래에 두면 부드러운 안개 가장자리 때문에 윗면보다 어둡고 깨져 보였다. 비교 샘플 `docs/sprites/boss_fx/check_dark_pillar.png`.
   - (결정) 어둠 속에서 근위병 몸통 칸이 보이면(주인공 바로 옆) 머리까지 보이도록 근위병 그림을 안개 위 층으로 옮긴다(`WraithGuard.GuardSprite`, `GameScene.addMobSpriteBack`).
+  - (결정) 어두운 동안 기둥·왕좌 그림이 안개 위(캐릭터보다 위)에 있어 주인공이 기둥 바로 아래 칸에 서면 머리가 가려 끊겨 보였다. 그래서 어두운 동안에는 주인공 그림도 안개 위 층으로 올려 기둥 앞에 보이게 하고, 밝아지면 되돌린다(`WraithPillarTops.liftHero`).
   - (결정) 여러 번 때리는 공격(연격·반월베기 등 스킬 연타, 연속 베기 추가 평타, 분노 폭발)은 맞은 적이 다른 곳으로 순간이동하거나 은신하면 남은 타격을 멈춘다(`SwordSkill.stillThere`, `BloomAttack.extraStrike`, `Combo` 분노 폭발).
   - (결정) 대각선 인간을 죽이는 마법은 칸마다 돌린 조각을 붙이면 이음매가 깨져 보여서, 줄마다 처음 칸부터 끝 칸까지 하나로 길게 늘여 그린다(`diagBeamVisual`).
   - (결정, 바뀜) 왕의 기본 공격: 바로 옆(1칸)의 주인공은 일반 근접 공격(방어력 적용), 떨어져 있으면 마법 공격(영혼 화살, 마법 명중 판정, 방어 무시). 둘 다 피해 -60%(`WK_BASIC_MULTI`, -30% → -50% → -60%). 3단계 기어다니는 왕의 할퀴기는 배율 없이 근접. (결정) 망령 왕 회피 17(`WK_DEF`), 여제 회피 20(`B20_DEF`, 예전 22).
