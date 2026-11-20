@@ -562,6 +562,23 @@ public class WraithKing extends Mob {
 				if (lanes != null) lanes.add(k);
 			}
 		}
+		//(결정) 대각선 광선에서 양옆 이웃 줄이 모두 없는 칸(기둥 옆으로 홀로 빠져나간 줄)은 광선 그림에서 빠지므로(ZoltBeamFx)
+		//피해·경고에서도 뺀다. 홀로 남은 칸끼리는 서로 이웃이 아니라서 빼도 다른 칸이 새로 홀로 남지 않는다
+		if (dx != 0 && dy != 0){
+			java.util.HashSet<Integer> set = new java.util.HashSet<>(cells);
+			set.add(pos);
+			int[] pA = dx * dy < 0 ? new int[]{1, 0} : new int[]{-1, 0};
+			int[] pB = {0, 1};
+			for (int i = cells.size() - 1; i >= 0; i--){
+				int c = cells.get(i);
+				boolean pos1 = set.contains(c + pA[0] + pA[1] * w) || set.contains(c + pB[0] + pB[1] * w);
+				boolean neg1 = set.contains(c - pA[0] - pA[1] * w) || set.contains(c - pB[0] - pB[1] * w);
+				if (!pos1 && !neg1){
+					cells.remove(i);
+					if (lanes != null) lanes.remove(i);
+				}
+			}
+		}
 		return cells;
 	}
 
