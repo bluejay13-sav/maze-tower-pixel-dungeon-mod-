@@ -712,9 +712,40 @@ public class WraithKing extends Mob {
 		if (target.sprite != null){
 			target.sprite.flash();
 			com.shatteredpixel.shatteredpixeldungeon.effects.Wound.hit(target);
+			ambushClawFx(target);
 		}
 		Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 		target.damage(dmg, this);
+	}
+
+	//(결정) 기습이 성공했을 때의 피격 연출: 왕이 있는 쪽에서 주인공을 할퀴는 망령의 발톱 자국 세 줄
+	//(짙은 남색 몸통 + 옅은 푸른 테두리, 차례로 빠르게), 몸에서 피어오르는 그림자 넋, 약한 화면 흔들림
+	private void ambushClawFx( Char target ){
+		if (target.sprite == null || target.sprite.parent == null) return;
+		PointF t = target.sprite.destinationCenter();
+		PointF k = sprite != null ? sprite.destinationCenter() : t;
+		//왕 쪽에서 반대쪽으로 긁는다
+		float dir = (float)Math.atan2(t.y - k.y, t.x - k.x);
+		if (k == t || (k.x == t.x && k.y == t.y)) dir = (float)(Math.PI / 4);
+		float sweep = 1.4f;
+		float start = dir + (float)Math.PI - sweep / 2f;
+		//발톱 세 줄: 긁는 방향과 직각으로 조금씩 비켜 놓는다
+		float px = -(float)Math.sin(dir), py = (float)Math.cos(dir);
+		//어둠 속에서도 칸 밖으로 뻗은 발톱이 안개에 가리지 않게 안개 위에 그린다
+		com.watabou.noosa.Group fx = new com.watabou.noosa.Group();
+		GameScene.groupOverFog(fx);
+		for (int i = -1; i <= 1; i++){
+			PointF c = new PointF(t.x + px * i * 3f + (float)Math.cos(dir) * 7f, t.y + py * i * 3f + (float)Math.sin(dir) * 7f);
+			float delay = (i + 1) * 0.04f;
+			new com.shatteredpixel.shatteredpixeldungeon.effects.SlashTrail(10f, 2.2f, start, sweep, delay, 0.09f, 0.28f)
+					.trailColor(0x1C2440).solid()
+					.show(fx, c);
+			new com.shatteredpixel.shatteredpixeldungeon.effects.SlashTrail(10.8f, 0.8f, start, sweep, delay, 0.09f, 0.28f)
+					.trailColor(0x8FD3FF)
+					.show(fx, c);
+		}
+		target.sprite.emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle.UP, 8);
+		PixelScene.shake(1.5f, 0.2f);
 	}
 
 	private void cancelAmbush(){
