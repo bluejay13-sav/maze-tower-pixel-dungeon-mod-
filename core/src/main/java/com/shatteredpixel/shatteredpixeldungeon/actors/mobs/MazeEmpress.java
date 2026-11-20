@@ -90,6 +90,7 @@ public class MazeEmpress extends Mob {
 
 	public int spearType = 0;          //머리 위의 창: 0 없음, ElementTile.FROST / FIRE
 	private int spearTimer = 0;
+	private int spearMax = 4;          //이번 창이 처음 가진 대기 턴 (아이콘 채움용)
 	private int spearCd = 0;
 	private int nextSpear = ElementTile.FROST;
 
@@ -160,6 +161,17 @@ public class MazeEmpress extends Mob {
 
 		boolean heroHidden = Dungeon.hero.invisible > 0;
 
+		//(결정) 원소 감응이 모든 기술보다 먼저: 깔아야 하면 이번 턴은 원소 감응만 한다
+		//(예고한 공격·창은 한 턴 미뤄지고, 원소 폭풍의 진행은 그대로 흐른다)
+		tileTurns++;
+		if (phase >= 2 && needSensing()){
+			castSensing();
+			if (phase == 3) stormTick();
+			boltCd--; rainCd--; spearCd--;
+			spend(TICK);
+			return true;
+		}
+
 		//지난 턴에 예고한 공격
 		if (boltPath != null) fireBolt();
 		if (rainCells != null) fireRain();
@@ -173,12 +185,10 @@ public class MazeEmpress extends Mob {
 
 		if (phase == 3) stormTick();
 
-		boltCd--; rainCd--; spearCd--; tileTurns++;
+		boltCd--; rainCd--; spearCd--;
 
 		//한 턴에 새 기술 하나
-		if (phase >= 2 && needSensing()){
-			castSensing();
-		} else if (!heroHidden && boltCd <= 0 && boltPath == null){
+		if (!heroHidden && boltCd <= 0 && boltPath == null){
 			warnBolt();
 			boltCd = MazeTower.EM_BOLT_INTERVAL;
 		} else if (!heroHidden && rainCd <= 0 && rainCells == null){
@@ -187,7 +197,8 @@ public class MazeEmpress extends Mob {
 		} else if (phase >= 2 && spearType == 0 && spearCd <= 0){
 			spearType = nextSpear;
 			nextSpear = nextSpear == ElementTile.FROST ? ElementTile.FIRE : ElementTile.FROST;
-			spearTimer = MazeTower.EM_SPEAR_DELAY;
+			spearTimer = Random.IntRange(MazeTower.EM_SPEAR_DELAY_MIN, MazeTower.EM_SPEAR_DELAY_MAX); //(결정) 3~4턴 뒤
+			spearMax = spearTimer;
 			spearCd = MazeTower.EM_SPEAR_INTERVAL;
 			Buff.affect(this, SpearCountdown.class);
 			showSpearCount();
@@ -418,7 +429,7 @@ public class MazeEmpress extends Mob {
 		public float iconFadePercent() {
 			MazeEmpress e = empress();
 			if (e == null) return 0;
-			return Math.max(0, Math.min(1, 1f - Math.max(0, e.spearTimer) / (float) MazeTower.EM_SPEAR_DELAY));
+			return Math.max(0, Math.min(1, 1f - Math.max(0, e.spearTimer) / (float) Math.max(1, e.spearMax)));
 		}
 
 		@Override
@@ -516,6 +527,7 @@ public class MazeEmpress extends Mob {
 	private void stormTick(){
 		if (warnZone == null && stormZone == null){
 			warnZone = newZone(0);
+			warnZone[3] = MazeTower.EM_STORM_FIRST_WARN; //(결정) 처음 폭풍은 경고 3턴
 			showZoneFx();
 			return;
 		}
@@ -541,6 +553,7 @@ public class MazeEmpress extends Mob {
 			if (stormZone[3] <= 0){
 				stormZone = null;
 				clear(stormFx);
+				if (stormLook != null){ stormLook.kill(); stormLook = null; }
 			}
 		}
 		//경고
@@ -557,26 +570,27 @@ public class MazeEmpress extends Mob {
 		}
 	}
 
+	//경고·폭풍 연출 (effects/StormZoneFx: 명암 있는 바닥 + 불씨·눈송이·번개를 코드로)
+	private com.shatteredpixel.shatteredpixeldungeon.effects.StormZoneFx warnZoneLook, stormLook;
+
+	private void clearZoneLooks(){
+		if (warnZoneLook != null){ warnZoneLook.kill(); warnZoneLook = null; }
+		if (stormLook != null){ stormLook.kill(); stormLook = null; }
+	}
+
 	private void showZoneFx(){
 		clear(warnZoneFx);
 		clear(stormFx);
+		clearZoneLooks();
+		if (Dungeon.hero.sprite == null || Dungeon.hero.sprite.parent == null) return;
 		if (warnZone != null){
-			BossEffects.Fx fx = warnZone[2] == ElementTile.FIRE ? BossEffects.Fx.EM_ZONE_FIRE
-					: warnZone[2] == ElementTile.FROST ? BossEffects.Fx.EM_ZONE_FROST : BossEffects.Fx.EM_ZONE_SHOCK;
-			for (int c : zoneCells(warnZone)){
-				MovieClip m = BossEffects.atCell(fx, c, 3, true);
-				m.alpha(0.6f);
-				warnZoneFx.add(m);
-			}
+			warnZoneLook = new com.shatteredpixel.shatteredpixeldungeon.effects.StormZoneFx(zoneCells(warnZone), warnZone[2], false);
+			warnZoneLook.attach(Dungeon.hero.sprite.parent);
 		}
 		if (stormZone != null){
-			BossEffects.Fx fx = stormZone[2] == ElementTile.FIRE ? BossEffects.Fx.EM_STORM_FIRE
-					: stormZone[2] == ElementTile.FROST ? BossEffects.Fx.EM_STORM_FROST : BossEffects.Fx.EM_STORM_SHOCK;
-			for (int c : zoneCells(stormZone)){
-				stormFx.add(BossEffects.atCellBottom(fx, c, 10, true));
-			}
+			stormLook = new com.shatteredpixel.shatteredpixeldungeon.effects.StormZoneFx(zoneCells(stormZone), stormZone[2], true);
+			stormLook.attach(Dungeon.hero.sprite.parent);
 		}
-		for (MovieClip m : warnZoneFx) m.visible = true;
 	}
 
 	// ----- 순간이동 -----
@@ -670,6 +684,7 @@ public class MazeEmpress extends Mob {
 	@Override
 	public void die( Object cause ) {
 		clear(boltFx); clear(rainFx); clear(warnZoneFx); clear(stormFx);
+		clearZoneLooks();
 		clearBoltLine();
 		boltPath = null; rainCells = null; spearType = 0; stormZone = null; warnZone = null;
 		ElementTile.removeAll();
@@ -689,7 +704,7 @@ public class MazeEmpress extends Mob {
 	private void restoreFx(){
 		if (boltPath != null && boltLine == null) showBoltWarn();
 		if (rainCells != null && rainFx.isEmpty()) showRainWarn();
-		if ((warnZone != null && warnZoneFx.isEmpty()) || (stormZone != null && stormFx.isEmpty())) showZoneFx();
+		if ((warnZone != null && warnZoneLook == null) || (stormZone != null && stormLook == null)) showZoneFx();
 		for (MovieClip m : boltFx)     m.visible = true;
 	}
 
@@ -708,6 +723,7 @@ public class MazeEmpress extends Mob {
 		if (rainCells != null) bundle.put("rain_cells", rainCells);
 		bundle.put("spear_type", spearType);
 		bundle.put("spear_timer", spearTimer);
+		bundle.put("spear_max", spearMax);
 		bundle.put("spear_cd", spearCd);
 		bundle.put("next_spear", nextSpear);
 		bundle.put("sensing_pending", sensingPending);
@@ -730,6 +746,7 @@ public class MazeEmpress extends Mob {
 		rainCells = bundle.contains("rain_cells") ? bundle.getIntArray("rain_cells") : null;
 		spearType = bundle.getInt("spear_type");
 		spearTimer = bundle.getInt("spear_timer");
+		spearMax = bundle.contains("spear_max") ? bundle.getInt("spear_max") : 4;
 		spearCd = bundle.getInt("spear_cd");
 		nextSpear = bundle.getInt("next_spear");
 		if (nextSpear == 0) nextSpear = ElementTile.FROST;

@@ -569,7 +569,8 @@ public class MazeTower {
 	public static final int   EM_RAIN_MAX       = 12;
 	public static final float EM_RAIN_STATIC    = 3f;    //정전기 턴
 	public static final int   EM_SPEAR_INTERVAL = 15;    //서리창·화염창 번갈아 (각각 30턴마다)
-	public static final int   EM_SPEAR_DELAY    = 5;     //머리 위에 뜬 뒤 날아가기까지
+	public static final int   EM_SPEAR_DELAY_MIN = 3;    //창이 머리 위에 뜬 뒤 날아가기까지 (3~4턴, 무작위)
+	public static final int   EM_SPEAR_DELAY_MAX = 4;
 	public static final int   EM_SPEAR_MIN      = 15;
 	public static final int   EM_SPEAR_MAX      = 22;
 	public static final float EM_SPEAR_FROSTBITE = 3f;   //서리창 혹한
@@ -579,6 +580,7 @@ public class MazeTower {
 	public static final int   EM_TILE_STEAM_MIN = 10;    //원소 타일 위 주인공 증기 반응 피해 (폭발은 기존 폭발 반응 피해)
 	public static final int   EM_TILE_STEAM_MAX = 16;
 	public static final int   EM_STORM_WARN     = 5;     //원소 폭풍 경고 턴
+	public static final int   EM_STORM_FIRST_WARN = 3;   //처음 원소 폭풍만 경고 3턴
 	public static final int   EM_STORM_TURNS    = 5;     //원소 폭풍 턴
 	public static final int   EM_STORM_MIN      = 6;     //폭풍 구역 안 주인공 피해 (턴마다)
 	public static final int   EM_STORM_MAX      = 10;

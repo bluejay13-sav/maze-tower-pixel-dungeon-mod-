@@ -205,7 +205,7 @@ public class Goo extends Mob {
 
 	//내려칠 때 주변 3×3의 빈 바닥 몇 칸에 수액 웅덩이
 	private void spillSap(){
-		if (!maze() || exposed()) return;
+		if (!maze() || torched) return; //불타는 동안만 수액을 만들지 못한다 (다 쪼그라든 s4에서도 내려치면 수액이 생긴다)
 		java.util.ArrayList<Integer> cells = new java.util.ArrayList<>();
 		for (int n : PathFinder.NEIGHBOURS9){
 			int c = pos + n;
