@@ -528,9 +528,9 @@ public class MazeTower {
 	public static final int   WK_ORB_COUNT      = 2;     //한 번에 떨어지는 구슬 수
 	public static final float WK_ORB_HASTE      = 2f;    //주인공이 구슬을 먹으면 신속 (갱신만, 더하지 않음)
 	public static final float WK_SOUL_ATK       = 0.05f; //영혼 1개당 공격력
-	public static final int   WK_SOUL_GUARDS    = 5;     //(결정, 바뀜 6→5) 영혼이 이만큼 이상이면 어두워질 때 근위병 3마리
-	public static final int   WK_SOUL_NOWARN    = 11;    //(결정, 바뀜 12→11) 영혼이 이만큼 이상이면 졸트라크 경고 없음
-	public static final int   WK_SOUL_RAGE      = 16;    //(결정, 바뀜 18→16) 영혼이 이만큼 이상이면 공격력 추가
+	public static final int   WK_SOUL_GUARDS    = 6;     //(결정, 다시 6) 영혼이 이만큼 이상이면 어두워질 때 근위병 3마리
+	public static final int   WK_SOUL_NOWARN    = 12;    //(결정, 다시 12) 영혼이 이만큼 이상이면 인간을 죽이는 마법 경고 없음
+	public static final int   WK_SOUL_RAGE      = 18;    //(결정, 다시 18) 영혼이 이만큼 이상이면 공격력 추가
 	public static final float WK_RAGE_ATK       = 1.0f;  //위의 추가 공격력 (+100%)
 	public static final int   WK_DARK_VIEW      = 1;     //어둠 속 주인공 시야
 	public static final int   WK_LAMPS          = 3;     //기억의 등불 수
@@ -552,6 +552,7 @@ public class MazeTower {
 	public static final float WK_AMBUSH_ARMOR_IGNORE = 0.5f; //기습 일격은 주인공 방어력의 이만큼을 무시한다
 	public static final float WK_EYES_ALPHA     = 0.35f; //어둠 속 푸른 눈의 진하기 (원작 미믹처럼 알아채기 어렵게)
 	public static final float WK_PHASE3_TAKEN   = 1.5f;  //3단계: 받는 평타·스킬 피해
+	public static final float WK_CRAWL_SPEED    = 0.7f;  //(결정) 3단계 기어다니는 왕의 이동 속도 (주인공에게서 도망친다)
 	//망령 근위병 (원작 드워프 왕 부하 구울을 조금 약하게)
 	public static final int   WG_HP             = 40;
 	public static final int   WG_DMG_MIN        = 10;

@@ -207,7 +207,7 @@ public class WraithKing extends Mob {
 		}
 
 		if (phase == 1) return actHarvest();
-		if (phase == 3) return super.act();
+		if (phase == 3) return actCrawl();
 
 		//2단계
 		zoltCd--; guardCd--;
@@ -442,6 +442,8 @@ public class WraithKing extends Mob {
 		double a = Math.atan2(dy, dx);
 		zoltDir = (int)Math.floorMod(Math.round(a / (Math.PI / 4)), 8L);
 		zoltCharge = MazeTower.WK_ZOLT_CHARGE;
+		if (sprite != null) sprite.turnTo(pos, Dungeon.hero.pos);
+		if (sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).raiseStaff(); //지팡이를 들어 구슬이 빛남
 		showZoltFx();
 		if (Dungeon.level.heroFOV[pos]) GLog.n(Messages.get(this, "zolt_charge"));
 		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP, 1f, 0.7f);
@@ -521,6 +523,7 @@ public class WraithKing extends Mob {
 
 	private void fireZoltraak(){
 		clearZoltFx();
+		if (sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).raiseStaff();
 		ArrayList<Integer> lanes = new ArrayList<>();
 		ArrayList<Integer> cells = zoltCells(lanes);
 		boolean seen = false;
@@ -762,11 +765,58 @@ public class WraithKing extends Mob {
 		applyDarkness();
 		BossHealthBar.bleed(true);
 		if (sprite != null){
-			BossEffects.onChar(BossEffects.Fx.WK_CROWN_BREAK, sprite, 8, false);
-			if (sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).crawl();
+			//쓰러짐 동작과 함께 머리 위 왕관이 깨지고, 끝나면 기어다니는 모습
+			if (sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).collapse();
 		}
 		Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 		yell(Messages.get(this, "phase3"));
+	}
+
+	//(결정) 3단계: 기어다니는 왕은 주인공에게서 도망친다 (이동 속도 70%).
+	//주인공에게서 더 멀어지는 칸이 없고 주인공이 바로 옆에 있을 때만 할퀴기
+	private boolean actCrawl(){
+		Hero hero = Dungeon.hero;
+		if (hero == null || !hero.isAlive()){
+			spend(TICK);
+			return true;
+		}
+		int cur = Dungeon.level.distance(pos, hero.pos);
+		int best = -1, bestDist = cur;
+		if (!rooted){
+			for (int n : PathFinder.NEIGHBOURS8){
+				int c = pos + n;
+				if (c < 0 || c >= Dungeon.level.length()) continue;
+				if (!Dungeon.level.passable[c] || Dungeon.level.avoid[c] || Actor.findChar(c) != null) continue;
+				int d = Dungeon.level.distance(c, hero.pos);
+				if (d > bestDist || (d == bestDist && best != -1 && Random.Int(2) == 0)){
+					if (d > cur){ bestDist = d; best = c; }
+				}
+			}
+		}
+		if (best != -1){
+			int oldPos = pos;
+			move(best);
+			spend(1f / speed());
+			return moveSprite(oldPos, pos);
+		}
+		if (Dungeon.level.adjacent(pos, hero.pos) && hero.invisible <= 0){
+			enemy = hero;
+			if (sprite != null && (sprite.visible || hero.sprite.visible)){
+				sprite.attack(hero.pos);
+				return false; //공격 동작이 끝나면 onAttackComplete
+			}
+			attack(hero);
+			spend(attackDelay());
+			return true;
+		}
+		spend(TICK);
+		return true;
+	}
+
+	@Override
+	public float speed() {
+		float s = super.speed();
+		return phase == 3 ? s * MazeTower.WK_CRAWL_SPEED : s;
 	}
 
 	// ===== 피해 =====
@@ -903,19 +953,67 @@ public class WraithKing extends Mob {
 
 		private boolean crawling = false;
 
+		//(결정) 서 있는 시트의 9~12는 사망이 아니라 3단계로 바뀔 때 한 번 재생하는 '쓰러짐'
+		private boolean collapsing = false;
+
 		public WraithKingSprite(){
 			super();
-			MazeBossSprites.apply(this, MazeBossSprites.Look.WRAITHKING);
+			setAttack(MazeBossSprites.apply(this, MazeBossSprites.Look.WRAITHKING));
 			play(idle);
 		}
 
+		//(결정) 공격 6~8: 서 있는 모습은 지팡이를 들어 구슬이 빛나고(인간을 죽이는 마법 기 모으기·발사도 이 동작), 기어다니는 모습은 할퀴기
+		private void setAttack( com.watabou.noosa.TextureFilm film ){
+			attack = new Animation(12, false);
+			attack.frames(film, 6, 7, 8);
+			zap = attack.clone();
+		}
+
+		//인간을 죽이는 마법 기 모으기·발사: 지팡이를 들어 구슬이 빛나는 동작 (공격 6~8)
+		public void raiseStaff(){
+			if (!crawling && !collapsing && curAnim != die) play(zap);
+		}
+
+		//3단계로 바뀔 때: 쓰러짐(서 있는 시트 9~12)을 한 번 재생하고, 9번과 함께 머리 위에서 왕관이 깨진다. 끝나면 기어다니는 시트
+		public void collapse(){
+			if (crawling || collapsing) return;
+			collapsing = true;
+			reveal = 0;
+			hidden = false;
+			alpha(1f);
+			play(die);
+			BossEffects.at(BossEffects.Fx.WK_CROWN_BREAK, x + width / 2f, y + 2, 8, false);
+		}
+
 		public void crawl(){
+			collapsing = false;
 			if (crawling) return;
 			crawling = true;
-			boolean dying = curAnim == die;
 			//게임 사본은 칸마다 양옆에 투명 1픽셀을 두어(24×25) 옆 프레임 픽셀이 번져 보이지 않게 했다 (원본 docs는 22×25)
-			MazeBossSprites.applyFile(this, "sprites/maze_b5_wraithking_crawl_sheet.png", 24, MazeBossSprites.Look.WRAITHKING.h);
-			if (!dying) play(idle);
+			setAttack(MazeBossSprites.applyFile(this, "sprites/maze_b5_wraithking_crawl_sheet.png", 24, MazeBossSprites.Look.WRAITHKING.h));
+			play(idle);
+		}
+
+		@Override
+		public void play( Animation anim ) {
+			//쓰러지는 중에 다른 동작(이동·공격)이 오면 쓰러짐을 끝내고 기어다니는 시트의 같은 동작으로
+			if (collapsing && anim != die){
+				Animation old = anim;
+				Animation oldRun = run, oldAtk = attack, oldZap = zap;
+				crawl();
+				if (old == oldRun) anim = run;
+				else if (old == oldAtk) anim = attack;
+				else if (old == oldZap) anim = zap;
+				else anim = idle;
+			}
+			super.play(anim);
+		}
+
+		@Override
+		public void die() {
+			//실제 사망은 기어다니는 시트의 9~12
+			if (!crawling) crawl();
+			super.die();
 		}
 
 		private float reveal = 0;
@@ -950,6 +1048,15 @@ public class WraithKing extends Mob {
 		public void onComplete( Animation anim ) {
 			//기습 연출의 공격 동작은 원작 공격 마무리(onAttackComplete)를 부르지 않는다 (피해는 이미 들어감)
 			if (anim == attack && reveal > 0){
+				idle();
+				return;
+			}
+			//쓰러짐이 끝나면 기어다니는 모습 (MobSprite가 사라지게 하지 않도록 먼저 가로챈다)
+			if (collapsing && anim == die){
+				crawl();
+				return;
+			}
+			if (anim == zap){
 				idle();
 				return;
 			}

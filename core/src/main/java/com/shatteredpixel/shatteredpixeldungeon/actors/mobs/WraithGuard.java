@@ -55,6 +55,13 @@ public class WraithGuard extends Mob {
 
 	private int noisePriority = 0; //지금 쫓는 소리의 우선순위 (도착하면 0)
 
+	//(결정) 조사 문구: 방이 어두울 때와 밝을 때(등불이 켜졌거나 3단계) 다르다
+	@Override
+	public String description() {
+		WraithKing k = WraithKing.find();
+		return Messages.get(this, k != null && k.isDark() ? "desc_dark" : "desc");
+	}
+
 	@Override
 	protected boolean act() {
 		WraithKing k = WraithKing.find();
