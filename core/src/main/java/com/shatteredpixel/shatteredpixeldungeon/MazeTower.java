@@ -535,6 +535,7 @@ public class MazeTower {
 	public static final int   WK_SOUL_NOWARN    = 11;    //(결정, 바뀜 12→11) 영혼이 이만큼 이상이면 인간을 죽이는 마법 경고 없음
 	public static final int   WK_SOUL_RAGE      = 16;    //(결정, 바뀜 18→16) 영혼이 이만큼 이상이면 공격력 추가
 	public static final float WK_RAGE_ATK       = 1.0f;  //위의 추가 공격력 (+100%)
+	public static final int   WK_SOUL_DEATH     = 30;    //(결정) 영혼이 이만큼 모이면 주인공 즉사
 	public static final int   WK_DARK_VIEW      = 1;     //어둠 속 주인공 시야
 	public static final int   WK_LAMPS          = 3;     //기억의 등불 수
 	public static final int   WK_LAMP_HERO_GAP  = 2;     //등불은 처음 생길 때 주인공 둘레 이 칸 안에는 생기지 않는다
