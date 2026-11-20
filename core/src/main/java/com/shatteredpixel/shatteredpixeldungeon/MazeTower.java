@@ -555,14 +555,14 @@ public class MazeTower {
 	public static final float BOSS_FLOOR_DECO_KEEP = 0.3f; //5·10층 보스층: 바닥 장식 중 남기는 비율
 
 	// ===== 몬스터 전체 세기 =====
-	//원작 몬스터 수치에 곱한다. 30단계 난이도 조정 때 구역별로 나눌 수 있다.
-	public static final float MOB_HP_MULTI  = 0.8f;  //체력
-	public static final float MOB_DMG_MULTI = 0.8f;  //근접 공격 피해
-	public static final float MOB_ACC_MULTI = 0.9f;  //명중
+	//원작 몬스터 수치에 곱한다(1 = 원작). (결정) 한때 0.8·0.9로 약하게 했다가 원작대로 되돌렸다. 30단계 난이도 조정 때 구역별로 나눌 수 있다.
+	public static final float MOB_HP_MULTI  = 1f;    //체력
+	public static final float MOB_DMG_MULTI = 1f;    //근접 공격 피해
+	public static final float MOB_ACC_MULTI = 1f;    //명중
 	//보스 (BOSS 속성). 보스가 부른 몹·움직이지 않는 것(철창·광맥·기둥·돌무더기)은 원작 그대로
-	public static final float BOSS_HP_MULTI  = 0.8f;
-	public static final float BOSS_DMG_MULTI = 0.8f;
-	public static final float BOSS_ACC_MULTI = 0.9f;
+	public static final float BOSS_HP_MULTI  = 1f;
+	public static final float BOSS_DMG_MULTI = 1f;
+	public static final float BOSS_ACC_MULTI = 1f;
 
 	//적 편 몬스터의 세기 배율: 보스면 bossMulti, 잡몹이면 mobMulti, 보스 부하·움직이지 않는 것·그 밖은 1
 	public static float mobStatMulti( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch, float mobMulti, float bossMulti ){
