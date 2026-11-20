@@ -57,42 +57,48 @@ public class StormZoneFx {
 		sky.killAndErase();
 	}
 
-	// ===== 구역 테두리: 바깥은 진한 원소 색 2픽셀, 그 안쪽에 밝은 1픽셀 =====
+	// ===== 구역 테두리 =====
+	//(결정) 명암을 살짝 섞은 세 겹 줄: 바깥 어두운 원소 색 1픽셀 → 원소 색 1픽셀 → 안쪽 밝은 색 1픽셀(옅게).
+	//경고 중에는 은은하게 숨 쉬듯 밝아졌다 어두워지고, (결정) 폭풍이 내리는 동안은 빛나지 않는다(가라앉은 색으로 멈춰 있음).
 	private class Border extends Group {
-		private final ArrayList<ColorBlock> outer = new ArrayList<>(), inner = new ArrayList<>();
+		private final ArrayList<ColorBlock> dark = new ArrayList<>(), mid = new ArrayList<>(), light = new ArrayList<>();
 		private float time = 0;
 
 		Border( int w ){
 			for (int c : cells){
 				float x = (c % w) * DungeonTilemap.SIZE, y = (c / w) * DungeonTilemap.SIZE;
-				if (!set.contains(c - w)) line(x, y, 16, 2, x, y + 2, 16, 1);           //위
-				if (!set.contains(c + w)) line(x, y + 14, 16, 2, x, y + 13, 16, 1);     //아래
-				if (!set.contains(c - 1)) line(x, y, 2, 16, x + 2, y, 1, 16);           //왼쪽
-				if (!set.contains(c + 1)) line(x + 14, y, 2, 16, x + 13, y, 1, 16);     //오른쪽
+				//위·아래는 가로 줄, 왼쪽·오른쪽은 세로 줄 (바깥 → 안쪽 순서로 한 픽셀씩)
+				if (!set.contains(c - w)) for (int k = 0; k < 3; k++) seg(k, x, y + k, 16, 1);
+				if (!set.contains(c + w)) for (int k = 0; k < 3; k++) seg(k, x, y + 15 - k, 16, 1);
+				if (!set.contains(c - 1)) for (int k = 0; k < 3; k++) seg(k, x + k, y, 1, 16);
+				if (!set.contains(c + 1)) for (int k = 0; k < 3; k++) seg(k, x + 15 - k, y, 1, 16);
 			}
 			update();
 		}
 
-		private void line( float ox, float oy, float ow, float oh, float ix, float iy, float iw, float ih ){
-			ColorBlock o = new ColorBlock(ow, oh, 0xFF000000 | BASE[element]);
-			o.x = ox; o.y = oy;
-			add(o);
-			outer.add(o);
-			ColorBlock i = new ColorBlock(iw, ih, 0xFF000000 | RIM[element]);
-			i.x = ix; i.y = iy;
-			add(i);
-			inner.add(i);
+		private void seg( int layer, float x, float y, float w, float h ){
+			int color = layer == 0 ? DEEP[element] : layer == 1 ? BASE[element] : RIM[element];
+			ColorBlock b = new ColorBlock(w, h, 0xFF000000 | color);
+			b.x = x; b.y = y;
+			add(b);
+			(layer == 0 ? dark : layer == 1 ? mid : light).add(b);
 		}
 
 		@Override
 		public void update() {
 			super.update();
 			time += Game.elapsed;
-			//경고는 천천히 숨 쉬듯, 폭풍은 진하게 빠르게
-			float wave = storm ? 0.85f + 0.15f * (float)Math.sin(time * 6f) : 0.6f + 0.4f * (float)Math.sin(time * 3f);
-			float k = storm ? 1f : 0.8f;
-			for (ColorBlock o : outer) o.alpha(0.85f * k * wave);
-			for (ColorBlock i : inner) i.alpha(0.55f * k * wave);
+			float wave = storm ? 1f : 0.75f + 0.25f * (float)Math.sin(time * 3f);
+			float d, m, l;
+			if (storm){
+				//폭풍 중: 빛나지 않게 낮고 고른 진하기
+				d = 0.55f; m = 0.40f; l = 0.12f;
+			} else {
+				d = 0.70f * wave; m = 0.60f * wave; l = 0.30f * wave;
+			}
+			for (ColorBlock b : dark)  b.alpha(d);
+			for (ColorBlock b : mid)   b.alpha(m);
+			for (ColorBlock b : light) b.alpha(l);
 		}
 	}
 

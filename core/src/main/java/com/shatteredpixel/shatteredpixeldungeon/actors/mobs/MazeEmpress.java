@@ -501,7 +501,8 @@ public class MazeEmpress extends Mob {
 		int goal = Math.round(tileableCells() * MazeTower.EM_TILE_FILL);
 		ArrayList<Integer> empty = new ArrayList<>();
 		for (int c : l.roomFloorCells()){
-			if (c == l.mazeThrone() || ElementTile.at(c) != 0) continue;
+			//빈칸에만 깐다. 주인공이 선 칸은 떠나는 순간 사라지므로 빼서 90%가 바로 깨지지 않게
+			if (c == l.mazeThrone() || ElementTile.at(c) != 0 || c == Dungeon.hero.pos) continue;
 			empty.add(c);
 		}
 		int n = ElementTile.count();
