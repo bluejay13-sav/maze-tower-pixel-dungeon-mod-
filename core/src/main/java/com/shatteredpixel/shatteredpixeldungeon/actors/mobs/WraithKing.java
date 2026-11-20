@@ -226,6 +226,11 @@ public class WraithKing extends Mob {
 		}
 
 		if (phase == 1) return actHarvest();
+		//쓰러지는 연출이 끝날 때까지 왕은 움직이지 않는다 (연출이 끊기지 않게)
+		if (phase == 3 && sprite instanceof WraithKingSprite && ((WraithKingSprite) sprite).isCollapsing()){
+			spend(TICK);
+			return true;
+		}
 		if (phase == 3) return actCrawl();
 
 		//2단계
@@ -987,10 +992,20 @@ public class WraithKing extends Mob {
 		//(결정) 서 있는 시트의 9~12는 사망이 아니라 3단계로 바뀔 때 한 번 재생하는 '쓰러짐'
 		private boolean collapsing = false;
 
+		//(결정) 쓰러짐은 천천히: 한 프레임 0.25초, 마지막에 엎드린 모습으로 잠깐 멈춘다 (약 1.5초)
+		private Animation collapseAnim;
+
 		public WraithKingSprite(){
 			super();
-			setAttack(MazeBossSprites.apply(this, MazeBossSprites.Look.WRAITHKING));
+			com.watabou.noosa.TextureFilm film = MazeBossSprites.apply(this, MazeBossSprites.Look.WRAITHKING);
+			setAttack(film);
+			collapseAnim = new Animation(4, false);
+			collapseAnim.frames(film, 9, 10, 11, 12, 12, 12);
 			play(idle);
+		}
+
+		public boolean isCollapsing(){
+			return collapsing;
 		}
 
 		//(결정) 공격 6~8: 서 있는 모습은 지팡이를 들어 구슬이 빛나고(인간을 죽이는 마법 기 모으기·발사도 이 동작), 기어다니는 모습은 할퀴기
@@ -1012,8 +1027,15 @@ public class WraithKing extends Mob {
 			reveal = 0;
 			hidden = false;
 			alpha(1f);
-			play(die);
-			BossEffects.at(BossEffects.Fx.WK_CROWN_BREAK, x + width / 2f, y + 2, 8, false);
+			play(collapseAnim);
+			//(결정) 한눈에 알아보게: 왕관 깨짐을 천천히, 하얗게 번쩍, 푸른 넋이 크게 흩어지고, 화면이 흔들리며 머리 위에 글자
+			BossEffects.at(BossEffects.Fx.WK_CROWN_BREAK, x + width / 2f, y + 2, 6, false);
+			flash();
+			emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle.UP, 18);
+			emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.factory(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.LIGHT), 6);
+			showStatus(0x66AAFF, Messages.get(WraithKing.class, "phase3_status"));
+			PixelScene.shake(3f, 0.6f);
+			GameScene.flash(0x223366);
 		}
 
 		public void crawl(){
@@ -1028,7 +1050,7 @@ public class WraithKing extends Mob {
 		@Override
 		public void play( Animation anim ) {
 			//쓰러지는 중에 다른 동작(이동·공격)이 오면 쓰러짐을 끝내고 기어다니는 시트의 같은 동작으로
-			if (collapsing && anim != die){
+			if (collapsing && anim != collapseAnim){
 				Animation old = anim;
 				Animation oldRun = run, oldAtk = attack, oldZap = zap;
 				crawl();
@@ -1083,7 +1105,7 @@ public class WraithKing extends Mob {
 				return;
 			}
 			//쓰러짐이 끝나면 기어다니는 모습 (MobSprite가 사라지게 하지 않도록 먼저 가로챈다)
-			if (collapsing && anim == die){
+			if (collapsing && anim == collapseAnim){
 				crawl();
 				return;
 			}
