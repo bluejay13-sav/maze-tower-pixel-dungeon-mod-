@@ -259,7 +259,8 @@ public class BloomAttack {
 	}
 
 	private static void extraStrike(final Hero hero, final Char enemy){
-		if (!hero.isAlive() || !enemy.isAlive()) return;
+		if (!hero.isAlive() || !enemy.isAlive()
+				|| enemy.invisible > 0 || !Dungeon.level.adjacent(hero.pos, enemy.pos)) return; //(결정) 적이 순간이동·은신하면 추가 평타 없음
 		TalentEffects.shadowStrike(hero, enemy); //원작 그림자검 원 베기 연출 재사용
 		BloomRules.extraAttack(awake(hero, DOUBLE_SLASH), new java.util.concurrent.Callable<Boolean>() {
 			@Override

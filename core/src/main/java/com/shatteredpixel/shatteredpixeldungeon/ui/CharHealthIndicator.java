@@ -46,7 +46,8 @@ public class CharHealthIndicator extends HealthBar {
 	public void update() {
 		super.update();
 		
-		if (target != null && target.isAlive() && target.isActive() && target.sprite.visible) {
+		if (target != null && target.isAlive() && target.isActive() && target.sprite.visible
+				&& !com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.hideHealth(target)) { //Maze Tower: 망령 왕 기습 중에는 체력바 없음
 			CharSprite sprite = target.sprite;
 			width = sprite.width()*(4/6f);
 			x = sprite.x + sprite.width()/6f;

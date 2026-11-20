@@ -90,8 +90,16 @@ public class WraithEyes extends Mob {
 			return 0.15f;
 		}
 
+		private boolean overFog = false;
+
 		@Override
 		public void update() {
+			//(결정) 눈 칸은 안개로 덮여 밝아지지 않으므로, 눈 그림만 안개 위 층으로 옮긴다
+			if (!overFog && parent != null){
+				overFog = true;
+				parent.erase(this);
+				com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.effectOverFog(this);
+			}
 			super.update();
 			//(결정) 원작 미믹처럼 알아채기 어렵게: 완전한 어둠 속에서 35%만 비친다
 			if (ch != null && ch.isAlive()) alpha(MazeTower.WK_EYES_ALPHA);

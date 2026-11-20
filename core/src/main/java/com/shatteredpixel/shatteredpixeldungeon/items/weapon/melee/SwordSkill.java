@@ -222,6 +222,7 @@ public class SwordSkill {
 	//타격 한 번. 여러 번 때리는 스킬은 타격 사이에 MazeTower.SKILL_HIT_INTERVAL초 텀을 둔다.
 	//(그동안 주인공은 행동 중이라 다른 누구도 움직이지 않는다)
 	private static void doHit(final Hero hero, final MeleeWeapon wep, final SwordSkill skill, final Char enemy, final int index, final boolean surprise){
+		if (index == 0) startPos = enemy.pos;
 		hero.belongings.abilityWeapon = wep;
 
 		SkillEffects.hit(skill.nameKey, hero, enemy, index, surprise);
@@ -238,7 +239,8 @@ public class SwordSkill {
 		active = null;
 		noBlood = false;
 
-		if (index + 1 < skill.hits && enemy.isAlive() && hero.isAlive() && hero.sprite != null && hero.sprite.parent != null){
+		//(결정) 맞은 적이 다른 곳으로 순간이동했거나 은신하면 남은 타격은 멈춘다
+		if (index + 1 < skill.hits && enemy.isAlive() && hero.isAlive() && stillThere(enemy) && hero.sprite != null && hero.sprite.parent != null){
 			Delayer wait = new Delayer(MazeTower.SKILL_HIT_INTERVAL){
 				@Override
 				protected void onComplete() {
@@ -250,6 +252,14 @@ public class SwordSkill {
 		} else {
 			finish(hero, wep);
 		}
+	}
+
+	//여러 번 때리는 공격: 첫 타격 때 적이 있던 칸
+	private static int startPos = -1;
+
+	//Maze Tower: 연속 공격을 이어 가도 되는지 (적이 순간이동하거나 은신하면 멈춘다)
+	public static boolean stillThere( Char enemy ){
+		return enemy.isAlive() && enemy.pos == startPos && enemy.invisible <= 0;
 	}
 
 	private static void finish(Hero hero, MeleeWeapon wep){

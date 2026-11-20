@@ -82,6 +82,12 @@ public class WraithKing extends Mob {
 	private ArrayList<MovieClip> zoltWarn = new ArrayList<>();
 	private MovieClip zoltChargeFx;
 
+	//Maze Tower: 기습 중(푸른 눈)과 어둠 속 왕에게는 체력바를 띄우지 않는다
+	public static boolean hideHealth( Char c ){
+		if (c instanceof WraithEyes) return true;
+		return c instanceof WraithKing && ((WraithKing) c).isDark();
+	}
+
 	public static WraithKing find(){
 		if (Dungeon.level == null) return null;
 		for (Mob m : Dungeon.level.mobs){
@@ -552,6 +558,8 @@ public class WraithKing extends Mob {
 			//왕의 기술은 주인공에게 적대적인 몹(근위병 등)과 등불을 다치게 하지 않는다
 			if (ch.alignment == Alignment.ENEMY || ch instanceof MemoryLamp) continue;
 			int dmg = Math.round(Random.NormalIntRange(MazeTower.WK_ZOLT_MIN, MazeTower.WK_ZOLT_MAX) * power());
+			//(결정) 방어력의 70%를 무시한다 (30%만 적용)
+			dmg = Math.max(0, dmg - Math.round(ch.drRoll() * (1f - MazeTower.WK_ZOLT_ARMOR_IGNORE)));
 			ch.damage(dmg, this);
 			if (ch == Dungeon.hero && !ch.isAlive()){
 				Dungeon.fail(this);
@@ -678,7 +686,7 @@ public class WraithKing extends Mob {
 	public void counterHit( int dmg, Object src ){
 		if (ambushCell == -1 || countered) return;
 		countered = true;
-		//(결정) 눈을 쳐서 넘어가는 피해는 원래의 60~70%만 (등불을 밝혀 직접 치는 쪽이 이득)
+		//(결정) 눈을 쳐서 넘어가는 피해는 원래의 10%만 (기습 중 받는 피해 90% 감소, WK_COUNTER_*)
 		damage(Math.max(1, Math.round(dmg * Random.Float(MazeTower.WK_COUNTER_MIN, MazeTower.WK_COUNTER_MAX))), src);
 	}
 
@@ -720,7 +728,7 @@ public class WraithKing extends Mob {
 
 	//기습 일격: 반드시 맞고, 방어력을 50%(WK_AMBUSH_ARMOR_IGNORE)만 적용한다
 	private void ambushStrike( Char target ){
-		int dmg = damageRoll();
+		int dmg = Math.round(damageRoll() * MazeTower.WK_AMBUSH_DMG); //(결정) 기습 피해 +30%
 		int armor = Math.round(target.drRoll() * (1f - MazeTower.WK_AMBUSH_ARMOR_IGNORE));
 		dmg = Math.max(0, dmg - armor);
 		if (target.sprite != null){

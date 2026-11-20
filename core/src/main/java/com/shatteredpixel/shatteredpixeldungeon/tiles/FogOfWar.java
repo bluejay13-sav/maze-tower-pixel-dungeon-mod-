@@ -288,6 +288,9 @@ public class FogOfWar extends Image {
 	private int getCellFog( int cell ){
 
 		if (visible[cell]) {
+			//Maze Tower: 망령 왕 어둠 속 푸른 눈 칸은 시야에 넣되(칠 수 있게) 밝히지 않는다
+			if (Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel
+					&& ((com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel) Dungeon.level).mazeDarkCell == cell) return INVISIBLE;
 			return VISIBLE;
 		} else if (visited[cell]) {
 			return VISITED;

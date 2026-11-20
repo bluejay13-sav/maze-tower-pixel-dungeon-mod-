@@ -503,6 +503,7 @@ public class CityBossLevel extends Level {
 	public void updateFieldOfView( Char c, boolean[] fieldOfView ) {
 		super.updateFieldOfView( c, fieldOfView );
 		if (!mazeRoom || c != Dungeon.hero) return;
+		mazeDarkCell = -1;
 		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing k = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.find();
 		if (k == null || !k.isDark()) return;
 		java.util.Arrays.fill(fieldOfView, false);
@@ -524,9 +525,14 @@ public class CityBossLevel extends Level {
 					|| ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithEyes
 					|| ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithGuard){
 				fieldOfView[cell] = true;
+				//(결정) 기습하려는 푸른 눈 칸은 칠 수 있게 시야에 넣지만 밝히지 않는다 (안개가 덮고, 눈 그림만 안개 위에)
+				if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithEyes) mazeDarkCell = cell;
 			}
 		}
 	}
+
+	//Maze Tower: 시야에는 있지만 안개를 걷지 않는 칸 (망령 왕 기습의 푸른 눈, FogOfWar에서 본다)
+	public int mazeDarkCell = -1;
 
 	//Maze Tower: 주인공이 마지막으로 움직인 방향 (망령 왕 기습: 주인공 뒤 칸)
 	private int lastHeroPos = -1;
