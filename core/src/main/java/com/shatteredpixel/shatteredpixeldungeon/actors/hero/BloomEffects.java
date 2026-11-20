@@ -75,6 +75,7 @@ public class BloomEffects {
 		u.target = target;
 		u.manaSpent = cost;
 		u.wasFullMana = m.isFull();
+		BloomRules.beginSkill(cost); //스킬 한 번이 새 "한 행동"
 		u.focusPrimed = m.focusReady;
 		m.focusReady = false;
 		skillUse = u;
@@ -89,9 +90,8 @@ public class BloomEffects {
 
 		//처형 3레벨: 처형으로 처치하면 비용 50% 반환
 		if (u.target != null && !u.target.isAlive() && u.executeApplied && lvl(hero, EXECUTE) >= 2){
-			int amt = Math.round(u.manaSpent * B2_EXECUTE_REFUND);
+			int amt = BloomRules.refund(hero, Math.round(u.manaSpent * B2_EXECUTE_REFUND));
 			if (amt > 0){
-				Mana.get(hero).gain(amt);
 				TalentEffects.manaRefund(hero, u.target, amt); //푸른 마탄이 주인공에게
 			}
 		}
@@ -126,8 +126,6 @@ public class BloomEffects {
 	// =====================================================================
 	// 공격 적중 (Hero.attackProc, 방어 적용 후 피해)
 	// =====================================================================
-
-	private static boolean inChain = false; //연쇄로 번진 피해 처리 중
 
 	public static int onHeroAttackProc(Hero hero, Char enemy, int damage){
 		return processHit(hero, enemy, damage, isSkill());
@@ -164,6 +162,7 @@ public class BloomEffects {
 	//평타·스킬 적중 한 번 처리
 	private static int processHit(Hero hero, Char enemy, int damage, boolean skill){
 		if (enemy == null || enemy == hero) return damage;
+		if (BloomRules.isDerived()) return damage; //규칙 1: 파생 피해는 평타도 스킬도 아니다
 		float bonus = 1f;
 
 		//넘치는 힘: 마나가 가득 찬 동안 모든 공격
@@ -198,22 +197,22 @@ public class BloomEffects {
 		if (!skill){
 			//마나 흡수
 			int md = lvl(hero, MANA_DRAIN);
-			if (md >= 0) Mana.get(hero).gain(B2_MANA_DRAIN[md]);
+			if (md >= 0 && BloomRules.triggerOnHit(MANA_DRAIN)) BloomRules.gainMana(hero, B2_MANA_DRAIN[md]);
 			//잔향
 			int ec = lvl(hero, ECHO);
-			if (ec >= 0 && hero.buff(EchoTracker.class) != null) Mana.get(hero).gain(B2_ECHO_MANA[ec]);
+			if (ec >= 0 && hero.buff(EchoTracker.class) != null && BloomRules.triggerOnHit(ECHO)) BloomRules.gainMana(hero, B2_ECHO_MANA[ec]);
 			//불꽃 칼날
 			int fb = lvl(hero, FLAME_BLADE);
-			if (fb >= 0 && Random.Float() < B2_FLAME_CHANCE[fb]){
+			if (fb >= 0 && Random.Float() < B2_FLAME_CHANCE[fb] && BloomRules.triggerOnHit(FLAME_BLADE)){
 				ignite(hero, enemy, B2_FLAME_TURNS);
 			}
 		} else {
 			//서리 베기
 			int fs = lvl(hero, FROST_SLASH);
-			if (fs >= 0) chill(hero, enemy, B2_FROST_TURNS[fs]);
+			if (fs >= 0 && BloomRules.triggerOnHit(FROST_SLASH)) chill(hero, enemy, B2_FROST_TURNS[fs]);
 			//연쇄
 			int ch = lvl(hero, CHAIN);
-			if (ch >= 0 && !inChain) chain(hero, enemy, result, ch);
+			if (ch >= 0 && BloomRules.triggerOnHit(CHAIN)) chain(hero, enemy, result, ch);
 		}
 
 		//잔류전기 (평타·스킬)
@@ -233,16 +232,14 @@ public class BloomEffects {
 				candidates.add(c);
 			}
 		}
-		inChain = true;
 		for (int i = 0; i < B2_CHAIN_TARGETS[level] && !candidates.isEmpty(); i++){
 			Char other = Random.element(candidates);
 			candidates.remove(other);
 			if (other.sprite != null && enemy.sprite != null){
 				TalentEffects.chain(enemy, other); //대상 사이 짧은 빛줄기
 			}
-			other.damage(amt, hero);
+			BloomRules.derivedDamage(CHAIN, other, amt); //번진 피해는 파생
 		}
-		inChain = false;
 	}
 
 	// =====================================================================
@@ -252,6 +249,15 @@ public class BloomEffects {
 	//추가 평타로 이어서 처리하면 true (그때는 끝난 뒤 done을 부른다). false면 부른 쪽이 바로 done을 처리한다.
 	public static boolean afterNormalAttack(final Hero hero, final Char enemy, boolean hit, final Runnable done){
 		return false;
+	}
+
+	// =====================================================================
+	// 처치 (BloomRules.onDeath에서, 주인공이 처치했을 때만)
+	// =====================================================================
+
+	//byDerived: 파생 피해로 죽었는지. 처치 특성(기세·질풍·결투·기습·물보라·표식 등)은 C단계에서 넣는다.
+	public static void onEnemyKilled(Hero hero, Char enemy, boolean byDerived){
+		BloomRules.debug("kill " + enemy.name() + (byDerived ? " (derived)" : ""));
 	}
 
 	// =====================================================================
@@ -352,6 +358,7 @@ public class BloomEffects {
 		if (SwordSkill.active != null) chance *= SwordSkill.active.elementChanceMulti; //룬 블레이드 무형검
 		boolean onWater = Wet.onWater(enemy);
 		if (!(r >= 2 && onWater) && Random.Float() >= chance) return;
+		if (!BloomRules.triggerOnHit(RESIDUAL_SHOCK)) return; //규칙 2
 
 		int shockDmg = Math.max(1, Math.round(damage * B2_SHOCK_DMG_FACTOR));
 
@@ -383,10 +390,10 @@ public class BloomEffects {
 		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 	}
 
-	//전격 피해 한 번
-	public static void shock(Hero hero, Char target, int dmg){
+	//전격 피해 한 번. 특성이 만든 피해라 파생 피해로 처리한다 (적중 시 특성을 부르지 않음, 처치는 인정)
+	public static void shock(Hero hero, final Char target, final int dmg){
 		if (!target.isAlive()) return;
-		target.damage(dmg, new ShockDamage());
+		BloomRules.derived(new Runnable(){ @Override public void run(){ target.damage(dmg, new ShockDamage()); } });
 		if (target.sprite != null) target.sprite.flash();
 	}
 

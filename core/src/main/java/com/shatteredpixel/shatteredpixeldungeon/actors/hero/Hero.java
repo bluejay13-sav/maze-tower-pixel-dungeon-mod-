@@ -2446,6 +2446,7 @@ public class Hero extends Char {
 			return;
 		}
 		
+		BloomRules.beginNormal(); //Maze Tower: 2차 특성 - 평타 한 번이 새 "한 행동"
 		AttackIndicator.target(attackTarget);
 		boolean wasEnemy = attackTarget.alignment == Alignment.ENEMY
 				|| (attackTarget instanceof Mimic && attackTarget.alignment == Alignment.NEUTRAL);

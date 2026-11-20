@@ -1161,6 +1161,7 @@ public abstract class Char extends Actor {
 	}
 	
 	public void die( Object src ) {
+		com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomRules.onDeath(this, src); //Maze Tower: 2차 특성 처치 효과
 		//something else is forcing death, so remove death mark to prevent conflicts
 		if (buff(DeathMark.DeathMarkTracker.class) != null){
 			buff(DeathMark.DeathMarkTracker.class).detachOnDeath();
