@@ -534,7 +534,8 @@ public class MazeEmpress extends Mob {
 		lastAxis = axis;
 		int el;
 		do { el = 1 + Random.Int(3); } while (el == notElement);
-		return new int[]{axis, Random.Int(3), el, MazeTower.EM_STORM_WARN};
+		//(결정) 가운데 띠(가로·세로의 중앙)에는 생기지 않는다: 가장자리 띠(0 또는 2)만. 넓힌 띠라 가운데를 한 칸 살짝 침범한다
+		return new int[]{axis, Random.Int(2) == 0 ? 0 : 2, el, MazeTower.EM_STORM_WARN};
 	}
 
 	private static boolean inBand( int band, int v ){

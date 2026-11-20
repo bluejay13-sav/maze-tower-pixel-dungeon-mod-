@@ -25,9 +25,9 @@ public class StormZoneFx {
 
 	public static final int FIRE = 1, FROST = 2, SHOCK = 3;
 
-	private static final int[] BASE  = {0, 0xFF5A2A, 0x3E86C8, 0xD8C24A};
-	private static final int[] RIM   = {0, 0xFFC070, 0x9FD8FF, 0xFFF29A};
-	private static final int[] DEEP  = {0, 0x5A1810, 0x14304E, 0x4E4410};
+	private static final int[] BASE  = {0, 0xFF5A2A, 0x5AB0FF, 0xFFE040};
+	private static final int[] RIM   = {0, 0xFFC070, 0xC8ECFF, 0xFFF8C0};
+	private static final int[] DEEP  = {0, 0x5A1810, 0x0E2A50, 0x5A4A08};
 
 	private final Group floor = new Group(), sky = new Group();
 	private final ArrayList<Integer> cells;
@@ -92,7 +92,7 @@ public class StormZoneFx {
 			time += Game.elapsed;
 			float wave = 0.8f + 0.2f * (float)Math.sin(time * 1.8f + phase);
 			//경고는 옅게, 폭풍은 진하게. 불은 청록 바닥에서 묻혀 보여서 더 진하게
-			float k = (storm ? 1f : 0.7f) * (element == FIRE ? 1.3f : 1f);
+			float k = (storm ? 1f : 0.7f) * 1.35f; //(결정) 화염·서리·번개 모두 진하게 (청록 바닥에 묻히지 않게)
 			deep.alpha(Math.min(0.6f, 0.30f * k * wave));
 			base.alpha(Math.min(0.6f, 0.32f * k * shade * wave));
 			rim.alpha(Math.min(0.5f, 0.22f * k * wave));
@@ -111,13 +111,14 @@ public class StormZoneFx {
 			if (element == SHOCK){
 				boltTimer -= Game.elapsed;
 				if (boltTimer <= 0){
-					boltTimer = Random.Float(0.18f, 0.45f);
+					boltTimer = Random.Float(0.07f, 0.18f); //(결정) 더 촘촘하게
 					strike(cells.get(Random.Int(cells.size())), w);
+					if (Random.Int(2) == 0) strike(cells.get(Random.Int(cells.size())), w);
 				}
 				//잔 정전기 불꽃
-				acc += Game.elapsed * cells.size() * 0.6f;
+				acc += Game.elapsed * cells.size() * 2.5f;
 			} else {
-				acc += Game.elapsed * cells.size() * (element == FIRE ? 2.4f : 1.4f);
+				acc += Game.elapsed * cells.size() * (element == FIRE ? 4f : 3.5f);
 			}
 			while (acc >= 1f){
 				acc -= 1f;
@@ -128,7 +129,7 @@ public class StormZoneFx {
 					p.reset(x - 6, y - 18, Random.oneOf(0xFFF0B0, 0xFFE29A, 0xFFA54A, 0xFF6A2E, 0xC83A1E), Random.Float(1.5f, 2.5f), Random.Float(0.4f, 0.6f));
 					p.speed.set(Random.Float(10, 18), Random.Float(40, 60));
 				} else if (element == FROST){
-					p.reset(x, y - 16, Random.oneOf(0xFFFFFF, 0xDDEEFF, 0xA8D4FF), Random.Float(1f, 2f), Random.Float(0.6f, 0.9f));
+					p.reset(x, y - 16, Random.oneOf(0xFFFFFF, 0xFFFFFF, 0xDDEEFF, 0xA8D4FF, 0x7FC0FF), Random.Float(1.5f, 2.5f), Random.Float(0.6f, 0.9f));
 					p.speed.set(Random.Float(-8, 8), Random.Float(16, 26));
 				} else {
 					p.reset(x, y, Random.oneOf(0xFFFFFF, 0xFFF29A, 0xD8C24A), 1f, Random.Float(0.12f, 0.25f));

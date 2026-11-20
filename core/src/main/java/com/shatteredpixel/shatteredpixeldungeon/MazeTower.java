@@ -533,7 +533,7 @@ public class MazeTower {
 	public static final float WK_RAGE_ATK       = 1.0f;  //위의 추가 공격력 (+100%)
 	public static final int   WK_DARK_VIEW      = 1;     //어둠 속 주인공 시야
 	public static final int   WK_LAMPS          = 3;     //기억의 등불 수
-	public static final int   WK_LAMP_TURNS     = 50;    //등불이 켜져 있는 턴
+	public static final int   WK_LAMP_TURNS     = 35;    //(결정, 바뀜 50→35) 등불이 켜져 있는 턴
 	public static final float WK_LAMP_STUN      = 3f;    //등불이 켜지면 왕 기절
 	public static final int   WK_ZOLT_INTERVAL  = 15;    //졸트라크 쿨타임
 	public static final int   WK_ZOLT_CHARGE    = 2;     //졸트라크 기 모으기 턴
@@ -557,7 +557,7 @@ public class MazeTower {
 	public static final float EM_PHASE3_HP      = 0.30f;
 	public static final float EM_PETAL_TAKEN    = 0.5f;  //1단계 꽃잎의 보호: 받는 피해
 	public static final float EM_PHASE3_TAKEN   = 1.5f;  //3단계 시든 꽃관: 받는 피해
-	public static final int   EM_TELEPORT_HITS  = 4;     //피해를 연속으로 이만큼 받으면 순간이동
+	public static final int   EM_TELEPORT_HITS  = 2;     //(결정, 바뀜 4→2) 피해를 연속으로 이만큼 받으면 순간이동
 	public static final int   EM_HIT_RESET_TURNS = 2;    //이 턴 동안 맞지 않으면 연속 횟수가 처음부터
 	public static final int   EM_BOLT_INTERVAL  = 3;     //강화 마탄 쿨타임
 	public static final int   EM_BOLT_MIN       = 10;

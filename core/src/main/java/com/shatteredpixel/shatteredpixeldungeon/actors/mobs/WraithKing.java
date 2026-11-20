@@ -80,7 +80,7 @@ public class WraithKing extends Mob {
 
 	//화면 연출 (저장하지 않음)
 	private ArrayList<MovieClip> zoltWarn = new ArrayList<>();
-	private MovieClip zoltChargeFx, eyesFx;
+	private MovieClip zoltChargeFx;
 
 	public static WraithKing find(){
 		if (Dungeon.level == null) return null;
@@ -349,7 +349,7 @@ public class WraithKing extends Mob {
 			want = Dungeon.level.viewDistance;
 			if (h.buff(Light.class) != null) want = Math.max(Light.DISTANCE, want);
 		}
-		invisible = (isDark() && ambushCell == -1) ? 1 : 0;
+		invisible = isDark() ? 1 : 0; //어둠 속 왕은 늘 숨어 있다 (기습은 푸른 눈으로)
 		if (h.viewDistance != want || lastView != want){
 			h.viewDistance = want;
 			lastView = want;
@@ -511,6 +511,9 @@ public class WraithKing extends Mob {
 	}
 
 	// ----- 기습 -----
+	//(결정, 바뀜) 어둠 속 왕은 실제로 걸어다니지 않는다. 주인공 뒤 칸에 푸른 눈(WraithEyes)만 나타나고,
+	//그 눈을 치면 기습이 취소되며 피해가 왕에게 들어간다. 치지 않으면 다음 왕 턴에 왕이 그 칸으로 순간이동해
+	//주인공을 한 대 치고(그 순간만 모습이 보인다) 다른 곳으로 순간이동해 사라진다.
 
 	private boolean startAmbush(){
 		CityBossLevel l = level();
@@ -536,10 +539,6 @@ public class WraithKing extends Mob {
 		ambushCd = MazeTower.WK_AMBUSH_INTERVAL;
 		ambushCell = behind;
 		countered = false;
-		pos = behind;
-		if (sprite != null) sprite.place(pos);
-		invisible = 0;
-		Dungeon.level.occupyCell(this);
 		showEyes();
 		return true;
 	}
@@ -549,44 +548,63 @@ public class WraithKing extends Mob {
 	}
 
 	private void showEyes(){
-		if (eyesFx != null) eyesFx.killAndErase();
-		eyesFx = BossEffects.atCell(BossEffects.Fx.WK_EYES, ambushCell, 4, true);
-		eyesFx.alpha(0.7f);
+		if (findEyes() != null) return;
+		if (Actor.findChar(ambushCell) != null) return;
+		WraithEyes e = new WraithEyes();
+		e.pos = ambushCell;
+		GameScene.add(e);
+	}
+
+	private static WraithEyes findEyes(){
+		for (Mob m : Dungeon.level.mobs){
+			if (m instanceof WraithEyes) return (WraithEyes) m;
+		}
+		return null;
+	}
+
+	private static void removeEyes(){
+		WraithEyes e = findEyes();
+		if (e != null) e.die(null);
+	}
+
+	//눈이 맞았다: 기습을 막고 피해를 숨은 왕에게
+	public void counterHit( int dmg, Object src ){
+		if (ambushCell == -1 || countered) return;
+		countered = true;
+		damage(dmg, src);
 	}
 
 	private boolean actAmbush(){
-		if (eyesFx != null){
-			eyesFx.killAndErase();
-			eyesFx = null;
-		}
+		int cell = ambushCell;
 		boolean wasCountered = countered;
+		removeEyes();
 		ambushCell = -1;
 		countered = false;
-		if (!wasCountered && Dungeon.level.adjacent(pos, Dungeon.hero.pos) && Dungeon.hero.isAlive()){
-			//막지 못하면 주인공을 덮친다 (반드시 맞는다)
+		if (wasCountered){
+			if (Dungeon.level.heroFOV[cell]) GLog.p(Messages.get(this, "ambush_blocked"));
+		} else if (Dungeon.level.adjacent(cell, Dungeon.hero.pos) && Actor.findChar(cell) == null && Dungeon.hero.isAlive()){
+			//막지 못하면 그 칸으로 순간이동해 주인공을 덮친다 (반드시 맞는다)
+			pos = cell;
+			Dungeon.level.occupyCell(this);
+			if (sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).strike(cell, Dungeon.hero.pos);
 			attack(Dungeon.hero, 1f, 0f, Char.INFINITE_ACCURACY);
 			if (!Dungeon.hero.isAlive()){
 				Dungeon.fail(this);
 			}
-		} else if (wasCountered && Dungeon.level.heroFOV[pos]){
-			GLog.p(Messages.get(this, "ambush_blocked"));
+			vanish(false);
 		}
-		vanish();
 		spend(TICK);
 		return true;
 	}
 
 	private void cancelAmbush(){
-		if (eyesFx != null){
-			eyesFx.killAndErase();
-			eyesFx = null;
-		}
+		if (Dungeon.level != null) removeEyes();
 		ambushCell = -1;
 		countered = false;
 	}
 
-	//주인공에게서 떨어진 칸으로 숨는다
-	private void vanish(){
+	//주인공에게서 떨어진 칸으로 숨는다. placeSprite가 false면 그림은 기습 연출이 끝난 뒤 옮겨진다
+	private void vanish( boolean placeSprite ){
 		CityBossLevel l = level();
 		if (l == null) return;
 		ArrayList<Integer> cells = new ArrayList<>();
@@ -597,7 +615,7 @@ public class WraithKing extends Mob {
 		}
 		if (cells.isEmpty()) return;
 		pos = Random.element(cells);
-		if (sprite != null) sprite.place(pos);
+		if (placeSprite && sprite != null) sprite.place(pos);
 		Dungeon.level.occupyCell(this);
 	}
 
@@ -624,10 +642,6 @@ public class WraithKing extends Mob {
 
 	@Override
 	public void damage( int dmg, Object src ) {
-		//기습하려고 숨어든 왕을 그 쪽으로 쳐서 막으면 기습이 취소되고 왕이 피해를 입는다
-		if (ambushCell != -1 && pos == ambushCell && src == Dungeon.hero){
-			countered = true;
-		}
 		//3단계: 받는 평타·스킬 피해 +50%
 		if (phase == 3 && src instanceof Char){
 			dmg = Math.round(dmg * MazeTower.WK_PHASE3_TAKEN);
@@ -645,6 +659,31 @@ public class WraithKing extends Mob {
 		if (phase <= 2 && HP <= HT * MazeTower.WK_PHASE3_HP){
 			enterPhase3();
 		}
+		//(결정) 한 대 맞을 때마다 순간이동 (화상·독 같은 지속 피해는 제외)
+		if (isAlive() && pre != HP && !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff)
+				&& !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob)){
+			hitTeleport();
+		}
+	}
+
+	private void hitTeleport(){
+		CityBossLevel l = level();
+		if (l == null) return;
+		ArrayList<Integer> cells = new ArrayList<>();
+		for (int c : l.roomFloorCells()){
+			if (l.roomEdge(c) || Actor.findChar(c) != null) continue;
+			if (Dungeon.level.distance(c, Dungeon.hero.pos) < 2) continue;
+			cells.add(c);
+		}
+		if (cells.isEmpty()) return;
+		boolean seenFrom = Dungeon.level.heroFOV[pos] && !shrouded();
+		int from = pos;
+		pos = Random.element(cells);
+		if (sprite != null) sprite.place(pos);
+		Dungeon.level.occupyCell(this);
+		if (seenFrom) BossEffects.atCell(BossEffects.Fx.TELEPORT, from, 12, false);
+		if (Dungeon.level.heroFOV[pos] && !shrouded()) BossEffects.atCell(BossEffects.Fx.TELEPORT, pos, 12, false);
+		Sample.INSTANCE.play(Assets.Sounds.PUFF, 0.6f);
 	}
 
 	@Override
@@ -678,7 +717,7 @@ public class WraithKing extends Mob {
 	//불러온 뒤 화면 연출을 다시 만든다
 	private void restoreFx(){
 		if (zoltCharge > 0 && zoltChargeFx == null && zoltWarn.isEmpty()) showZoltFx();
-		if (ambushCell != -1 && eyesFx == null) showEyes();
+		if (ambushCell != -1) showEyes();
 		if (phase == 3 && sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).crawl();
 	}
 
@@ -739,17 +778,47 @@ public class WraithKing extends Mob {
 			if (crawling) return;
 			crawling = true;
 			boolean dying = curAnim == die;
-			MazeBossSprites.applyFile(this, "sprites/maze_b5_wraithking_crawl_sheet.png",
-					MazeBossSprites.Look.WRAITHKING.w, MazeBossSprites.Look.WRAITHKING.h);
+			//게임 사본은 칸마다 양옆에 투명 1픽셀을 두어(24×25) 옆 프레임 픽셀이 번져 보이지 않게 했다 (원본 docs는 22×25)
+			MazeBossSprites.applyFile(this, "sprites/maze_b5_wraithking_crawl_sheet.png", 24, MazeBossSprites.Look.WRAITHKING.h);
 			if (!dying) play(idle);
+		}
+
+		private float reveal = 0;
+		private boolean hidden = false;
+
+		//어둠 속 기습: 그 칸에 잠깐 모습을 드러내 한 대 치고, 연출이 끝나면 숨은 자리로 옮긴다
+		public void strike( int at, int target ){
+			place(at);
+			turnTo(at, target);
+			reveal = 0.5f;
+			alpha(1f);
+			hidden = false;
+			play(attack);
+		}
+
+		@Override
+		public void onComplete( Animation anim ) {
+			//기습 연출의 공격 동작은 원작 공격 마무리(onAttackComplete)를 부르지 않는다 (피해는 이미 들어감)
+			if (anim == attack && reveal > 0){
+				idle();
+				return;
+			}
+			super.onComplete(anim);
 		}
 
 		@Override
 		public void update() {
 			super.update();
-			//어둠 속에 숨은 동안 그림을 숨긴다 (기습하려고 숨어든 동안도 눈만 보인다)
-			if (ch instanceof WraithKing && ((WraithKing) ch).shrouded() && ch.isAlive()){
-				visible = false;
+			if (!(ch instanceof WraithKing) || !ch.isAlive()) return;
+			if (reveal > 0){
+				reveal -= com.watabou.noosa.Game.elapsed;
+				if (reveal <= 0) place(ch.pos);
+			}
+			//어둠 속에 숨은 동안 그림을 숨긴다. 시야 계산이 visible을 다시 켜도 깜빡이지 않게 투명도로 숨긴다
+			boolean hide = ((WraithKing) ch).shrouded() && reveal <= 0;
+			if (hide != hidden){
+				hidden = hide;
+				alpha(hide ? 0f : 1f);
 			}
 		}
 	}
