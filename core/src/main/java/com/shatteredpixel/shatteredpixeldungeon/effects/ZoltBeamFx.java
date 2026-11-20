@@ -48,10 +48,24 @@ public class ZoltBeamFx extends Group {
 			int cx = c % w, cy = c / w;
 			int ox = cx - kx, oy = cy - ky;
 			int row;
-			if (dx != 0 && dy != 0){
-				//대각선: "/"(오른쪽 위·왼쪽 아래)는 6~10줄, "\"는 11~15줄, 광선 가운데 선에서 몇 줄 떨어졌는지(-2~2)
-				if (dx * dy < 0) row = 6 + clamp(ox + oy, 2) + 2;
-				else             row = 11 + clamp(-ox + oy, 2) + 2;
+			boolean diag = dx != 0 && dy != 0;
+			//대각선에서 테두리를 칸 변에 직접 긋는 쪽 (광선 끝처럼 그쪽 이웃이 하나만 있는 곳). 옆면은 조각 그림이 곧은 선으로 잘라 그린다
+			boolean[] edgeRim = {true, true, true, true}; //위·오른쪽·아래·왼쪽
+			if (diag){
+				//대각선: "/"(오른쪽 위·왼쪽 아래)는 6~25줄, "\"는 26~45줄. 광선 가운데 선에서 몇 줄 떨어졌는지(s = -2~2)와
+				//바깥쪽(+)·안쪽(-) 옆이 비었는지(비었으면 곧은 선으로 잘라 테두리)로 고른다
+				boolean slash = dx * dy < 0;
+				int s = clamp(slash ? ox + oy : -ox + oy, 2);
+				//+쪽 이웃 두 칸: "/"는 오른쪽·아래, "\"는 왼쪽·아래. -쪽은 그 반대
+				int[] pA = slash ? new int[]{1, 0} : new int[]{-1, 0};
+				int[] pB = {0, 1};
+				boolean posA = has(set, origin, w, cx + pA[0], cy + pA[1]), posB = has(set, origin, w, cx + pB[0], cy + pB[1]);
+				boolean negA = has(set, origin, w, cx - pA[0], cy - pA[1]), negB = has(set, origin, w, cx - pB[0], cy - pB[1]);
+				boolean clipPos = !posA && !posB, clipNeg = !negA && !negB;
+				row = (slash ? 6 : 26) + (s + 2) * 4 + (clipPos ? 2 : 0) + (clipNeg ? 1 : 0);
+				//곧은 선으로 자른 쪽은 칸 변에 테두리를 긋지 않는다
+				if (clipPos){ edgeRim[sideIndex(pA)] = false; edgeRim[sideIndex(pB)] = false; }
+				if (clipNeg){ edgeRim[sideIndex(new int[]{-pA[0], -pA[1]})] = false; edgeRim[sideIndex(new int[]{-pB[0], -pB[1]})] = false; }
 			} else if (dy == 0){
 				row = clamp(oy, 1) + 1;      //가로 광선: 0~2줄
 			} else {
@@ -67,11 +81,10 @@ public class ZoltBeamFx extends Group {
 
 			//광선 바깥과 맞닿은 변에 짙은 테두리 (왕의 칸 쪽은 없음)
 			int[][] sides = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
-			for (int[] d : sides){
-				int nx = cx + d[0], ny = cy + d[1];
-				int n = nx + ny * w;
-				boolean inside = nx >= 0 && ny >= 0 && nx < w && ny < Dungeon.level.height() && (set.contains(n) || n == origin);
-				if (inside) continue;
+			for (int si = 0; si < 4; si++){
+				int[] d = sides[si];
+				if (!edgeRim[si]) continue;
+				if (has(set, origin, w, cx + d[0], cy + d[1])) continue;
 				ColorBlock b;
 				if (d[1] == -1)      b = new ColorBlock(S, 2, 0xFF000000 | RIM_COLOR);
 				else if (d[1] == 1)  b = new ColorBlock(S, 2, 0xFF000000 | RIM_COLOR);
@@ -82,6 +95,21 @@ public class ZoltBeamFx extends Group {
 				rims.add(b);
 			}
 		}
+	}
+
+	//그 칸이 광선 안인지 (왕의 칸도 안으로 친다)
+	private static boolean has( HashSet<Integer> set, int origin, int w, int x, int y ){
+		if (x < 0 || y < 0 || x >= w || y >= Dungeon.level.height()) return false;
+		int n = x + y * w;
+		return set.contains(n) || n == origin;
+	}
+
+	//방향 → 변 번호 (위 0, 오른쪽 1, 아래 2, 왼쪽 3)
+	private static int sideIndex( int[] d ){
+		if (d[1] == -1) return 0;
+		if (d[0] == 1) return 1;
+		if (d[1] == 1) return 2;
+		return 3;
 	}
 
 	private static int clamp( int v, int r ){
