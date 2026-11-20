@@ -71,6 +71,7 @@ public class BloomSkill {
 		m.focusReady = false;
 
 		s.overcharge = wasFullMana && lvl(hero, OVERCHARGE) >= 0;
+		if (s.overcharge) com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.overcharge(hero); //과충전: 시전할 때 마력 넘침
 		state = s;
 	}
 
@@ -106,7 +107,10 @@ public class BloomSkill {
 		int ex = lvl(hero, EXECUTE);
 		if (ex >= 0 && enemy.HP <= enemy.HT * B2_EXECUTE_HP){
 			bonus += B2_EXECUTE_DMG[ex];
-			if (s.executed.add(enemy.id())) TalentEffects.execute(enemy); //붉은 섬광
+			if (s.executed.add(enemy.id())){
+				TalentEffects.execute(enemy); //붉은 섬광
+				com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.slash(hero, enemy, 0xFF3030); //붉은 일격
+			}
 		}
 
 		//과충전
@@ -126,7 +130,8 @@ public class BloomSkill {
 			s.burstStacks++;
 			s.burstTransferred = mark.transferred;
 			mark.stacks--;
-			if (enemy.sprite != null) enemy.sprite.showStatus(0xE070FF, Messages.get(BloomBuffs.class, "mark_n", mark.stacks)); //임시 (E단계: 표식 터짐)
+			mark.refreshOverhead();
+			com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.markPop(enemy); //표식 터짐
 			if (mark.stacks <= 0) mark.detach();
 		}
 
@@ -188,7 +193,7 @@ public class BloomSkill {
 					BloomRules.derivedDamage(OVERCHARGE, c, dmg);
 				}
 			}
-			PixelScene.shake(1, 0.2f);
+			com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.shockwave(enemy, 1); //대상 주변 3×3 충격파
 		}
 
 		//충격: 맞은 적을 밀친다 (스킬 한 번에 한 번, 피해가 들어간 뒤)
@@ -235,7 +240,7 @@ public class BloomSkill {
 			Char other = Random.element(candidates);
 			candidates.remove(other);
 			if (other.sprite != null && enemy.sprite != null){
-				TalentEffects.chain(enemy, other); //대상 사이 짧은 빛줄기 (E단계: 하늘색 번개 빛줄기)
+				com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.chain(enemy, other); //하늘색 빛줄기
 			}
 			BloomRules.derivedDamage(CHAIN, other, amt);
 		}
@@ -280,10 +285,12 @@ public class BloomSkill {
 			BloomRules.derivedDamage(IMPACT, enemy, Math.max(1, Math.round(hitDmg * B2_IMPACT_WALL_DMG[lv])));
 			if (lv >= 2 && enemy.isAlive()) Buff.affect(enemy, Paralysis.class, B2_IMPACT_STUN);
 			PixelScene.shake(1, 0.15f);
+			com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.impact(enemy.pos); //벽 충돌
 		} else if (bumped != null && wake && bumped.alignment == Char.Alignment.ENEMY){
 			if (enemy.isAlive()) Buff.affect(enemy, Paralysis.class, B2_IMPACT_STUN);
 			if (bumped.isAlive()) Buff.affect(bumped, Paralysis.class, B2_IMPACT_STUN);
 			PixelScene.shake(1, 0.15f);
+			com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.impact(bumped.pos); //적끼리 충돌
 		}
 	}
 
@@ -344,7 +351,7 @@ public class BloomSkill {
 					if (c != enemy && c.isAlive() && c.alignment == Char.Alignment.ENEMY
 							&& Dungeon.level.distance(enemy.pos, c.pos) <= B2_MARK_BURST_AWAKE_RANGE){
 						BloomBuffs.Mark.add(c, stacks, true);
-						TalentEffects.chain(enemy, c); //임시 (E단계: 표식이 옮겨 붙는 빛)
+						com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.markTransfer(enemy, c);
 					}
 				}
 			}
@@ -359,7 +366,7 @@ public class BloomSkill {
 		if (enemy == null || !enemy.isAlive() || !awake(hero, PARRY)) return;
 		int dmg = hero.damageRoll();
 		BloomRules.derivedDamage(PARRY, enemy, dmg);
-		TalentEffects.shadowStrike(hero, enemy); //임시 (E단계: 베기 궤적)
+		com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.slash(hero, enemy, 0xFFFFFF); //베기 궤적
 	}
 
 	// =====================================================================

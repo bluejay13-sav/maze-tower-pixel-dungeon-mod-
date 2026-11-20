@@ -25,6 +25,8 @@ public class Assets {
 
 	public static class Effects {
 		public static final String EFFECTS      = "effects/effects.png";
+		//Maze Tower: 2차 특성 이펙트 (휩쓸기·충격파·표식 등, 좌표는 docs/sprites/talent2/README.md)
+		public static final String MAZE_FX2     = "sprites/maze_fx2_sheet.png";
 		public static final String FIREBALL     = "effects/fireball.png";
 		public static final String SPECKS       = "effects/specks.png";
 		public static final String SPELL_ICONS  = "effects/spell_icons.png";

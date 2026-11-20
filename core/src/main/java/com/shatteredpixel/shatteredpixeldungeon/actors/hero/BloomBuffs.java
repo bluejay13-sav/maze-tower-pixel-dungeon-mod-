@@ -47,10 +47,28 @@ public class BloomBuffs {
 				m.stacks = Math.min(Math.max(m.stacks, 0) + 1, Math.max(n, 1));
 			}
 			m.left = B2_MARK_TURNS;
-			if (ch.sprite != null && m.stacks != before){
-				ch.sprite.showStatus(0xE070FF, Messages.get(BloomBuffs.class, "mark_n", m.stacks)); //임시 (E단계: 머리 위 표식 그림)
-			}
+			if (m.stacks != before) m.refreshOverhead();
 			return m;
+		}
+
+		//머리 위 표식 그림 (표식 수만큼 쌓인다)
+		private com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.MarkOverhead overhead;
+
+		public void refreshOverhead(){
+			if (overhead != null) overhead.stacks(stacks);
+		}
+
+		@Override
+		public void fx(boolean on) {
+			if (on){
+				if (overhead == null && target.sprite != null){
+					overhead = com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.markOverhead(target.sprite);
+					refreshOverhead();
+				}
+			} else if (overhead != null){
+				overhead.killAndErase();
+				overhead = null;
+			}
 		}
 
 		@Override
@@ -343,8 +361,8 @@ public class BloomBuffs {
 		@Override
 		public void use(com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter emitter) {
 			super.use(emitter);
-			//임시 (E단계: fx2_sheet 잔상 칸 그림)
-			emitter.pour(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.factory(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.LIGHT), 0.6f);
+			//fx2_sheet 잔상 칸 그림
+			emitter.add(new com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.AfterimageLayer(this));
 		}
 
 		@Override

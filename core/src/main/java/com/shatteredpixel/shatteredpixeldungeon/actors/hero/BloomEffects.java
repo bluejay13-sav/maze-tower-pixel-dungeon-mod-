@@ -126,6 +126,7 @@ public class BloomEffects {
 	public static int armorAfterIgnore(Hero hero, Char enemy, int dr){
 		float ignore = BloomAttack.armorIgnore(hero, isSkill());
 		if (isSkill()) ignore = Math.max(ignore, BloomSkill.armorIgnore(hero)); //집중 각성
+		if (ignore > 0 && dr > 0) com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.pierce(enemy); //방어 무시 파편
 		return ignore > 0 ? Math.round(dr * (1f - ignore)) : dr;
 	}
 
@@ -261,6 +262,10 @@ public class BloomEffects {
 		//넘치는 힘 + 가득 찬 마나: 은은한 푸른 기운
 		boolean full = m != null && m.isFull() && lvl(hero, OVERFLOW) >= 0;
 		TalentEffects.updateHero(hero, parry, ready, full);
+		//질풍(바람 줄기), 원소 순환 각성(무기에 원소 3색 빛)
+		com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.updateHero(hero,
+				hero.buff(BloomBuffs.Gale.class) != null && lvl(hero, GALE) >= 0,
+				hero.buff(BloomBuffs.CycleCharge.class) != null);
 	}
 
 	// =====================================================================
@@ -290,6 +295,7 @@ public class BloomEffects {
 			dmg *= 1f - B2_VEIL_REDUCE[mv];
 			hero.sprite.showStatus(0x4488FF, "-" + B2_VEIL_COST);
 			TalentEffects.manaVeil(hero);
+			com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.veil(hero);
 			BloomCommon.veilPush(hero); //마나 장막 각성
 		}
 

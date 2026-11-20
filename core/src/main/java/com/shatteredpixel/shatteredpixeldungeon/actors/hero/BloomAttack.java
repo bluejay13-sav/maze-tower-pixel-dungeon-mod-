@@ -140,7 +140,10 @@ public class BloomAttack {
 
 		//확정타
 		int s = lvl(hero, SURE_STRIKE);
-		if (sureActive && s >= 0) bonus += B2_SURE_BONUS[s];
+		if (sureActive && s >= 0){
+			bonus += B2_SURE_BONUS[s];
+			if (BloomRules.trigger(SURE_STRIKE)) com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.target(enemy); //조준 과녁
+		}
 
 		//강타: 같은 적에게 3번째 평타마다
 		int h = lvl(hero, HEAVY_BLOW);
@@ -154,8 +157,7 @@ public class BloomAttack {
 			if (hc.count >= B2_HEAVY_HITS){
 				hc.count = 0;
 				bonus += B2_HEAVY_DMG[h];
-				TalentEffects.comboBurst(enemy); //임시 연출 (E단계: 굵은 베기)
-				PixelScene.shake(1, 0.15f);
+				com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.heavyBlow(hero, enemy); //굵은 베기 + 약한 화면 흔들림
 				if (BloomRules.triggerOnHit(HEAVY_BLOW)){
 					final boolean push = h >= 2;
 					final boolean stun = awake(hero, HEAVY_BLOW);
@@ -168,8 +170,6 @@ public class BloomAttack {
 						}
 					});
 				}
-			} else {
-				TalentEffects.comboStack(enemy, hc.count, B2_HEAVY_HITS);
 			}
 			com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.refreshHero(); //강타 준비 아이콘
 		}
@@ -310,6 +310,7 @@ public class BloomAttack {
 			if (galeActive && awake(hero, GALE) && BloomRules.trigger(GALE)){
 				int dmg = Math.round(lastHitDamage * B2_GALE_AWAKE_DMG);
 				BloomRules.debug("gale sweep " + dmg);
+				com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.galeSweep(hero);
 				for (int n : PathFinder.NEIGHBOURS8){
 					Char c = Actor.findChar(hero.pos + n);
 					if (c != null && c != enemy && c.alignment == Char.Alignment.ENEMY){
@@ -333,7 +334,7 @@ public class BloomAttack {
 			Char to = nearestEnemy(enemy, B2_MARK_AWAKE_RANGE);
 			if (to != null){
 				BloomBuffs.Mark.add(to, mark.stacks, true);
-				TalentEffects.chain(enemy, to); //임시 연출 (E단계: 표식이 옮겨 붙는 빛)
+				com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.markTransfer(enemy, to);
 			}
 		}
 	}
