@@ -18,7 +18,9 @@ import com.watabou.utils.Bundle;
 public class Wet extends Buff {
 
 	{
-		type = buffType.NEGATIVE;
+		//(결정) 젖음은 원소 반응용 표시일 뿐이라 "나쁜 상태이상"이 아니다.
+		//나쁜 상태이상이면 원작에서 중립 몬스터(놀 추방자·석상)가 적으로 바뀌고, 잠든 몬스터가 깨고, 상점 주인이 떠난다.
+		type = buffType.NEUTRAL;
 		announced = true;
 	}
 
