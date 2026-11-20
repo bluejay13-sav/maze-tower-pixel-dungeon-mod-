@@ -1095,7 +1095,16 @@ public class WraithKing extends Mob {
 			alpha(1f);
 			hidden = false;
 			play(attack);
+			//(결정) 어둠 속 기습: 왕이 나타난 칸은 깜깜한 안개 아래라 모습이 가려지고, 기둥 바로 아래면 머리도 기둥에 가린다.
+			//그래서 모습을 드러내는 동안만 왕 그림을 안개 위 층으로 올린다 (연출이 끝나면 되돌림)
+			if (parent != null && ((WraithKing) ch).isDark() && !overFog){
+				parent.erase(this);
+				GameScene.effectOverFog(this);
+				overFog = true;
+			}
 		}
+
+		private boolean overFog = false;
 
 		@Override
 		public void onComplete( Animation anim ) {
@@ -1121,8 +1130,16 @@ public class WraithKing extends Mob {
 			super.update();
 			if (!(ch instanceof WraithKing) || !ch.isAlive()) return;
 			if (reveal > 0){
+				visible = true; //나타난 칸이 시야 밖이어도 드러내는 동안은 보인다
 				reveal -= com.watabou.noosa.Game.elapsed;
-				if (reveal <= 0) place(ch.pos);
+				if (reveal <= 0){
+					place(ch.pos);
+					if (overFog && parent != null){
+						parent.erase(this);
+						GameScene.addMobSpriteBack(this);
+						overFog = false;
+					}
+				}
 			}
 			//어둠 속에 숨은 동안 그림을 숨긴다. 시야 계산이 visible을 다시 켜도 깜빡이지 않게 투명도로 숨긴다
 			boolean hide = ((WraithKing) ch).shrouded() && reveal <= 0;
