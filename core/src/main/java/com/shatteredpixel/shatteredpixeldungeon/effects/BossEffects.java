@@ -29,6 +29,9 @@ public class BossEffects {
 		REGION_MAGIC     ("sprites/maze_fx_region_magic.png",     16, 16, 8), //잊힌 마도시 분위기
 		REGION_HEARTBEAT ("sprites/maze_fx_region_heartbeat.png", 48, 48, 8), //탑의 심장 분위기
 		SAP_HEAL   ("sprites/maze_fx5_sap_heal.png",     16, 24, 4),
+		SAP_DROP   ("sprites/maze_fx5_sap_drop.png",     16, 16, 3), //수액 방울 (바닥, 반복)
+		SAP_FLY    ("sprites/maze_fx5_sap_fly.png",       8,  8, 2), //수액 방울 날아감 (반복)
+		SAP_ABSORB ("sprites/maze_fx5_sap_absorb.png",   16, 16, 4), //수액 방울 흡수 (한 번)
 		//10층 그림자 간수
 		TELEPORT   ("sprites/maze_fx10_teleport.png",    24, 24, 5),
 		CHAIN_FLY  ("sprites/maze_fx10_chain_fly.png",   16,  8, 2),
@@ -112,6 +115,25 @@ public class BossEffects {
 		if (s == null) return null;
 		PointF c = s.center();
 		return at(fx, c.x, c.y, fps, loop);
+	}
+
+	//from 칸에서 to 칸으로 날아가는 반복 그림. 닿으면 사라지고 onLand를 부른다(없어도 됨)
+	public static MovieClip fly( Fx fx, int from, int to, float time, final com.watabou.utils.Callback onLand ){
+		PointF a = DungeonTilemap.tileCenterToWorld(from);
+		PointF b = DungeonTilemap.tileCenterToWorld(to);
+		final MovieClip c = clip(fx, 10, true);
+		c.x = a.x - fx.w / 2f;
+		c.y = a.y - fx.h / 2f;
+		GameScene.effect(c);
+		com.watabou.noosa.tweeners.PosTweener t = new com.watabou.noosa.tweeners.PosTweener(c, new PointF(b.x - fx.w / 2f, b.y - fx.h / 2f), time){
+			@Override
+			protected void onComplete() {
+				c.killAndErase();
+				if (onLand != null) onLand.call();
+			}
+		};
+		c.parent.add(t);
+		return c;
 	}
 
 	public static boolean visible( int cell ){

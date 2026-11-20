@@ -494,8 +494,15 @@ public class MazeTower {
 	// ===== 보스 (24단계, MazeBosses) =====
 
 	//5층 썩은 수액 덩어리
-	public static final float SAP_PHYS_REDUCE     = 0.80f; //물리 피해 감소 (횃불을 맞기 전, 체력 절반 위)
-	public static final float SAP_HALF_PHYS_BONUS = 0.30f; //체력 절반 아래: 물리 피해를 더 받는다
+	public static final float SAP_PHYS_REDUCE     = 0.80f; //물리 피해 감소 (불타거나 쪼그라든 동안은 없음)
+	public static final float SAP_HALF_PHYS_BONUS = 0.30f; //(예전 규칙, 지금은 안 씀) 체력 절반 아래 물리 피해 추가
+	public static final float SAP_BURN_UNTIL      = 0.40f; //불이 붙으면 체력이 이 비율이 될 때까지 계속 탄다
+	public static final float[] SAP_STAGE_HP      = {0.80f, 0.65f, 0.50f}; //체력이 이 아래면 s1 / s2 / s3 (쪼그라든 모습)
+	public static final int   SAP_STAGE_STEP_TURNS = 2;    //쪼그라드는 단계 하나에 머무는 턴 (단계를 건너뛰지 않음)
+	public static final int   SAP_DROPS           = 3;     //다 쪼그라들면(s4) 흩뿌리는 수액 방울 수
+	public static final int   SAP_DROP_RADIUS     = 2;     //방울을 흩뿌리는 범위 (칸)
+	public static final int   SAP_DROPS_TO_HEAL   = 2;     //방울을 이만큼 흡수하면 기본 모습으로 돌아온다
+	public static final int   BOSS_TORCHES        = 2;     //5층 보스층에 떨어져 있는 횃불 수 (비밀방 제외 무작위 바닥)
 	public static final int   SAP_PUDDLE_MIN      = 3;     //내려칠 때 수액 웅덩이 칸 수
 	public static final int   SAP_PUDDLE_MAX      = 4;
 	public static final int   SAP_PUDDLE_TURNS    = 30;    //수액 웅덩이 지속

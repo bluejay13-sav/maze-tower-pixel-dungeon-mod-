@@ -46,8 +46,13 @@ public class MazeBossSprites {
 
 	//그림을 바꾸고 기본 동작(대기·이동·공격·사망)을 채운다. 특수 동작에 쓸 수 있게 TextureFilm을 돌려준다.
 	public static TextureFilm apply( CharSprite s, Look look ){
-		s.texture(look.file);
-		TextureFilm film = new TextureFilm(s.texture, look.w, look.h);
+		return applyFile(s, look.file, look.w, look.h);
+	}
+
+	//같은 13프레임 순서의 다른 시트로 바꾼다 (수액 덩어리 쪼그라든 모습, 망령 왕 기어다니는 모습 등)
+	public static TextureFilm applyFile( CharSprite s, String file, int w, int h ){
+		s.texture(file);
+		TextureFilm film = new TextureFilm(s.texture, w, h);
 		s.idle   = anim(film, 3, true,  IDLE);
 		s.run    = anim(film, 10, true, MOVE);
 		s.attack = anim(film, 15, false, ATTACK);

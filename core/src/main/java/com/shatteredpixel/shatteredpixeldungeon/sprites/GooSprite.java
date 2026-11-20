@@ -95,6 +95,21 @@ public class GooSprite extends MobSprite {
 		super.link(ch);
 		if (ch.HP*2 <= ch.HT)
 			spray(true);
+		//Maze Tower: 불러올 때 쪼그라든 모습 그대로
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED && ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo){
+			int s = ((com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo) ch).mazeStage();
+			if (s > 0) mazeStage(s);
+		}
+	}
+
+	//Maze Tower: 불에 타 쪼그라든 모습 (0 기본, 1~4 = maze_b1_sap_s1~s4_sheet.png). 프레임 크기·번호는 기본 시트와 같다
+	public void mazeStage( int stage ){
+		String file = stage <= 0 ? MazeBossSprites.Look.SAP.file : "sprites/maze_b1_sap_s" + Math.min(stage, 4) + "_sheet.png";
+		boolean dying = curAnim == die;
+		TextureFilm f = MazeBossSprites.applyFile(this, file, MazeBossSprites.Look.SAP.w, MazeBossSprites.Look.SAP.h);
+		pump = MazeBossSprites.anim(f, 12, true, 6, 7);
+		pumpAttack = MazeBossSprites.anim(f, 15, false, MazeBossSprites.ATTACK);
+		if (!dying) play(idle);
 	}
 
 	public void pumpUp( int warnDist ) {
@@ -203,6 +218,12 @@ public class GooSprite extends MobSprite {
 
 			size = 4;
 			speed.polar( -Random.Float( PointF.PI ), Random.Float( 32, 48 ) );
+
+			//Maze Tower: 힘 모으기 입자 색 = 연분홍 70% + 수액색 30% (원작은 검정)
+			if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
+				if (Random.Float() < 0.7f) color( Random.oneOf(0xFFB7D5, 0xFFC9DE, 0xFFA3C7) );
+				else                       color( Random.oneOf(0xF5BF55, 0xE0952A) );
+			}
 		}
 
 		@Override

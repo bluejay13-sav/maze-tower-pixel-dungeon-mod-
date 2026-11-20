@@ -153,14 +153,23 @@ public class SewerBossLevel extends SewerLevel {
 			}
 		Random.popGenerator();
 
-		//Maze Tower: 썩은 수액 덩어리의 약점 - 횃불 하나. 숨은 방에 놓이지 않게, 반드시 지나가는 입구 방에 둔다
+		//Maze Tower: 썩은 수액 덩어리의 약점 - 횃불 2개(BOSS_TORCHES). 보스층의 무작위 바닥 칸에 하나씩, 비밀방에는 두지 않는다
 		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
-			int torchPos;
-			int tries = 100;
-			do {
-				torchPos = pointToCell(roomEntrance.random());
-			} while (tries-- > 0 && (torchPos == entrance() || solid[torchPos] || !passable[torchPos] || heaps.get(torchPos) != null));
-			drop(new com.shatteredpixel.shatteredpixeldungeon.items.BossTorch(), torchPos);
+			ArrayList<Integer> cells = new ArrayList<>();
+			for (Room r : rooms){
+				if (r instanceof com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom) continue;
+				for (Point p : r.getPoints()){
+					if (!r.inside(p)) continue;
+					int cell = pointToCell(p);
+					if (cell == entrance() || cell == exit() || solid[cell] || !passable[cell] || pit[cell]
+							|| map[cell] == Terrain.DOOR || heaps.get(cell) != null) continue;
+					cells.add(cell);
+				}
+			}
+			for (int t = 0; t < com.shatteredpixel.shatteredpixeldungeon.MazeTower.BOSS_TORCHES && !cells.isEmpty(); t++){
+				int torchPos = cells.remove(Random.Int(cells.size()));
+				drop(new com.shatteredpixel.shatteredpixeldungeon.items.BossTorch(), torchPos);
+			}
 		}
 	}
 
