@@ -82,6 +82,8 @@ public class InterlevelScene extends PixelScene {
 		DESCEND, ASCEND, CONTINUE, RESURRECT, RETURN, FALL, RESET, NONE
 	}
 	public static Mode mode;
+	//Maze Tower: 층 건너뛰기 치트의 목표 층 (0이면 평소대로)
+	public static int mazeSkipTarget = 0;
 
 	public static LevelTransition curTransition = null;
 	public static int returnDepth;
@@ -717,6 +719,15 @@ public class InterlevelScene extends PixelScene {
 	private void returnTo() throws IOException {
 		Mob.holdAllies( Dungeon.level );
 		Dungeon.saveAll();
+
+		//Maze Tower: 층 건너뛰기 치트 - 1층부터 차례대로 층을 만들고 아이템을 가져온 뒤 목표 층 계단 앞으로
+		if (mazeSkipTarget > 0){
+			int t = mazeSkipTarget;
+			mazeSkipTarget = 0;
+			Level skipped = com.shatteredpixel.shatteredpixeldungeon.MazeSkip.generate(t);
+			Dungeon.switchLevel( skipped, com.shatteredpixel.shatteredpixeldungeon.MazeSkip.arrivalCell(skipped) );
+			return;
+		}
 
 		Level level;
 		Dungeon.depth = returnDepth;

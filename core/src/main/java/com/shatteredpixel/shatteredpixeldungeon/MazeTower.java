@@ -632,6 +632,9 @@ public class MazeTower {
 	public static final float SEWER_WALL_DECO_KEEP       = 0.35f; //뿌리 지하: 벽 장식(뿌리 단면) 중 남기는 비율 (물이 많은 층에서 너무 많아서)
 	public static final float DOOR_DECO_PCT              = 0.33f; //모든 구역: 닫힌 문 중 장식(뿌리·사슬·마석·휘장·가지)이 붙은 문의 비율 (effects/MazeDoorDecor)
 	public static final float BOSS20_WALL_DECO_PCT       = 0.30f; //20층 보스방(망령 왕·여제): 아래가 바닥인 벽 앞면 중 새 장식을 그리는 비율 (effects/BossRoomDecor20)
+	//베타 테스트용 층 건너뛰기 치트 (명세 8번): 목표 층(각 보스층 바로 앞)과 도착할 때의 레벨
+	public static final int[] SKIP_DEPTHS = {4, 9, 14, 19};
+	public static final int[] SKIP_LEVELS = {6, 11, 15, 19};
 	public static final float ROOT_SP_PETAL_CHANCE       = 12f;  //뿌리 지하 특수 바닥 중 벚꽃잎이 있는 그림이 나오는 확률 % (원작 그림 바꾸기 비율 50)
 	public static final float BOSS_WALL_DECO_KEEP  = 0.3f; //5·10층 보스층: 벽 장식 중 남기는 비율
 	public static final float BOSS_FLOOR_DECO_KEEP = 0.3f; //5·10층 보스층: 바닥 장식 중 남기는 비율

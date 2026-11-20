@@ -168,6 +168,10 @@ public class WndCheats extends Window {
 			}
 		});
 
+		//베타 테스트용 층 건너뛰기 (명세 8번): 4·9·14·19층까지
+		addPair(skipButton(0), skipButton(1));
+		addPair(skipButton(2), skipButton(3));
+
 		addPair(new RedButton(Messages.get(this, "level_up"), 7){
 			@Override
 			protected void onClick() {
@@ -396,6 +400,30 @@ public class WndCheats extends Window {
 				GLog.p(Messages.get(WndCheats.class, awaken ? "granted_awaken" : "granted", Messages.titleCase(talent.title()), lvl));
 			}
 		});
+	}
+
+	//층 건너뛰기: 목표 레벨까지 올리고 체력·마나를 채운 뒤, 1층부터 목표 층까지 차례대로 만들며 아이템을 가져간다
+	private RedButton skipButton( final int i ){
+		final int depth = MazeTower.SKIP_DEPTHS[i];
+		return new RedButton(Messages.get(this, "skip", depth), 7){
+			@Override
+			protected void onClick() {
+				Hero hero = Dungeon.hero;
+				if (Dungeon.depth >= depth){
+					GLog.w(Messages.get(WndCheats.class, "skip_past"));
+					return;
+				}
+				hide();
+				int lvl = com.shatteredpixel.shatteredpixeldungeon.MazeSkip.levelFor(depth);
+				while (hero.lvl < lvl){
+					hero.earnExp(hero.maxExp() - hero.exp, WndCheats.class);
+				}
+				hero.HP = hero.HT;
+				Mana.get(hero).fill();
+				InterlevelScene.mazeSkipTarget = depth;
+				goToDepth(depth);
+			}
+		};
 	}
 
 	private static void goToDepth(int depth){
