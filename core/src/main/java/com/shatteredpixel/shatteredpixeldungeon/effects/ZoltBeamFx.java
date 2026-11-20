@@ -52,7 +52,7 @@ public class ZoltBeamFx extends Group {
 			//대각선에서 테두리를 칸 변에 직접 긋는 쪽 (광선 끝처럼 그쪽 이웃이 하나만 있는 곳). 옆면은 조각 그림이 곧은 선으로 잘라 그린다
 			boolean[] edgeRim = {true, true, true, true}; //위·오른쪽·아래·왼쪽
 			if (diag){
-				//대각선: "/"(오른쪽 위·왼쪽 아래)는 6~25줄, "\"는 26~45줄. 광선 가운데 선에서 몇 줄 떨어졌는지(s = -2~2)와
+				//대각선: "/"(오른쪽 위·왼쪽 아래)는 6~50줄, "\"는 51~95줄. 광선 가운데 선에서 몇 줄 떨어졌는지(s = -2~2)와
 				//바깥쪽(+)·안쪽(-) 옆이 비었는지(비었으면 곧은 선으로 잘라 테두리)로 고른다
 				boolean slash = dx * dy < 0;
 				int s = clamp(slash ? ox + oy : -ox + oy, 2);
@@ -62,7 +62,12 @@ public class ZoltBeamFx extends Group {
 				boolean posA = has(set, origin, w, cx + pA[0], cy + pA[1]), posB = has(set, origin, w, cx + pB[0], cy + pB[1]);
 				boolean negA = has(set, origin, w, cx - pA[0], cy - pA[1]), negB = has(set, origin, w, cx - pB[0], cy - pB[1]);
 				boolean clipPos = !posA && !posB, clipNeg = !negA && !negB;
-				row = (slash ? 6 : 26) + (s + 2) * 4 + (clipPos ? 2 : 0) + (clipNeg ? 1 : 0);
+				//(결정) 광선 폭을 살짝 줄였다: 자르는 선을 줄 사이(반 줄 안쪽)로 둔다. 그래서 바깥 줄이 기둥 옆으로 홀로 빠져나가도
+				//양옆이 모두 잘려 보이지 않고(가는 광선이 삐져나가지 않음), 광선 바깥 가장자리는 가장 바깥 줄 칸의 안쪽 절반 지점이다.
+				//가장 바깥 바로 안쪽 줄(±1)은 바깥 줄이 있어도 그 가장자리(반 줄 바깥)에서 잘라 광선 옆면을 곧게 맞춘다
+				int pv = clipPos ? 1 : (s == 1 ? 2 : 0);
+				int nv = clipNeg ? 1 : (s == -1 ? 2 : 0);
+				row = (slash ? 6 : 51) + (s + 2) * 9 + pv * 3 + nv;
 				//곧은 선으로 자른 쪽은 칸 변에 테두리를 긋지 않는다
 				if (clipPos){ edgeRim[sideIndex(pA)] = false; edgeRim[sideIndex(pB)] = false; }
 				if (clipNeg){ edgeRim[sideIndex(new int[]{-pA[0], -pA[1]})] = false; edgeRim[sideIndex(new int[]{-pB[0], -pB[1]})] = false; }
