@@ -127,7 +127,8 @@ public class MazeEmpress extends Mob {
 
 	@Override
 	public String description() {
-		return Messages.get(DwarfKing.class, "maze_empress_desc");
+		//(결정) 1단계는 벚꽃의 고리가 보호하고, 2·3단계에는 사라졌다
+		return Messages.get(DwarfKing.class, "maze_empress_desc") + "\n\n" + Messages.get(this, phase == 1 ? "desc_ring" : "desc_no_ring");
 	}
 
 	@Override public int damageRoll() { return 0; }

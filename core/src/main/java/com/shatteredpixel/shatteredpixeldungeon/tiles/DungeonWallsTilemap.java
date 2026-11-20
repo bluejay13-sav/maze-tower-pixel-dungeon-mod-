@@ -73,6 +73,11 @@ public class DungeonWallsTilemap extends DungeonTilemap {
 			return -1;
 		}
 
+		//Maze Tower: 망령 왕의 왕좌 윗부분은 effects/WraithThrone이 따로 그린다
+		if (pos + mapWidth < size && com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel.mazeThroneCell(pos + mapWidth)){
+			return -1;
+		}
+
 		if (map[pos] == Terrain.LOCKED_EXIT || map[pos] == Terrain.UNLOCKED_EXIT){
 			return DungeonTileSheet.EXIT_UNDERHANG;
 		} else if (pos + mapWidth < size && DungeonTileSheet.wallStitcheable(map[pos+mapWidth])) {

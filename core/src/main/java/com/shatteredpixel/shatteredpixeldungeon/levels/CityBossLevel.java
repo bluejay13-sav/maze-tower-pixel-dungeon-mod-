@@ -698,6 +698,7 @@ public class CityBossLevel extends Level {
 	public Group addVisuals( ) {
 		super.addVisuals();
 		CityLevel.addCityVisuals(this, visuals);
+		com.shatteredpixel.shatteredpixeldungeon.effects.WraithThrone.addLower(visuals); //Maze Tower: 망령 왕의 왕좌 (의자 몸통)
 		return visuals;
 	}
 
@@ -705,6 +706,7 @@ public class CityBossLevel extends Level {
 	public Group addWallVisuals() {
 		super.addWallVisuals();
 		CityLevel.addCityWallVisuals( this, wallVisuals );
+		com.shatteredpixel.shatteredpixeldungeon.effects.WraithThrone.addUpper(wallVisuals); //Maze Tower: 망령 왕의 왕좌 (등받이 윗부분)
 		return wallVisuals;
 	}
 
