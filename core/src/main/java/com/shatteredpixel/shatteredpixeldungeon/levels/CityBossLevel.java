@@ -96,7 +96,7 @@ public class CityBossLevel extends Level {
 				Music.INSTANCE.play(Assets.Music.CITY_BOSS, true);
 			}
 		//if top door isn't unlocked
-		} else if (map[topDoor] == Terrain.LOCKED_DOOR){
+		} else if (map[topDoor()] == Terrain.LOCKED_DOOR){
 			Music.INSTANCE.end();
 		} else {
 			Music.INSTANCE.playTracks(CityLevel.CITY_TRACK_LIST, CityLevel.CITY_TRACK_CHANCES, false);
@@ -116,13 +116,22 @@ public class CityBossLevel extends Level {
 	private static final String IMP_SHOP = "imp_shop";
 	//Maze Tower: 마도시의 여제 보스방으로 지은 층인지 (지을 때 정해 저장. 치트로 보스를 바꿔도 이미 지은 층은 그대로)
 	private static final String MAZE_EMPRESS_ROOM = "maze_empress_room";
+	private static final String MAZE_ROOM = "maze_room20";
 	public boolean mazeEmpressRoom = false;
+	//Maze Tower: 마탑 20층 보스방(망령 왕·여제, 13×13 새 모양)으로 지은 층. 예전(9×9 여제 방) 저장 파일은 false
+	public boolean mazeRoom = false;
+
+	//Maze Tower: 위쪽 문 자리. 마탑 보스방은 방이 원작보다 2줄 길어서 문이 2칸 위에 있다
+	private int topDoor(){
+		return mazeRoom ? MAZE_TOP_DOOR : topDoor;
+	}
 
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle( bundle );
 		bundle.put( IMP_SHOP, impShop );
 		bundle.put( MAZE_EMPRESS_ROOM, mazeEmpressRoom ); //Maze Tower
+		bundle.put( MAZE_ROOM, mazeRoom );
 	}
 
 	@Override
@@ -130,8 +139,8 @@ public class CityBossLevel extends Level {
 		super.restoreFromBundle( bundle );
 		impShop = (ImpShopRoom) bundle.get( IMP_SHOP );
 		mazeEmpressRoom = bundle.getBoolean( MAZE_EMPRESS_ROOM ); //Maze Tower
-		if (mazeEmpressRoom) thinEmpressWallDeco();
-		if (map[topDoor] != Terrain.LOCKED_DOOR && Imp.Quest.earnedShop() && !impShop.shopSpawned()){
+		mazeRoom = bundle.getBoolean( MAZE_ROOM );
+		if (map[topDoor()] != Terrain.LOCKED_DOOR && Imp.Quest.earnedShop() && !impShop.shopSpawned()){
 			spawnShop();
 		}
 	}
@@ -165,10 +174,11 @@ public class CityBossLevel extends Level {
 		Painter.set(this, entrance, Terrain.ENTRANCE);
 		transitions.add(new LevelTransition(this, entrance, LevelTransition.Type.REGULAR_ENTRANCE));
 
-		//Maze Tower: 마도시의 여제 판이면 원작 드워프 왕 옥좌방 대신 여제 보스방 (명세 22번)
-		mazeEmpressRoom = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.empress();
-		if (mazeEmpressRoom){
-			buildEmpressRoom();
+		//Maze Tower: 마탑 보스면 원작 드워프 왕 옥좌방 대신 망령 왕 / 마도시의 여제 보스방 (명세 22번)
+		mazeRoom = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED;
+		mazeEmpressRoom = mazeRoom && com.shatteredpixel.shatteredpixeldungeon.MazeBosses.empress();
+		if (mazeRoom){
+			buildMazeRoom();
 		} else {
 
 		//DK's throne room
@@ -211,15 +221,18 @@ public class CityBossLevel extends Level {
 		Painter.set(this, impShop.left+2, impShop.top, Terrain.STATUE);
 		Painter.set(this, impShop.left+6, impShop.top, Terrain.STATUE);
 
-		Painter.fill(this, end.left+5, end.bottom+1, 5, 1, Terrain.EMPTY);
-		Painter.fill(this, end.left+6, end.bottom+2, 3, 1, Terrain.EMPTY);
+		//Maze Tower: 마탑 보스방은 이 두 줄이 방의 위쪽 벽·첫 줄이다
+		if (!mazeRoom){
+			Painter.fill(this, end.left+5, end.bottom+1, 5, 1, Terrain.EMPTY);
+			Painter.fill(this, end.left+6, end.bottom+2, 3, 1, Terrain.EMPTY);
+		}
 
 		impShop.paint(this);
 		new CityPainter().paint(this, null);
 
 		//Maze Tower: 원작은 20층이면 아래가 바닥인 벽마다 휘장(WALL_DECO)을 건다(확률 1/(21-층) = 100%).
-		//여제 보스방은 벽·기둥 장식이 너무 많아 보여 일부만 남긴다.
-		if (mazeEmpressRoom) thinEmpressWallDeco();
+		//마탑 보스방은 원작 휘장 대신 새 장식(effects/BossRoomDecor20)을 그리므로 방 둘레의 휘장을 지운다.
+		if (mazeRoom) clearMazeRoomWallDeco();
 
 		//pillars last, no deco on these
 		Painter.fill(this, end.left+1, end.top+2, 2, 2, Terrain.WALL);
@@ -247,46 +260,121 @@ public class CityBossLevel extends Level {
 		return true;
 	}
 
-	//Maze Tower: 마도시의 여제 보스방 (명세 22번). 지금은 방 구조만: 보스·패턴·원소 타일 없음.
-	//안쪽 9×9, 왼쪽 위 칸을 (행 0, 열 0)으로 두면 옥좌(여제 자리)는 (4,4) = arena 가운데.
-	//ㄱ자 기둥 4개(모두 12칸)는 옥좌 기준 네 모서리에 대칭. 잔디·물은 만들지 않는다(보스층은 원래 칠하지 않음).
-	//보스가 아직 없으므로 위쪽 문은 잠그지 않고 그냥 문으로 둔다(진행이 막히지 않게).
+	// ===== Maze Tower: 20층 마탑 보스방 (명세 22번) =====
+	//방을 감싸는 13×13의 맨 왼쪽 위 칸을 (행 0, 열 0)으로 둔다. 13×13은 층의 x 1~13, y 24~36에 놓인다.
+	//(원작 옥좌방보다 2줄 길어서 방 위쪽 벽을 2칸 올렸다: 위쪽 문 (7,23), 아래쪽 문은 원작 그대로 (7,37))
+	//옥좌·왕좌는 (6,6). 잔디·물은 만들지 않는다(보스층은 원래 칠하지 않음).
+	public static final int ROOM_SIZE = 13;
+	public static final int ROOM_X = 1, ROOM_Y = 24;
+	public static final int MAZE_TOP_DOOR = 7 + 23*15;
+	public static final int MAZE_THRONE = (ROOM_X + 6) + (ROOM_Y + 6)*15;
+
+	//여제 방: 가운데 11×11 + 네 변 가운데 5칸을 1칸씩 확장 (141칸), 한 칸짜리 기둥 8개
 	public static final int[][] EMPRESS_PILLARS = {
-			{2,2},{2,3},{3,2},   {2,6},{2,5},{3,6},
-			{6,2},{6,3},{5,2},   {6,6},{6,5},{5,6}
+			{3,3},{3,6},{3,9}, {6,3},{6,9}, {9,3},{9,6},{9,9}
+	};
+	//망령 왕 방: 13×13에서 귀퉁이를 깎은 모양 (153칸), 한 칸짜리 기둥 8개
+	public static final int[][] WRAITH_PILLARS = {
+			{3,3},{3,9},{9,3},{9,9}, {2,6},{10,6},{6,2},{6,10}
 	};
 
-	private void buildEmpressRoom(){
-		Point c = arena.center();
-		int left = c.x - 4, top = c.y - 4;
-
-		//안쪽 9×9 (둘레는 벽으로 남는다)
-		Painter.fill(this, left, top, 9, 9, Terrain.EMPTY);
-		//위·아래 문까지 한 칸 통로
-		Painter.set(this, c.x, top - 1, Terrain.EMPTY);
-		Painter.set(this, c.x, top + 9, Terrain.EMPTY);
-
-		for (int[] p : EMPRESS_PILLARS){
-			Painter.set(this, left + p[1], top + p[0], Terrain.WALL);
+	//(행, 열)이 방 안인지 (기둥 칸도 방 안으로 친다)
+	public static boolean inRoomShape( boolean empress, int r, int c ){
+		if (r < 0 || c < 0 || r >= ROOM_SIZE || c >= ROOM_SIZE) return false;
+		if (empress){
+			if (r == 0 || r == 12)  return c >= 4 && c <= 8;
+			if (r <= 3 || r >= 9)   return c >= 1 && c <= 11;
+			return true;
+		} else {
+			if (r == 0 || r == 12)  return c >= 3 && c <= 9;
+			if (r == 1 || r == 11)  return c >= 1 && c <= 11;
+			return true;
 		}
-
-		Painter.set(this, c.x, arena.top, Terrain.DOOR);
 	}
 
-	//Maze Tower: 여제 보스방(바깥 벽 + 기둥)의 휘장(WALL_DECO)은 일부(MazeTower.EMPRESS_WALL_DECO_KEEP)만 남기고 평범한 벽으로.
-	//칸마다 던전 시드로 정해 지을 때와 불러올 때 결과가 같다(불러올 때는 지우기만 하고 새로 걸지는 않는다).
-	private void thinEmpressWallDeco(){
-		for (int y = arena.top; y < arena.bottom; y++){
-			for (int x = arena.left; x < arena.right; x++){
+	public static boolean isPillarRC( boolean empress, int r, int c ){
+		for (int[] p : (empress ? EMPRESS_PILLARS : WRAITH_PILLARS)){
+			if (p[0] == r && p[1] == c) return true;
+		}
+		return false;
+	}
+
+	public static int cellOf( int r, int c ){
+		return (ROOM_X + c) + (ROOM_Y + r) * 15;
+	}
+
+	//칸 → {행, 열} (13×13 밖이면 null)
+	public static int[] rcOf( int cell ){
+		int x = cell % 15 - ROOM_X, y = cell / 15 - ROOM_Y;
+		if (x < 0 || y < 0 || x >= ROOM_SIZE || y >= ROOM_SIZE) return null;
+		return new int[]{y, x};
+	}
+
+	//방 바닥 칸 (기둥 제외)
+	public boolean roomFloor( int cell ){
+		int[] rc = rcOf(cell);
+		return rc != null && inRoomShape(mazeEmpressRoom, rc[0], rc[1]) && !isPillarRC(mazeEmpressRoom, rc[0], rc[1]);
+	}
+
+	public boolean isPillar( int cell ){
+		int[] rc = rcOf(cell);
+		return rc != null && inRoomShape(mazeEmpressRoom, rc[0], rc[1]) && isPillarRC(mazeEmpressRoom, rc[0], rc[1]);
+	}
+
+	//방의 맨 끝자락 칸: 바깥 벽과 맞닿은 칸 (대각선 포함). 기둥은 바깥 벽이 아니다
+	public boolean roomEdge( int cell ){
+		int[] rc = rcOf(cell);
+		if (rc == null || !inRoomShape(mazeEmpressRoom, rc[0], rc[1])) return false;
+		for (int dr = -1; dr <= 1; dr++) for (int dc = -1; dc <= 1; dc++){
+			if (!inRoomShape(mazeEmpressRoom, rc[0] + dr, rc[1] + dc)) return true;
+		}
+		return false;
+	}
+
+	//벽(바깥 벽·기둥)과 맞닿은 칸 (대각선 포함)
+	public boolean touchesWall( int cell ){
+		int[] rc = rcOf(cell);
+		if (rc == null) return true;
+		for (int dr = -1; dr <= 1; dr++) for (int dc = -1; dc <= 1; dc++){
+			int r = rc[0] + dr, c = rc[1] + dc;
+			if (!inRoomShape(mazeEmpressRoom, r, c) || isPillarRC(mazeEmpressRoom, r, c)) return true;
+		}
+		return false;
+	}
+
+	//방 바닥 칸 목록 (기둥 제외)
+	public java.util.ArrayList<Integer> roomFloorCells(){
+		java.util.ArrayList<Integer> list = new java.util.ArrayList<>();
+		for (int r = 0; r < ROOM_SIZE; r++) for (int c = 0; c < ROOM_SIZE; c++){
+			if (inRoomShape(mazeEmpressRoom, r, c) && !isPillarRC(mazeEmpressRoom, r, c)) list.add(cellOf(r, c));
+		}
+		return list;
+	}
+
+	public int mazeThrone(){
+		return MAZE_THRONE;
+	}
+
+	private void buildMazeRoom(){
+		for (int r = 0; r < ROOM_SIZE; r++){
+			for (int c = 0; c < ROOM_SIZE; c++){
+				if (!inRoomShape(mazeEmpressRoom, r, c)) continue;
+				Painter.set(this, cellOf(r, c), isPillarRC(mazeEmpressRoom, r, c) ? Terrain.WALL : Terrain.EMPTY);
+			}
+		}
+		Painter.set(this, MAZE_TOP_DOOR, Terrain.LOCKED_DOOR);
+	}
+
+	//방 둘레(바깥 벽 + 기둥)의 원작 휘장(WALL_DECO)을 평범한 벽으로. 새 장식은 effects/BossRoomDecor20이 겹쳐 그린다
+	private void clearMazeRoomWallDeco(){
+		for (int y = ROOM_Y - 1; y <= ROOM_Y + ROOM_SIZE; y++){
+			for (int x = 0; x < 15; x++){
 				int cell = x + y * width();
-				if (map[cell] != Terrain.WALL_DECO) continue;
-				float roll = new java.util.Random(Dungeon.seed ^ 0x20DEC0L ^ (cell * 0x9E3779B97F4A7C15L)).nextFloat();
-				if (roll >= com.shatteredpixel.shatteredpixeldungeon.MazeTower.EMPRESS_WALL_DECO_KEEP){
-					map[cell] = Terrain.WALL;
-				}
+				if (map[cell] == Terrain.WALL_DECO) map[cell] = Terrain.WALL;
 			}
 		}
 	}
+
 
 	//returns a random pedestal that doesn't already have a summon inbound on it
 	public int getSummoningPos(){
@@ -365,7 +453,7 @@ public class CityBossLevel extends Level {
 	@Override
 	public boolean invalidHeroPos(int tile) {
 		//hero cannot be above top door if it is locked
-		if (map[topDoor] == Terrain.LOCKED_DOOR && tile <= topDoor){
+		if (map[topDoor()] == Terrain.LOCKED_DOOR && tile <= topDoor()){
 			return true;
 		}
 		return super.invalidHeroPos(tile);
@@ -373,9 +461,9 @@ public class CityBossLevel extends Level {
 
 	@Override
 	public void occupyCell( Char ch ) {
-		//Maze Tower: 여제 보스방은 아직 방 구조만 있어 보스가 나오지 않으므로 잠그지 않는다
-		if (!mazeEmpressRoom
-				&& map[bottomDoor] != Terrain.LOCKED_DOOR && map[topDoor] == Terrain.LOCKED_DOOR
+		//Maze Tower: 주인공이 아래쪽 문을 지나 들어오면 방을 잠그고 보스가 나온다
+		if (!(mazeEmpressRoom && !mazeRoom) //예전 저장 파일의 9×9 여제 방은 보스가 없어 잠그지 않는다
+				&& map[bottomDoor] != Terrain.LOCKED_DOOR && map[topDoor()] == Terrain.LOCKED_DOOR
 				&& ch.pos < bottomDoor && ch == Dungeon.hero) {
 			seal();
 		}
@@ -432,8 +520,8 @@ public class CityBossLevel extends Level {
 		set( bottomDoor, Terrain.DOOR );
 		GameScene.updateMap( bottomDoor );
 
-		set( topDoor, Terrain.DOOR );
-		GameScene.updateMap( topDoor );
+		set( topDoor(), Terrain.DOOR );
+		GameScene.updateMap( topDoor() );
 
 		if (Imp.Quest.earnedShop()) {
 			spawnShop();

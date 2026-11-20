@@ -805,6 +805,7 @@ public class GameScene extends PixelScene {
 		if (MazeRetreat.active()) RetreatEffects.addOverlays(this);
 		//Maze Tower: 구역별 문 장식 (닫힌 문의 33%)
 		com.shatteredpixel.shatteredpixeldungeon.effects.MazeDoorDecor.add(this);
+		com.shatteredpixel.shatteredpixeldungeon.effects.BossRoomDecor20.add(this); //Maze Tower: 20층 보스방 벽 장식
 
 		if (!invVisible) toggleInvPane();
 		fadeIn();
