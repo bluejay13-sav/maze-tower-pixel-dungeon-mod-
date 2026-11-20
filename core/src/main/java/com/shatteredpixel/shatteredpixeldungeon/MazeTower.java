@@ -30,9 +30,9 @@ public class MazeTower {
 	//본편(main 브랜치)은 false. 체험판 브랜치(boss-trial)에서만 true로 둔다
 	public static final boolean BOSS_TRIAL = false;
 	//배포용: 크레딧 화면(AboutScene) 맨 아래 미궁의 마탑 칸. 제작자 이름과 저장소 주소 (비워 두면 그 줄을 숨긴다)
-	public static final String MOD_AUTHOR = "";
-	public static final String MOD_LINK_TEXT = "";
-	public static final String MOD_LINK = "";
+	public static final String MOD_AUTHOR = "bluejay13-sav";
+	public static final String MOD_LINK_TEXT = "github.com/bluejay13-sav/...";
+	public static final String MOD_LINK = "https://github.com/bluejay13-sav/maze-tower-pixel-dungeon-mod-";
 	//원작 엔딩(아뮬렛을 주운 뒤 머무르기·귀환 길)을 쓸지. false면 아뮬렛을 주우면 그 자리에서 승리
 	public static final boolean ORIGINAL_ENDING = false;
 
