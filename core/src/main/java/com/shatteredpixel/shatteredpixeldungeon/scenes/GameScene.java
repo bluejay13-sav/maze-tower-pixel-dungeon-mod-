@@ -803,7 +803,7 @@ public class GameScene extends PixelScene {
 		//Maze Tower: 아뮬렛을 파괴했으면 역행 시작, 역행 중이면 금·꽃·보스 흔적을 겹쳐 그린다
 		if (MazeRetreat.pendingBegin && Dungeon.hero.isAlive()) MazeRetreat.begin(Dungeon.hero);
 		if (MazeRetreat.active()) RetreatEffects.addOverlays(this);
-		//Maze Tower: 뿌리 지하 문 장식 (닫힌 문의 33%)
+		//Maze Tower: 구역별 문 장식 (닫힌 문의 33%)
 		com.shatteredpixel.shatteredpixeldungeon.effects.MazeDoorDecor.add(this);
 
 		if (!invVisible) toggleInvPane();
@@ -1109,7 +1109,7 @@ public class GameScene extends PixelScene {
 		customTilemaps.add( t );
 	}
 
-	//Maze Tower: 바닥 쪽 / 벽 쪽 겹침 그림 (뿌리 지하 문 장식 MazeDoorDecor)
+	//Maze Tower: 바닥 쪽 / 벽 쪽 겹침 그림 (구역별 문 장식 MazeDoorDecor)
 	public void addMazeTerrainOverlay( com.watabou.noosa.Gizmo g ){
 		customTerrain.add( g );
 	}
