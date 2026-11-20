@@ -551,14 +551,29 @@ public class WraithKing extends Mob {
 		int x0 = pos % w, y0 = pos / w;
 		int dx = DX[zoltDir], dy = DY[zoltDir];
 		int reach = (DX[zoltDir] != 0 && DY[zoltDir] != 0) ? 2 : 1; //(결정) 대각선 광선은 한 칸 더 넓게
+		//줄마다 벽·기둥에 막히기 전까지 몇 칸 가는지
+		int[] len = new int[reach * 2 + 1];
 		for (int k = -reach; k <= reach; k++){
 			int[] o = laneOffset(k);
+			int n = 0;
 			for (int i = 1; i < 40; i++){ //(결정) 옆 줄도 왕 다음 칸부터 (왕의 바로 옆에는 광선 없음)
 				int x = x0 + o[0] + dx * i, y = y0 + o[1] + dy * i;
 				if (x < 0 || y < 0 || x >= w || y >= Dungeon.level.height()) break;
-				int c = x + y * w;
-				if (Dungeon.level.solid[c]) break;
-				cells.add(c);
+				if (Dungeon.level.solid[x + y * w]) break;
+				n++;
+			}
+			len[k + reach] = n;
+		}
+		//(결정) 광선은 언제나 한 덩어리: 바깥 줄은 그 안쪽 줄이 가는 데까지만 간다.
+		//안쪽(가운데) 줄이 기둥에 막혔는데 바깥 줄만 기둥 옆으로 가늘게 빠져나가 갈라지던 것을 막는다 (가운데가 막히면 광선 전체가 멈춘다)
+		for (int k = 1; k <= reach; k++){
+			len[reach + k] = Math.min(len[reach + k], len[reach + k - 1]);
+			len[reach - k] = Math.min(len[reach - k], len[reach - k + 1]);
+		}
+		for (int k = -reach; k <= reach; k++){
+			int[] o = laneOffset(k);
+			for (int i = 1; i <= len[k + reach]; i++){
+				cells.add((x0 + o[0] + dx * i) + (y0 + o[1] + dy * i) * w);
 				if (lanes != null) lanes.add(k);
 			}
 		}
