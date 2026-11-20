@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 //Maze Tower: 여제 원소 폭풍 구역 연출 (명세 22번). 그림 시트(칸마다 같은 박자로 움직이는 바닥 줄·번개)가 어색해서 코드로 그린다.
-//  바닥(캐릭터 아래): 원소 색을 칸마다 조금씩 다른 진하기로 깔고, 구역 가장자리는 밝은 테두리, 안쪽은 어둡게, 천천히 일렁인다.
+//  바닥(캐릭터 아래): (결정, 바뀜) 칸을 칠하지 않고 구역의 바깥 테두리만 진한 원소 색 줄(+ 안쪽 밝은 줄)로, 숨 쉬듯 일렁인다.
 //  폭풍(캐릭터 위): 불 = 비스듬히 떨어지는 불씨, 냉기 = 흩날리는 눈송이, 번개 = 무작위 칸에 가끔 내리꽂는 들쭉날쭉한 번개 + 번쩍임.
 //경고 때는 바닥만 옅게, 폭풍 때는 바닥을 진하게 + 위의 입자.
 public class StormZoneFx {
@@ -40,19 +40,12 @@ public class StormZoneFx {
 		this.set = new HashSet<>(cells);
 		this.element = element;
 		this.storm = storm;
+		//(결정, 바뀜) 칸을 칠하면 원소 타일과 겹쳐 헷갈려서, 구역의 바깥 테두리만 진한 색 줄로 그린다
 		int w = Dungeon.level.width();
-		for (int c : cells){
-			boolean edge = false;
-			int[] n4 = {-w, 1, w, -1};
-			for (int n : n4) if (!set.contains(c + n)) edge = true;
-			float x = (c % w) * DungeonTilemap.SIZE, y = (c / w) * DungeonTilemap.SIZE;
-			//안쪽은 어두운 바탕, 그 위에 원소 색 (칸마다 진하기를 다르게)
-			Tile t = new Tile(x, y, edge, Random.Float(0.75f, 1.15f), Random.Float(0f, 6.28f));
-			floor.add(t);
-		}
+		floor.add(new Border(w));
 	}
 
-	//층의 캐릭터 무리 그룹에 붙인다: 바닥은 맨 뒤, 폭풍 입자는 맨 앞
+	//층의 캐릭터 무리 그룹에 붙인다: 테두리는 맨 뒤(바닥 쪽), 폭풍 입자는 맨 앞
 	public void attach( Group mobs ){
 		mobs.addToBack(floor);
 		if (storm) mobs.add(sky);
@@ -64,38 +57,42 @@ public class StormZoneFx {
 		sky.killAndErase();
 	}
 
-	// ===== 바닥 한 칸 =====
-	private class Tile extends Group {
-		private final ColorBlock deep, base, rim;
-		private final float shade, phase;
+	// ===== 구역 테두리: 바깥은 진한 원소 색 2픽셀, 그 안쪽에 밝은 1픽셀 =====
+	private class Border extends Group {
+		private final ArrayList<ColorBlock> outer = new ArrayList<>(), inner = new ArrayList<>();
 		private float time = 0;
 
-		Tile( float x, float y, boolean edge, float shade, float phase ){
-			this.shade = shade;
-			this.phase = phase;
-			deep = new ColorBlock(16, 16, 0xFF000000 | DEEP[element]);
-			deep.x = x; deep.y = y;
-			add(deep);
-			base = new ColorBlock(14, 14, 0xFF000000 | BASE[element]);
-			base.x = x + 1; base.y = y + 1;
-			add(base);
-			rim = new ColorBlock(16, 16, 0xFF000000 | RIM[element]);
-			rim.x = x; rim.y = y;
-			rim.visible = edge;
-			add(rim);
+		Border( int w ){
+			for (int c : cells){
+				float x = (c % w) * DungeonTilemap.SIZE, y = (c / w) * DungeonTilemap.SIZE;
+				if (!set.contains(c - w)) line(x, y, 16, 2, x, y + 2, 16, 1);           //위
+				if (!set.contains(c + w)) line(x, y + 14, 16, 2, x, y + 13, 16, 1);     //아래
+				if (!set.contains(c - 1)) line(x, y, 2, 16, x + 2, y, 1, 16);           //왼쪽
+				if (!set.contains(c + 1)) line(x + 14, y, 2, 16, x + 13, y, 1, 16);     //오른쪽
+			}
 			update();
+		}
+
+		private void line( float ox, float oy, float ow, float oh, float ix, float iy, float iw, float ih ){
+			ColorBlock o = new ColorBlock(ow, oh, 0xFF000000 | BASE[element]);
+			o.x = ox; o.y = oy;
+			add(o);
+			outer.add(o);
+			ColorBlock i = new ColorBlock(iw, ih, 0xFF000000 | RIM[element]);
+			i.x = ix; i.y = iy;
+			add(i);
+			inner.add(i);
 		}
 
 		@Override
 		public void update() {
 			super.update();
 			time += Game.elapsed;
-			float wave = 0.8f + 0.2f * (float)Math.sin(time * 1.8f + phase);
-			//경고는 옅게, 폭풍은 진하게. 불은 청록 바닥에서 묻혀 보여서 더 진하게
-			float k = (storm ? 1f : 0.7f) * 1.35f; //(결정) 화염·서리·번개 모두 진하게 (청록 바닥에 묻히지 않게)
-			deep.alpha(Math.min(0.6f, 0.30f * k * wave));
-			base.alpha(Math.min(0.6f, 0.32f * k * shade * wave));
-			rim.alpha(Math.min(0.5f, 0.22f * k * wave));
+			//경고는 천천히 숨 쉬듯, 폭풍은 진하게 빠르게
+			float wave = storm ? 0.85f + 0.15f * (float)Math.sin(time * 6f) : 0.6f + 0.4f * (float)Math.sin(time * 3f);
+			float k = storm ? 1f : 0.8f;
+			for (ColorBlock o : outer) o.alpha(0.85f * k * wave);
+			for (ColorBlock i : inner) i.alpha(0.55f * k * wave);
 		}
 	}
 
