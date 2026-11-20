@@ -945,6 +945,8 @@ public class Dungeon {
 		}
 	
 		GameScene.updateFog(l, t, width, height);
+		//Maze Tower: 망령 왕의 어둠 속에서는 지나온 칸·옆 칸이 탐색되지 않는다 (기둥만 보임)
+		if (level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel) ((com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel) level).mazeAfterObserve();
 
 		if (hero.buff(MindVision.class) != null || hero.buff(DivineSense.DivineSenseTracker.class) != null){
 			for (Mob m : level.mobs.toArray(new Mob[0])){

@@ -534,6 +534,32 @@ public class CityBossLevel extends Level {
 	//Maze Tower: 시야에는 있지만 안개를 걷지 않는 칸 (망령 왕 기습의 푸른 눈, FogOfWar에서 본다)
 	public int mazeDarkCell = -1;
 
+	private boolean wraithDark(){
+		if (!mazeRoom || mazeEmpressRoom) return false;
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing k = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.find();
+		return k != null && k.isDark();
+	}
+
+	//Maze Tower: 어두운 동안 기둥(왕좌 포함)은 보인다 (FogOfWar가 기둥 칸은 아래 칸과 상관없이 자기 안개로 칠한다)
+	public boolean mazeShownPillar( int cell ){
+		return wraithDark() && isPillar(cell);
+	}
+
+	//Maze Tower: Dungeon.observe 뒤에 부른다. (결정) 어두운 동안 주인공이 움직여도 지나온 칸·옆 칸이 탐색되지 않는다.
+	//원작은 주인공 옆 칸을 늘 "본 적 있음"으로 하고 안개를 주인공 근처만 다시 그려서, 지나온 자리에 회색 자국이 남았다
+	public void mazeAfterObserve(){
+		if (!wraithDark()) return;
+		for (int y = ROOM_Y - 1; y <= ROOM_Y + ROOM_SIZE; y++){
+			for (int x = 0; x < width(); x++){
+				int cell = x + y * width();
+				boolean pillar = isPillar(cell);
+				visited[cell] = pillar || heroFOV[cell];
+				mapped[cell] = pillar;
+			}
+		}
+		GameScene.updateFog();
+	}
+
 	//Maze Tower: 주인공이 마지막으로 움직인 방향 (망령 왕 기습: 주인공 뒤 칸)
 	private int lastHeroPos = -1;
 	private int lastHeroStep = 0;

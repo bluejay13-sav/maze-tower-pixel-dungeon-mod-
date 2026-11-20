@@ -246,13 +246,26 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addButton(new RedButton(Messages.get(this, "class_weapons"), 7){
+		addPair(new RedButton(Messages.get(this, "class_weapons"), 7){
 			@Override
 			protected void onClick() {
 				give(new WornDagger().identify());
 				give(new WornShortbow().identify());
 				give(new Arrow().quantity(50));
 				give(new ThrowingSpear().quantity(2).identify());
+			}
+		}, new RedButton(Messages.get(this, "kill_near"), 7){
+			@Override
+			protected void onClick() {
+				//주인공 주변 5×5(2칸 안)의 모든 적 처치
+				int killed = 0;
+				for (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob m : Dungeon.level.mobs.toArray(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob[0])){
+					if (m.alignment != com.shatteredpixel.shatteredpixeldungeon.actors.Char.Alignment.ENEMY || !m.isAlive()) continue;
+					if (Dungeon.level.distance(m.pos, Dungeon.hero.pos) > 2) continue;
+					m.die(Dungeon.hero);
+					killed++;
+				}
+				com.shatteredpixel.shatteredpixeldungeon.utils.GLog.i(Messages.get(WndCheats.class, "killed", killed));
 			}
 		});
 

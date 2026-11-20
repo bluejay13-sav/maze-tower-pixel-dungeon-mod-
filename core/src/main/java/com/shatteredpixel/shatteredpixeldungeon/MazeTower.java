@@ -552,7 +552,9 @@ public class MazeTower {
 	public static final float WK_AMBUSH_ARMOR_IGNORE = 0.5f; //기습 일격은 주인공 방어력의 이만큼을 무시한다
 	public static final float WK_AMBUSH_DMG     = 1.3f;  //(결정) 기습 일격 피해 배율 (+30%)
 	public static final float WK_ZOLT_ARMOR_IGNORE = 0.7f; //(결정) 인간을 죽이는 마법은 주인공 방어력의 이만큼을 무시한다
-	public static final float WK_EYES_ALPHA     = 0.35f; //어둠 속 푸른 눈의 진하기 (원작 미믹처럼 알아채기 어렵게)
+	public static final float WK_EYES_ALPHA     = 0.25f; //(결정, 바뀜 35%→25%) 어둠 속 푸른 눈의 진하기 (원작 미믹처럼 알아채기 어렵게)
+	public static final int   WK_TP_ORB_MIN     = 2;     //(결정) 1단계에 맞아서 순간이동할 때: 영혼 구슬에서 이 칸 이상
+	public static final int   WK_TP_ORB_MAX     = 4;     //... 이 칸 이내
 	public static final float WK_PHASE3_TAKEN   = 1.5f;  //3단계: 받는 평타·스킬 피해
 	public static final float WK_CRAWL_SPEED    = 0.7f;  //(결정) 3단계 기어다니는 왕의 이동 속도 (주인공에게서 도망친다)
 	//망령 근위병 (원작 드워프 왕 부하 구울을 조금 약하게)

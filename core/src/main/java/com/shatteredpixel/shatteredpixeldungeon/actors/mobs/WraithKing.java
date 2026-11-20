@@ -701,8 +701,9 @@ public class WraithKing extends Mob {
 		} else if (Dungeon.hero.isAlive()){
 			//(결정) 눈을 치지 않았으면 주인공이 어느 쪽으로 움직였든 반드시 덮친다:
 			//주인공 바로 옆 칸(눈이 있던 칸이 그대로 옆이면 그 칸)으로 순간이동해 방어력 50%를 무시하는 일격
+			//(결정, 바뀜) 왕은 언제나 눈이 있던 칸에서 나타난다 (주인공이 움직였어도 그 칸 그대로). 그 칸이 막혔을 때만 주인공 옆 칸
 			int at = -1;
-			if (Dungeon.level.adjacent(cell, Dungeon.hero.pos) && Actor.findChar(cell) == null) at = cell;
+			if (Actor.findChar(cell) == null && Dungeon.level.passable[cell]) at = cell;
 			if (at == -1){
 				ArrayList<Integer> opts = new ArrayList<>();
 				for (int n : PathFinder.NEIGHBOURS8){
@@ -869,6 +870,20 @@ public class WraithKing extends Mob {
 			cells.add(c);
 		}
 		if (cells.isEmpty()) return;
+		//(결정) 1단계: 영혼 구슬(떨어진 것·떨어질 예고 포함)에서 2칸 이상 4칸 이내인 칸으로. 그런 칸이 없으면 방 안 아무 칸
+		if (phase == 1){
+			ArrayList<Integer> orbs = new ArrayList<>();
+			for (int c = 0; c < Dungeon.level.length(); c++){
+				if (SoulOrb.at(c) || SoulOrb.Warn.at(c)) orbs.add(c);
+			}
+			ArrayList<Integer> near = new ArrayList<>();
+			for (int c : cells){
+				int d = Integer.MAX_VALUE;
+				for (int o : orbs) d = Math.min(d, Dungeon.level.distance(c, o));
+				if (d >= MazeTower.WK_TP_ORB_MIN && d <= MazeTower.WK_TP_ORB_MAX) near.add(c);
+			}
+			if (!near.isEmpty()) cells = near;
+		}
 		boolean seenFrom = Dungeon.level.heroFOV[pos] && !shrouded();
 		int from = pos;
 		pos = Random.element(cells);
