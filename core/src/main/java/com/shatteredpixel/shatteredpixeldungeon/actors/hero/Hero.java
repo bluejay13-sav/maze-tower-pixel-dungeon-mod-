@@ -2418,7 +2418,7 @@ public class Hero extends Char {
 		boolean wasHighGrass = Dungeon.level.map[step] == Terrain.HIGH_GRASS;
 
 		super.move( step, travelling);
-		if (travelling && pos != mazeFrom){ BloomAttack.onMove(this); BloomCommon.onMove(this, mazeFrom); } //Maze Tower: 2차 특성 돌진·거리 벌리기
+		if (travelling && pos != mazeFrom) BloomAttack.onMove(this); //Maze Tower: 2차 특성 돌진
 		
 		if (!flying && travelling) {
 			if (Dungeon.level.water[pos]) {

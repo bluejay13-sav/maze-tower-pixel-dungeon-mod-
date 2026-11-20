@@ -297,11 +297,6 @@ public class MazeTower {
 	//기습
 	public static final float[] B2_AMBUSH_DMG          = {0.20f, 0.30f, 0.40f};
 	public static final float   B2_AMBUSH_AWAKE_INVIS  = 1f;
-	//거리 벌리기
-	public static final float[] B2_DISENGAGE_BONUS     = {0.15f, 0.25f, 0.40f}; //피해·명중률 보정
-	public static final int     B2_DISENGAGE_COOLDOWN  = 10;
-	public static final float   B2_DISENGAGE_AWAKE_ROOT = 1f;
-	public static final int     B2_AFTERIMAGE_TURNS    = 10;    //각성: 잔상이 남는 턴
 	//잔류전기 (전이는 파생)
 	public static final float[] B2_SHOCK_CHANCE        = {0.10f, 0.15f, 0.20f};
 	public static final float   B2_SHOCK_DMG_FACTOR    = 0.50f; //그 타격 피해에 대한 전격 피해

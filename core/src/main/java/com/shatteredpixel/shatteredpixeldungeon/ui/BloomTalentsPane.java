@@ -270,7 +270,7 @@ public class BloomTalentsPane extends ScrollPane {
 		private Image bg;
 		private Image icon;
 		private ColorBlock fill;
-		private ColorBlock awakeGlow; //만개 각성: 칸 뒤의 분홍빛 (숨 쉬듯 밝아졌다 어두워짐)
+		private ColorBlock awakeGlow; //만개 각성: 칸 위에 살짝 겹치는 분홍빛 (숨 쉬듯 밝아졌다 어두워짐)
 		private float glowTime = 0;
 
 		public SlotButton(int index){
@@ -283,7 +283,6 @@ public class BloomTalentsPane extends ScrollPane {
 
 			if (slot != null && slot.isChosen() && slot.awakened){
 				awakeGlow = new ColorBlock(1, 1, 0xFFFF5FC0); //화사한 분홍
-				add(awakeGlow);
 			}
 
 			fill = new ColorBlock(0, 4, 0xFFFFFF44);
@@ -293,6 +292,8 @@ public class BloomTalentsPane extends ScrollPane {
 			//특성 최대 레벨 3 → 원작 3포인트 특성 테두리
 			bg.frame(20*(MazeTower.BLOOM_MAX_TALENT_LEVEL-1), 0, TalentButton.WIDTH, TalentButton.HEIGHT);
 			add(bg);
+			//각성 분홍빛은 칸 그림 위에 살짝 겹친다 (뒤에 두면 칸 그림에 가려 보이지 않는다)
+			if (awakeGlow != null) add(awakeGlow);
 
 			if (slot != null && slot.isChosen()){
 				icon = new BloomTalentIcon(slot.chosen);
@@ -371,7 +372,7 @@ public class BloomTalentsPane extends ScrollPane {
 			if (awakeGlow != null){
 				glowTime += Game.elapsed;
 				float b = 0.5f + 0.5f * (float)Math.sin(glowTime * 2.2f);
-				awakeGlow.alpha(0.3f + 0.35f * b);
+				awakeGlow.alpha(0.06f + 0.16f * b); //살짝만 보이게
 				if (appearTime <= 0 && flashTime <= 0){
 					bg.hardlight(1f, 0.78f - 0.14f * b, 0.9f - 0.06f * b);
 				}

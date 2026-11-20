@@ -259,26 +259,6 @@ public class BloomBuffs {
 		}
 	}
 
-	//거리 벌리기: 물러나서 다음 공격이 강해지는 상태 (맞으면 풀린다)
-	public static class DisengageReady extends Buff {
-		{ type = buffType.POSITIVE; }
-		@Override public int icon() { return BuffIndicator.B2_DISENGAGE; }
-		@Override public String desc() {
-			int d = Math.max(0, BloomEffects.lvl(com.shatteredpixel.shatteredpixeldungeon.Dungeon.hero, BloomTalent.DISENGAGE));
-			return Messages.get(this, "desc", Math.round(B2_DISENGAGE_BONUS[d] * 100));
-		}
-	}
-
-	//거리 벌리기 쿨타임
-	public static class DisengageCooldown extends FlavourBuff {
-		{ type = buffType.NEUTRAL; }
-		@Override public int icon() { return BuffIndicator.B2_DISENGAGE; }
-		@Override public void tintIcon(Image icon) { icon.brightness(0.4f); }
-		@Override public float iconFadePercent() { return Math.max(0, (B2_DISENGAGE_COOLDOWN - visualcooldown()) / B2_DISENGAGE_COOLDOWN); }
-		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
-		@Override public String desc() { return Messages.get(this, "desc", dispTurns()); }
-	}
-
 	//원소 순환 각성: 다음 공격이 무작위 원소를 건다
 	public static class CycleCharge extends Buff {
 		{ type = buffType.POSITIVE; }
@@ -331,64 +311,6 @@ public class BloomBuffs {
 		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
 			left = bundle.getFloat("left");
-		}
-	}
-
-	//거리 벌리기 각성: 물러난 칸에 남는 잔상. 밟은 적은 1턴 속박되고 잔상은 사라진다. 다시 퍼지지 않는다 (규칙 5).
-	public static class Afterimage extends com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob {
-		@Override
-		protected void evolve() {
-			int cell;
-			for (int i = area.left; i < area.right; i++){
-				for (int j = area.top; j < area.bottom; j++){
-					cell = i + j * com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.width();
-					if (cur[cell] <= 0){
-						off[cell] = 0;
-						continue;
-					}
-					//(밟는 순간은 stepOn이 처리한다. 여기서는 처음부터 서 있던 적도 놓치지 않게 한 번 더 본다)
-					Char ch = com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(cell);
-					if (ch != null && ch.alignment == Char.Alignment.ENEMY){
-						root(ch);
-						off[cell] = 0;
-						continue;
-					}
-					off[cell] = cur[cell] - 1;
-					volume += off[cell];
-				}
-			}
-		}
-
-		//적이 잔상 칸에 들어선 순간 (Char.move): 바로 속박하고 잔상은 사라진다
-		public static void stepOn(Char ch){
-			if (ch == null || ch.alignment != Char.Alignment.ENEMY || com.shatteredpixel.shatteredpixeldungeon.Dungeon.level == null) return;
-			Afterimage a = (Afterimage) com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.blobs.get(Afterimage.class);
-			if (a == null || a.volume <= 0 || a.cur == null || ch.pos < 0 || ch.pos >= a.cur.length || a.cur[ch.pos] <= 0) return;
-			a.volume -= a.cur[ch.pos];
-			a.cur[ch.pos] = 0;
-			root(ch);
-		}
-
-		private static void root(Char ch){
-			//밟은 순간부터 그 적의 다음 행동 한 번(1턴)을 묶도록 1턴을 더한다 (상태는 적보다 늦게 줄어든다)
-			Buff.prolong(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots.class, B2_DISENGAGE_AWAKE_ROOT + 1f);
-			if (ch.sprite != null && ch.sprite.visible){
-				ch.sprite.showStatus(com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite.NEGATIVE,
-						Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots.class, "name"));
-				ch.sprite.emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.EarthParticle.FACTORY, 6);
-			}
-		}
-
-		@Override
-		public void use(com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter emitter) {
-			super.use(emitter);
-			//fx2_sheet 잔상 칸 그림
-			emitter.add(new com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.AfterimageLayer(this));
-		}
-
-		@Override
-		public String tileDesc() {
-			return Messages.get(this, "desc");
 		}
 	}
 

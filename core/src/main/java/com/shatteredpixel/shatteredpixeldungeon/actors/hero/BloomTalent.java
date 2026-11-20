@@ -7,8 +7,8 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 
-//Maze Tower: 2차(개화) 특성 31개 (2차 특성 개편, docs/sprites/talent2/TALENT2_SPEC.md).
-//기본공격 전용 9, 스킬 전용 9, 공용 13. 계열은 1~2개이고, 선택지는 첫 번째 계열이 서로 다르게 뽑는다.
+//Maze Tower: 2차(개화) 특성 30개 (2차 특성 개편, docs/sprites/talent2/TALENT2_SPEC.md). 거리 벌리기는 삭제했다.
+//기본공격 전용 9, 스킬 전용 9, 공용 12. 계열은 1~2개이고, 선택지는 첫 번째 계열이 서로 다르게 뽑는다.
 //아이콘 번호는 talent2_icons.png (16×16, 가로 8칸) 순서. 31번은 분홍 꽃잎.
 public enum BloomTalent {
 
@@ -41,7 +41,6 @@ public enum BloomTalent {
 	MELEE         (21, Kind.COMMON, Family.COMBO, Family.SURVIVAL),  //난전
 	DUEL          (22, Kind.COMMON, Family.TACTIC, Family.SURVIVAL), //결투
 	AMBUSH        (23, Kind.COMMON, Family.TACTIC),                  //기습
-	DISENGAGE     (24, Kind.COMMON, Family.TACTIC),                  //거리 벌리기
 	RESIDUAL_SHOCK(25, Kind.COMMON, Family.ELEMENT),                 //잔류전기
 	ELEMENT_AMP   (26, Kind.COMMON, Family.ELEMENT),                 //원소 증폭
 	ELEMENT_CYCLE (27, Kind.COMMON, Family.ELEMENT, Family.MANA),    //원소 순환

@@ -273,7 +273,6 @@ public class BloomEffects {
 	// =====================================================================
 
 	public static int onHeroDefense(Hero hero, Char enemy, int damage){
-		BloomCommon.onHeroHit(hero); //거리 벌리기: 맞으면 풀린다
 		if (damage <= 0) return damage;
 		float dmg = damage;
 

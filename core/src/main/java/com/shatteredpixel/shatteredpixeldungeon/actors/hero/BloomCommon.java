@@ -48,7 +48,6 @@ public class BloomCommon {
 
 	static float flowBonus      = 0;     //흐름: 이번 공격에 붙는 피해
 	static boolean flowActive   = false; //흐름: 번갈아 쓴 공격 (3레벨 명중)
-	static boolean disengage    = false; //거리 벌리기: 물러난 뒤 첫 공격
 	static boolean cycleElement = false; //원소 순환 각성: 이번 공격이 무작위 원소를 건다
 	static int duelTarget       = -1;    //결투 상대
 	static int ambushTarget     = -1;    //기습한 대상
@@ -60,7 +59,6 @@ public class BloomCommon {
 	static void onActionStart(Hero hero, boolean skill){
 		flowBonus = 0;
 		flowActive = false;
-		disengage = false;
 		cycleElement = false;
 		duelTarget = -1;
 		ambushTarget = -1;
@@ -82,15 +80,6 @@ public class BloomCommon {
 			ft.lastKind = kind;
 		}
 
-		//거리 벌리기: 물러난 뒤 맞지 않고 하는 첫 공격
-		if (hero.buff(BloomBuffs.DisengageReady.class) != null){
-			Buff.detach(hero, BloomBuffs.DisengageReady.class);
-			if (lvl(hero, DISENGAGE) >= 0 && hero.buff(BloomBuffs.DisengageCooldown.class) == null){
-				disengage = true;
-				Buff.affect(hero, BloomBuffs.DisengageCooldown.class, B2_DISENGAGE_COOLDOWN);
-			}
-		}
-
 		//원소 순환 각성: 반응을 일으킨 다음 공격
 		if (hero.buff(BloomBuffs.CycleCharge.class) != null){
 			Buff.detach(hero, BloomBuffs.CycleCharge.class);
@@ -105,8 +94,6 @@ public class BloomCommon {
 	static float accuracyMulti(Hero hero){
 		float acc = 1f;
 		if (flowActive && lvl(hero, FLOW) >= 2) acc *= 1f + B2_FLOW_ACC;
-		int d = lvl(hero, DISENGAGE);
-		if (disengage && d >= 0) acc *= 1f + B2_DISENGAGE_BONUS[d];
 		return acc;
 	}
 
@@ -145,10 +132,6 @@ public class BloomCommon {
 			bonus += B2_AMBUSH_DMG[am];
 			ambushTarget = enemy.id();
 		}
-
-		//거리 벌리기
-		int d = lvl(hero, DISENGAGE);
-		if (disengage && d >= 0) bonus += B2_DISENGAGE_BONUS[d];
 
 		return bonus;
 	}
@@ -266,11 +249,6 @@ public class BloomCommon {
 	// 받는 피해
 	// =====================================================================
 
-	//공격을 받았을 때 (Hero.defenseProc → BloomEffects.onHeroDefense): 거리 벌리기가 풀린다
-	static void onHeroHit(Hero hero){
-		Buff.detach(hero, BloomBuffs.DisengageReady.class);
-	}
-
 	//받는 모든 피해 배율 (Hero.damage → BloomEffects.onHeroDamage): 난전 각성, 결투 3레벨
 	static float incomingMulti(Hero hero){
 		float m = 1f;
@@ -287,29 +265,6 @@ public class BloomCommon {
 			if (c != null && c.alignment == Char.Alignment.ENEMY){
 				BloomAttack.pushAway(hero, c, B2_VEIL_AWAKE_PUSH);
 			}
-		}
-	}
-
-	// =====================================================================
-	// 이동 (Hero.move): 거리 벌리기
-	// =====================================================================
-
-	static void onMove(Hero hero, int from){
-		if (lvl(hero, DISENGAGE) < 0 || hero.buff(BloomBuffs.DisengageCooldown.class) != null) return;
-		//붙어 있던 적에게서 멀어졌는지
-		boolean awayFromAny = false;
-		for (Char c : Actor.chars()){
-			if (c.isAlive() && c.alignment == Char.Alignment.ENEMY
-					&& Dungeon.level.adjacent(from, c.pos) && !Dungeon.level.adjacent(hero.pos, c.pos)){
-				awayFromAny = true;
-				break;
-			}
-		}
-		if (!awayFromAny) return;
-		Buff.affect(hero, BloomBuffs.DisengageReady.class);
-		//각성: 물러난 칸에 잔상 (밟은 적은 1턴 속박, 다시 퍼지지 않는 장판)
-		if (awake(hero, DISENGAGE)){
-			Blob.seed(from, B2_AFTERIMAGE_TURNS, BloomBuffs.Afterimage.class, Dungeon.level);
 		}
 	}
 

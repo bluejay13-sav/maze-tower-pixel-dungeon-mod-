@@ -145,7 +145,7 @@ public class BuffIndicator extends Component {
 	public static final int B2_GALE         = MAZE2 + 2;
 	public static final int B2_HEAVY        = MAZE2 + 3;
 	public static final int B2_CHARGE       = MAZE2 + 4;
-	public static final int B2_DISENGAGE    = MAZE2 + 5;
+	//MAZE2 + 5: 거리 벌리기 (특성 삭제, 그림 칸만 남음)
 	public static final int B2_SURE         = MAZE2 + 6;
 	public static final int B2_FOCUS        = MAZE2 + 7;
 	public static final int B2_FLOW         = MAZE2 + 8;

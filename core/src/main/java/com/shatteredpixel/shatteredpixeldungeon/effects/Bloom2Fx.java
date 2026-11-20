@@ -8,7 +8,6 @@ package com.shatteredpixel.shatteredpixeldungeon.effects;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
-import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle;
@@ -28,10 +27,9 @@ import com.watabou.noosa.tweeners.PosTweener;
 import com.watabou.noosa.tweeners.Tweener;
 import com.watabou.utils.PointF;
 
-import java.util.HashMap;
 
 //Maze Tower: 2차 특성 개편 그림·연출 (E단계). 그림은 fx2_sheet.png (좌표는 docs/sprites/talent2/README.md).
-//  시트 그림: 원형 휩쓸기, 원형 충격파, 표식 터짐, 방어 무시 파편, 조준 과녁, 마나 장막, 마력 파편, 잔상 칸, 머리 위 표식
+//  시트 그림: 원형 휩쓸기, 원형 충격파, 표식 터짐, 방어 무시 파편, 조준 과녁, 마나 장막, 마력 파편, 머리 위 표식
 //  코드 입자: 강타 굵은 베기, 질풍 바람, 연쇄 하늘색 빛줄기, 과충전 마력 넘침, 충격 충돌, 원소 순환 3색 빛, 표식이 옮겨 붙는 빛
 public class Bloom2Fx {
 
@@ -46,8 +44,7 @@ public class Bloom2Fx {
 		PIERCE    (16, 16, new int[][]{{0,102},{18,102}}),
 		TARGET    (16, 16, new int[][]{{0,120}}),
 		VEIL      (16, 16, new int[][]{{0,138}}),
-		SHARD     ( 5,  5, new int[][]{{0,156}}),
-		AFTERIMAGE(16, 16, new int[][]{{0,163}});
+		SHARD     ( 5,  5, new int[][]{{0,156}});
 
 		public final int w, h;
 		final int[][] frames;
@@ -188,48 +185,6 @@ public class Bloom2Fx {
 				killAndErase();
 			}
 		});
-	}
-
-	// =====================================================================
-	// 거리 벌리기 각성: 잔상 칸 (블롭이 있는 칸마다 그림, Afterimage.use에서 붙인다)
-	// =====================================================================
-
-	public static class AfterimageLayer extends Group {
-		private final Blob blob;
-		private final HashMap<Integer, Image> imgs = new HashMap<>();
-		private float time = 0;
-
-		public AfterimageLayer(Blob blob){
-			this.blob = blob;
-		}
-
-		@Override
-		public synchronized void update() {
-			super.update();
-			if (blob.cur == null || Dungeon.level == null) return;
-			time += Game.elapsed;
-			int w = Dungeon.level.width();
-			for (int i = 0; i < blob.cur.length; i++){
-				boolean has = blob.cur[i] > 0;
-				Image im = imgs.get(i);
-				if (has && im == null){
-					im = new Image(Assets.Effects.MAZE_FX2);
-					im.frame(film(im, Sheet.AFTERIMAGE).get(0));
-					im.x = (i % w) * DungeonTilemap.SIZE;
-					im.y = (i / w) * DungeonTilemap.SIZE;
-					add(im);
-					imgs.put(i, im);
-				} else if (!has && im != null){
-					im.killAndErase();
-					imgs.remove(i);
-					im = null;
-				}
-				if (im != null){
-					im.visible = Dungeon.level.heroFOV[i];
-					im.alpha(0.55f + 0.2f * (float)Math.sin(time * 3f));
-				}
-			}
-		}
 	}
 
 	// =====================================================================
