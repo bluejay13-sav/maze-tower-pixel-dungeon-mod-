@@ -256,29 +256,29 @@ public class Bloom2Fx {
 				.show(enemy.sprite.parent, e);
 	}
 
-	//연쇄: 맞은 적에서 번진 적까지 옅은 입자가 지나간다 (눈에 덜 띄게)
+	//연쇄: 맞은 적에서 번진 적에게 빛 조각이 빠르게 날아가 꽂힌다 (공격하는 느낌)
 	public static void chain(Char from, Char to){
 		if (!seen(from) || !seen(to)) return;
-		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center(), CHAIN_DUST_COLORS); //하늘색이 섞인다
+		pathStrike(from.sprite.parent, from.sprite.center(), to.sprite.center());
 	}
 
-	//표식이 옮겨 붙는 길 (연쇄와 같은 옅은 입자)
+	//표식이 옮겨 붙는 길: 보라색이 섞인 입자가 차례로 지나간다
 	public static void markTransfer(Char from, Char to){
 		if (!seen(from) || !seen(to)) return;
-		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center(), DUST_COLORS);
+		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center(), MARK_DUST_COLORS);
 	}
 
-	// ===== 특성으로 다른 적에게 번지는 길: 회색·흰색·검정 입자 몇 개 =====
+	// ===== 특성으로 다른 적에게 번지는 길 =====
 
-	//입자 색 (흰색·밝은 회색·회색·검정)
-	private static final int[] DUST_COLORS = {0xFFFFFF, 0xC8C8C8, 0x8C8C8C, 0x202020};
-	//연쇄: 위 색에 하늘색 두 가지를 더한다
-	private static final int[] CHAIN_DUST_COLORS = {0xFFFFFF, 0xC8C8C8, 0x8C8C8C, 0x202020, 0x7FD4FF, 0xB8E8FF};
-	//거리 1칸(16px)마다 입자 수 (너무 많지 않게), 최소·최대
-	private static final float DUST_PER_TILE = 2f;
-	private static final int   DUST_MIN = 4, DUST_MAX = 9;
+	//표식 전이 입자 색: 흰색·밝은 회색·회색·검정 + 보라 두 가지
+	private static final int[] MARK_DUST_COLORS = {0xFFFFFF, 0xC8C8C8, 0x8C8C8C, 0x202020, 0xB070FF, 0xD8A8FF};
+	//거리 1칸(16px)마다 입자 수, 최소·최대
+	private static final float DUST_PER_TILE = 2.5f;
+	private static final int   DUST_MIN = 5, DUST_MAX = 11;
 	//입자 크기 (픽셀)
-	private static final float DUST_SIZE = 1.5f;
+	private static final float DUST_SIZE = 2f;
+	//처음 진하기 (0~1, 사라지며 옅어진다)
+	private static final float DUST_ALPHA = 1f;
 	//출발점에서 도착점까지 입자가 차례로 나타나는 시간 (방향이 보이게)
 	private static final float DUST_TRAVEL = 0.14f;
 
@@ -298,20 +298,80 @@ public class Bloom2Fx {
 					float p = (spawned + 0.5f) / count;
 					float x = from.x + (to.x - from.x) * p + com.watabou.utils.Random.Float(-1.5f, 1.5f);
 					float y = from.y + (to.y - from.y) * p + com.watabou.utils.Random.Float(-1.5f, 1.5f);
-					com.watabou.noosa.particles.PixelParticle d = new com.watabou.noosa.particles.PixelParticle(){
-						@Override
-						public void update() {
-							super.update();
-							alpha(Math.max(0, left / lifespan) * 0.75f); //옅게 시작해서 사라진다
-						}
-					};
-					d.reset(x, y, colors[com.watabou.utils.Random.Int(colors.length)], DUST_SIZE, com.watabou.utils.Random.Float(0.25f, 0.4f));
-					d.speed.set(com.watabou.utils.Random.Float(-4, 4), com.watabou.utils.Random.Float(-6, -2)); //살짝 떠오르며 사라진다
-					add(d);
+					add(fadingDot(x, y, colors[com.watabou.utils.Random.Int(colors.length)], DUST_SIZE, DUST_ALPHA,
+							com.watabou.utils.Random.Float(0.3f, 0.45f),
+							com.watabou.utils.Random.Float(-4, 4), com.watabou.utils.Random.Float(-6, -2))); //살짝 떠오르며 사라진다
 				}
-				if (spawned >= count && t > DUST_TRAVEL + 0.5f) killAndErase();
+				if (spawned >= count && t > DUST_TRAVEL + 0.6f) killAndErase();
 			}
 		});
+	}
+
+	//연쇄 입자 색: 흰색·하늘색 두 가지·밝은 회색, 가끔 회색·검정
+	private static final int[] STRIKE_COLORS = {0xFFFFFF, 0xFFFFFF, 0x7FD4FF, 0xB8E8FF, 0x7FD4FF, 0xC8C8C8, 0x8C8C8C, 0x202020};
+	//빛 조각이 날아가는 시간 (짧을수록 날카롭다)
+	private static final float STRIKE_TIME = 0.10f;
+	//날아가며 남기는 꼬리 입자 간격 (px)
+	private static final float STRIKE_TRAIL_STEP = 2.5f;
+	//꽂힐 때 튀는 입자 수
+	private static final int   STRIKE_BURST = 7;
+
+	//연쇄: 앞머리(밝은 2px)가 빠르게 날아가며 꼬리 입자를 남기고, 닿는 순간 입자가 사방으로 튄다
+	public static void pathStrike(Group parent, final PointF from, final PointF to){
+		if (parent == null) return;
+		final float dx = to.x - from.x, dy = to.y - from.y;
+		final float dist = (float)Math.max(1, Math.hypot(dx, dy));
+		parent.add(new Group(){
+			float t = 0;
+			float trailed = 0; //꼬리를 남긴 거리
+			boolean hit = false;
+			@Override
+			public void update() {
+				super.update();
+				t += Game.elapsed;
+				float p = Math.min(1f, t / STRIKE_TIME);
+				float travelled = dist * p;
+				//꼬리: 지나온 자리에 일정 간격으로
+				for (; trailed <= travelled; trailed += STRIKE_TRAIL_STEP){
+					float q = trailed / dist;
+					float x = from.x + dx * q + com.watabou.utils.Random.Float(-0.6f, 0.6f);
+					float y = from.y + dy * q + com.watabou.utils.Random.Float(-0.6f, 0.6f);
+					add(fadingDot(x, y, STRIKE_COLORS[com.watabou.utils.Random.Int(STRIKE_COLORS.length)], 1.5f, 0.9f,
+							com.watabou.utils.Random.Float(0.15f, 0.25f),
+							-dx / dist * 12f, -dy / dist * 12f)); //날아가는 반대쪽으로 살짝 흘러간다
+				}
+				//앞머리: 밝은 흰색·하늘색 2px
+				if (!hit){
+					add(fadingDot(from.x + dx * p, from.y + dy * p, com.watabou.utils.Random.Int(2) == 0 ? 0xFFFFFF : 0xB8E8FF, 2.5f, 1f, 0.05f, 0, 0));
+				}
+				//꽂힘: 사방으로 튀는 입자
+				if (p >= 1f && !hit){
+					hit = true;
+					for (int i = 0; i < STRIKE_BURST; i++){
+						float a = com.watabou.utils.Random.Float(0, 6.283f);
+						float sp = com.watabou.utils.Random.Float(25f, 45f);
+						add(fadingDot(to.x, to.y, STRIKE_COLORS[com.watabou.utils.Random.Int(STRIKE_COLORS.length)], 1.5f, 1f,
+								com.watabou.utils.Random.Float(0.18f, 0.3f), (float)Math.cos(a) * sp, (float)Math.sin(a) * sp));
+					}
+				}
+				if (hit && t > STRIKE_TIME + 0.5f) killAndErase();
+			}
+		});
+	}
+
+	//사라지며 옅어지는 점 하나
+	private static com.watabou.noosa.particles.PixelParticle fadingDot(float x, float y, int color, float size, final float alpha,
+	                                                                  float life, float vx, float vy){
+		com.watabou.noosa.particles.PixelParticle d = new com.watabou.noosa.particles.PixelParticle(){
+			@Override
+			public void update() {
+				super.update();
+				alpha(Math.max(0, left / lifespan) * alpha);
+			}
+		};
+		d.reset(x, y, color, size, life);
+		d.speed.set(vx, vy);
+		return d;
 	}
 
 	//과충전: 시전할 때 마력이 넘쳐흐름
