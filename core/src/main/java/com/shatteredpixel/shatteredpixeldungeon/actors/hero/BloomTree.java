@@ -22,7 +22,7 @@ import java.util.Arrays;
 // - 선택권이 생기는 순간 그 칸의 선택지 3개를 던전 시드로 정해 저장한다.
 //   이미 가진 특성과, 아직 고르지 않은 다른 칸의 선택지는 제외하고, 3개는 첫 번째 계열이 서로 다르다.
 // - 고른 특성은 0레벨(효과 없음)로 시작하고 포인트로 1~3레벨이 된다.
-// - 만개의 핵을 쓰면 분홍 꽃잎 BLOOM_PETALS개. 꽃잎 1개로 특성 하나를 각성한다 (특성마다 1번, 되돌릴 수 없음).
+// - 만개의 핵을 쓰면 분홍 꽃잎 BLOOM_PETALS개. 꽃잎 1개로 1레벨 이상인 특성 하나를 각성한다 (특성마다 1번, 되돌릴 수 없음).
 public class BloomTree extends Buff {
 
 	{
@@ -186,7 +186,7 @@ public class BloomTree extends Buff {
 	public boolean canAwakenSomething(){
 		if (petalsAvailable() <= 0) return false;
 		for (Slot s : slots){
-			if (s.isChosen() && !s.awakened) return true;
+			if (s.isChosen() && !s.awakened && s.level >= MazeTower.BLOOM_AWAKEN_MIN_LEVEL) return true;
 		}
 		return false;
 	}
@@ -194,6 +194,7 @@ public class BloomTree extends Buff {
 	public boolean awaken( int slotIndex ){
 		Slot s = slots.get(slotIndex);
 		if (!s.isChosen() || s.awakened || petalsAvailable() <= 0) return false;
+		if (s.level < MazeTower.BLOOM_AWAKEN_MIN_LEVEL) return false; //(결정) 1레벨 이상 찍은 특성만 각성할 수 있다
 		s.awakened = true;
 		return true;
 	}

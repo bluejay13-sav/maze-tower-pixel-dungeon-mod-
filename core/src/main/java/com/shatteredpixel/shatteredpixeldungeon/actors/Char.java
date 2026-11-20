@@ -1371,6 +1371,8 @@ public abstract class Char extends Actor {
 
 		//Maze Tower: 물에 들어가면 젖음
 		if (Wet.onWater(this)) Buff.affect(this, Wet.class);
+		//Maze Tower: 2차 특성 거리 벌리기 각성 - 잔상 칸을 밟으면 바로 속박
+		com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomBuffs.Afterimage.stepOn(this);
 
 		if (this != Dungeon.hero) {
 			sprite.visible = Dungeon.level.heroFOV[pos];

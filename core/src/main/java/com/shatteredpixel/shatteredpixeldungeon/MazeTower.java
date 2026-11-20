@@ -182,6 +182,8 @@ public class MazeTower {
 
 	//만개의 핵을 쓰면 받는 분홍 꽃잎 (각성) 수
 	public static final int BLOOM_PETALS = 2;
+	//각성할 수 있는 최소 특성 레벨 (0레벨 특성은 각성할 수 없다)
+	public static final int BLOOM_AWAKEN_MIN_LEVEL = 1;
 
 	// ===== 2차 특성 수치 (모두 임시값. 배열은 [1레벨, 2레벨, 3레벨]) =====
 

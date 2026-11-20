@@ -67,7 +67,7 @@ public class WndBloomTalent extends Window {
 	}
 
 	//아래에 버튼을 하나 더 붙인다. close = 누르면 이 창을 닫는지
-	private void addButton(String text, com.watabou.noosa.Image icon, final boolean close, final Runnable onClick){
+	private RedButton addButton(String text, com.watabou.noosa.Image icon, final boolean close, final Runnable onClick){
 		RedButton button = new RedButton(text){
 			@Override
 			protected void onClick() {
@@ -81,6 +81,7 @@ public class WndBloomTalent extends Window {
 		add(button);
 		buttonTop = button.bottom() + 1;
 		resize(wndWidth, (int)button.bottom() + 1);
+		return button;
 	}
 
 	//+ 칸의 선택지 하나: "이 특성 선택"
@@ -133,7 +134,14 @@ public class WndBloomTalent extends Window {
 			});
 		}
 
-		boolean canAwaken = hero.isAlive() && !slot.awakened && tree.petalsAvailable() > 0;
+		//0레벨 특성은 각성할 수 없다: 버튼을 꺼 두고 이유를 보여 준다
+		if (hero.isAlive() && !slot.awakened && tree.petalsAvailable() > 0 && slot.level < MazeTower.BLOOM_AWAKEN_MIN_LEVEL){
+			w.addButton(Messages.get(WndBloomTalent.class, "awaken_need_level", MazeTower.BLOOM_AWAKEN_MIN_LEVEL), BloomTalentIcon.petal(), false, new Runnable() {
+				@Override public void run() { }
+			}).enable(false);
+		}
+
+		boolean canAwaken = hero.isAlive() && !slot.awakened && tree.petalsAvailable() > 0 && slot.level >= MazeTower.BLOOM_AWAKEN_MIN_LEVEL;
 		if (canAwaken){
 			w.addButton(Messages.get(WndBloomTalent.class, "awaken", tree.petalsAvailable()), BloomTalentIcon.petal(), false, new Runnable() {
 				@Override

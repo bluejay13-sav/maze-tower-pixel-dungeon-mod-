@@ -346,15 +346,36 @@ public class BloomBuffs {
 						off[cell] = 0;
 						continue;
 					}
+					//(밟는 순간은 stepOn이 처리한다. 여기서는 처음부터 서 있던 적도 놓치지 않게 한 번 더 본다)
 					Char ch = com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(cell);
 					if (ch != null && ch.alignment == Char.Alignment.ENEMY){
-						Buff.affect(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots.class, B2_DISENGAGE_AWAKE_ROOT);
+						root(ch);
 						off[cell] = 0;
 						continue;
 					}
 					off[cell] = cur[cell] - 1;
 					volume += off[cell];
 				}
+			}
+		}
+
+		//적이 잔상 칸에 들어선 순간 (Char.move): 바로 속박하고 잔상은 사라진다
+		public static void stepOn(Char ch){
+			if (ch == null || ch.alignment != Char.Alignment.ENEMY || com.shatteredpixel.shatteredpixeldungeon.Dungeon.level == null) return;
+			Afterimage a = (Afterimage) com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.blobs.get(Afterimage.class);
+			if (a == null || a.volume <= 0 || a.cur == null || ch.pos < 0 || ch.pos >= a.cur.length || a.cur[ch.pos] <= 0) return;
+			a.volume -= a.cur[ch.pos];
+			a.cur[ch.pos] = 0;
+			root(ch);
+		}
+
+		private static void root(Char ch){
+			//밟은 순간부터 그 적의 다음 행동 한 번(1턴)을 묶도록 1턴을 더한다 (상태는 적보다 늦게 줄어든다)
+			Buff.prolong(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots.class, B2_DISENGAGE_AWAKE_ROOT + 1f);
+			if (ch.sprite != null && ch.sprite.visible){
+				ch.sprite.showStatus(com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite.NEGATIVE,
+						Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots.class, "name"));
+				ch.sprite.emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.EarthParticle.FACTORY, 6);
 			}
 		}
 
