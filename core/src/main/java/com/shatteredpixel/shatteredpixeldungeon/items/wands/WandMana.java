@@ -42,7 +42,7 @@ public class WandMana {
 
 	public static int manaCost( Hero hero, Wand wand ){
 		if (!SwordSkill.heroUsesSkills(hero)) return 0;
-		return isStaffWand(hero, wand) ? SwordSkill.manaCost(hero) : MazeTower.LOOSE_WAND_MANA_COST;
+		return isStaffWand(hero, wand) ? BloomEffects.wandSkillCost(hero, MazeTower.SKILL_MANA_COST) : MazeTower.LOOSE_WAND_MANA_COST; //흐름 각성 +15
 	}
 
 	//쏘기 전에: 마나가 모자라면 막는다

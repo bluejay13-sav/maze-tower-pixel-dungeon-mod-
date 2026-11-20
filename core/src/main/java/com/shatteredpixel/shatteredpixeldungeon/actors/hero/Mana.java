@@ -87,6 +87,7 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	//대기(휴식·탐색 포함)로 턴을 넘겼을 때 호출한다
 	public static void onWait( Hero hero, float turns ){
 		Mana m = get(hero);
+		if (m.isFull()) BloomCommon.onWaitAtFull(hero); //명상 각성: 가득 찬 마나로 대기
 		SproutEffects.manaCycle(hero, m, turns); //마나 순환 (회복 전에 가득 찼는지 본다)
 		//명상: 대기 시 마나 회복 배율
 		m.gain(Math.round(MazeTower.MANA_PER_WAIT_TURN * turns * BloomEffects.waitManaMulti(hero)));

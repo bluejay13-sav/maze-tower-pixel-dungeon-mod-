@@ -61,15 +61,21 @@ public class BloomEffects {
 
 	public static SkillUse skillUse = null;
 
-	//스킬 비용 (흐름 각성은 C·D단계)
+	//검·단검·활 스킬 비용 (흐름 각성 +10)
 	public static int skillCost(Hero hero, int base){
-		return Math.max(0, base);
+		return Math.max(0, base + BloomCommon.extraSkillCost(hero, false));
+	}
+
+	//지팡이 스킬 비용 (흐름 각성 +15)
+	public static int wandSkillCost(Hero hero, int base){
+		return Math.max(0, base + BloomCommon.extraSkillCost(hero, true));
 	}
 
 	//평타 한 번 시작 (Hero.onAttackComplete): 새 "한 행동"
 	public static void beginNormal(Hero hero){
 		BloomRules.beginNormal();
 		BloomAttack.onActionStart(hero, false);
+		BloomCommon.onActionStart(hero, false);
 	}
 
 	//마나를 쓰기 직전에 호출
@@ -81,6 +87,7 @@ public class BloomEffects {
 		u.wasFullMana = m.isFull();
 		BloomRules.beginSkill(cost); //스킬 한 번이 새 "한 행동"
 		BloomAttack.onActionStart(hero, true); //돌진
+		BloomCommon.onActionStart(hero, true); //흐름·거리 벌리기·원소 순환
 		BloomSkill.onSkillStart(hero, u.wasFullMana); //집중·과충전
 		skillUse = u;
 		return u;
@@ -96,11 +103,9 @@ public class BloomEffects {
 		BloomSkill.endSkill(hero, u); //처형 3레벨 비용 반환
 		BloomSkill.onSkillEnd();
 
-		//흐름 (임시: 스킬 뒤 다음 평타 강화. 번갈아 쓰기는 C단계)
-		if (lvl(hero, FLOW) >= 0) Buff.affect(hero, FlowTracker.class).charges = 1;
-
 		//잔향: 몇 턴 동안 평타 적중 시 마나
 		if (lvl(hero, ECHO) >= 0) Buff.prolong(hero, EchoTracker.class, B2_ECHO_TURNS);
+		BloomCommon.onSkillEnd(hero); //잔향 각성: 이번 스킬 피해 기억
 
 		//흘리기: 다음에 받는 공격 피해 감소
 		if (lvl(hero, PARRY) >= 0) Buff.affect(hero, ParryTracker.class);
@@ -111,11 +116,9 @@ public class BloomEffects {
 	// =====================================================================
 
 	public static float accuracyMulti(Hero hero, Char target){
-		if (isSkill()) return 1f;
-		float acc = 1f;
+		float acc = BloomCommon.accuracyMulti(hero); //흐름 3레벨·거리 벌리기 (평타·스킬)
+		if (isSkill()) return acc;
 		acc *= BloomAttack.accuracyMulti(hero); //확정타
-		FlowTracker flow = hero.buff(FlowTracker.class);
-		if (flow != null && lvl(hero, FLOW) >= 2) acc *= 1f + B2_FLOW_ACC;
 		return acc;
 	}
 
@@ -163,10 +166,10 @@ public class BloomEffects {
 		return processHit(hero, target, dmg, true);
 	}
 
-	//주인공이 준 피해를 받을 때 (Char.damage): 표식, 불꽃 칼날 각성
+	//적이 피해를 받을 때 (Char.damage): 표식(모든 피해), 불꽃 칼날 각성(주인공이 준 피해)
 	public static int incomingDamage(Char target, int dmg, Object src){
-		if (dmg <= 0 || target == Dungeon.hero || !BloomRules.isHeroKill(src)) return dmg;
-		float m = BloomAttack.incomingMulti(target, src);
+		if (dmg <= 0 || target == Dungeon.hero) return dmg;
+		float m = BloomAttack.incomingMulti(target, src, BloomRules.isHeroKill(src));
 		return m == 1f ? dmg : Math.round(dmg * m);
 	}
 
@@ -181,16 +184,11 @@ public class BloomEffects {
 		if (o >= 0 && Mana.get(hero).isFull()) bonus += B2_OVERFLOW_DMG[o];
 		//돌진 (평타·스킬)
 		bonus += BloomAttack.anyHitBonus(hero, enemy);
+		//공용 (흐름·기세·난전·결투·기습·거리 벌리기)
+		bonus += BloomCommon.hitBonus(hero, enemy, skill);
 
 		if (!skill){
 			bonus += BloomAttack.normalHitBonus(hero, enemy); //확정타·강타
-			//흐름 (임시)
-			FlowTracker flow = hero.buff(FlowTracker.class);
-			int f = lvl(hero, FLOW);
-			if (flow != null){
-				if (f >= 0) bonus += B2_FLOW_DMG[f];
-				flow.detach();
-			}
 		} else {
 			bonus += BloomSkill.hitBonus(hero, enemy); //집중·처형·과충전·표식 폭발·섬광 보법
 		}
@@ -201,13 +199,13 @@ public class BloomEffects {
 		if (!skill){
 			//기본공격 전용 특성 (표식·불꽃 칼날·물보라·마나 흡수)
 			BloomAttack.onNormalHit(hero, enemy, result);
-			//잔향
-			int ec = lvl(hero, ECHO);
-			if (ec >= 0 && hero.buff(EchoTracker.class) != null && BloomRules.triggerOnHit(ECHO)) BloomRules.gainMana(hero, B2_ECHO_MANA[ec]);
 		} else {
 			//스킬 전용 특성 (서리 베기·연쇄·과충전 각성·충격·섬광 보법 각성)
 			BloomSkill.onSkillHit(hero, enemy, result);
 		}
+
+		//공용 적중 효과 (잔향·원소 순환 각성·넘치는 힘 각성)
+		BloomCommon.onHit(hero, enemy, result, skill);
 
 		//잔류전기 (평타·스킬)
 		residualShock(hero, enemy, result);
@@ -233,6 +231,7 @@ public class BloomEffects {
 		BloomRules.debug("kill " + enemy.name() + (byDerived ? " (derived)" : ""));
 		BloomAttack.onKill(hero, enemy, byDerived);
 		BloomSkill.onKill(hero, enemy, byDerived);
+		BloomCommon.onKill(hero, enemy, byDerived);
 	}
 
 	// =====================================================================
@@ -244,9 +243,8 @@ public class BloomEffects {
 		Mana m = hero.buff(Mana.class);
 		//흘리기 대기 중: 보호막
 		boolean parry = hero.buff(ParryTracker.class) != null && lvl(hero, PARRY) >= 0;
-		//집중(대기·탐색 직후)·흐름 준비 완료: 은은한 빛
-		boolean ready = (lvl(hero, FOCUS) >= 0 && m != null && m.focusReady && hero.buff(BloomBuffs.FocusCooldown.class) == null)
-				|| (lvl(hero, FLOW) >= 0 && hero.buff(FlowTracker.class) != null);
+		//집중(대기·탐색 직후) 준비 완료: 은은한 빛
+		boolean ready = (lvl(hero, FOCUS) >= 0 && m != null && m.focusReady && hero.buff(BloomBuffs.FocusCooldown.class) == null);
 		//넘치는 힘 + 가득 찬 마나: 은은한 푸른 기운
 		boolean full = m != null && m.isFull() && lvl(hero, OVERFLOW) >= 0;
 		TalentEffects.updateHero(hero, parry, ready, full);
@@ -257,6 +255,7 @@ public class BloomEffects {
 	// =====================================================================
 
 	public static int onHeroDefense(Hero hero, Char enemy, int damage){
+		BloomCommon.onHeroHit(hero); //거리 벌리기: 맞으면 풀린다
 		if (damage <= 0) return damage;
 		float dmg = damage;
 
@@ -278,14 +277,17 @@ public class BloomEffects {
 			dmg *= 1f - B2_VEIL_REDUCE[mv];
 			hero.sprite.showStatus(0x4488FF, "-" + B2_VEIL_COST);
 			TalentEffects.manaVeil(hero);
+			BloomCommon.veilPush(hero); //마나 장막 각성
 		}
 
 		return Math.round(dmg);
 	}
 
-	//받는 모든 피해 (난전·결투는 C단계)
+	//받는 모든 피해 (난전 각성, 결투 3레벨)
 	public static int onHeroDamage(Hero hero, int dmg){
-		return dmg;
+		if (dmg <= 0) return dmg;
+		float m = BloomCommon.incomingMulti(hero);
+		return m == 1f ? dmg : Math.round(dmg * m);
 	}
 
 	//내가 받는 상태이상 지속 (예전 원소 친화 자리, 지금은 없음)
@@ -348,7 +350,8 @@ public class BloomEffects {
 		ArrayList<Char> near = new ArrayList<>();
 		for (Char c : Actor.chars()){
 			if (c != enemy && c.isAlive()
-					&& Dungeon.level.adjacent(enemy.pos, c.pos)){
+					&& Dungeon.level.adjacent(enemy.pos, c.pos)
+					&& !(c == hero && BloomTree.awakened(hero, RESIDUAL_SHOCK))){ //각성: 나에게는 튀지 않는다
 				near.add(c);
 			}
 		}
@@ -397,9 +400,16 @@ public class BloomEffects {
 		return c == Burning.class || c == Chill.class || c == Frost.class || c == StaticCharge.class;
 	}
 
-	//원소 반응 피해 배율 (원소 증폭은 C단계)
+	//원소 반응 피해 배율 (원소 증폭)
 	public static float reactionDamageMulti(Hero hero){
-		return 1f;
+		return hero == null ? 1f : BloomCommon.reactionDamageMulti(hero);
+	}
+
+	//원소 반응이 일어났을 때 (ElementalReactions.announce): 원소 순환, 원소 증폭 각성
+	public static void onReaction(Char ch){
+		Hero hero = Dungeon.hero;
+		if (hero == null || ch == null || ch == hero) return;
+		BloomCommon.onReaction(hero, ch);
 	}
 
 	public static boolean hasElementalStatus(Char ch){
@@ -413,35 +423,59 @@ public class BloomEffects {
 	// 추적용 버프
 	// =====================================================================
 
-	//흐름: 다음 공격 강화
+	//흐름: 마지막 공격 종류(1 평타, 2 스킬)와 번갈아 쓴 횟수(각성 중첩)
 	public static class FlowTracker extends Buff {
 		{ type = buffType.POSITIVE; }
-		public int charges = 1;
+		public int lastKind = 0;
+		public int stacks = 0;
 
-		@Override public int icon() { return BuffIndicator.MOMENTUM; }
+		//다음 공격을 다른 종류로 하면 붙는 피해
+		private int nextPct(){
+			Hero h = Dungeon.hero;
+			int f = h == null ? -1 : lvl(h, FLOW);
+			if (f < 0) return 0;
+			int next = BloomTree.awakened(h, FLOW) ? Math.min(B2_FLOW_AWAKE_STACKS, stacks + 1) : 1;
+			return Math.round(B2_FLOW_DMG[f] * next * 100);
+		}
+
+		@Override public int icon() { return lastKind == 0 ? BuffIndicator.NONE : BuffIndicator.MOMENTUM; }
 		@Override public void tintIcon(Image icon) { icon.hardlight(0.5f, 0.8f, 1f); }
-		@Override public String iconTextDisplay() { return Integer.toString(charges); }
+		@Override public String iconTextDisplay() { return stacks > 0 ? Integer.toString(stacks) : ""; }
 		@Override public String desc() {
-			int f = Dungeon.hero == null ? 0 : Math.max(0, lvl(Dungeon.hero, FLOW));
-			return Messages.get(this, "desc", Math.round(B2_FLOW_DMG[f] * 100), charges);
+			return Messages.get(this, lastKind == 2 ? "desc_skill" : "desc_normal", nextPct(), stacks);
 		}
 
 		@Override
 		public void storeInBundle(Bundle bundle) {
 			super.storeInBundle(bundle);
-			bundle.put("charges", charges);
+			bundle.put("last_kind", lastKind);
+			bundle.put("stacks", stacks);
 		}
 
 		@Override
 		public void restoreFromBundle(Bundle bundle) {
 			super.restoreFromBundle(bundle);
-			charges = bundle.getInt("charges");
+			lastKind = bundle.getInt("last_kind");
+			stacks = bundle.getInt("stacks");
 		}
 	}
 
-	//잔향: 남은 턴
+	//잔향: 남은 턴. skillDamage = 방금 쓴 스킬의 첫 타격 피해 (각성 잔상, 0이면 공격 스킬이 아님)
 	public static class EchoTracker extends FlavourBuff {
 		{ type = buffType.POSITIVE; }
+		public int skillDamage = 0;
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put("skill_damage", skillDamage);
+		}
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			skillDamage = bundle.getInt("skill_damage");
+		}
 
 		@Override public int icon() { return BuffIndicator.RECHARGING; }
 		@Override public void tintIcon(Image icon) { icon.hardlight(0.4f, 0.6f, 1f); }

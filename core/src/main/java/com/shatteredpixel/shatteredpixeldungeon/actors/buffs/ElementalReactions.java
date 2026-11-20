@@ -394,6 +394,7 @@ public class ElementalReactions {
 	}
 
 	private static void announce( Char ch, String key, int color ){
+		BloomEffects.onReaction(ch); //Maze Tower: 2차 특성 원소 순환·원소 증폭 각성
 		if (ch.sprite != null && validPos(ch) && Dungeon.level.heroFOV[ch.pos]){
 			ch.sprite.showStatus(color, Messages.get(ElementalReactions.class, key));
 		}

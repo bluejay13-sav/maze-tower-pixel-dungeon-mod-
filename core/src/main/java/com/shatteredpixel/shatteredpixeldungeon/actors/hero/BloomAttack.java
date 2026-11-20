@@ -273,7 +273,9 @@ public class BloomAttack {
 	// 받는 피해 배율 (Char.damage, 주인공이 준 피해일 때)
 	// =====================================================================
 
-	static float incomingMulti(Char target, Object src){
+	//표식: 어떤 피해든(화상·독·폭탄·함정·원소 반응·아군 등 모두) 더 받는다.
+	//불꽃 칼날 각성: 주인공이 준 피해만.
+	static float incomingMulti(Char target, Object src, boolean byHero){
 		Hero hero = Dungeon.hero;
 		if (hero == null) return 1f;
 		float multi = 1f;
@@ -281,7 +283,7 @@ public class BloomAttack {
 		BloomBuffs.Mark mark = target.buff(BloomBuffs.Mark.class);
 		if (mark != null) multi += B2_MARK_DMG_PER * mark.stacks;
 		//불꽃 칼날 각성: 화상 중인 적에게 모든 피해
-		if (awake(hero, FLAME_BLADE) && target.buff(Burning.class) != null) multi += B2_FLAME_AWAKE_DMG;
+		if (byHero && awake(hero, FLAME_BLADE) && target.buff(Burning.class) != null) multi += B2_FLAME_AWAKE_DMG;
 		return multi;
 	}
 
@@ -314,7 +316,7 @@ public class BloomAttack {
 					}
 				}
 			}
-			BloomBuffs.Gale gb = Buff.affect(hero, BloomBuffs.Gale.class, B2_GALE_TURNS);
+			BloomBuffs.Gale gb = Buff.prolong(hero, BloomBuffs.Gale.class, B2_GALE_TURNS);
 			gb.charges = B2_GALE_CHARGES[g];
 		}
 

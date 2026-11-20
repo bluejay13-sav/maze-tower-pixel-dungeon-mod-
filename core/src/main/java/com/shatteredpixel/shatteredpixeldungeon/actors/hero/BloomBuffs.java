@@ -209,4 +209,158 @@ public class BloomBuffs {
 		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
 		@Override public String desc() { return Messages.get(this, "desc", dispTurns()); }
 	}
+
+	// ===== 공용 특성 (C3) =====
+
+	//기세: 처치마다 1스택 (최대 B2_MOMENTUM_MAX), B2_MOMENTUM_TURNS 동안 처치하지 못하면 사라진다
+	public static class Momentum extends FlavourBuff {
+		{ type = buffType.POSITIVE; }
+		public int stacks = 0;
+
+		@Override public int icon() { return BuffIndicator.FURY; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(1f, 0.6f, 0.2f); }
+		@Override public String iconTextDisplay() { return Integer.toString(stacks); }
+		@Override public float iconFadePercent() { return Math.max(0, (B2_MOMENTUM_TURNS - visualcooldown()) / B2_MOMENTUM_TURNS); }
+		@Override public String desc() {
+			int m = Math.max(0, BloomEffects.lvl(com.shatteredpixel.shatteredpixeldungeon.Dungeon.hero, BloomTalent.MOMENTUM));
+			return Messages.get(this, "desc", stacks, Math.round(stacks * B2_MOMENTUM_DMG[m] * 100), dispTurns());
+		}
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put("stacks", stacks);
+		}
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			stacks = bundle.getInt("stacks");
+		}
+	}
+
+	//거리 벌리기: 물러나서 다음 공격이 강해지는 상태 (맞으면 풀린다)
+	public static class DisengageReady extends Buff {
+		{ type = buffType.POSITIVE; }
+		@Override public int icon() { return BuffIndicator.MOMENTUM; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(0.6f, 0.8f, 1f); }
+		@Override public String desc() {
+			int d = Math.max(0, BloomEffects.lvl(com.shatteredpixel.shatteredpixeldungeon.Dungeon.hero, BloomTalent.DISENGAGE));
+			return Messages.get(this, "desc", Math.round(B2_DISENGAGE_BONUS[d] * 100));
+		}
+	}
+
+	//거리 벌리기 쿨타임
+	public static class DisengageCooldown extends FlavourBuff {
+		{ type = buffType.NEUTRAL; }
+		@Override public int icon() { return BuffIndicator.MOMENTUM; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(0.35f, 0.35f, 0.35f); }
+		@Override public float iconFadePercent() { return Math.max(0, (B2_DISENGAGE_COOLDOWN - visualcooldown()) / B2_DISENGAGE_COOLDOWN); }
+		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
+		@Override public String desc() { return Messages.get(this, "desc", dispTurns()); }
+	}
+
+	//원소 순환 각성: 다음 공격이 무작위 원소를 건다
+	public static class CycleCharge extends Buff {
+		{ type = buffType.POSITIVE; }
+		@Override public int icon() { return BuffIndicator.IMBUE; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(1f, 0.7f, 0.9f); }
+		@Override public String desc() { return Messages.get(this, "desc"); }
+	}
+
+	//원소 증폭 각성 쿨타임 (화면에 보이지 않음)
+	public static class AmpCooldown extends FlavourBuff {
+		{ type = buffType.NEUTRAL; }
+	}
+
+	//명상 각성 쿨타임
+	public static class MeditationCooldown extends FlavourBuff {
+		{ type = buffType.NEUTRAL; }
+		@Override public int icon() { return BuffIndicator.HEART; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(0.35f, 0.35f, 0.35f); }
+		@Override public float iconFadePercent() { return Math.max(0, (B2_MEDITATION_AWAKE_COOLDOWN - visualcooldown()) / B2_MEDITATION_AWAKE_COOLDOWN); }
+		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
+		@Override public String desc() { return Messages.get(this, "desc", dispTurns()); }
+	}
+
+	//명상 각성: B2_MEDITATION_AWAKE_TURNS 동안 유지되는 방어막
+	public static class MeditationShield extends com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff {
+		{ type = buffType.POSITIVE; }
+		public float left = B2_MEDITATION_AWAKE_TURNS;
+
+		@Override
+		public boolean act() {
+			left -= TICK;
+			if (left <= 0 || shielding() <= 0){
+				detach();
+				return true;
+			}
+			spend(TICK);
+			return true;
+		}
+
+		@Override public int icon() { return BuffIndicator.ARMOR; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(0.5f, 0.7f, 1f); }
+		@Override public String iconTextDisplay() { return Integer.toString(shielding()); }
+		@Override public String desc() { return Messages.get(this, "desc", shielding(), (int)Math.ceil(left)); }
+
+		@Override
+		public void storeInBundle(Bundle bundle) {
+			super.storeInBundle(bundle);
+			bundle.put("left", left);
+		}
+
+		@Override
+		public void restoreFromBundle(Bundle bundle) {
+			super.restoreFromBundle(bundle);
+			left = bundle.getFloat("left");
+		}
+	}
+
+	//거리 벌리기 각성: 물러난 칸에 남는 잔상. 밟은 적은 1턴 속박되고 잔상은 사라진다. 다시 퍼지지 않는다 (규칙 5).
+	public static class Afterimage extends com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob {
+		@Override
+		protected void evolve() {
+			int cell;
+			for (int i = area.left; i < area.right; i++){
+				for (int j = area.top; j < area.bottom; j++){
+					cell = i + j * com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.width();
+					if (cur[cell] <= 0){
+						off[cell] = 0;
+						continue;
+					}
+					Char ch = com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(cell);
+					if (ch != null && ch.alignment == Char.Alignment.ENEMY){
+						Buff.affect(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots.class, B2_DISENGAGE_AWAKE_ROOT);
+						off[cell] = 0;
+						continue;
+					}
+					off[cell] = cur[cell] - 1;
+					volume += off[cell];
+				}
+			}
+		}
+
+		@Override
+		public void use(com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter emitter) {
+			super.use(emitter);
+			//임시 (E단계: fx2_sheet 잔상 칸 그림)
+			emitter.pour(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.factory(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.LIGHT), 0.6f);
+		}
+
+		@Override
+		public String tileDesc() {
+			return Messages.get(this, "desc");
+		}
+	}
+
+	//섬광 보법 쿨타임
+	public static class FlashCooldown extends FlavourBuff {
+		{ type = buffType.NEUTRAL; }
+		@Override public int icon() { return BuffIndicator.HASTE; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(0.35f, 0.35f, 0.35f); }
+		@Override public float iconFadePercent() { return Math.max(0, (B2_FLASH_COOLDOWN - visualcooldown()) / B2_FLASH_COOLDOWN); }
+		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
+		@Override public String desc() { return Messages.get(this, "desc", dispTurns()); }
+	}
 }

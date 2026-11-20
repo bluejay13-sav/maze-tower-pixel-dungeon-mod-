@@ -53,7 +53,7 @@ public class BloomSkill {
 		int burstStacks = 0;
 		boolean burstTransferred = false;
 		boolean impactDone = false;
-		boolean ranged = false;                       //원거리 스킬 (섬광 보법)
+		boolean flash = false;                        //섬광 보법이 이번 원거리 스킬에 발동 (준비되었을 때만)
 	}
 
 	static State state = null;
@@ -80,7 +80,13 @@ public class BloomSkill {
 
 	//원거리 스킬로 시작했다 (활 조준 사격: SwordSkill.perform, 지팡이 스킬: BloomEffects.beginStaffSkill)
 	public static void markRanged(){
-		if (state != null) state.ranged = true;
+		Hero hero = Dungeon.hero;
+		//섬광 보법: 준비되었을 때만 발동하고 쿨타임 10턴
+		if (state != null && hero != null && lvl(hero, FLASH_STEP) >= 0
+				&& hero.buff(BloomBuffs.FlashCooldown.class) == null){
+			state.flash = true;
+			Buff.affect(hero, BloomBuffs.FlashCooldown.class, B2_FLASH_COOLDOWN);
+		}
 	}
 
 	// =====================================================================
@@ -126,7 +132,7 @@ public class BloomSkill {
 
 		//섬광 보법: 원거리 스킬 피해
 		int fl = lvl(hero, FLASH_STEP);
-		if (fl >= 0 && rangedSkill()) bonus += B2_FLASH_DMG[fl];
+		if (fl >= 0 && s.flash) bonus += B2_FLASH_DMG[fl];
 
 		return bonus;
 	}
@@ -201,7 +207,7 @@ public class BloomSkill {
 		}
 
 		//섬광 보법 각성: 지정한 대상 1턴 기절 (스킬 한 번에 한 번)
-		if (awake(hero, FLASH_STEP) && lvl(hero, FLASH_STEP) >= 0 && rangedSkill()
+		if (awake(hero, FLASH_STEP) && lvl(hero, FLASH_STEP) >= 0 && s != null && s.flash
 				&& BloomEffects.skillUse != null && BloomEffects.skillUse.target == enemy
 				&& BloomRules.trigger(FLASH_STEP)){
 			BloomAttack.afterHit(new Runnable() {
@@ -295,7 +301,7 @@ public class BloomSkill {
 
 		//섬광 보법: 원거리 스킬을 쓴 뒤 대상 반대쪽으로 1~2칸 물러난다 (물러날 수 있을 때만)
 		int fl = lvl(hero, FLASH_STEP);
-		if (s != null && s.ranged && fl >= 0 && u.target != null && hero.isAlive()){
+		if (s != null && s.flash && fl >= 0 && u.target != null && hero.isAlive()){
 			int cell = retreatCell(hero, u.target.pos, B2_FLASH_RANGE[fl]);
 			if (cell != hero.pos) dash(hero, cell);
 		}
