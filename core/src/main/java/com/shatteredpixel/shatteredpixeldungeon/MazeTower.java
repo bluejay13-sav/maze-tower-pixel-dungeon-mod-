@@ -163,67 +163,165 @@ public class MazeTower {
 	//5층 보스(구)가 개화의 핵을 떨어뜨리는지
 	public static final boolean GOO_DROPS_BLOOM_CORE = true;
 
-	//2차 줄 칸 수 (핵 사용 1칸 + Lv7~11 5칸)
-	public static final int BLOOM_SLOTS = 6;
+	//2차 줄 칸 수 (핵 사용 1칸 + Lv7~10 4칸)
+	public static final int BLOOM_SLOTS = 5;
 
-	//2차 선택권·포인트를 주는 레벨 구간 (이 구간에서 레벨업마다 선택권 1, 포인트 1)
-	public static final int BLOOM_FIRST_LEVEL = 7;
-	public static final int BLOOM_LAST_LEVEL  = 11;
+	//2차 선택권을 주는 레벨 구간 (이 구간에서 레벨업마다 선택권 1)
+	public static final int BLOOM_FIRST_LEVEL       = 7;
+	public static final int BLOOM_CHOICE_LAST_LEVEL = 10;
+	//2차 포인트를 주는 레벨 구간 (BLOOM_FIRST_LEVEL ~ 이 레벨, 레벨업마다 포인트 1)
+	public static final int BLOOM_LAST_LEVEL        = 12;
+	//개화의 핵을 쓸 때 바로 받는 포인트
+	public static final int BLOOM_CORE_POINTS = 1;
 
-	//한 칸에서 보여 주는 선택지 수
+	//한 칸에서 보여 주는 선택지 수 (첫 번째 계열이 서로 다른 것으로 뽑는다)
 	public static final int BLOOM_CHOICES_PER_SLOT = 3;
 
-	//특성 최대 레벨 (0레벨로 해금, 포인트 1개당 1레벨)
-	public static final int BLOOM_MAX_TALENT_LEVEL = 2;
+	//특성 최대 레벨 (0레벨 = 효과 없음으로 해금, 포인트 1개당 1레벨)
+	public static final int BLOOM_MAX_TALENT_LEVEL = 3;
 
-	// ===== 2차 특성 수치 (배열은 [0레벨, 1레벨, 2레벨]) =====
+	//만개의 핵을 쓰면 받는 분홍 꽃잎 (각성) 수
+	public static final int BLOOM_PETALS = 2;
 
-	//기본공격
-	public static final float[] T_PRECISION_ACC      = {0.20f, 0.40f, 0.60f};
-	public static final int[]   T_COMBO_HITS         = {3, 3, 2};
-	public static final float[] T_COMBO_BONUS        = {0.30f, 0.40f, 0.30f};
-	public static final float[] T_SHADOW_BLADE_CHANCE= {0.10f, 0.15f, 0.20f};
-	public static final float[] T_WEAK_POINT_DMG     = {0.10f, 0.20f, 0.30f};
-	public static final int[]   T_LIFE_STEAL_HEAL    = {5, 10, 15};
-	public static final float   T_FLOW_DMG           = 0.25f;
-	public static final int[]   T_FLOW_ATTACKS       = {1, 1, 2};
+	// ===== 2차 특성 수치 (모두 임시값. 배열은 [1레벨, 2레벨, 3레벨]) =====
 
-	//스킬
-	public static final float[] T_SHARPEN_DMG        = {0.10f, 0.20f, 0.20f};
-	public static final float   T_SHARPEN_REFUND     = 0.50f; //2레벨, 처치 시 마나 반환
-	public static final float[] T_CHAIN_PCT          = {0.20f, 0.40f, 0.40f};
-	public static final int     T_CHAIN_RANGE        = 2;
-	public static final float[] T_FOCUS_DMG          = {0.25f, 0.40f, 0.40f};
-	public static final float   T_EXECUTE_HP         = 0.30f;
-	public static final float[] T_EXECUTE_DMG        = {0.20f, 0.35f, 0.35f};
-	public static final float   T_EXECUTE_REFUND     = 1.00f; //2레벨
-	public static final int[]   T_ECHO_TURNS         = {2, 3, 3};
-	public static final int[]   T_ECHO_MANA          = {3, 5, 8};
-	public static final float[] T_PARRY_REDUCE       = {0.15f, 0.25f, 0.35f};
+	//무한 연계 방지
+	public static final float B2_MANA_CAP_PER_ACTION = 0.25f; //특성으로 얻는 마나: 한 행동에 최대 마나의 이 비율까지
+	public static final int   B2_MULTIHIT_SKILL_CAP  = 2;     //여러 번 때리는 스킬의 "스킬 적중 시" 효과는 스킬당 이 횟수까지
 
-	//마나
-	public static final int[]   T_MANA_DRAIN         = {1, 3, 5};
-	public static final int[]   T_MANA_ATTUNE_MAX    = {20, 40, 40};
-	public static final float   T_MANA_ATTUNE_FULL_DMG = 0.50f; //2레벨
-	public static final float[] T_THRIFT_COST        = {0.10f, 0.20f, 0.30f};
-	public static final int[]   T_MEDITATION_MULTI   = {2, 3, 4};
-	public static final float[] T_OVERFLOW_DMG       = {0.10f, 0.20f, 0.30f};
-	public static final float   T_MANA_VEIL_HP       = 0.50f;
-	public static final int     T_MANA_VEIL_COST     = 20;
-	public static final float[] T_MANA_VEIL_REDUCE   = {0.25f, 0.40f, 0.60f};
+	//--- 기본공격 전용 ---
+	//연속 베기: 평타 적중 시 확률로 같은 적에게 추가 평타
+	public static final float[] B2_DOUBLE_SLASH_CHANCE = {0.10f, 0.20f, 0.30f};
+	//강타: 같은 적에게 N번째 평타마다
+	public static final int     B2_HEAVY_HITS          = 3;
+	public static final float[] B2_HEAVY_DMG           = {0.30f, 0.45f, 0.45f};
+	public static final int     B2_HEAVY_PUSH          = 1;    //3레벨 밀침 칸
+	public static final float   B2_HEAVY_AWAKE_STUN    = 1f;   //각성: 기절 턴
+	//질풍: 평타 처치 후 다음 평타 공격속도
+	public static final int[]   B2_GALE_CHARGES        = {1, 2, 3};
+	public static final float   B2_GALE_SPEED          = 0.50f; //공격속도 +50%
+	public static final float   B2_GALE_TURNS          = 10f;
+	public static final float   B2_GALE_AWAKE_DMG      = 0.50f; //각성: 휩쓸기 (파생)
+	//표식 새기기
+	public static final int[]   B2_MARK_MAX            = {2, 3, 4};
+	public static final float   B2_MARK_DMG_PER        = 0.04f; //표식 1개당 받는 피해
+	public static final float   B2_MARK_TURNS          = 3f;
+	public static final int     B2_MARK_AWAKE_RANGE    = 2;
+	//돌진: 이동 후 다음 피해
+	public static final float[] B2_CHARGE_DMG          = {0.10f, 0.20f, 0.30f};
+	public static final int     B2_CHARGE_COOLDOWN     = 40;
+	public static final float   B2_CHARGE_AWAKE_IGNORE = 0.50f; //각성: 방어력 무시
+	//불꽃 칼날
+	public static final float[] B2_FLAME_CHANCE        = {0.10f, 0.20f, 0.30f};
+	public static final float   B2_FLAME_TURNS         = 3f;
+	public static final float   B2_FLAME_AWAKE_DMG     = 0.25f; //각성: 화상 중인 적에게 모든 피해
+	//물보라
+	public static final float[] B2_SPLASH_CHANCE       = {0.20f, 0.35f, 0.50f};
+	public static final float   B2_SPLASH_TURNS        = 3f;
+	//마나 흡수
+	public static final int[]   B2_MANA_DRAIN          = {2, 3, 5};
+	public static final float   B2_DRAIN_AWAKE_IGNORE  = 0.50f; //각성: 가득 찬 동안 방어 무시
+	public static final int     B2_DRAIN_AWAKE_COST    = 15;
+	//확정타: 빗나간 뒤 다음 평타
+	public static final float[] B2_SURE_BONUS          = {0.10f, 0.20f, 0.30f}; //명중률·피해 보정
+	public static final int     B2_SURE_COOLDOWN       = 5;
+	public static final int     B2_SURE_AWAKE_HITS     = 2;
 
-	//속성
-	public static final float[] T_FLAME_BLADE_CHANCE = {0.10f, 0.20f, 0.30f};
-	public static final float   T_FLAME_BLADE_TURNS  = 3f;
-	public static final float[] T_FROST_SLASH_TURNS  = {2f, 3f, 4f};
-	public static final float   T_FROST_SLASH_BONUS  = 0.20f; //2레벨, 냉각·빙결 적이 받는 피해
-	public static final float[] T_SHOCK_CHANCE       = {0.15f, 0.25f, 0.25f};
-	public static final float   T_SHOCK_DMG_FACTOR   = 0.50f; //그 타격 피해에 대한 전격 피해 (원작 전격 마법 부여와 같음)
-	public static final float[] T_LINGERING_DURATION = {1.50f, 2.00f, 2.00f};
-	public static final float   T_LINGERING_REACTION = 0.50f; //2레벨, 원소 반응 피해 (8단계)
-	public static final float[] T_ELEMENT_BURST_DMG  = {0.30f, 0.50f, 0.70f};
-	public static final float   T_AFFINITY_DURATION  = 0.50f;
-	public static final float[] T_AFFINITY_REDUCE    = {0f, 0.20f, 0.40f};
+	//--- 스킬 전용 ---
+	//연쇄 (파생)
+	public static final int[]   B2_CHAIN_TARGETS       = {1, 1, 2};
+	public static final float[] B2_CHAIN_PCT           = {0.30f, 0.45f, 0.60f};
+	public static final int     B2_CHAIN_RANGE         = 2;
+	public static final int     B2_CHAIN_AWAKE_TARGETS = 3;
+	//표식 폭발
+	public static final float[] B2_MARK_BURST_PER      = {0.15f, 0.25f, 0.35f};
+	public static final int     B2_MARK_BURST_AWAKE_RANGE = 2;
+	//집중: 대기·탐색 바로 다음 스킬
+	public static final float[] B2_FOCUS_DMG           = {0.25f, 0.40f, 0.55f};
+	public static final int     B2_FOCUS_COOLDOWN      = 10;
+	public static final float   B2_FOCUS_AWAKE_IGNORE  = 0.50f;
+	//처형
+	public static final float   B2_EXECUTE_HP          = 0.30f;
+	public static final float[] B2_EXECUTE_DMG         = {0.20f, 0.35f, 0.50f};
+	public static final float   B2_EXECUTE_REFUND      = 0.50f; //3레벨, 처치 시 비용 반환
+	public static final float   B2_EXECUTE_AWAKE_FEAR  = 2f;
+	public static final int     B2_EXECUTE_AWAKE_RANGE = 2;
+	//과충전: 가득 찬 마나로 쓴 스킬
+	public static final float[] B2_OVERCHARGE_DMG      = {0.20f, 0.35f, 0.50f};
+	public static final float   B2_OVERCHARGE_AWAKE_DMG = 0.50f; //각성: 3×3 충격파 (파생)
+	//충격: 스킬 맞은 적 밀침
+	public static final int[]   B2_IMPACT_PUSH         = {1, 1, 2};
+	public static final float[] B2_IMPACT_WALL_DMG     = {0.20f, 0.30f, 0.40f};
+	public static final float   B2_IMPACT_STUN         = 2f; //3레벨 벽 충돌, 각성 적 충돌
+	//서리 베기
+	public static final float[] B2_FROST_TURNS         = {2f, 3f, 4f};
+	//흘리기
+	public static final float[] B2_PARRY_REDUCE        = {0.15f, 0.25f, 0.40f};
+	public static final float   B2_PARRY_AWAKE_DMG     = 1.00f; //각성: 반격 (파생)
+	//섬광 보법: 근거리 무기 스킬 사거리·피해
+	public static final int[]   B2_FLASH_RANGE         = {1, 1, 2};
+	public static final float[] B2_FLASH_DMG           = {0.10f, 0.20f, 0.20f};
+	public static final float   B2_FLASH_AWAKE_STUN    = 1f;
+
+	//--- 공용 ---
+	//흐름: 평타와 스킬을 번갈아 쓸 때
+	public static final float[] B2_FLOW_DMG            = {0.05f, 0.15f, 0.25f};
+	public static final float   B2_FLOW_ACC            = 0.80f; //3레벨 명중률
+	public static final int     B2_FLOW_AWAKE_STACKS   = 20;
+	public static final int     B2_FLOW_AWAKE_COST     = 10;    //각성: 스킬 마나 +10
+	public static final int     B2_FLOW_AWAKE_WAND_COST = 15;   //마법봉은 +15
+	//잔향: 스킬 뒤 평타 적중 시 마나
+	public static final float   B2_ECHO_TURNS          = 3f;
+	public static final int[]   B2_ECHO_MANA           = {2, 4, 6};
+	public static final float   B2_ECHO_AWAKE_DMG      = 0.30f; //각성: 잔상 (파생)
+	public static final int     B2_ECHO_AWAKE_MANA     = 10;
+	//기세: 처치마다 스택
+	public static final int     B2_MOMENTUM_MAX        = 3;
+	public static final float   B2_MOMENTUM_TURNS      = 10f;
+	public static final float[] B2_MOMENTUM_DMG        = {0.05f, 0.08f, 0.12f};
+	public static final float   B2_MOMENTUM_AWAKE_DMG  = 0.50f; //각성: 2칸 충격파 (파생)
+	public static final int     B2_MOMENTUM_AWAKE_RANGE = 2;
+	//난전: 인접한 적 1명당
+	public static final int     B2_MELEE_MAX           = 4;
+	public static final float[] B2_MELEE_DMG           = {0.05f, 0.08f, 0.12f};
+	public static final int     B2_MELEE_GUARD_COUNT   = 3;     //각성: 인접 적이 이만큼 이상이면
+	public static final float   B2_MELEE_GUARD         = 0.25f; //받는 피해 감소
+	//결투: 2칸 안에 적이 하나뿐일 때
+	public static final int     B2_DUEL_RANGE          = 2;
+	public static final float[] B2_DUEL_DMG            = {0.15f, 0.25f, 0.35f};
+	public static final float   B2_DUEL_GUARD          = 0.15f; //3레벨 받는 피해 감소
+	public static final float   B2_DUEL_AWAKE_HEAL     = 0.15f; //각성: 처치 시 최대 체력 비율 회복
+	//기습
+	public static final float[] B2_AMBUSH_DMG          = {0.20f, 0.30f, 0.40f};
+	public static final float   B2_AMBUSH_AWAKE_INVIS  = 1f;
+	//거리 벌리기
+	public static final float[] B2_DISENGAGE_BONUS     = {0.15f, 0.25f, 0.40f}; //피해·명중률 보정
+	public static final int     B2_DISENGAGE_COOLDOWN  = 10;
+	public static final float   B2_DISENGAGE_AWAKE_ROOT = 1f;
+	//잔류전기 (전이는 파생)
+	public static final float[] B2_SHOCK_CHANCE        = {0.10f, 0.15f, 0.20f};
+	public static final float   B2_SHOCK_DMG_FACTOR    = 0.50f; //그 타격 피해에 대한 전격 피해
+	//원소 증폭
+	public static final float[] B2_ELEMENT_AMP_DMG     = {0.15f, 0.30f, 0.45f};
+	public static final float   B2_AMP_AWAKE_WEAKEN    = 2f;
+	public static final int     B2_AMP_AWAKE_COOLDOWN  = 3;
+	//원소 순환
+	public static final int[]   B2_CYCLE_MANA          = {8, 16, 24};
+	public static final float   B2_CYCLE_AWAKE_TURNS   = 3f; //각성: 다음 공격이 거는 원소 지속
+	//마나 장막
+	public static final float   B2_VEIL_HP             = 0.25f;
+	public static final int     B2_VEIL_COST           = 15;
+	public static final float[] B2_VEIL_REDUCE         = {0.25f, 0.40f, 0.55f};
+	public static final int     B2_VEIL_AWAKE_PUSH     = 1;
+	//넘치는 힘
+	public static final float[] B2_OVERFLOW_DMG        = {0.10f, 0.20f, 0.30f};
+	public static final float   B2_OVERFLOW_AWAKE_DMG  = 0.50f; //각성: 마력 파편 (파생)
+	public static final int     B2_OVERFLOW_AWAKE_RANGE = 3;
+	//명상
+	public static final int[]   B2_MEDITATION_MULTI    = {2, 3, 4};
+	public static final float   B2_MEDITATION_AWAKE_SHIELD = 0.20f; //최대 체력 비율
+	public static final float   B2_MEDITATION_AWAKE_TURNS  = 50f;
+	public static final int     B2_MEDITATION_AWAKE_COOLDOWN = 200;
 
 	// ===== 속성과 원소 반응 =====
 

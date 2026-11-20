@@ -17,7 +17,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
-import com.shatteredpixel.shatteredpixeldungeon.ui.TalentIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BloomTalentIcon;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 
@@ -34,7 +34,7 @@ public class WndBloomTalent extends Window {
 		int width = WIDTH_MIN;
 
 		IconTitle titlebar = new IconTitle();
-		titlebar.icon(new TalentIcon(talent.icon()));
+		titlebar.icon(new BloomTalentIcon(talent));
 		String title = Messages.titleCase(talent.title());
 		if (level >= 0) title += " " + Messages.get(WndBloomTalent.class, "level", level);
 		titlebar.label(title, Window.TITLE_COLOR);

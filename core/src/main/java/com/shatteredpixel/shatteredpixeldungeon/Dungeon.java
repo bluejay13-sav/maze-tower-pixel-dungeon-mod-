@@ -386,6 +386,7 @@ public class Dungeon {
 
 			if (depth > Statistics.deepestFloor && branch == 0) {
 				Statistics.deepestFloor = depth;
+				mazeArrivalLog = depth; //Maze Tower: 처음 도착한 층의 영웅 레벨을 남긴다 (GameScene.create)
 
 				if (Statistics.qualifiedForNoKilling) {
 					Statistics.completedWithNoKilling = true;
@@ -464,6 +465,9 @@ public class Dungeon {
 		return true;
 	}
 	
+	//Maze Tower: 처음 도착한 층 (GameScene이 로그를 남기고 -1로 되돌린다)
+	public static int mazeArrivalLog = -1;
+
 	public static void switchLevel( final Level level, int pos ) {
 
 		//Position of -2 specifically means trying to place the hero the exit

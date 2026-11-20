@@ -92,7 +92,7 @@ public class BloomTalentsPane extends ScrollPane {
 		//남은 포인트는 별로: 밝은 별 = 쓸 수 있는 포인트, 회색 = 쓴 포인트, 어두운 별 = 아직 얻지 못한 포인트
 		secondStars.clear();
 		if (tree.unlocked){
-			int regular = MazeTower.BLOOM_LAST_LEVEL - MazeTower.BLOOM_FIRST_LEVEL + 1;
+			int regular = BloomTree.regularPoints();
 			int total = regular + tree.bonusPoints;
 			int open = tree.pointsAvailable(hero);
 			int used = tree.pointsSpent();
@@ -173,7 +173,7 @@ public class BloomTalentsPane extends ScrollPane {
 		top += 4;
 
 		//제목 + 별을 가운데에 (원작 특성 줄과 같은 배치, 기본 5개를 넘는 별은 다음 줄)
-		int regStars = MazeTower.BLOOM_LAST_LEVEL - MazeTower.BLOOM_FIRST_LEVEL + 1;
+		int regStars = BloomTree.regularPoints();
 		float titleWidth = secondTitle.width() + (secondStars.isEmpty() ? 0 : 2 + Math.min(secondStars.size(), regStars)*6);
 		secondTitle.setPos((width - titleWidth)/2f, top);
 		float starLeft = secondTitle.right() + 2;
@@ -197,11 +197,13 @@ public class BloomTalentsPane extends ScrollPane {
 		secondInfo.setPos(2, top);
 		top = secondInfo.bottom() + 4;
 
-		float rowWidth = SLOTS_PER_ROW * TalentButton.WIDTH + (SLOTS_PER_ROW-1) * SLOT_GAP;
-		float left = (width - rowWidth)/2f;
 		for (int i = 0; i < slotButtons.size(); i++){
 			int col = i % SLOTS_PER_ROW;
 			int row = i / SLOTS_PER_ROW;
+			//줄마다 가운데 정렬 (5칸이면 3 + 2)
+			int inRow = Math.min(SLOTS_PER_ROW, slotButtons.size() - row*SLOTS_PER_ROW);
+			float rowWidth = inRow * TalentButton.WIDTH + (inRow-1) * SLOT_GAP;
+			float left = (width - rowWidth)/2f;
 			slotButtons.get(i).setPos(left + col*(TalentButton.WIDTH + SLOT_GAP),
 					top + row*(TalentButton.HEIGHT + 4));
 			PixelScene.align(slotButtons.get(i));
@@ -264,12 +266,12 @@ public class BloomTalentsPane extends ScrollPane {
 			add(fill);
 
 			bg = new Image(Assets.Interfaces.TALENT_BUTTON);
-			//특성 최대 레벨 2 → 원작 2포인트 특성 테두리
+			//특성 최대 레벨 3 → 원작 3포인트 특성 테두리
 			bg.frame(20*(MazeTower.BLOOM_MAX_TALENT_LEVEL-1), 0, TalentButton.WIDTH, TalentButton.HEIGHT);
 			add(bg);
 
 			if (slot != null && slot.isChosen()){
-				icon = new TalentIcon(slot.chosen.icon());
+				icon = new BloomTalentIcon(slot.chosen);
 			} else if (slot != null){
 				icon = Icons.get(Icons.PLUS);
 				bg.hardlight(1f, 1f, 0.5f);

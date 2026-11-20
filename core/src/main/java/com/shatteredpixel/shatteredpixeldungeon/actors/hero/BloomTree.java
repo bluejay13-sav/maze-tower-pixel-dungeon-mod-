@@ -17,10 +17,12 @@ import java.util.Arrays;
 
 //Maze Tower: 2차 전직 상태. 영웅에게 붙는 보이지 않는 버프로 저장·불러오기를 원작 방식 그대로 처리한다.
 //
-// - 개화의 핵을 쓰면 unlocked = true, 기본 선택권 1개.
-// - Lv7~11 레벨업마다 선택권 1, 포인트 1. (핵을 쓰기 전에 오른 레벨도 핵을 쓰는 순간 한꺼번에 들어온다)
+// - 개화의 핵을 쓰면 unlocked = true, 선택권 1개 + 포인트 BLOOM_CORE_POINTS.
+// - Lv7~10 레벨업마다 선택권 1 (총 5칸), Lv7~12 레벨업마다 포인트 1. (핵을 쓰기 전에 오른 레벨도 핵을 쓰는 순간 한꺼번에 들어온다)
 // - 선택권이 생기는 순간 그 칸의 선택지 3개를 던전 시드로 정해 저장한다.
-//   이미 가진 특성과, 아직 고르지 않은 다른 칸의 선택지는 제외한다.
+//   이미 가진 특성과, 아직 고르지 않은 다른 칸의 선택지는 제외하고, 3개는 첫 번째 계열이 서로 다르다.
+// - 고른 특성은 0레벨(효과 없음)로 시작하고 포인트로 1~3레벨이 된다.
+// - 만개의 핵을 쓰면 분홍 꽃잎 BLOOM_PETALS개. 꽃잎 1개로 특성 하나를 각성한다 (특성마다 1번, 되돌릴 수 없음).
 public class BloomTree extends Buff {
 
 	{
@@ -31,7 +33,8 @@ public class BloomTree extends Buff {
 	public static class Slot {
 		public BloomTalent chosen = null;               //고른 특성 (null이면 아직 + 칸)
 		public BloomTalent[] options = new BloomTalent[0]; //이 칸의 선택지
-		public int level = 0;                           //고른 특성의 레벨 (0~2)
+		public int level = 0;                           //고른 특성의 레벨 (0~3, 0 = 효과 없음)
+		public boolean awakened = false;                //만개 각성 (분홍 꽃잎을 썼는지, 되돌릴 수 없음)
 
 		public boolean isChosen(){
 			return chosen != null;
@@ -43,12 +46,15 @@ public class BloomTree extends Buff {
 
 	//신성한 영감의 물약으로 얻은 2차 추가 포인트
 	public int bonusPoints = 0;
-	//신성한 영감의 물약으로 얻은 1차 추가 포인트 (1차 능력은 미완성, 쌓이기만 한다)
+	//신성한 영감의 물약으로 얻은 1차 추가 포인트
 	public int firstTierBonus = 0;
 	//신성한 영감의 물약으로 얻은 3차(만개) 추가 포인트
 	public int thirdTierBonus = 0;
 	//신성한 영감의 물약으로 얻은 4차(결실) 추가 포인트
 	public int fourthTierBonus = 0;
+
+	//만개의 핵으로 받은 분홍 꽃잎 수 (쓴 꽃잎 = 각성한 칸 수)
+	public int petalsGranted = 0;
 
 	//상태창에서 이미 본 칸 수 (새로 생긴 + 칸만 빛나며 등장하게)
 	public int seenSlots = 0;
@@ -66,45 +72,72 @@ public class BloomTree extends Buff {
 		return t;
 	}
 
-	//영웅이 가진 특성 레벨. 없으면 -1. (7단계 특성 효과에서 사용)
+	//영웅이 가진 특성 레벨 (0~3). 없으면 -1. 0레벨은 효과 없음.
 	public static int level( Hero hero, BloomTalent talent ){
-		if (hero == null) return -1;
-		BloomTree t = hero.buff(BloomTree.class);
-		if (t == null) return -1;
-		for (Slot s : t.slots){
-			if (s.chosen == talent) return s.level;
-		}
-		return -1;
+		Slot s = slotOf(hero, talent);
+		return s == null ? -1 : s.level;
 	}
 
 	public static boolean has( Hero hero, BloomTalent talent ){
 		return level(hero, talent) >= 0;
 	}
 
-	// ===== 선택권·포인트 계산 =====
-
-	//Lv7~11 중 도달한 레벨 수 (0~5)
-	public static int bloomLevelsReached( Hero hero ){
-		int reached = hero.lvl - MazeTower.BLOOM_FIRST_LEVEL + 1;
-		int max = MazeTower.BLOOM_LAST_LEVEL - MazeTower.BLOOM_FIRST_LEVEL + 1;
-		return Math.max(0, Math.min(max, reached));
+	//각성했는지 (레벨과 상관없음)
+	public static boolean awakened( Hero hero, BloomTalent talent ){
+		Slot s = slotOf(hero, talent);
+		return s != null && s.awakened;
 	}
 
-	//1차 포인트 (Lv2~6, 쌓이기만 한다)
+	private static Slot slotOf( Hero hero, BloomTalent talent ){
+		if (hero == null) return null;
+		BloomTree t = hero.buff(BloomTree.class);
+		if (t == null) return null;
+		for (Slot s : t.slots){
+			if (s.chosen == talent) return s;
+		}
+		return null;
+	}
+
+	// ===== 선택권·포인트 계산 =====
+
+	private static int levelsIn( Hero hero, int first, int last ){
+		int reached = hero.lvl - first + 1;
+		return Math.max(0, Math.min(last - first + 1, reached));
+	}
+
+	//선택권을 주는 레벨(Lv7~10) 중 도달한 수
+	public static int choiceLevelsReached( Hero hero ){
+		return levelsIn(hero, MazeTower.BLOOM_FIRST_LEVEL, MazeTower.BLOOM_CHOICE_LAST_LEVEL);
+	}
+
+	//포인트를 주는 레벨(Lv7~12) 중 도달한 수
+	public static int pointLevelsReached( Hero hero ){
+		return levelsIn(hero, MazeTower.BLOOM_FIRST_LEVEL, MazeTower.BLOOM_LAST_LEVEL);
+	}
+
+	//1차 포인트 (Lv2~6)
 	public static int firstTierPoints( Hero hero ){
-		int reached = hero.lvl - MazeTower.FIRST_TIER_FIRST_LEVEL + 1;
-		int max = MazeTower.FIRST_TIER_LAST_LEVEL - MazeTower.FIRST_TIER_FIRST_LEVEL + 1;
-		return Math.max(0, Math.min(max, reached));
+		return levelsIn(hero, MazeTower.FIRST_TIER_FIRST_LEVEL, MazeTower.FIRST_TIER_LAST_LEVEL);
 	}
 
 	//핵을 쓰면 받게 될(또는 받은) 선택권 수
 	public static int choicesFor( Hero hero ){
-		return Math.min(MazeTower.BLOOM_SLOTS, 1 + bloomLevelsReached(hero));
+		return Math.min(MazeTower.BLOOM_SLOTS, 1 + choiceLevelsReached(hero));
+	}
+
+	//핵을 쓰면 받게 될(또는 받은) 레벨 포인트 (물약 제외)
+	public static int levelPointsFor( Hero hero ){
+		return MazeTower.BLOOM_CORE_POINTS + pointLevelsReached(hero);
+	}
+
+	//물약을 뺀 2차 포인트 최대치 (특성 창의 별 개수)
+	public static int regularPoints(){
+		return MazeTower.BLOOM_CORE_POINTS + MazeTower.BLOOM_LAST_LEVEL - MazeTower.BLOOM_FIRST_LEVEL + 1;
 	}
 
 	public int pointsEarned( Hero hero ){
 		if (!unlocked) return 0;
-		return bloomLevelsReached(hero) + bonusPoints;
+		return levelPointsFor(hero) + bonusPoints;
 	}
 
 	public int pointsSpent(){
@@ -135,9 +168,39 @@ public class BloomTree extends Buff {
 		return false;
 	}
 
-	//고를 칸이나 쓸 포인트가 남았는지 (상태창 알림용)
+	// ===== 만개 각성 (분홍 꽃잎) =====
+
+	public int petalsUsed(){
+		int n = 0;
+		for (Slot s : slots){
+			if (s.isChosen() && s.awakened) n++;
+		}
+		return n;
+	}
+
+	public int petalsAvailable(){
+		return Math.max(0, petalsGranted - petalsUsed());
+	}
+
+	//각성할 수 있는 특성이 있고 꽃잎이 남았는지
+	public boolean canAwakenSomething(){
+		if (petalsAvailable() <= 0) return false;
+		for (Slot s : slots){
+			if (s.isChosen() && !s.awakened) return true;
+		}
+		return false;
+	}
+
+	public boolean awaken( int slotIndex ){
+		Slot s = slots.get(slotIndex);
+		if (!s.isChosen() || s.awakened || petalsAvailable() <= 0) return false;
+		s.awakened = true;
+		return true;
+	}
+
+	//고를 칸, 쓸 포인트, 쓸 꽃잎이 남았는지 (상태창 알림용)
 	public boolean hasPending( Hero hero ){
-		return unlocked && (unchosenSlots() > 0 || canUpgradeSomething(hero));
+		return unlocked && (unchosenSlots() > 0 || canUpgradeSomething(hero) || canAwakenSomething());
 	}
 
 	// ===== 변화 =====
@@ -166,6 +229,8 @@ public class BloomTree extends Buff {
 		}
 	}
 
+	//선택지 3개: 남은 특성 중 하나를 고르고, 그 계열(첫 번째 계열)을 빼고 다음을 고른다. 그 밖의 가중치는 없다.
+	//남은 계열이 모자라면 같은 계열도 허용한다.
 	private BloomTalent[] rollOptions( int slotIndex ){
 		ArrayList<BloomTalent> pool = new ArrayList<>(Arrays.asList(BloomTalent.values()));
 		for (Slot s : slots){
@@ -179,10 +244,22 @@ public class BloomTree extends Buff {
 		ArrayList<BloomTalent> picked = new ArrayList<>();
 		//던전 시드 + 칸 번호로 정한다. 같은 시드, 같은 선택이면 같은 선택지.
 		Random.pushGenerator(Dungeon.seed + 0x4D41_5A45L + 7919L * (slotIndex + 1));
-		while (picked.size() < MazeTower.BLOOM_CHOICES_PER_SLOT && !pool.isEmpty()){
-			picked.add(pool.remove(Random.Int(pool.size())));
+		try {
+			while (picked.size() < MazeTower.BLOOM_CHOICES_PER_SLOT && !pool.isEmpty()){
+				ArrayList<BloomTalent> fresh = new ArrayList<>();
+				for (BloomTalent t : pool){
+					boolean same = false;
+					for (BloomTalent p : picked) if (p.family() == t.family()) same = true;
+					if (!same) fresh.add(t);
+				}
+				ArrayList<BloomTalent> from = fresh.isEmpty() ? pool : fresh;
+				BloomTalent t = from.get(Random.Int(from.size()));
+				pool.remove(t);
+				picked.add(t);
+			}
+		} finally {
+			Random.popGenerator();
 		}
-		Random.popGenerator();
 
 		return picked.toArray(new BloomTalent[0]);
 	}
@@ -204,20 +281,19 @@ public class BloomTree extends Buff {
 		return true;
 	}
 
-	//테스트용 치트: 특성을 원하는 레벨로 바로 얻는다 (포인트와 무관). 6칸이 모두 찼으면 false.
-	public boolean cheatGrant( Hero hero, BloomTalent talent, int level ){
+	//테스트용 치트: 특성을 원하는 레벨로 바로 얻는다 (포인트와 무관). 칸이 모두 찼으면 false.
+	public boolean cheatGrant( Hero hero, BloomTalent talent, int level, boolean awaken ){
 		unlocked = true;
-		for (Slot s : slots){
-			if (s.chosen == talent){
-				s.level = level;
-				return true;
-			}
-		}
 		Slot target = null;
 		for (Slot s : slots){
-			if (!s.isChosen()){
-				target = s;
-				break;
+			if (s.chosen == talent) target = s;
+		}
+		if (target == null){
+			for (Slot s : slots){
+				if (!s.isChosen()){
+					target = s;
+					break;
+				}
 			}
 		}
 		if (target == null){
@@ -228,30 +304,43 @@ public class BloomTree extends Buff {
 		target.chosen = talent;
 		target.options = new BloomTalent[0];
 		target.level = level;
+		if (awaken && !target.awakened){
+			target.awakened = true;
+			//치트 각성은 꽃잎을 따로 준다 (남은 꽃잎은 그대로)
+			petalsGranted++;
+		}
 		return true;
 	}
 
 	// ===== 저장 =====
 
+	//2차 특성 개편(31개, 5칸, 0~3레벨) 저장 형식. 이 값이 없는 예전 저장은 2차 칸을 비우고 다시 받는다.
+	private static final int TREE_VERSION = 2;
+
+	private static final String VERSION  = "tree_version";
 	private static final String UNLOCKED = "unlocked";
 	private static final String BONUS    = "bonus_points";
 	private static final String FIRST_BONUS = "first_tier_bonus";
 	private static final String THIRD_BONUS = "third_tier_bonus";
 	private static final String FOURTH_BONUS = "fourth_tier_bonus";
+	private static final String PETALS   = "petals_granted";
 	private static final String SEEN     = "seen_slots";
 	private static final String COUNT    = "slot_count";
 	private static final String CHOSEN   = "slot_chosen_";
 	private static final String OPTIONS  = "slot_options_";
 	private static final String LEVEL    = "slot_level_";
+	private static final String AWAKENED = "slot_awakened_";
 
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle(bundle);
+		bundle.put(VERSION, TREE_VERSION);
 		bundle.put(UNLOCKED, unlocked);
 		bundle.put(BONUS, bonusPoints);
 		bundle.put(FIRST_BONUS, firstTierBonus);
 		bundle.put(THIRD_BONUS, thirdTierBonus);
 		bundle.put(FOURTH_BONUS, fourthTierBonus);
+		bundle.put(PETALS, petalsGranted);
 		bundle.put(SEEN, seenSlots);
 		bundle.put(COUNT, slots.size());
 		for (int i = 0; i < slots.size(); i++){
@@ -261,6 +350,7 @@ public class BloomTree extends Buff {
 			for (int j = 0; j < opts.length; j++) opts[j] = s.options[j].name();
 			bundle.put(OPTIONS + i, opts);
 			bundle.put(LEVEL + i, s.level);
+			bundle.put(AWAKENED + i, s.awakened);
 		}
 	}
 
@@ -272,9 +362,17 @@ public class BloomTree extends Buff {
 		firstTierBonus = bundle.getInt(FIRST_BONUS);
 		thirdTierBonus = bundle.getInt(THIRD_BONUS);
 		fourthTierBonus = bundle.getInt(FOURTH_BONUS);
-		seenSlots = bundle.getInt(SEEN);
+		petalsGranted = bundle.getInt(PETALS);
 		slots.clear();
-		int count = bundle.getInt(COUNT);
+
+		//예전 2차 특성(24개, 6칸) 저장: 칸을 비우고 새 규칙으로 다시 받는다 (물약 포인트는 그대로)
+		if (bundle.getInt(VERSION) < TREE_VERSION){
+			seenSlots = 0;
+			return;
+		}
+
+		seenSlots = bundle.getInt(SEEN);
+		int count = Math.min(bundle.getInt(COUNT), MazeTower.BLOOM_SLOTS);
 		for (int i = 0; i < count; i++){
 			Slot s = new Slot();
 			if (bundle.contains(CHOSEN + i)){
@@ -297,6 +395,7 @@ public class BloomTree extends Buff {
 			s.options = opts.toArray(new BloomTalent[0]);
 			//저장값이 범위를 벗어나도 효과 배열을 넘지 않게
 			s.level = Math.max(0, Math.min(MazeTower.BLOOM_MAX_TALENT_LEVEL, bundle.getInt(LEVEL + i)));
+			s.awakened = s.chosen != null && bundle.getBoolean(AWAKENED + i);
 			slots.add(s);
 		}
 	}

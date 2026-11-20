@@ -687,6 +687,15 @@ public class GameScene extends PixelScene {
 				Random.popGenerator();
 			}
 
+			//Maze Tower: 처음 도착한 층의 영웅 레벨 (10층에서 Lv10 이상인지 확인용). 게임 로그와 터미널에 남긴다.
+			if (Dungeon.mazeArrivalLog > 0){
+				String line = Messages.get(GameScene.class, "maze_arrival", Dungeon.mazeArrivalLog, Dungeon.hero.lvl);
+				GLog.i(line);
+				System.out.println("[Maze Tower] depth " + Dungeon.mazeArrivalLog + " arrival: hero Lv " + Dungeon.hero.lvl
+						+ " (exp " + Dungeon.hero.exp + "/" + Dungeon.hero.maxExp() + ")");
+				Dungeon.mazeArrivalLog = -1;
+			}
+
 			boolean unspentTalents = false;
 			for (int i = 1; i <= Dungeon.hero.talents.size(); i++){
 				//Maze Tower: 특성이 없는 빈 줄의 포인트는 알리지 않는다

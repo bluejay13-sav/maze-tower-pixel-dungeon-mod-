@@ -15,7 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BloomTalentsPane;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
-import com.shatteredpixel.shatteredpixeldungeon.ui.TalentIcon;
+import com.shatteredpixel.shatteredpixeldungeon.ui.BloomTalentIcon;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 
 //Maze Tower: + 칸을 눌렀을 때 그 칸에 저장된 특성 3개를 보여 주는 창.
@@ -52,7 +52,7 @@ public class WndBloomChoice extends Window {
 					show(WndBloomTalent.forChoice(slotIndex, t, pane, WndBloomChoice.this));
 				}
 			};
-			btn.icon(new TalentIcon(t.icon()));
+			btn.icon(new BloomTalentIcon(t));
 			btn.leftJustify = true;
 			btn.setRect(0, pos, WIDTH, BTN_HEIGHT);
 			add(btn);

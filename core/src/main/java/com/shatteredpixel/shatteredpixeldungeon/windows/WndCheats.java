@@ -342,8 +342,8 @@ public class WndCheats extends Window {
 				Messages.get(WndCheats.class, "grant_category"),
 				Messages.get(WndCheats.class, "cat_attack"),
 				Messages.get(WndCheats.class, "cat_skill"),
-				Messages.get(WndCheats.class, "cat_mana"),
-				Messages.get(WndCheats.class, "cat_element")){
+				Messages.get(WndCheats.class, "cat_common1"),
+				Messages.get(WndCheats.class, "cat_common2")){
 			@Override
 			protected void onSelect(int index) {
 				pickTalent(index);
@@ -351,34 +351,49 @@ public class WndCheats extends Window {
 		});
 	}
 
+	//Maze Tower: 2차 특성 31개를 4묶음으로 (기본공격 9, 스킬 9, 공용 7 + 6)
+	private static java.util.ArrayList<BloomTalent> talentGroup(int group){
+		java.util.ArrayList<BloomTalent> all = new java.util.ArrayList<>();
+		for (BloomTalent t : BloomTalent.values()){
+			if (group == 0 && t.kind == BloomTalent.Kind.ATTACK) all.add(t);
+			if (group == 1 && t.kind == BloomTalent.Kind.SKILL) all.add(t);
+			if (group >= 2 && t.kind == BloomTalent.Kind.COMMON) all.add(t);
+		}
+		if (group == 2) return new java.util.ArrayList<>(all.subList(0, 7));
+		if (group == 3) return new java.util.ArrayList<>(all.subList(7, all.size()));
+		return all;
+	}
+
 	private static void pickTalent(final int category){
-		final BloomTalent[] all = BloomTalent.values();
-		final int per = 6;
-		String[] names = new String[per];
-		for (int i = 0; i < per; i++){
-			BloomTalent t = all[category*per + i];
+		final java.util.ArrayList<BloomTalent> group = talentGroup(category);
+		String[] names = new String[group.size()];
+		for (int i = 0; i < names.length; i++){
+			BloomTalent t = group.get(i);
 			int lvl = BloomTree.level(Dungeon.hero, t);
-			names[i] = Messages.titleCase(t.title()) + (lvl >= 0 ? " (" + lvl + ")" : "");
+			names[i] = Messages.titleCase(t.title()) + (lvl >= 0 ? " (" + lvl + (BloomTree.awakened(Dungeon.hero, t) ? "+" : "") + ")" : "");
 		}
 		GameScene.show(new WndOptions(Messages.get(WndCheats.class, "grant_talent"),
 				Messages.get(WndCheats.class, "grant_pick"), names){
 			@Override
 			protected void onSelect(int index) {
-				pickLevel(all[category*per + index]);
+				pickLevel(group.get(index));
 			}
 		});
 	}
 
 	private static void pickLevel(final BloomTalent talent){
 		GameScene.show(new WndOptions(Messages.titleCase(talent.title()),
-				Messages.get(WndCheats.class, "grant_level"), "0", "1", "2"){
+				Messages.get(WndCheats.class, "grant_level"), "0", "1", "2", "3",
+				Messages.get(WndCheats.class, "grant_awaken")){
 			@Override
 			protected void onSelect(int index) {
-				if (!BloomTree.get(Dungeon.hero).cheatGrant(Dungeon.hero, talent, index)){
+				boolean awaken = index == 4;
+				int lvl = awaken ? Math.max(0, BloomTree.level(Dungeon.hero, talent)) : index;
+				if (!BloomTree.get(Dungeon.hero).cheatGrant(Dungeon.hero, talent, lvl, awaken)){
 					GLog.w(Messages.get(WndCheats.class, "slots_full"));
 					return;
 				}
-				GLog.p(Messages.get(WndCheats.class, "granted", Messages.titleCase(talent.title()), index));
+				GLog.p(Messages.get(WndCheats.class, awaken ? "granted_awaken" : "granted", Messages.titleCase(talent.title()), lvl));
 			}
 		});
 	}

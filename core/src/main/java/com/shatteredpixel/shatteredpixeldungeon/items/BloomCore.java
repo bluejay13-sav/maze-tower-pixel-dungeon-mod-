@@ -83,7 +83,7 @@ public class BloomCore extends Item {
 		Hero hero = Dungeon.hero;
 		if (hero != null){
 			desc += "\n\n" + Messages.get(this, "stored",
-					BloomTree.choicesFor(hero), BloomTree.bloomLevelsReached(hero));
+					BloomTree.choicesFor(hero), BloomTree.levelPointsFor(hero));
 		}
 		return desc;
 	}
