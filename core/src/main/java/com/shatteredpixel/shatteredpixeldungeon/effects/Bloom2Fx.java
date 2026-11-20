@@ -256,21 +256,58 @@ public class Bloom2Fx {
 				.show(enemy.sprite.parent, e);
 	}
 
-	//연쇄: 원작 번개 빛줄기를 하늘색으로
+	//연쇄: 맞은 적에서 번진 적까지 옅은 입자가 지나간다 (눈에 덜 띄게)
 	public static void chain(Char from, Char to){
 		if (!seen(from) || !seen(to)) return;
-		Beam ray = new Beam.LightRay(from.sprite.center(), to.sprite.center());
-		ray.hardlight(0x7FD4FF);
-		from.sprite.parent.add(ray);
+		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center());
 	}
 
-	//표식이 옮겨 붙는 빛 (분홍빛 빛줄기 + 닿는 곳 반짝)
+	//표식이 옮겨 붙는 길 (연쇄와 같은 옅은 입자)
 	public static void markTransfer(Char from, Char to){
 		if (!seen(from) || !seen(to)) return;
-		Beam ray = new Beam.LightRay(from.sprite.center(), to.sprite.center());
-		ray.hardlight(0xE070FF);
-		from.sprite.parent.add(ray);
-		to.sprite.centerEmitter().burst(Speck.factory(Speck.LIGHT), 3);
+		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center());
+	}
+
+	// ===== 특성으로 다른 적에게 번지는 길: 회색·흰색·검정 입자 몇 개 =====
+
+	//입자 색 (흰색·밝은 회색·회색·검정)
+	private static final int[] DUST_COLORS = {0xFFFFFF, 0xC8C8C8, 0x8C8C8C, 0x202020};
+	//거리 1칸(16px)마다 입자 수 (너무 많지 않게), 최소·최대
+	private static final float DUST_PER_TILE = 1.5f;
+	private static final int   DUST_MIN = 3, DUST_MAX = 7;
+	//출발점에서 도착점까지 입자가 차례로 나타나는 시간 (방향이 보이게)
+	private static final float DUST_TRAVEL = 0.14f;
+
+	public static void pathDust(Group parent, final PointF from, final PointF to){
+		if (parent == null) return;
+		float dist = (float)Math.hypot(to.x - from.x, to.y - from.y);
+		final int count = Math.max(DUST_MIN, Math.min(DUST_MAX, Math.round(dist / DungeonTilemap.SIZE * DUST_PER_TILE)));
+		parent.add(new Group(){
+			float t = 0;
+			int spawned = 0;
+			@Override
+			public void update() {
+				super.update();
+				t += Game.elapsed;
+				int want = Math.min(count, (int)Math.ceil(t / DUST_TRAVEL * count));
+				for (; spawned < want; spawned++){
+					float p = (spawned + 0.5f) / count;
+					float x = from.x + (to.x - from.x) * p + com.watabou.utils.Random.Float(-1.5f, 1.5f);
+					float y = from.y + (to.y - from.y) * p + com.watabou.utils.Random.Float(-1.5f, 1.5f);
+					com.watabou.noosa.particles.PixelParticle d = new com.watabou.noosa.particles.PixelParticle(){
+						@Override
+						public void update() {
+							super.update();
+							alpha(Math.max(0, left / lifespan) * 0.75f); //옅게 시작해서 사라진다
+						}
+					};
+					d.reset(x, y, DUST_COLORS[com.watabou.utils.Random.Int(DUST_COLORS.length)], 1f, com.watabou.utils.Random.Float(0.25f, 0.4f));
+					d.speed.set(com.watabou.utils.Random.Float(-4, 4), com.watabou.utils.Random.Float(-6, -2)); //살짝 떠오르며 사라진다
+					add(d);
+				}
+				if (spawned >= count && t > DUST_TRAVEL + 0.5f) killAndErase();
+			}
+		});
 	}
 
 	//과충전: 시전할 때 마력이 넘쳐흐름
