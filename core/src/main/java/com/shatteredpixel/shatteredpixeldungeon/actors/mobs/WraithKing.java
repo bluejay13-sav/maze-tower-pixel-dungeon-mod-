@@ -734,18 +734,18 @@ public class WraithKing extends Mob {
 		if (k == t || (k.x == t.x && k.y == t.y)) dir = (float)(Math.PI / 4);
 		float sweep = 1.4f;
 		float start = dir + (float)Math.PI - sweep / 2f;
-		//발톱 세 줄: 긁는 방향과 직각으로 조금씩 비켜 놓는다
+		//발톱 자국 한 줄 (조금 굵게)
 		float px = -(float)Math.sin(dir), py = (float)Math.cos(dir);
 		//어둠 속에서도 칸 밖으로 뻗은 발톱이 안개에 가리지 않게 안개 위에 그린다
 		com.watabou.noosa.Group fx = new com.watabou.noosa.Group();
 		GameScene.groupOverFog(fx);
-		for (int i = -1; i <= 1; i++){
+		for (int i = 0; i <= 0; i++){ //(결정, 바뀜) 발톱 자국은 한 번만 (예전 세 줄)
 			PointF c = new PointF(t.x + px * i * 3f + (float)Math.cos(dir) * 7f, t.y + py * i * 3f + (float)Math.sin(dir) * 7f);
 			float delay = (i + 1) * 0.04f;
-			new com.shatteredpixel.shatteredpixeldungeon.effects.SlashTrail(10f, 2.2f, start, sweep, delay, 0.09f, 0.28f)
+			new com.shatteredpixel.shatteredpixeldungeon.effects.SlashTrail(10f, 3f, start, sweep, delay, 0.09f, 0.28f)
 					.trailColor(0x1C2440).solid()
 					.show(fx, c);
-			new com.shatteredpixel.shatteredpixeldungeon.effects.SlashTrail(10.8f, 0.8f, start, sweep, delay, 0.09f, 0.28f)
+			new com.shatteredpixel.shatteredpixeldungeon.effects.SlashTrail(11.2f, 1f, start, sweep, delay, 0.09f, 0.28f)
 					.trailColor(0x8FD3FF)
 					.show(fx, c);
 		}
