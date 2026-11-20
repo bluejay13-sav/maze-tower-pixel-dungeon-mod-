@@ -275,8 +275,10 @@ public class Bloom2Fx {
 	//연쇄: 위 색에 하늘색 두 가지를 더한다
 	private static final int[] CHAIN_DUST_COLORS = {0xFFFFFF, 0xC8C8C8, 0x8C8C8C, 0x202020, 0x7FD4FF, 0xB8E8FF};
 	//거리 1칸(16px)마다 입자 수 (너무 많지 않게), 최소·최대
-	private static final float DUST_PER_TILE = 1.5f;
-	private static final int   DUST_MIN = 3, DUST_MAX = 7;
+	private static final float DUST_PER_TILE = 2f;
+	private static final int   DUST_MIN = 4, DUST_MAX = 9;
+	//입자 크기 (픽셀)
+	private static final float DUST_SIZE = 1.5f;
 	//출발점에서 도착점까지 입자가 차례로 나타나는 시간 (방향이 보이게)
 	private static final float DUST_TRAVEL = 0.14f;
 
@@ -303,7 +305,7 @@ public class Bloom2Fx {
 							alpha(Math.max(0, left / lifespan) * 0.75f); //옅게 시작해서 사라진다
 						}
 					};
-					d.reset(x, y, colors[com.watabou.utils.Random.Int(colors.length)], 1f, com.watabou.utils.Random.Float(0.25f, 0.4f));
+					d.reset(x, y, colors[com.watabou.utils.Random.Int(colors.length)], DUST_SIZE, com.watabou.utils.Random.Float(0.25f, 0.4f));
 					d.speed.set(com.watabou.utils.Random.Float(-4, 4), com.watabou.utils.Random.Float(-6, -2)); //살짝 떠오르며 사라진다
 					add(d);
 				}
