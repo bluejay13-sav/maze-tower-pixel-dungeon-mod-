@@ -473,13 +473,22 @@ public class WraithKing extends Mob {
 		if (Dungeon.level.heroFOV[pos] && sprite != null){
 			zoltChargeFx = BossEffects.onChar(BossEffects.Fx.WK_ZOLT_CHARGE, sprite, 8, true);
 		}
-		//영혼 10개 이하면 범위 경고. (결정) 맞는 칸을 칸 단위로 빈틈없이 옅게 칠하고, 그 덩어리 둘레 전체에 흰 테두리.
+		//영혼 10개 이하면 범위 경고. (결정) 맞는 칸을 칸 단위로 빈틈없이 옅게 칠하고, 그 덩어리 둘레 전체에 회색빛 테두리(바깥 모서리는 둥글게).
 		//대각선에서도 벽 쪽 세모가 비지 않고, 벽에 막혀 폭이 줄어도 테두리가 따라간다. 어둠 속에서도 보이게 안개 위에 그린다
 		if (souls < MazeTower.WK_SOUL_NOWARN){
+			ArrayList<Integer> lanes = new ArrayList<>();
+			ArrayList<Integer> cells = zoltCells(lanes);
 			zoltZone = new com.shatteredpixel.shatteredpixeldungeon.effects.CellZoneFx(
-					com.shatteredpixel.shatteredpixeldungeon.effects.CellZoneFx.Mode.WARN, zoltCells(), null, pos);
+					com.shatteredpixel.shatteredpixeldungeon.effects.CellZoneFx.Mode.WARN, laneMap(cells, lanes), pos);
 			GameScene.groupOverFog(zoltZone);
 		}
+	}
+
+	//칸 → 줄 번호 (CellZoneFx가 줄마다 명암을 준다)
+	private static java.util.LinkedHashMap<Integer, Integer> laneMap( ArrayList<Integer> cells, ArrayList<Integer> lanes ){
+		java.util.LinkedHashMap<Integer, Integer> m = new java.util.LinkedHashMap<>();
+		for (int i = 0; i < cells.size(); i++) m.put(cells.get(i), lanes.get(i));
+		return m;
 	}
 
 	private void clearZoltFx(){
@@ -552,14 +561,10 @@ public class WraithKing extends Mob {
 		for (int c : cells){
 			if (Dungeon.level.heroFOV[c]) seen = true;
 		}
-		//(결정) 광선도 칸 단위로 빈틈없이 한 덩어리: 맞는 칸 전체를 환하게 칠하고 가운데 줄은 더 밝게, 둘레 전체에 흰 테두리.
+		//(결정) 광선도 칸 단위로 빈틈없이 한 덩어리: 줄마다 명암(가운데 가장 밝고 바깥으로 갈수록 짙은 푸른색), 둘레 전체에 회색빛 테두리.
 		//벽에 막혀 폭이 줄어드는 곳도 끊기지 않고 자연스럽게 이어진다
-		{
-			ArrayList<Integer> core = new ArrayList<>();
-			for (int i = 0; i < cells.size(); i++) if (lanes.get(i) == 0) core.add(cells.get(i));
-			GameScene.groupOverFog(new com.shatteredpixel.shatteredpixeldungeon.effects.CellZoneFx(
-					com.shatteredpixel.shatteredpixeldungeon.effects.CellZoneFx.Mode.BEAM, cells, core, pos));
-		}
+		GameScene.groupOverFog(new com.shatteredpixel.shatteredpixeldungeon.effects.CellZoneFx(
+				com.shatteredpixel.shatteredpixeldungeon.effects.CellZoneFx.Mode.BEAM, laneMap(cells, lanes), pos));
 		for (int c : cells){
 			Char ch = Actor.findChar(c);
 			if (ch == null || ch == this) continue;
