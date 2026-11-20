@@ -187,7 +187,7 @@ public class MazeTower {
 
 	//무한 연계 방지
 	public static final float B2_MANA_CAP_PER_ACTION = 0.25f; //특성으로 얻는 마나: 한 행동에 최대 마나의 이 비율까지
-	public static final int   B2_MULTIHIT_SKILL_CAP  = 2;     //여러 번 때리는 스킬의 "스킬 적중 시" 효과는 스킬당 이 횟수까지
+	public static final int   B2_MULTIHIT_SKILL_CAP  = 3;     //여러 번 때리는 스킬의 "스킬 적중 시" 효과는 스킬당 이 횟수까지
 
 	//--- 기본공격 전용 ---
 	//연속 베기: 평타 적중 시 확률로 같은 적에게 추가 평타
