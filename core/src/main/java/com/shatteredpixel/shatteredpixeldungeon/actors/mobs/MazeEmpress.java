@@ -161,25 +161,25 @@ public class MazeEmpress extends Mob {
 
 		boolean heroHidden = Dungeon.hero.invisible > 0;
 
-		//(결정) 원소 감응이 모든 기술보다 먼저: 깔아야 하면 이번 턴은 원소 감응만 한다
-		//(예고한 공격·창은 한 턴 미뤄지고, 원소 폭풍의 진행은 그대로 흐른다)
+		//(결정) 원소 감응은 모든 기술보다 먼저이고 0.5턴만 쓴다: 2단계 첫 감응은 턴 처음에,
+		//그 뒤로는 기술을 쓸 때마다 원소 타일 수를 확인해 85칸(65%)보다 적으면 그 자리에서 0.5턴을 더 써서 다시 깐다.
 		tileTurns++;
-		if (phase >= 2 && needSensing()){
+		if (phase >= 2 && sensingPending){
 			castSensing();
-			if (phase == 3) stormTick();
-			boltCd--; rainCd--; spearCd--;
-			spend(TICK);
+			spend(MazeTower.EM_SENSING_TIME);
 			return true;
 		}
 
-		//지난 턴에 예고한 공격
-		if (boltPath != null) fireBolt();
-		if (rainCells != null) fireRain();
+		boolean usedSkill = false;
 
-		//머리 위의 창: 5턴 뒤 날아간다 (주인공이 숨어 있으면 은신이 풀린 뒤 다음 턴에)
+		//지난 턴에 예고한 공격
+		if (boltPath != null){ fireBolt(); usedSkill = true; }
+		if (rainCells != null){ fireRain(); usedSkill = true; }
+
+		//머리 위의 창: 3~4턴 뒤 날아간다 (주인공이 숨어 있으면 은신이 풀린 뒤 다음 턴에)
 		if (spearType != 0){
 			spearTimer--;
-			if (spearTimer <= 0 && !heroHidden) throwSpear();
+			if (spearTimer <= 0 && !heroHidden){ throwSpear(); usedSkill = true; }
 			else showSpearCount();
 		}
 
@@ -191,9 +191,11 @@ public class MazeEmpress extends Mob {
 		if (!heroHidden && boltCd <= 0 && boltPath == null){
 			warnBolt();
 			boltCd = MazeTower.EM_BOLT_INTERVAL;
+			usedSkill = true;
 		} else if (!heroHidden && rainCd <= 0 && rainCells == null){
 			warnRain();
 			rainCd = MazeTower.EM_RAIN_INTERVAL;
+			usedSkill = true;
 		} else if (phase >= 2 && spearType == 0 && spearCd <= 0){
 			spearType = nextSpear;
 			nextSpear = nextSpear == ElementTile.FROST ? ElementTile.FIRE : ElementTile.FROST;
@@ -204,6 +206,14 @@ public class MazeEmpress extends Mob {
 			showSpearCount();
 			if (Dungeon.level.heroFOV[pos]) GLog.w(Messages.get(this, spearType == ElementTile.FROST ? "frost_spear" : "fire_spear"));
 			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP, 0.7f, 1.2f);
+			usedSkill = true;
+		}
+
+		//기술을 쓴 턴: 원소 타일이 모자라면 0.5턴을 더 써서 깐다
+		if (usedSkill && phase >= 2 && needSensing()){
+			castSensing();
+			spend(TICK + MazeTower.EM_SENSING_TIME);
+			return true;
 		}
 
 		spend(TICK);
@@ -481,7 +491,7 @@ public class MazeEmpress extends Mob {
 	private boolean needSensing(){
 		if (sensingPending) return true;
 		int n = ElementTile.count();
-		return n < Math.round(tileableCells() * MazeTower.EM_TILE_REFILL) && tileTurns >= MazeTower.EM_TILE_COOLDOWN;
+		return n < Math.round(tileableCells() * MazeTower.EM_TILE_REFILL); //(결정, 바뀜) 쿨타임 13턴 없이 기술을 쓸 때마다 확인
 	}
 
 	private void castSensing(){
