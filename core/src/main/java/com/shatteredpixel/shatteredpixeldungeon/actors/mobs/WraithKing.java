@@ -319,6 +319,24 @@ public class WraithKing extends Mob {
 	}
 
 	//누군가 칸에 들어섰다 (CityBossLevel.occupyCell). 영혼 구슬을 먹는다
+	//영혼 30개: 모은 영혼이 주인공을 덮쳐 즉사 (방어·체력과 상관없이. 부활 아이템은 원작대로)
+	private void soulDoom(){
+		Hero hero = Dungeon.hero;
+		if (hero == null || !hero.isAlive()) return;
+		yell(Messages.get(this, "doom_yell"));
+		if (hero.sprite != null){
+			hero.sprite.flash();
+			BossEffects.onChar(BossEffects.Fx.WK_SOUL_ABSORB, hero.sprite, 10, false);
+		}
+		GameScene.flash(0x3355AA);
+		Sample.INSTANCE.play(Assets.Sounds.DEATH);
+		hero.die(this);
+		if (!hero.isAlive()){
+			Dungeon.fail(this);
+			GLog.n(Messages.get(this, "doom_kill"));
+		}
+	}
+
 	public static void onOccupy( Char ch ){
 		if (!SoulOrb.at(ch.pos)) return;
 		if (ch == Dungeon.hero){
@@ -334,6 +352,8 @@ public class WraithKing extends Mob {
 				if (ch.sprite != null) ch.sprite.showStatus(0x66AAFF, Messages.get(WraithKing.class, "soul_status", ((WraithKing) ch).souls));
 			}
 			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP, 0.5f, 1.3f);
+			//(결정) 영혼을 30개 모으면 주인공은 즉사한다
+			if (((WraithKing) ch).souls >= MazeTower.WK_SOUL_DEATH) ((WraithKing) ch).soulDoom();
 		}
 	}
 
