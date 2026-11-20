@@ -576,7 +576,7 @@ public class MazeTower {
 	public static final int   EM_SPEAR_MAX      = 22;
 	public static final float EM_SPEAR_FROSTBITE = 3f;   //서리창 혹한
 	public static final float EM_TILE_FILL      = 0.90f; //원소 감응: 타일 칸(132칸)의 90% = 118칸
-	public static final float EM_TILE_REFILL    = 0.65f; //이 아래(85칸)면 다시 깐다
+	public static final float EM_TILE_REFILL    = 0.80f; //(결정, 완화 65%→80%) 이 아래(106칸)면 다시 깐다
 	public static final int   EM_TILE_COOLDOWN  = 13;    //(지금은 안 씀) 예전 원소 감응 쿨타임. 이제 기술을 쓸 때마다 타일 수를 확인한다
 	public static final float EM_SENSING_TIME   = 0.5f;  //원소 감응에 드는 시간 (턴)
 	public static final int   EM_TILE_STEAM_MIN = 10;    //원소 타일 위 주인공 증기 반응 피해 (폭발은 기존 폭발 반응 피해)

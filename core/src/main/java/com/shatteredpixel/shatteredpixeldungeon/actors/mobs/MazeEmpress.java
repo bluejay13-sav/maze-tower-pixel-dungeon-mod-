@@ -81,6 +81,7 @@ public class MazeEmpress extends Mob {
 
 	private int phase = 1;
 	private int hitStreak = 0, quietTurns = 0;
+	private float lastHitTime = -100f;
 
 	private int boltCd = 1;
 	private int[] boltPath = null;     //예고한 강화 마탄 궤적 (다음 턴에 쏜다)
@@ -156,8 +157,6 @@ public class MazeEmpress extends Mob {
 			return true;
 		}
 
-		quietTurns++;
-		if (quietTurns >= MazeTower.EM_HIT_RESET_TURNS) hitStreak = 0;
 
 		boolean heroHidden = Dungeon.hero.invisible > 0;
 
@@ -209,8 +208,8 @@ public class MazeEmpress extends Mob {
 			usedSkill = true;
 		}
 
-		//기술을 쓴 턴: 원소 타일이 모자라면 0.5턴을 더 써서 깐다
-		if (usedSkill && phase >= 2 && needSensing()){
+		//(결정, 완화) 기술을 썼든 안 썼든 매 턴 확인: 원소 타일이 모자라면 0.5턴을 더 써서 깐다
+		if (phase >= 2 && needSensing()){
 			castSensing();
 			spend(TICK + MazeTower.EM_SENSING_TIME);
 			return true;
@@ -677,8 +676,11 @@ public class MazeEmpress extends Mob {
 		}
 		if (!isAlive() || pre == HP) return;
 
+		//연속 피격: 마지막으로 맞은 뒤 실제 게임 시간으로 2턴이 넘게 지났으면 처음부터 센다
+		//(예전에는 여제가 행동한 횟수로 셌는데, 0.5턴 원소 감응도 한 번으로 세어져 연속 2대가 끊기곤 했다)
+		if (Actor.now() - lastHitTime > MazeTower.EM_HIT_RESET_TURNS) hitStreak = 0;
+		lastHitTime = Actor.now();
 		hitStreak++;
-		quietTurns = 0;
 		if (phase == 1 && HP <= HT * MazeTower.EM_PHASE2_HP){
 			enterPhase2();
 			if (HP <= HT * MazeTower.EM_PHASE3_HP) enterPhase3();
@@ -749,6 +751,7 @@ public class MazeEmpress extends Mob {
 		bundle.put("phase", phase);
 		bundle.put("hit_streak", hitStreak);
 		bundle.put("quiet", quietTurns);
+		bundle.put("last_hit", lastHitTime);
 		bundle.put("bolt_cd", boltCd);
 		if (boltPath != null) bundle.put("bolt_path", boltPath);
 		bundle.put("bolt_from", boltFrom);
@@ -772,6 +775,7 @@ public class MazeEmpress extends Mob {
 		phase = bundle.getInt("phase");
 		hitStreak = bundle.getInt("hit_streak");
 		quietTurns = bundle.getInt("quiet");
+		lastHitTime = bundle.contains("last_hit") ? bundle.getFloat("last_hit") : -100f;
 		boltCd = bundle.getInt("bolt_cd");
 		boltPath = bundle.contains("bolt_path") ? bundle.getIntArray("bolt_path") : null;
 		boltFrom = bundle.contains("bolt_from") ? bundle.getInt("bolt_from") : -1;
