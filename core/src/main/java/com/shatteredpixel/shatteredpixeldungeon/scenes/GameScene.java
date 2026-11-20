@@ -1300,6 +1300,11 @@ public class GameScene extends PixelScene {
 	public static void effectOverFog( Visual effect ) {
 		if (scene != null) scene.overFogEffects.add( effect );
 	}
+
+	//Maze Tower: 여러 그림을 묶은 Group을 안개 위에 (망령 왕 마법 범위 경고)
+	public static void groupOverFog( Group group ) {
+		if (scene != null) scene.overFogEffects.add( group );
+	}
 	
 	public static CheckedCell checkedCell( int pos, int source ){
 		if (scene != null) {

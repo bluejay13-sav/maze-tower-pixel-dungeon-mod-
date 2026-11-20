@@ -194,6 +194,8 @@ public class AttackIndicator extends Tag {
 
 	public static void target(Char target ) {
 		if (target == null) return;
+		//Maze Tower: 망령 왕 기습의 푸른 눈은 공격 버튼 대상이 되지 않는다
+		if (target instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithEyes) return;
 		synchronized (instance) {
 			instance.lastTarget = (Mob) target;
 			instance.updateImage();

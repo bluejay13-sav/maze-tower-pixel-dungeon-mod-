@@ -56,7 +56,7 @@ public class WraithKing extends Mob {
 
 		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? MazeTower.B20_HP_STRONG : MazeTower.B20_HP;
 		EXP = MazeTower.B20_EXP;
-		defenseSkill = MazeTower.B20_DEF;
+		defenseSkill = MazeTower.WK_DEF; //(결정) 망령 왕 회피는 여제보다 조금 낮게
 
 		properties.add(Property.BOSS);
 		properties.add(Property.UNDEAD);
@@ -79,7 +79,7 @@ public class WraithKing extends Mob {
 	private boolean countered = false;
 
 	//화면 연출 (저장하지 않음)
-	private ArrayList<MovieClip> zoltWarn = new ArrayList<>();
+	private com.shatteredpixel.shatteredpixeldungeon.effects.BeamWarnZone zoltZone = null; //인간을 죽이는 마법 범위 경고
 	private MovieClip zoltChargeFx;
 
 	//Maze Tower: 기습 중(푸른 눈)과 어둠 속 왕에게는 체력바를 띄우지 않는다
@@ -123,7 +123,7 @@ public class WraithKing extends Mob {
 
 	@Override
 	public int damageRoll() {
-		return Math.round(Random.NormalIntRange(MazeTower.B20_DMG_MIN, MazeTower.B20_DMG_MAX) * power());
+		return Math.round(Random.NormalIntRange(MazeTower.B20_DMG_MIN, MazeTower.B20_DMG_MAX) * power() * (basicMelee ? MazeTower.WK_BASIC_MULTI : 1f));
 	}
 
 	@Override
@@ -147,7 +147,13 @@ public class WraithKing extends Mob {
 
 	@Override
 	protected boolean doAttack( Char enemy ) {
-		//(결정) 기본 공격은 붙어 있든 떨어져 있든 마법 공격(영혼 화살)
+		//(결정, 바뀜) 바로 옆(1칸)의 적에게는 일반 근접 공격(방어력 적용), 떨어진 적에게는 마법 공격(영혼 화살, 방어 무시). 둘 다 기본 공격 피해 -60%
+		if (Dungeon.level.adjacent(pos, enemy.pos)){
+			basicMelee = true;
+			boolean done = super.doAttack(enemy);
+			if (done) basicMelee = false; //그림 없이 바로 친 경우
+			return done;
+		}
 		boolean visible = Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[enemy.pos];
 		if (visible && sprite instanceof WraithKingSprite){
 			((WraithKingSprite) sprite).shootSoul(enemy.pos);
@@ -155,6 +161,15 @@ public class WraithKing extends Mob {
 		}
 		soulBolt();
 		return true;
+	}
+
+	//기본 근접 공격 중인지 (damageRoll에 기본 공격 피해 배율을 붙인다)
+	private boolean basicMelee = false;
+
+	@Override
+	public void onAttackComplete() {
+		super.onAttackComplete();
+		basicMelee = false;
 	}
 
 	//영혼 화살이 닿았다 (그림에서 부른다)
@@ -169,7 +184,7 @@ public class WraithKing extends Mob {
 		if (e == null) return;
 		if (hit(this, e, true)){ //마법 공격
 			int dmg = damageRoll();
-			//(결정) 기본 공격은 마법: 피해 -50%, 마법이라 방어력을 무시한다
+			//(결정) 기본 공격(마법): 피해 -60%, 마법이라 방어력을 무시한다
 			dmg = Math.round(dmg * MazeTower.WK_BASIC_MULTI);
 			e.damage(dmg, this);
 			if (e == Dungeon.hero && !e.isAlive()) Dungeon.fail(this);
@@ -458,21 +473,63 @@ public class WraithKing extends Mob {
 		if (Dungeon.level.heroFOV[pos] && sprite != null){
 			zoltChargeFx = BossEffects.onChar(BossEffects.Fx.WK_ZOLT_CHARGE, sprite, 8, true);
 		}
-		//영혼 11개 이하면 범위 경고
+		//영혼 10개 이하면 범위 경고. (결정) 칸마다 붙인 그림 대신 줄마다 이어진 옅은 띠 + 범위 가장자리 선으로 깔끔하게,
+		//어둠 속에서도 전부 보이게 안개 위에 그린다
 		if (souls < MazeTower.WK_SOUL_NOWARN){
-			for (int c : zoltCells()){
-				MovieClip w = BossEffects.atCell(BossEffects.Fx.WK_ZOLT_WARN, c, 4, true);
-				//(결정) 어둠 속에서도 범위 경고가 전부 보인다 (안개 위로 옮김)
-				if (w.parent != null) w.parent.erase(w);
-				GameScene.effectOverFog(w);
-				zoltWarn.add(w);
+			ArrayList<Integer> lanes = new ArrayList<>();
+			ArrayList<Integer> cells = zoltCells(lanes);
+			int reach = laneReach();
+			boolean diag = DX[zoltDir] != 0 && DY[zoltDir] != 0;
+			float width = diag ? DungeonTilemap.SIZE / 1.41421f : DungeonTilemap.SIZE;
+			float ul = (float)Math.sqrt(DX[zoltDir] * DX[zoltDir] + DY[zoltDir] * DY[zoltDir]);
+			float nx = -DY[zoltDir] / ul, ny = DX[zoltDir] / ul; //광선에 수직인 방향
+			zoltZone = new com.shatteredpixel.shatteredpixeldungeon.effects.BeamWarnZone();
+			for (int k = -reach; k <= reach; k++){
+				int[] fl = laneEnds(cells, lanes, k);
+				if (fl == null) continue;
+				PointF[] seg = laneSegment(fl[0], fl[1]);
+				zoltZone.band(seg[0], seg[1], width);
+				if (Math.abs(k) == reach){
+					//가장 바깥 줄: 바깥쪽 가장자리에 선
+					int[] o = laneOffset(k);
+					float side = Math.signum(o[0] * nx + o[1] * ny) * width / 2f;
+					zoltZone.edge(new PointF(seg[0].x + nx * side, seg[0].y + ny * side),
+							new PointF(seg[1].x + nx * side, seg[1].y + ny * side));
+				}
 			}
+			GameScene.groupOverFog(zoltZone);
 		}
 	}
 
+	private int laneReach(){
+		return (DX[zoltDir] != 0 && DY[zoltDir] != 0) ? 2 : 1;
+	}
+
+	//한 줄의 처음 칸·끝 칸 (없으면 null)
+	private int[] laneEnds( ArrayList<Integer> cells, ArrayList<Integer> lanes, int k ){
+		int first = -1, last = -1;
+		for (int i = 0; i < cells.size(); i++){
+			if (lanes.get(i) != k) continue;
+			if (first == -1) first = cells.get(i);
+			last = cells.get(i);
+		}
+		return first == -1 ? null : new int[]{first, last};
+	}
+
+	//처음 칸 ~ 끝 칸 가운데를 잇고, 양 끝을 반 칸씩 더 늘려 칸 끝까지 닿게 한 선분
+	private PointF[] laneSegment( int first, int last ){
+		PointF a = DungeonTilemap.tileCenterToWorld(first);
+		PointF b = DungeonTilemap.tileCenterToWorld(last);
+		float dx = DX[zoltDir], dy = DY[zoltDir];
+		float half = DungeonTilemap.SIZE / 2f;
+		return new PointF[]{ new PointF(a.x - dx * half, a.y - dy * half), new PointF(b.x + dx * half, b.y + dy * half) };
+	}
+
 	private void clearZoltFx(){
-		for (MovieClip c : zoltWarn) c.killAndErase();
-		zoltWarn.clear();
+		if (zoltZone != null){
+			zoltZone.killAndErase();
+			zoltZone = null;
+		}
 		if (zoltChargeFx != null){
 			zoltChargeFx.killAndErase();
 			zoltChargeFx = null;
@@ -535,23 +592,15 @@ public class WraithKing extends Mob {
 		ArrayList<Integer> lanes = new ArrayList<>();
 		ArrayList<Integer> cells = zoltCells(lanes);
 		boolean seen = false;
-		boolean diag = DX[zoltDir] != 0 && DY[zoltDir] != 0;
-		for (int i = 0; i < cells.size(); i++){
-			int c = cells.get(i);
-			//어둠 속에서도 광선은 보인다. 가로·세로는 칸마다 이어 붙이고, 대각선은 아래에서 줄마다 한 번에 그린다
-			if (!diag) beamVisual(c, lanes.get(i));
+		for (int c : cells){
 			if (Dungeon.level.heroFOV[c]) seen = true;
 		}
-		if (diag){
-			//(결정) 대각선은 칸마다 돌린 조각을 붙이면 이음매가 깨져 보여서, 줄마다 처음 칸부터 끝 칸까지 하나로 길게 늘여 그린다
-			for (int k = -2; k <= 2; k++){
-				int first = -1, last = -1;
-				for (int i = 0; i < cells.size(); i++){
-					if (lanes.get(i) != k) continue;
-					if (first == -1) first = cells.get(i);
-					last = cells.get(i);
-				}
-				if (first != -1) diagBeamVisual(first, last, k);
+		//(결정) 칸마다 그림을 붙이면 이음매가 깨져 보여서, 가로·세로·대각선 모두 줄마다 처음 칸부터 끝 칸까지 하나로 길게 늘여 그린다
+		{
+			int reach = laneReach();
+			for (int k = -reach; k <= reach; k++){
+				int[] fl = laneEnds(cells, lanes, k);
+				if (fl != null) laneBeamVisual(fl[0], fl[1], k);
 			}
 		}
 		for (int c : cells){
@@ -572,8 +621,10 @@ public class WraithKing extends Mob {
 		Sample.INSTANCE.play(Assets.Sounds.RAY);
 	}
 
-	//대각선 한 줄을 처음 칸 ~ 끝 칸까지 하나로 늘여 그린다 (양 끝을 반 칸씩 더 늘려 칸 끝까지 닿게)
-	private void diagBeamVisual( int first, int last, int lane ){
+	//광선 한 줄을 처음 칸 ~ 끝 칸까지 하나로 늘여 그린다 (양 끝을 반 칸씩 더 늘려 칸 끝까지 닿게)
+	private void laneBeamVisual( int first, int last, int lane ){
+		boolean diag = DX[zoltDir] != 0 && DY[zoltDir] != 0;
+		float thick = diag ? 0.8f : 1f; //대각선 줄 간격은 약 11.3픽셀이라 두께를 조금 줄인다 (가로·세로는 16픽셀 그대로)
 		PointF a = DungeonTilemap.tileCenterToWorld(first);
 		PointF b = DungeonTilemap.tileCenterToWorld(last);
 		float dx = DX[zoltDir], dy = DY[zoltDir];
@@ -590,12 +641,12 @@ public class WraithKing extends Mob {
 		c.angle = angle;
 		c.scale.x = len / 16f;
 		//나란한 줄 사이가 비지 않게 두께를 조금 늘린다 (대각선 줄 간격 약 11.3픽셀)
-		c.scale.y = 0.8f;
+		c.scale.y = thick;
 		if (edgeLane(lane)){
 			double r = Math.toRadians(angle);
 			int[] o = laneOffset(lane);
 			double dot = o[0] * Math.sin(r) + o[1] * -Math.cos(r);
-			if (dot < 0) c.scale.y = -0.8f;
+			if (dot < 0) c.scale.y = -thick;
 		}
 		GameScene.effectOverFog(c); //(결정) 어둠 속에서도 광선 전체가 보인다 (안개 위)
 	}
@@ -604,27 +655,6 @@ public class WraithKing extends Mob {
 	private boolean edgeLane( int lane ){
 		int reach = (DX[zoltDir] != 0 && DY[zoltDir] != 0) ? 2 : 1;
 		return Math.abs(lane) == reach;
-	}
-
-	//가로 그림을 광선 방향으로 돌린다(대각선은 45도 + 길게). 바깥 두 줄은 그림의 위쪽이 바깥을 향하게, 반대쪽 줄은 뒤집는다
-	private void beamVisual( int cell, int lane ){
-		boolean diag = DX[zoltDir] != 0 && DY[zoltDir] != 0;
-		MovieClip c = BossEffects.clip(edgeLane(lane) ? BossEffects.Fx.WK_ZOLT_EDGE : BossEffects.Fx.WK_ZOLT_CENTER, 15, false);
-		PointF p = DungeonTilemap.tileCenterToWorld(cell);
-		c.origin.set(8, 8);
-		c.x = p.x - 8;
-		c.y = p.y - 8;
-		float angle = zoltDir * 45f;
-		c.angle = angle;
-		if (diag) c.scale.x = 1.42f;
-		if (edgeLane(lane)){
-			//돌린 뒤 그림의 위쪽 방향 = (sin, -cos). 이 줄이 그쪽에 있으면 그대로, 아니면 뒤집는다
-			double r = Math.toRadians(angle);
-			int[] o = laneOffset(lane);
-			double dot = o[0] * Math.sin(r) + o[1] * -Math.cos(r);
-			if (dot < 0) c.scale.y = -1;
-		}
-		GameScene.effectOverFog(c); //(결정) 어둠 속에서도 광선 전체가 보인다 (안개 위)
 	}
 
 	// ----- 기습 -----
@@ -926,7 +956,7 @@ public class WraithKing extends Mob {
 
 	//불러온 뒤 화면 연출을 다시 만든다
 	private void restoreFx(){
-		if (zoltCharge > 0 && zoltChargeFx == null && zoltWarn.isEmpty()) showZoltFx();
+		if (zoltCharge > 0 && zoltChargeFx == null && zoltZone == null) showZoltFx();
 		if (ambushCell != -1) showEyes();
 		if (phase == 3 && sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).crawl();
 	}

@@ -1787,7 +1787,8 @@ public class Hero extends Char {
 				Notes.add(m.landmark());
 			}
 
-			if (fieldOfView[ m.pos ] && m.alignment == Alignment.ENEMY) {
+			if (fieldOfView[ m.pos ] && m.alignment == Alignment.ENEMY
+					&& !(m instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithEyes)) { //Maze Tower: 망령 왕 기습의 푸른 눈은 보이는 적으로 치지 않는다 (공격 버튼·적 표시·자동 조준에 안 나옴, 눈 칸을 직접 눌러야 친다)
 				visible.add(m);
 				if (!visibleEnemies.contains( m )) {
 					newMob = true;
