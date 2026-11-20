@@ -65,8 +65,11 @@ public class ZoltBeamFx extends Group {
 				//(결정) 광선 폭을 살짝 줄였다: 자르는 선을 줄 사이(반 줄 안쪽)로 둔다. 그래서 바깥 줄이 기둥 옆으로 홀로 빠져나가도
 				//양옆이 모두 잘려 보이지 않고(가는 광선이 삐져나가지 않음), 광선 바깥 가장자리는 가장 바깥 줄 칸의 안쪽 절반 지점이다.
 				//가장 바깥 바로 안쪽 줄(±1)은 바깥 줄이 있어도 그 가장자리(반 줄 바깥)에서 잘라 광선 옆면을 곧게 맞춘다
-				int pv = clipPos ? 1 : (s == 1 ? 2 : 0);
-				int nv = clipNeg ? 1 : (s == -1 ? 2 : 0);
+				//바깥 이웃 줄은 있는데 그 너머 줄이 없으면, 광선 가장자리가 이 칸과 이웃 칸에 걸치므로 이 칸도 그 가장자리(반 줄 바깥)에서 자른다
+				boolean pos2 = has(set, origin, w, cx + 2*pA[0], cy + 2*pA[1]) || has(set, origin, w, cx + pA[0] + pB[0], cy + pA[1] + pB[1]) || has(set, origin, w, cx + 2*pB[0], cy + 2*pB[1]);
+				boolean neg2 = has(set, origin, w, cx - 2*pA[0], cy - 2*pA[1]) || has(set, origin, w, cx - pA[0] - pB[0], cy - pA[1] - pB[1]) || has(set, origin, w, cx - 2*pB[0], cy - 2*pB[1]);
+				int pv = clipPos ? 1 : (!pos2 && s >= 0 ? 2 : 0); //가장자리 맞추기는 바깥쪽(+쪽은 가운데·+줄)에만
+				int nv = clipNeg ? 1 : (!neg2 && s <= 0 ? 2 : 0);
 				row = (slash ? 6 : 51) + (s + 2) * 9 + pv * 3 + nv;
 				//곧은 선으로 자른 쪽은 칸 변에 테두리를 긋지 않는다
 				if (clipPos){ edgeRim[sideIndex(pA)] = false; edgeRim[sideIndex(pB)] = false; }
