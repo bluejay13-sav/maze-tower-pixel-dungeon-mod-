@@ -130,6 +130,7 @@ public class CityBossLevel extends Level {
 		super.restoreFromBundle( bundle );
 		impShop = (ImpShopRoom) bundle.get( IMP_SHOP );
 		mazeEmpressRoom = bundle.getBoolean( MAZE_EMPRESS_ROOM ); //Maze Tower
+		if (mazeEmpressRoom) plainEmpressPillars();
 		if (map[topDoor] != Terrain.LOCKED_DOOR && Imp.Quest.earnedShop() && !impShop.shopSpawned()){
 			spawnShop();
 		}
@@ -216,6 +217,10 @@ public class CityBossLevel extends Level {
 		impShop.paint(this);
 		new CityPainter().paint(this, null);
 
+		//Maze Tower: 원작은 20층이면 아래가 바닥인 벽마다 휘장(WALL_DECO)을 건다(확률 1/(21-층) = 100%).
+		//여제 보스방 기둥은 장식이 너무 많아 보여 평범한 벽으로 되돌린다.
+		if (mazeEmpressRoom) plainEmpressPillars();
+
 		//pillars last, no deco on these
 		Painter.fill(this, end.left+1, end.top+2, 2, 2, Terrain.WALL);
 		Painter.fill(this, end.left+1, end.top+7, 2, 2, Terrain.WALL);
@@ -266,6 +271,15 @@ public class CityBossLevel extends Level {
 		}
 
 		Painter.set(this, c.x, arena.top, Terrain.DOOR);
+	}
+
+	//Maze Tower: 여제 보스방 기둥의 휘장(WALL_DECO)을 평범한 벽으로 (지을 때 + 예전 저장 파일을 불러올 때)
+	private void plainEmpressPillars(){
+		Point c = arena.center();
+		for (int[] p : EMPRESS_PILLARS){
+			int cell = (c.x - 4 + p[1]) + (c.y - 4 + p[0]) * width();
+			if (map[cell] == Terrain.WALL_DECO) map[cell] = Terrain.WALL;
+		}
 	}
 
 	//returns a random pedestal that doesn't already have a summon inbound on it
