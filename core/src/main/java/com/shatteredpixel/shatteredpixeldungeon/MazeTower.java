@@ -551,6 +551,7 @@ public class MazeTower {
 	public static final float HEART_BLOOD_DROP_ALPHA     = 0.7f; //방울 진하기
 	public static final float SEWER_WALL_DECO_KEEP       = 0.35f; //뿌리 지하: 벽 장식(뿌리 단면) 중 남기는 비율 (물이 많은 층에서 너무 많아서)
 	public static final float DOOR_DECO_PCT              = 0.33f; //모든 구역: 닫힌 문 중 장식(뿌리·사슬·마석·휘장·가지)이 붙은 문의 비율 (effects/MazeDoorDecor)
+	public static final float EMPRESS_WALL_DECO_KEEP     = 0.25f; //20층 여제 보스방: 벽·기둥 휘장(WALL_DECO) 중 남기는 비율 (원작 20층은 100%라 너무 많음)
 	public static final float ROOT_SP_PETAL_CHANCE       = 12f;  //뿌리 지하 특수 바닥 중 벚꽃잎이 있는 그림이 나오는 확률 % (원작 그림 바꾸기 비율 50)
 	public static final float BOSS_WALL_DECO_KEEP  = 0.3f; //5·10층 보스층: 벽 장식 중 남기는 비율
 	public static final float BOSS_FLOOR_DECO_KEEP = 0.3f; //5·10층 보스층: 바닥 장식 중 남기는 비율
