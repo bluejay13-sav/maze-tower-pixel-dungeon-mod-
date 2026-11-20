@@ -114,17 +114,22 @@ public class CityBossLevel extends Level {
 	}
 
 	private static final String IMP_SHOP = "imp_shop";
+	//Maze Tower: 마도시의 여제 보스방으로 지은 층인지 (지을 때 정해 저장. 치트로 보스를 바꿔도 이미 지은 층은 그대로)
+	private static final String MAZE_EMPRESS_ROOM = "maze_empress_room";
+	public boolean mazeEmpressRoom = false;
 
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle( bundle );
 		bundle.put( IMP_SHOP, impShop );
+		bundle.put( MAZE_EMPRESS_ROOM, mazeEmpressRoom ); //Maze Tower
 	}
 
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		super.restoreFromBundle( bundle );
 		impShop = (ImpShopRoom) bundle.get( IMP_SHOP );
+		mazeEmpressRoom = bundle.getBoolean( MAZE_EMPRESS_ROOM ); //Maze Tower
 		if (map[topDoor] != Terrain.LOCKED_DOOR && Imp.Quest.earnedShop() && !impShop.shopSpawned()){
 			spawnShop();
 		}
@@ -159,6 +164,12 @@ public class CityBossLevel extends Level {
 		Painter.set(this, entrance, Terrain.ENTRANCE);
 		transitions.add(new LevelTransition(this, entrance, LevelTransition.Type.REGULAR_ENTRANCE));
 
+		//Maze Tower: 마도시의 여제 판이면 원작 드워프 왕 옥좌방 대신 여제 보스방 (명세 22번)
+		mazeEmpressRoom = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.empress();
+		if (mazeEmpressRoom){
+			buildEmpressRoom();
+		} else {
+
 		//DK's throne room
 		Painter.fillDiamond(this, arena, 1, Terrain.EMPTY);
 
@@ -179,6 +190,8 @@ public class CityBossLevel extends Level {
 		Painter.fill(this, c.x, c.y+2, 1, 4, Terrain.CUSTOM_DECO_EMPTY);
 
 		Painter.set(this, c.x, arena.top, Terrain.LOCKED_DOOR);
+
+		}
 
 		//exit hallway
 		Painter.fill(this, end, Terrain.CHASM);
@@ -227,6 +240,32 @@ public class CityBossLevel extends Level {
 		customWalls.add(customVisuals);
 
 		return true;
+	}
+
+	//Maze Tower: 마도시의 여제 보스방 (명세 22번). 지금은 방 구조만: 보스·패턴·원소 타일 없음.
+	//안쪽 9×9, 왼쪽 위 칸을 (행 0, 열 0)으로 두면 옥좌(여제 자리)는 (4,4) = arena 가운데.
+	//ㄱ자 기둥 4개(모두 12칸)는 옥좌 기준 네 모서리에 대칭. 잔디·물은 만들지 않는다(보스층은 원래 칠하지 않음).
+	//보스가 아직 없으므로 위쪽 문은 잠그지 않고 그냥 문으로 둔다(진행이 막히지 않게).
+	public static final int[][] EMPRESS_PILLARS = {
+			{2,2},{2,3},{3,2},   {2,6},{2,5},{3,6},
+			{6,2},{6,3},{5,2},   {6,6},{6,5},{5,6}
+	};
+
+	private void buildEmpressRoom(){
+		Point c = arena.center();
+		int left = c.x - 4, top = c.y - 4;
+
+		//안쪽 9×9 (둘레는 벽으로 남는다)
+		Painter.fill(this, left, top, 9, 9, Terrain.EMPTY);
+		//위·아래 문까지 한 칸 통로
+		Painter.set(this, c.x, top - 1, Terrain.EMPTY);
+		Painter.set(this, c.x, top + 9, Terrain.EMPTY);
+
+		for (int[] p : EMPRESS_PILLARS){
+			Painter.set(this, left + p[1], top + p[0], Terrain.WALL);
+		}
+
+		Painter.set(this, c.x, arena.top, Terrain.DOOR);
 	}
 
 	//returns a random pedestal that doesn't already have a summon inbound on it
@@ -314,7 +353,9 @@ public class CityBossLevel extends Level {
 
 	@Override
 	public void occupyCell( Char ch ) {
-		if (map[bottomDoor] != Terrain.LOCKED_DOOR && map[topDoor] == Terrain.LOCKED_DOOR
+		//Maze Tower: 여제 보스방은 아직 방 구조만 있어 보스가 나오지 않으므로 잠그지 않는다
+		if (!mazeEmpressRoom
+				&& map[bottomDoor] != Terrain.LOCKED_DOOR && map[topDoor] == Terrain.LOCKED_DOOR
 				&& ch.pos < bottomDoor && ch == Dungeon.hero) {
 			seal();
 		}
