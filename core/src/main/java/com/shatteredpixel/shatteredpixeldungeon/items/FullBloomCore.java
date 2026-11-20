@@ -69,6 +69,8 @@ public class FullBloomCore extends TengusMask {
 
 		curUser.subClass = way;
 		Talent.initSubclassTalents(curUser);
+		//만개 각성: 분홍 꽃잎 (2차 특성을 각성시킨다)
+		com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree.get(curUser).petalsGranted += MazeTower.BLOOM_PETALS;
 
 		curUser.sprite.operate( curUser.pos );
 		Sample.INSTANCE.play( Assets.Sounds.MASTERY );

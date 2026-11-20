@@ -41,6 +41,7 @@ public class BloomTalentsPane extends ScrollPane {
 	private RenderedTextBlock secondTitle;
 	private RenderedTextBlock secondInfo;
 	private final ArrayList<Image> secondStars = new ArrayList<>(); //2차 포인트 별 (1차·3차 줄과 같은 모양)
+	private final ArrayList<Image> secondPetals = new ArrayList<>(); //남은 분홍 꽃잎 (만개 각성), 제목 왼쪽
 	private final ArrayList<SlotButton> slotButtons = new ArrayList<>();
 
 	//3차(만개) 줄: 만개의 핵을 쓰면 원작 특성 줄(3단계)로 보여 준다
@@ -105,6 +106,14 @@ public class BloomTalentsPane extends ScrollPane {
 					im.tint(0f, 0f, 0f, 0.9f);
 				}
 			}
+		}
+
+		//남은 꽃잎: 제목 왼쪽에 분홍 꽃잎 아이콘 (별 아님)
+		secondPetals.clear();
+		for (int i = 0; i < tree.petalsAvailable(); i++){
+			Image p = part(BloomTalentIcon.petal());
+			p.scale.set(0.5f);
+			secondPetals.add(p);
 		}
 
 		slotButtons.clear();
@@ -174,8 +183,16 @@ public class BloomTalentsPane extends ScrollPane {
 
 		//제목 + 별을 가운데에 (원작 특성 줄과 같은 배치, 기본 5개를 넘는 별은 다음 줄)
 		int regStars = BloomTree.regularPoints();
-		float titleWidth = secondTitle.width() + (secondStars.isEmpty() ? 0 : 2 + Math.min(secondStars.size(), regStars)*6);
-		secondTitle.setPos((width - titleWidth)/2f, top);
+		float petalW = secondPetals.isEmpty() ? 0 : secondPetals.size()*9 + 1;
+		float titleWidth = petalW + secondTitle.width() + (secondStars.isEmpty() ? 0 : 2 + Math.min(secondStars.size(), regStars)*6);
+		float titleLeft = (width - titleWidth)/2f;
+		secondTitle.setPos(titleLeft + petalW, top);
+		for (int i = 0; i < secondPetals.size(); i++){
+			Image p = secondPetals.get(i);
+			p.x = titleLeft + i*9;
+			p.y = secondTitle.top() + (secondTitle.height() - 8)/2f;
+			PixelScene.align(p);
+		}
 		float starLeft = secondTitle.right() + 2;
 		float starTop = secondTitle.top();
 		if (regStars < secondStars.size()) starTop -= 2;
@@ -253,6 +270,8 @@ public class BloomTalentsPane extends ScrollPane {
 		private Image bg;
 		private Image icon;
 		private ColorBlock fill;
+		private ColorBlock awakeGlow; //만개 각성: 칸 뒤의 분홍빛 (숨 쉬듯 밝아졌다 어두워짐)
+		private float glowTime = 0;
 
 		public SlotButton(int index){
 			super();
@@ -261,6 +280,11 @@ public class BloomTalentsPane extends ScrollPane {
 
 			BloomTree tree = BloomTree.get(Dungeon.hero);
 			BloomTree.Slot slot = index < tree.slots.size() ? tree.slots.get(index) : null;
+
+			if (slot != null && slot.isChosen() && slot.awakened){
+				awakeGlow = new ColorBlock(1, 1, 0xFFFF8FD0);
+				add(awakeGlow);
+			}
 
 			fill = new ColorBlock(0, 4, 0xFFFFFF44);
 			add(fill);
@@ -301,6 +325,11 @@ public class BloomTalentsPane extends ScrollPane {
 
 			bg.x = x;
 			bg.y = y;
+			if (awakeGlow != null){
+				awakeGlow.x = x - 1;
+				awakeGlow.y = y - 1;
+				awakeGlow.size(TalentButton.WIDTH + 2, TalentButton.HEIGHT + 2);
+			}
 
 			if (icon != null){
 				icon.x = x + 2 + (16 - icon.width())/2f;
@@ -336,6 +365,16 @@ public class BloomTalentsPane extends ScrollPane {
 		@Override
 		public void update() {
 			super.update();
+
+			//만개 각성: 은은한 분홍빛으로 숨 쉬듯 빛난다
+			if (awakeGlow != null){
+				glowTime += Game.elapsed;
+				float b = 0.5f + 0.5f * (float)Math.sin(glowTime * 2.2f);
+				awakeGlow.alpha(0.2f + 0.45f * b);
+				if (appearTime <= 0 && flashTime <= 0){
+					bg.hardlight(1f, 0.8f - 0.15f * b, 0.92f - 0.07f * b);
+				}
+			}
 
 			if (appearDelay >= 0){
 				appearDelay -= Game.elapsed;

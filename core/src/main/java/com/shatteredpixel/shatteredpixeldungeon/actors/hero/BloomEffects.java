@@ -373,7 +373,11 @@ public class BloomEffects {
 	public static void shock(Hero hero, final Char target, final int dmg){
 		if (!target.isAlive()) return;
 		BloomRules.derived(new Runnable(){ @Override public void run(){ target.damage(dmg, new ShockDamage()); } });
-		if (target.sprite != null) target.sprite.flash();
+		//원작 번개(전격 마법 부여·번개 마법봉)처럼: 번쩍 + 스파크
+		if (target.sprite != null){
+			target.sprite.flash();
+			target.sprite.centerEmitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.SparkParticle.FACTORY, 3);
+		}
 	}
 
 	//전격 피해의 출처. 주인공이 튄 번개에 맞아 죽으면 사망 기록을 남긴다.

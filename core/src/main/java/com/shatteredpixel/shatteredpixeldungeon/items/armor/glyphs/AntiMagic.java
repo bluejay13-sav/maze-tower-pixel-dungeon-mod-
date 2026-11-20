@@ -121,6 +121,7 @@ public class AntiMagic extends Armor.Glyph {
 		RESISTS.add( ElementalStrike.class );
 		RESISTS.add( Blazing.class );
 		RESISTS.add( Shocking.class );
+		RESISTS.add( com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.ShockDamage.class ); //Maze Tower: 2차 특성 잔류전기 - 원작 번개처럼 마법 피해
 		RESISTS.add( Grim.class );
 		RESISTS.add( Crystal.class );
 

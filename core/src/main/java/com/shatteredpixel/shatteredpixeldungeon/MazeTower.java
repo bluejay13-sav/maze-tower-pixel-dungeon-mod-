@@ -311,7 +311,7 @@ public class MazeTower {
 	public static final int[]   B2_CYCLE_MANA          = {8, 16, 24};
 	public static final float   B2_CYCLE_AWAKE_TURNS   = 3f; //각성: 다음 공격이 거는 원소 지속
 	//마나 장막
-	public static final float   B2_VEIL_HP             = 0.25f;
+	public static final float   B2_VEIL_HP             = 0.35f; //체력이 이 비율 이하일 때 발동 (25% → 35%)
 	public static final int     B2_VEIL_COST           = 15;
 	public static final float[] B2_VEIL_REDUCE         = {0.25f, 0.40f, 0.55f};
 	public static final int     B2_VEIL_AWAKE_PUSH     = 1;
