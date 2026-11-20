@@ -67,6 +67,8 @@ public class BossEffects {
 		WK_ZOLT_CHARGE ("sprites/maze_fx20w_zoltraak_charge.png", 32, 32, 4),
 		WK_ZOLT_CENTER ("sprites/maze_fx20w_zoltraak_beam_center_h.png", 16, 16, 3),
 		WK_ZOLT_EDGE   ("sprites/maze_fx20w_zoltraak_beam_edge_h.png",   16, 16, 3),
+		WK_ZOLT_BODY   ("sprites/maze_fx20w_zoltraak_beam_body_h.png",   16, 16, 3), //Maze Tower: 넓은 광선의 가운데와 테두리 사이 (흰 심 없이 바깥으로 갈수록 짙은 몸통)
+		WK_ZOLT_EDGE_WIDE ("sprites/maze_fx20w_zoltraak_beam_edge_wide_h.png", 16, 16, 3), //Maze Tower: 몸통 바깥 테두리 (안쪽 색이 몸통의 짙은 색과 이어짐)
 		WK_ZOLT_WARN   ("sprites/maze_fx20w_zoltraak_warn.png", 16, 16, 2),
 		//20층 마도시의 여제
 		EM_PETAL_BACK  ("sprites/maze_fx20e_petal_guard_back.png",  32, 32, 4),
