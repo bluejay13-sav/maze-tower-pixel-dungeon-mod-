@@ -372,7 +372,7 @@ public class BloomTalentsPane extends ScrollPane {
 			if (awakeGlow != null){
 				glowTime += Game.elapsed;
 				float b = 0.5f + 0.5f * (float)Math.sin(glowTime * 2.2f);
-				awakeGlow.alpha(0.18f + 0.17f * b); //은은하지만 보이게 (18~35%)
+				awakeGlow.alpha(0.23f + 0.09f * b); //은은하지만 보이게 (23~32%)
 				if (appearTime <= 0 && flashTime <= 0){
 					bg.hardlight(1f, 0.78f - 0.14f * b, 0.9f - 0.06f * b);
 				}
