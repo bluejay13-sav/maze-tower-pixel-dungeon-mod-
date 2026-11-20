@@ -26,6 +26,9 @@ public class MazeTower {
 	//원작 서브클래스(텐구의 가면)를 얻을 수 있는지 여부
 	public static final boolean ORIGINAL_SUBCLASS = false;
 
+	//보스전 체험판 빌드 (MazeTrial): true면 시작 화면 "플레이"가 보스 고르기 창이 되고, 고른 보스층 바로 앞까지 건너뛰어 시작한다.
+	//본편(main 브랜치)은 false. 체험판 브랜치(boss-trial)에서만 true로 둔다
+	public static final boolean BOSS_TRIAL = false;
 	//원작 엔딩(아뮬렛을 주운 뒤 머무르기·귀환 길)을 쓸지. false면 아뮬렛을 주우면 그 자리에서 승리
 	public static final boolean ORIGINAL_ENDING = false;
 

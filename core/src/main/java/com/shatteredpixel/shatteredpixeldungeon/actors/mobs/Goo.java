@@ -494,6 +494,7 @@ public class Goo extends Mob {
 		if (MazeTower.GOO_DROPS_BLOOM_CORE) {
 			Dungeon.level.drop( new BloomCore(), pos ).sprite.drop();
 		}
+		com.shatteredpixel.shatteredpixeldungeon.MazeTrial.onBossDefeated(); //Maze Tower: 보스전 체험판이면 체험 완료 창
 		
 		//60% chance of 2 blobs, 30% chance of 3, 10% chance for 4. Average of 2.5
 		int blobs = Random.chances(new float[]{0, 0, 6, 3, 1});

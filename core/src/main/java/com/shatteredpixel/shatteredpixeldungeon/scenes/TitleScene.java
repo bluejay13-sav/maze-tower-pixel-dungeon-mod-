@@ -147,6 +147,11 @@ public class TitleScene extends PixelScene {
 		btnPlay = new StyledButton(GREY_TR, Messages.get(this, "enter")){
 			@Override
 			protected void onClick() {
+				//Maze Tower: 보스전 체험판은 보스 고르기 창
+				if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on()){
+					com.shatteredpixel.shatteredpixeldungeon.MazeTrial.showSelect();
+					return;
+				}
 				if (GamesInProgress.checkAll().size() == 0){
 					GamesInProgress.selectedClass = null;
 					GamesInProgress.curSlot = 1;

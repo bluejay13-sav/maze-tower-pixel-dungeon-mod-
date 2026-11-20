@@ -57,5 +57,6 @@ public class MazeBoss20 {
 		if (beacon != null) {
 			beacon.upgrade();
 		}
+		com.shatteredpixel.shatteredpixeldungeon.MazeTrial.onBossDefeated(); //Maze Tower: 보스전 체험판이면 체험 완료 창
 	}
 }

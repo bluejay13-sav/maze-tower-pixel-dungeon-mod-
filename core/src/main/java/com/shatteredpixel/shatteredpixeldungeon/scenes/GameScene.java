@@ -808,6 +808,7 @@ public class GameScene extends PixelScene {
 		com.shatteredpixel.shatteredpixeldungeon.effects.BossRoomDecor20.add(this); //Maze Tower: 20층 보스방 벽 장식
 		com.shatteredpixel.shatteredpixeldungeon.effects.WraithPillarTops.add(this); //Maze Tower: 망령 왕 어둠 속 기둥 윗부분
 		com.shatteredpixel.shatteredpixeldungeon.effects.WraithThrone.addOverFog(); //Maze Tower: 망령 왕의 왕좌 (어둠 속)
+		com.shatteredpixel.shatteredpixeldungeon.MazeTrial.afterSceneCreate(); //Maze Tower: 보스전 체험판 새 게임이면 보스층 앞으로 건너뛰기
 
 		if (!invVisible) toggleInvPane();
 		fadeIn();

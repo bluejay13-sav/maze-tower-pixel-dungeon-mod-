@@ -322,6 +322,7 @@ public class Hero extends Char {
 		
 		bundle.put( LEVEL, lvl );
 		bundle.put( MAZE_NAME, mazeName ); //Maze Tower: 캐릭터 이름
+		com.shatteredpixel.shatteredpixeldungeon.MazeTrial.store( bundle ); //Maze Tower: 보스전 체험판에서 고른 보스
 		bundle.put( EXPERIENCE, exp );
 		
 		bundle.put( HTBOOST, HTBoost );
@@ -334,6 +335,7 @@ public class Hero extends Char {
 
 		lvl = bundle.getInt( LEVEL );
 		mazeName = bundle.contains(MAZE_NAME) ? bundle.getString(MAZE_NAME) : ""; //Maze Tower
+		com.shatteredpixel.shatteredpixeldungeon.MazeTrial.restore( bundle ); //Maze Tower
 		exp = bundle.getInt( EXPERIENCE );
 
 		HTBoost = bundle.getInt(HTBOOST);
