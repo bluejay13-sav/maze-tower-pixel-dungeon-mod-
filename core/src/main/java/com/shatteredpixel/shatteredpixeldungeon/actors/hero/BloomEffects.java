@@ -57,8 +57,6 @@ public class BloomEffects {
 		public Char target;
 		public int manaSpent;
 		public boolean wasFullMana;
-		public boolean focusPrimed;
-		public boolean executeApplied;
 	}
 
 	public static SkillUse skillUse = null;
@@ -83,8 +81,7 @@ public class BloomEffects {
 		u.wasFullMana = m.isFull();
 		BloomRules.beginSkill(cost); //스킬 한 번이 새 "한 행동"
 		BloomAttack.onActionStart(hero, true); //돌진
-		u.focusPrimed = m.focusReady;
-		m.focusReady = false;
+		BloomSkill.onSkillStart(hero, u.wasFullMana); //집중·과충전
 		skillUse = u;
 		return u;
 	}
@@ -96,13 +93,8 @@ public class BloomEffects {
 		skillUse = null;
 		if (u == null) return;
 
-		//처형 3레벨: 처형으로 처치하면 비용 50% 반환
-		if (u.target != null && !u.target.isAlive() && u.executeApplied && lvl(hero, EXECUTE) >= 2){
-			int amt = BloomRules.refund(hero, Math.round(u.manaSpent * B2_EXECUTE_REFUND));
-			if (amt > 0){
-				TalentEffects.manaRefund(hero, u.target, amt); //푸른 마탄이 주인공에게
-			}
-		}
+		BloomSkill.endSkill(hero, u); //처형 3레벨 비용 반환
+		BloomSkill.onSkillEnd();
 
 		//흐름 (임시: 스킬 뒤 다음 평타 강화. 번갈아 쓰기는 C단계)
 		if (lvl(hero, FLOW) >= 0) Buff.affect(hero, FlowTracker.class).charges = 1;
@@ -130,6 +122,7 @@ public class BloomEffects {
 	//주인공 공격의 방어력 무시 (Char.attack). 돌진 각성·마나 흡수 각성 (집중 각성은 스킬 단계)
 	public static int armorAfterIgnore(Hero hero, Char enemy, int dr){
 		float ignore = BloomAttack.armorIgnore(hero, isSkill());
+		if (isSkill()) ignore = Math.max(ignore, BloomSkill.armorIgnore(hero)); //집중 각성
 		return ignore > 0 ? Math.round(dr * (1f - ignore)) : dr;
 	}
 
@@ -198,17 +191,7 @@ public class BloomEffects {
 				flow.detach();
 			}
 		} else {
-			SkillUse u = skillUse;
-			//집중
-			int fo = lvl(hero, FOCUS);
-			if (fo >= 0 && u != null && u.focusPrimed) bonus += B2_FOCUS_DMG[fo];
-			//처형
-			int ex = lvl(hero, EXECUTE);
-			if (ex >= 0 && enemy.HP <= enemy.HT * B2_EXECUTE_HP){
-				bonus += B2_EXECUTE_DMG[ex];
-				if (u != null) u.executeApplied = true;
-				TalentEffects.execute(enemy); //붉은 섬광
-			}
+			bonus += BloomSkill.hitBonus(hero, enemy); //집중·처형·과충전·표식 폭발·섬광 보법
 		}
 
 		int result = Math.round(damage * bonus);
@@ -221,39 +204,14 @@ public class BloomEffects {
 			int ec = lvl(hero, ECHO);
 			if (ec >= 0 && hero.buff(EchoTracker.class) != null && BloomRules.triggerOnHit(ECHO)) BloomRules.gainMana(hero, B2_ECHO_MANA[ec]);
 		} else {
-			//서리 베기
-			int fs = lvl(hero, FROST_SLASH);
-			if (fs >= 0 && BloomRules.triggerOnHit(FROST_SLASH)) chill(hero, enemy, B2_FROST_TURNS[fs]);
-			//연쇄
-			int ch = lvl(hero, CHAIN);
-			if (ch >= 0 && BloomRules.triggerOnHit(CHAIN)) chain(hero, enemy, result, ch);
+			//스킬 전용 특성 (서리 베기·연쇄·과충전 각성·충격·섬광 보법 각성)
+			BloomSkill.onSkillHit(hero, enemy, result);
 		}
 
 		//잔류전기 (평타·스킬)
 		residualShock(hero, enemy, result);
 
 		return result;
-	}
-
-	private static void chain(Hero hero, Char enemy, int damage, int level){
-		int amt = Math.round(damage * B2_CHAIN_PCT[level]);
-		if (amt <= 0) return;
-		ArrayList<Char> candidates = new ArrayList<>();
-		for (Char c : Actor.chars()){
-			if (c != enemy && c != hero && c.alignment == Char.Alignment.ENEMY && c.isAlive()
-					&& Dungeon.level.distance(enemy.pos, c.pos) <= B2_CHAIN_RANGE
-					&& Dungeon.level.heroFOV[c.pos]){
-				candidates.add(c);
-			}
-		}
-		for (int i = 0; i < B2_CHAIN_TARGETS[level] && !candidates.isEmpty(); i++){
-			Char other = Random.element(candidates);
-			candidates.remove(other);
-			if (other.sprite != null && enemy.sprite != null){
-				TalentEffects.chain(enemy, other); //대상 사이 짧은 빛줄기
-			}
-			BloomRules.derivedDamage(CHAIN, other, amt); //번진 피해는 파생
-		}
 	}
 
 	// =====================================================================
@@ -273,6 +231,7 @@ public class BloomEffects {
 	public static void onEnemyKilled(Hero hero, Char enemy, boolean byDerived){
 		BloomRules.debug("kill " + enemy.name() + (byDerived ? " (derived)" : ""));
 		BloomAttack.onKill(hero, enemy, byDerived);
+		BloomSkill.onKill(hero, enemy, byDerived);
 	}
 
 	// =====================================================================
@@ -285,7 +244,7 @@ public class BloomEffects {
 		//흘리기 대기 중: 보호막
 		boolean parry = hero.buff(ParryTracker.class) != null && lvl(hero, PARRY) >= 0;
 		//집중(대기·탐색 직후)·흐름 준비 완료: 은은한 빛
-		boolean ready = (lvl(hero, FOCUS) >= 0 && m != null && m.focusReady)
+		boolean ready = (lvl(hero, FOCUS) >= 0 && m != null && m.focusReady && hero.buff(BloomBuffs.FocusCooldown.class) == null)
 				|| (lvl(hero, FLOW) >= 0 && hero.buff(FlowTracker.class) != null);
 		//넘치는 힘 + 가득 찬 마나: 은은한 푸른 기운
 		boolean full = m != null && m.isFull() && lvl(hero, OVERFLOW) >= 0;
@@ -307,6 +266,7 @@ public class BloomEffects {
 			if (p >= 0){
 				dmg *= 1f - B2_PARRY_REDUCE[p];
 				TalentEffects.parryUsed(hero);
+				BloomSkill.parryCounter(hero, enemy); //흘리기 각성: 반격 (파생)
 			}
 			pt.detach();
 		}

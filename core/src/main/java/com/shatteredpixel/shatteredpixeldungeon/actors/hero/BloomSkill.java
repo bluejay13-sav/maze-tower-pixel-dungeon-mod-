@@ -1,0 +1,366 @@
+/*
+ * Maze Tower (가칭 미궁의 마탑)
+ * Shattered Pixel Dungeon 기반 아종. GPLv3.
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
+
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frostbite;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
+import com.shatteredpixel.shatteredpixeldungeon.effects.TalentEffects;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.Random;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+
+import static com.shatteredpixel.shatteredpixeldungeon.MazeTower.*;
+import static com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTalent.*;
+
+//Maze Tower: 2차 스킬 전용 특성 9개 (연쇄, 표식 폭발, 집중, 처형, 과충전, 충격, 서리 베기, 흘리기, 섬광 보법).
+//스킬 = 검·단검·활 스킬, 지팡이 스킬, 검투사 필살기 (BloomEffects.beginSkill ~ endSkill).
+//횟수·파생·마나 규칙은 BloomRules를 거친다.
+public class BloomSkill {
+
+	private static int lvl(Hero hero, BloomTalent t){
+		return BloomEffects.lvl(hero, t);
+	}
+
+	private static boolean awake(Hero hero, BloomTalent t){
+		return BloomTree.awakened(hero, t);
+	}
+
+	// =====================================================================
+	// 스킬 한 번의 상태 (BloomEffects.SkillUse에 붙는 것)
+	// =====================================================================
+
+	public static class State {
+		boolean focus;                                //집중: 대기·탐색 바로 다음 스킬
+		boolean overcharge;                           //과충전: 마나가 가득 찬 채 시작
+		final HashSet<Integer> executed = new HashSet<>(); //처형이 붙은 대상
+		int burstTarget = -1;                         //표식 폭발로 표식을 터뜨린 대상
+		int burstStacks = 0;
+		boolean burstTransferred = false;
+		boolean impactDone = false;
+	}
+
+	static State state = null;
+
+	//스킬 시작 (BloomEffects.beginSkill, 마나를 쓰기 직전)
+	static void onSkillStart(Hero hero, boolean wasFullMana){
+		State s = new State();
+		Mana m = Mana.get(hero);
+
+		//집중: 대기·탐색 바로 다음 스킬, 쿨타임 10턴
+		if (m.focusReady && lvl(hero, FOCUS) >= 0 && hero.buff(BloomBuffs.FocusCooldown.class) == null){
+			s.focus = true;
+			Buff.affect(hero, BloomBuffs.FocusCooldown.class, B2_FOCUS_COOLDOWN);
+		}
+		m.focusReady = false;
+
+		s.overcharge = wasFullMana && lvl(hero, OVERCHARGE) >= 0;
+		state = s;
+	}
+
+	static void onSkillEnd(){
+		state = null;
+	}
+
+	// =====================================================================
+	// 피해 배율 (스킬 타격마다)
+	// =====================================================================
+
+	static float hitBonus(Hero hero, Char enemy){
+		State s = state;
+		if (s == null) return 0;
+		float bonus = 0;
+
+		//집중
+		int fo = lvl(hero, FOCUS);
+		if (s.focus && fo >= 0) bonus += B2_FOCUS_DMG[fo];
+
+		//처형
+		int ex = lvl(hero, EXECUTE);
+		if (ex >= 0 && enemy.HP <= enemy.HT * B2_EXECUTE_HP){
+			bonus += B2_EXECUTE_DMG[ex];
+			if (s.executed.add(enemy.id())) TalentEffects.execute(enemy); //붉은 섬광
+		}
+
+		//과충전
+		int oc = lvl(hero, OVERCHARGE);
+		if (s.overcharge && oc >= 0) bonus += B2_OVERCHARGE_DMG[oc];
+
+		//표식 폭발: 대상의 표식을 모두 터뜨린다 (스킬 한 번에 한 번)
+		int mb = lvl(hero, MARK_BURST);
+		BloomBuffs.Mark mark = enemy.buff(BloomBuffs.Mark.class);
+		if (mb >= 0 && mark != null && mark.stacks > 0 && BloomRules.trigger(MARK_BURST)){
+			bonus += B2_MARK_BURST_PER[mb] * mark.stacks;
+			s.burstTarget = enemy.id();
+			s.burstStacks = mark.stacks;
+			s.burstTransferred = mark.transferred;
+			if (enemy.sprite != null) enemy.sprite.showStatus(0xE070FF, "x" + mark.stacks); //임시 (E단계: 표식 터짐)
+			mark.detach();
+		}
+
+		//섬광 보법: 근거리 무기 스킬 피해
+		int fl = lvl(hero, FLASH_STEP);
+		if (fl >= 0 && meleeWeaponSkill()) bonus += B2_FLASH_DMG[fl];
+
+		return bonus;
+	}
+
+	//검·단검 스킬 (활 조준 사격, 지팡이, 필살기 제외)
+	static boolean meleeWeaponSkill(){
+		return SwordSkill.active != null && !SwordSkill.active.ranged;
+	}
+
+	//방어 무시 비율 (집중 각성)
+	static float armorIgnore(Hero hero){
+		State s = state;
+		if (s != null && s.focus && awake(hero, FOCUS)) return B2_FOCUS_AWAKE_IGNORE;
+		return 0;
+	}
+
+	// =====================================================================
+	// 스킬 적중 시 효과 (피해가 정해진 뒤)
+	// =====================================================================
+
+	static void onSkillHit(final Hero hero, final Char enemy, int damage){
+		State s = state;
+
+		//서리 베기 (각성: 냉각 대신 혹한)
+		int fs = lvl(hero, FROST_SLASH);
+		if (fs >= 0 && BloomRules.triggerOnHit(FROST_SLASH)){
+			if (awake(hero, FROST_SLASH)){
+				final float turns = B2_FROST_TURNS[fs];
+				//혹한은 피해가 들어간 뒤에 건다 (빙결 반응 순서)
+				BloomAttack.afterHit(new Runnable() {
+					@Override
+					public void run() {
+						if (!enemy.isAlive()) return;
+						Buff.affect(enemy, Frostbite.class, turns);
+						if (enemy.sprite != null) enemy.sprite.emitter().burst(SnowParticle.FACTORY, 8);
+					}
+				});
+			} else {
+				BloomEffects.chill(hero, enemy, B2_FROST_TURNS[fs]);
+			}
+		}
+
+		//연쇄 (번진 피해는 파생)
+		int ch = lvl(hero, CHAIN);
+		if (ch >= 0 && BloomRules.triggerOnHit(CHAIN)) chain(hero, enemy, damage, ch);
+
+		//과충전 각성: 대상 주변 3×3 충격파 (파생, 스킬 한 번에 한 번)
+		if (s != null && s.overcharge && awake(hero, OVERCHARGE) && BloomRules.trigger(OVERCHARGE)){
+			int dmg = Math.round(damage * B2_OVERCHARGE_AWAKE_DMG);
+			for (int n : PathFinder.NEIGHBOURS8){
+				Char c = Actor.findChar(enemy.pos + n);
+				if (c != null && c != hero && c.alignment == Char.Alignment.ENEMY){
+					BloomRules.derivedDamage(OVERCHARGE, c, dmg);
+				}
+			}
+			PixelScene.shake(1, 0.2f);
+		}
+
+		//충격: 맞은 적을 밀친다 (스킬 한 번에 한 번, 피해가 들어간 뒤)
+		int im = lvl(hero, IMPACT);
+		if (im >= 0 && s != null && !s.impactDone && BloomRules.trigger(IMPACT)){
+			s.impactDone = true;
+			final int lv = im;
+			final int hitDmg = damage;
+			final boolean wake = awake(hero, IMPACT);
+			BloomAttack.afterHit(new Runnable() {
+				@Override
+				public void run() {
+					impact(hero, enemy, lv, hitDmg, wake);
+				}
+			});
+		}
+
+		//섬광 보법 각성: 지정한 대상 1턴 기절 (스킬 한 번에 한 번)
+		if (awake(hero, FLASH_STEP) && lvl(hero, FLASH_STEP) >= 0 && meleeWeaponSkill()
+				&& BloomEffects.skillUse != null && BloomEffects.skillUse.target == enemy
+				&& BloomRules.trigger(FLASH_STEP)){
+			BloomAttack.afterHit(new Runnable() {
+				@Override
+				public void run() {
+					if (enemy.isAlive()) Buff.affect(enemy, Paralysis.class, B2_FLASH_AWAKE_STUN);
+				}
+			});
+		}
+	}
+
+	private static void chain(Hero hero, Char enemy, int damage, int level){
+		int amt = Math.round(damage * B2_CHAIN_PCT[level]);
+		if (amt <= 0) return;
+		ArrayList<Char> candidates = new ArrayList<>();
+		for (Char c : Actor.chars()){
+			if (c != enemy && c != hero && c.alignment == Char.Alignment.ENEMY && c.isAlive()
+					&& Dungeon.level.distance(enemy.pos, c.pos) <= B2_CHAIN_RANGE
+					&& Dungeon.level.heroFOV[c.pos]){
+				candidates.add(c);
+			}
+		}
+		int targets = awake(hero, CHAIN) ? B2_CHAIN_AWAKE_TARGETS : B2_CHAIN_TARGETS[level];
+		for (int i = 0; i < targets && !candidates.isEmpty(); i++){
+			Char other = Random.element(candidates);
+			candidates.remove(other);
+			if (other.sprite != null && enemy.sprite != null){
+				TalentEffects.chain(enemy, other); //대상 사이 짧은 빛줄기 (E단계: 하늘색 번개 빛줄기)
+			}
+			BloomRules.derivedDamage(CHAIN, other, amt);
+		}
+	}
+
+	//충격: 주인공 반대쪽으로 밀친다. 벽에 부딪히면 추가 피해(파생), 3레벨은 2턴 기절.
+	//각성: 다른 적과 부딪히면 둘 다 2턴 기절.
+	private static void impact(Hero hero, Char enemy, int lv, int hitDmg, boolean wake){
+		if (!enemy.isAlive() || enemy.properties().contains(Char.Property.IMMOVABLE)) return;
+		int dir = enemy.pos - hero.pos;
+		if (dir == 0) return;
+		Ballistica traj = new Ballistica(enemy.pos, enemy.pos + dir, Ballistica.WONT_STOP);
+		int want = B2_IMPACT_PUSH[lv];
+		if (enemy.properties().contains(Char.Property.BOSS)) want = (want + 1) / 2; //원작 밀침과 같이 보스는 절반
+
+		int steps = 0;
+		boolean wall = false;
+		Char bumped = null;
+		for (int i = 1; i < traj.path.size() && steps < want; i++){
+			int next = traj.path.get(i);
+			if (Dungeon.level.solid[next] || !Dungeon.level.passable[next] && !Dungeon.level.avoid[next]){
+				wall = Dungeon.level.solid[next];
+				break;
+			}
+			Char c = Actor.findChar(next);
+			if (c != null){
+				bumped = c;
+				break;
+			}
+			steps++;
+		}
+		//밀려날 칸이 있으면 원작 밀침 (부딪힘 피해는 여기서 따로 준다)
+		if (steps > 0){
+			//원작 밀침은 보스를 절반만 밀어서, 위에서 이미 줄인 칸 수를 그대로 쓰도록 두 배로 넘긴다
+			int power = enemy.properties().contains(Char.Property.BOSS) ? steps * 2 : steps;
+			WandOfBlastWave.throwChar(enemy, new Ballistica(enemy.pos, traj.path.get(steps), Ballistica.WONT_STOP), power, true, false, hero);
+		} else if (steps == 0 && !wall && bumped == null){
+			return;
+		}
+
+		if (wall){
+			BloomRules.derivedDamage(IMPACT, enemy, Math.max(1, Math.round(hitDmg * B2_IMPACT_WALL_DMG[lv])));
+			if (lv >= 2 && enemy.isAlive()) Buff.affect(enemy, Paralysis.class, B2_IMPACT_STUN);
+			PixelScene.shake(1, 0.15f);
+		} else if (bumped != null && wake && bumped.alignment == Char.Alignment.ENEMY){
+			if (enemy.isAlive()) Buff.affect(enemy, Paralysis.class, B2_IMPACT_STUN);
+			if (bumped.isAlive()) Buff.affect(bumped, Paralysis.class, B2_IMPACT_STUN);
+			PixelScene.shake(1, 0.15f);
+		}
+	}
+
+	// =====================================================================
+	// 스킬이 끝난 뒤 (BloomEffects.endSkill)
+	// =====================================================================
+
+	static void endSkill(Hero hero, BloomEffects.SkillUse u){
+		State s = state;
+		//처형 3레벨: 처형으로 처치하면 비용 50% 반환 (비용을 넘지 않는다)
+		if (s != null && u.target != null && !u.target.isAlive() && s.executed.contains(u.target.id()) && lvl(hero, EXECUTE) >= 2){
+			int amt = BloomRules.refund(hero, Math.round(u.manaSpent * B2_EXECUTE_REFUND));
+			if (amt > 0) TalentEffects.manaRefund(hero, u.target, amt); //푸른 마탄이 주인공에게
+		}
+	}
+
+	// =====================================================================
+	// 처치 (BloomRules.onDeath)
+	// =====================================================================
+
+	static void onKill(Hero hero, Char enemy, boolean byDerived){
+		State s = state;
+		if (s == null || BloomRules.kind() != BloomRules.Kind.SKILL) return;
+
+		//처형 각성: 처형으로 처치하면 주변 2칸 적 2턴 공포
+		if (!byDerived && s.executed.contains(enemy.id()) && awake(hero, EXECUTE) && BloomRules.trigger(EXECUTE)){
+			for (Char c : Actor.chars()){
+				if (c != enemy && c.isAlive() && c.alignment == Char.Alignment.ENEMY
+						&& Dungeon.level.distance(enemy.pos, c.pos) <= B2_EXECUTE_AWAKE_RANGE){
+					Buff.affect(c, Terror.class, B2_EXECUTE_AWAKE_FEAR).object = hero.id();
+				}
+			}
+		}
+
+		//표식 폭발 각성: 표식을 가진 채(또는 이번 스킬로 터뜨린 채) 죽으면 주변 2칸 적에게 표식이 옮겨 간다
+		if (awake(hero, MARK_BURST) && lvl(hero, MARK_BURST) >= 0){
+			int stacks = 0;
+			boolean transferred = false;
+			BloomBuffs.Mark mark = enemy.buff(BloomBuffs.Mark.class);
+			if (mark != null){
+				stacks = mark.stacks;
+				transferred = mark.transferred;
+			} else if (s.burstTarget == enemy.id()){
+				stacks = s.burstStacks;
+				transferred = s.burstTransferred;
+			}
+			if (stacks > 0 && !transferred){
+				for (Char c : Actor.chars()){
+					if (c != enemy && c.isAlive() && c.alignment == Char.Alignment.ENEMY
+							&& Dungeon.level.distance(enemy.pos, c.pos) <= B2_MARK_BURST_AWAKE_RANGE){
+						BloomBuffs.Mark.add(c, stacks, true);
+						TalentEffects.chain(enemy, c); //임시 (E단계: 표식이 옮겨 붙는 빛)
+					}
+				}
+			}
+		}
+	}
+
+	// =====================================================================
+	// 흘리기 각성: 흘린 공격의 적에게 반격 (Hero.defenseProc → BloomEffects.onHeroDefense)
+	// =====================================================================
+
+	static void parryCounter(Hero hero, Char enemy){
+		if (enemy == null || !enemy.isAlive() || !awake(hero, PARRY)) return;
+		int dmg = hero.damageRoll();
+		BloomRules.derivedDamage(PARRY, enemy, dmg);
+		TalentEffects.shadowStrike(hero, enemy); //임시 (E단계: 베기 궤적)
+	}
+
+	// =====================================================================
+	// 섬광 보법: 떨어진 적에게 근접 무기 스킬 (SwordSkill.perform)
+	// =====================================================================
+
+	//다가갈 칸 (적 바로 앞, 주인공과 일직선 위). 쓸 수 없으면 -1.
+	public static int flashStepCell(Hero hero, Char enemy){
+		int f = lvl(hero, FLASH_STEP);
+		if (f < 0) return -1;
+		int range = 1 + B2_FLASH_RANGE[f];
+		if (Dungeon.level.distance(hero.pos, enemy.pos) > range) return -1;
+		Ballistica path = new Ballistica(hero.pos, enemy.pos, Ballistica.PROJECTILE);
+		if (path.collisionPos != enemy.pos) return -1;
+		int idx = path.path.indexOf(enemy.pos);
+		if (idx < 2) return -1;
+		int cell = path.path.get(idx - 1);
+		if (!Dungeon.level.passable[cell] || Actor.findChar(cell) != null) return -1;
+		return cell;
+	}
+
+	public static void dash(Hero hero, int cell){
+		int from = hero.pos;
+		hero.sprite.interruptMotion();
+		hero.move(cell, false);
+		hero.sprite.place(cell);
+		Dungeon.level.occupyCell(hero);
+		Dungeon.observe();
+		TalentEffects.flashStep(hero, from); //임시 잔상 (E단계)
+	}
+}

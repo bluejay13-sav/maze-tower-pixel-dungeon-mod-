@@ -91,6 +91,13 @@ public class TalentEffects {
 		new Flare(6, 20).color(0xFF2222, true).show(enemy.sprite, 0.5f);
 	}
 
+	//섬광 보법: 떠난 칸에 빛 잔상 (임시, E단계에서 다듬는다)
+	public static void flashStep( Char hero, int from ){
+		if (!visible(hero)) return;
+		CellEmitter.get(from).burst(Speck.factory(Speck.LIGHT), 4);
+		Sample.INSTANCE.play(Assets.Sounds.MISS, 1f, 1.4f);
+	}
+
 	//생명탈취: 회복 입자
 	public static void lifeSteal( Char hero ){
 		if (!visible(hero)) return;

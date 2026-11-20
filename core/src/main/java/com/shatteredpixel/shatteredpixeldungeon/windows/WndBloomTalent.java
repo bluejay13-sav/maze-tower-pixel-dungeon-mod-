@@ -111,6 +111,8 @@ public class WndBloomTalent extends Window {
 								pane.celebrate(slotIndex);
 							}
 						}
+						//강화한 뒤에도 창을 닫지 않는다: 새 레벨로 같은 창을 다시 연다
+						WndBloomChoice.show(forOwned(slotIndex, pane));
 					}
 				});
 	}

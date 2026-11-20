@@ -306,6 +306,7 @@ public class BloomAttack {
 			//각성: 질풍 상태에서 처치하면 인접한 모든 적 휩쓸기 (파생)
 			if (galeActive && awake(hero, GALE) && BloomRules.trigger(GALE)){
 				int dmg = Math.round(lastHitDamage * B2_GALE_AWAKE_DMG);
+				BloomRules.debug("gale sweep " + dmg);
 				for (int n : PathFinder.NEIGHBOURS8){
 					Char c = Actor.findChar(hero.pos + n);
 					if (c != null && c != enemy && c.alignment == Char.Alignment.ENEMY){

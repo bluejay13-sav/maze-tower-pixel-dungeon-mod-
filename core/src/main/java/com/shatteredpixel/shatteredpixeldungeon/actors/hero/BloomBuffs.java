@@ -199,4 +199,14 @@ public class BloomBuffs {
 		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
 		@Override public String desc() { return Messages.get(this, "desc", dispTurns()); }
 	}
+
+	//집중 쿨타임
+	public static class FocusCooldown extends FlavourBuff {
+		{ type = buffType.NEUTRAL; }
+		@Override public int icon() { return BuffIndicator.FORESIGHT; }
+		@Override public void tintIcon(Image icon) { icon.hardlight(0.35f, 0.35f, 0.35f); }
+		@Override public float iconFadePercent() { return Math.max(0, (B2_FOCUS_COOLDOWN - visualcooldown()) / B2_FOCUS_COOLDOWN); }
+		@Override public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
+		@Override public String desc() { return Messages.get(this, "desc", dispTurns()); }
+	}
 }
