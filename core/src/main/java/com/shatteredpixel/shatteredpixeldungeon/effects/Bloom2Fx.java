@@ -259,26 +259,28 @@ public class Bloom2Fx {
 	//연쇄: 맞은 적에서 번진 적까지 옅은 입자가 지나간다 (눈에 덜 띄게)
 	public static void chain(Char from, Char to){
 		if (!seen(from) || !seen(to)) return;
-		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center());
+		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center(), CHAIN_DUST_COLORS); //하늘색이 섞인다
 	}
 
 	//표식이 옮겨 붙는 길 (연쇄와 같은 옅은 입자)
 	public static void markTransfer(Char from, Char to){
 		if (!seen(from) || !seen(to)) return;
-		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center());
+		pathDust(from.sprite.parent, from.sprite.center(), to.sprite.center(), DUST_COLORS);
 	}
 
 	// ===== 특성으로 다른 적에게 번지는 길: 회색·흰색·검정 입자 몇 개 =====
 
 	//입자 색 (흰색·밝은 회색·회색·검정)
 	private static final int[] DUST_COLORS = {0xFFFFFF, 0xC8C8C8, 0x8C8C8C, 0x202020};
+	//연쇄: 위 색에 하늘색 두 가지를 더한다
+	private static final int[] CHAIN_DUST_COLORS = {0xFFFFFF, 0xC8C8C8, 0x8C8C8C, 0x202020, 0x7FD4FF, 0xB8E8FF};
 	//거리 1칸(16px)마다 입자 수 (너무 많지 않게), 최소·최대
 	private static final float DUST_PER_TILE = 1.5f;
 	private static final int   DUST_MIN = 3, DUST_MAX = 7;
 	//출발점에서 도착점까지 입자가 차례로 나타나는 시간 (방향이 보이게)
 	private static final float DUST_TRAVEL = 0.14f;
 
-	public static void pathDust(Group parent, final PointF from, final PointF to){
+	public static void pathDust(Group parent, final PointF from, final PointF to, final int[] colors){
 		if (parent == null) return;
 		float dist = (float)Math.hypot(to.x - from.x, to.y - from.y);
 		final int count = Math.max(DUST_MIN, Math.min(DUST_MAX, Math.round(dist / DungeonTilemap.SIZE * DUST_PER_TILE)));
@@ -301,7 +303,7 @@ public class Bloom2Fx {
 							alpha(Math.max(0, left / lifespan) * 0.75f); //옅게 시작해서 사라진다
 						}
 					};
-					d.reset(x, y, DUST_COLORS[com.watabou.utils.Random.Int(DUST_COLORS.length)], 1f, com.watabou.utils.Random.Float(0.25f, 0.4f));
+					d.reset(x, y, colors[com.watabou.utils.Random.Int(colors.length)], 1f, com.watabou.utils.Random.Float(0.25f, 0.4f));
 					d.speed.set(com.watabou.utils.Random.Float(-4, 4), com.watabou.utils.Random.Float(-6, -2)); //살짝 떠오르며 사라진다
 					add(d);
 				}
