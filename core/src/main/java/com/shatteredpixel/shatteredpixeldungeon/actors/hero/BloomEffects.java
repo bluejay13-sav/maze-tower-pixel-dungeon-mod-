@@ -145,6 +145,7 @@ public class BloomEffects {
 	public static void beginStaffSkill(Hero hero, Object wand, Char target, int cost){
 		beginSkill(hero, target, cost);
 		staffSkillWand = wand;
+		BloomSkill.markRanged(); //지팡이 스킬은 원거리 스킬 (섬광 보법)
 	}
 
 	//쏘기가 끝났을 때 (Wand.wandUsed)

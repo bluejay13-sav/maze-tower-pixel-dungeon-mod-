@@ -17,6 +17,7 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SnowParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfBlastWave;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
@@ -52,6 +53,7 @@ public class BloomSkill {
 		int burstStacks = 0;
 		boolean burstTransferred = false;
 		boolean impactDone = false;
+		boolean ranged = false;                       //원거리 스킬 (섬광 보법)
 	}
 
 	static State state = null;
@@ -74,6 +76,11 @@ public class BloomSkill {
 
 	static void onSkillEnd(){
 		state = null;
+	}
+
+	//원거리 스킬로 시작했다 (활 조준 사격: SwordSkill.perform, 지팡이 스킬: BloomEffects.beginStaffSkill)
+	public static void markRanged(){
+		if (state != null) state.ranged = true;
 	}
 
 	// =====================================================================
@@ -100,28 +107,33 @@ public class BloomSkill {
 		int oc = lvl(hero, OVERCHARGE);
 		if (s.overcharge && oc >= 0) bonus += B2_OVERCHARGE_DMG[oc];
 
-		//표식 폭발: 대상의 표식을 모두 터뜨린다 (스킬 한 번에 한 번)
+		//표식 폭발: 스킬 타격마다 표식 1개를 터뜨린다. 터질 때마다 1스택씩 사라진다.
+		//(여러 번 때리는 스킬은 타격마다 하나씩, 스킬 한 번에 최대 B2_MULTIHIT_SKILL_CAP개)
 		int mb = lvl(hero, MARK_BURST);
 		BloomBuffs.Mark mark = enemy.buff(BloomBuffs.Mark.class);
-		if (mb >= 0 && mark != null && mark.stacks > 0 && BloomRules.trigger(MARK_BURST)){
-			bonus += B2_MARK_BURST_PER[mb] * mark.stacks;
-			s.burstTarget = enemy.id();
-			s.burstStacks = mark.stacks;
+		if (mb >= 0 && mark != null && mark.stacks > 0 && BloomRules.triggerOnHit(MARK_BURST)){
+			bonus += B2_MARK_BURST_PER[mb];
+			if (s.burstTarget != enemy.id()){
+				s.burstTarget = enemy.id();
+				s.burstStacks = 0;
+			}
+			s.burstStacks++;
 			s.burstTransferred = mark.transferred;
-			if (enemy.sprite != null) enemy.sprite.showStatus(0xE070FF, "x" + mark.stacks); //임시 (E단계: 표식 터짐)
-			mark.detach();
+			mark.stacks--;
+			if (enemy.sprite != null) enemy.sprite.showStatus(0xE070FF, Messages.get(BloomBuffs.class, "mark_n", mark.stacks)); //임시 (E단계: 표식 터짐)
+			if (mark.stacks <= 0) mark.detach();
 		}
 
-		//섬광 보법: 근거리 무기 스킬 피해
+		//섬광 보법: 원거리 스킬 피해
 		int fl = lvl(hero, FLASH_STEP);
-		if (fl >= 0 && meleeWeaponSkill()) bonus += B2_FLASH_DMG[fl];
+		if (fl >= 0 && rangedSkill()) bonus += B2_FLASH_DMG[fl];
 
 		return bonus;
 	}
 
-	//검·단검 스킬 (활 조준 사격, 지팡이, 필살기 제외)
-	static boolean meleeWeaponSkill(){
-		return SwordSkill.active != null && !SwordSkill.active.ranged;
+	//원거리 스킬 (활 조준 사격, 지팡이 스킬). 검·단검 스킬과 필살기는 아니다.
+	static boolean rangedSkill(){
+		return (SwordSkill.active != null && SwordSkill.active.ranged) || BloomEffects.staffSkillWand != null;
 	}
 
 	//방어 무시 비율 (집중 각성)
@@ -189,7 +201,7 @@ public class BloomSkill {
 		}
 
 		//섬광 보법 각성: 지정한 대상 1턴 기절 (스킬 한 번에 한 번)
-		if (awake(hero, FLASH_STEP) && lvl(hero, FLASH_STEP) >= 0 && meleeWeaponSkill()
+		if (awake(hero, FLASH_STEP) && lvl(hero, FLASH_STEP) >= 0 && rangedSkill()
 				&& BloomEffects.skillUse != null && BloomEffects.skillUse.target == enemy
 				&& BloomRules.trigger(FLASH_STEP)){
 			BloomAttack.afterHit(new Runnable() {
@@ -280,6 +292,13 @@ public class BloomSkill {
 			int amt = BloomRules.refund(hero, Math.round(u.manaSpent * B2_EXECUTE_REFUND));
 			if (amt > 0) TalentEffects.manaRefund(hero, u.target, amt); //푸른 마탄이 주인공에게
 		}
+
+		//섬광 보법: 원거리 스킬을 쓴 뒤 대상 반대쪽으로 1~2칸 물러난다 (물러날 수 있을 때만)
+		int fl = lvl(hero, FLASH_STEP);
+		if (s != null && s.ranged && fl >= 0 && u.target != null && hero.isAlive()){
+			int cell = retreatCell(hero, u.target.pos, B2_FLASH_RANGE[fl]);
+			if (cell != hero.pos) dash(hero, cell);
+		}
 	}
 
 	// =====================================================================
@@ -305,12 +324,14 @@ public class BloomSkill {
 			int stacks = 0;
 			boolean transferred = false;
 			BloomBuffs.Mark mark = enemy.buff(BloomBuffs.Mark.class);
+			//남은 표식 + 이번 스킬로 터뜨린 표식 (터지기 전 개수)
 			if (mark != null){
 				stacks = mark.stacks;
 				transferred = mark.transferred;
-			} else if (s.burstTarget == enemy.id()){
-				stacks = s.burstStacks;
-				transferred = s.burstTransferred;
+			}
+			if (s.burstTarget == enemy.id()){
+				stacks += s.burstStacks;
+				transferred = transferred || s.burstTransferred;
 			}
 			if (stacks > 0 && !transferred){
 				for (Char c : Actor.chars()){
@@ -336,21 +357,23 @@ public class BloomSkill {
 	}
 
 	// =====================================================================
-	// 섬광 보법: 떨어진 적에게 근접 무기 스킬 (SwordSkill.perform)
+	// 섬광 보법: 원거리 스킬 뒤 물러나기
 	// =====================================================================
 
-	//다가갈 칸 (적 바로 앞, 주인공과 일직선 위). 쓸 수 없으면 -1.
-	public static int flashStepCell(Hero hero, Char enemy){
-		int f = lvl(hero, FLASH_STEP);
-		if (f < 0) return -1;
-		int range = 1 + B2_FLASH_RANGE[f];
-		if (Dungeon.level.distance(hero.pos, enemy.pos) > range) return -1;
-		Ballistica path = new Ballistica(hero.pos, enemy.pos, Ballistica.PROJECTILE);
-		if (path.collisionPos != enemy.pos) return -1;
-		int idx = path.path.indexOf(enemy.pos);
-		if (idx < 2) return -1;
-		int cell = path.path.get(idx - 1);
-		if (!Dungeon.level.passable[cell] || Actor.findChar(cell) != null) return -1;
+	//대상 반대쪽으로 최대 n칸. 막히면(벽·적·낭떠러지·함정 등) 그 앞에서 멈춘다. 못 움직이면 지금 칸.
+	static int retreatCell(Hero hero, int from, int n){
+		int w = Dungeon.level.width();
+		int dx = Integer.signum(hero.pos % w - from % w);
+		int dy = Integer.signum(hero.pos / w - from / w);
+		if (dx == 0 && dy == 0) return hero.pos;
+		int cell = hero.pos;
+		for (int i = 0; i < n; i++){
+			int x = cell % w + dx, y = cell / w + dy;
+			if (x < 0 || y < 0 || x >= w || y >= Dungeon.level.height()) break;
+			int next = x + y * w;
+			if (!Dungeon.level.passable[next] || Dungeon.level.avoid[next] || Actor.findChar(next) != null) break;
+			cell = next;
+		}
 		return cell;
 	}
 

@@ -12,7 +12,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomSkill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.GladiatorEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
@@ -167,7 +166,6 @@ public class SwordSkill {
 
 	private static void perform(final Hero hero, final MeleeWeapon wep, final SwordSkill skill, int target){
 		final Char enemy = Actor.findChar(target);
-		int mazeDash = -1; //Maze Tower: 2차 특성 섬광 보법 - 떨어진 적 앞으로 순식간에 다가갈 칸
 		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {
 			GLog.w(Messages.get(SwordSkill.class, "no_target"));
 			return;
@@ -192,11 +190,8 @@ public class SwordSkill {
 			}
 		//나머지 스킬은 인접한 단일 대상
 		} else if (!Dungeon.level.adjacent(hero.pos, enemy.pos)){
-			mazeDash = BloomSkill.flashStepCell(hero, enemy); //섬광 보법: 사거리 +1~2칸
-			if (mazeDash == -1){
-				GLog.w(Messages.get(SwordSkill.class, "not_adjacent"));
-				return;
-			}
+			GLog.w(Messages.get(SwordSkill.class, "not_adjacent"));
+			return;
 		}
 		final int cost = manaCost(hero);
 		if (Mana.get(hero).cur() < cost){
@@ -204,10 +199,10 @@ public class SwordSkill {
 			ActionIndicator.shake(); //마나 부족: 스킬 버튼 흔들림
 			return;
 		}
-		if (mazeDash != -1) BloomSkill.dash(hero, mazeDash); //섬광 보법: 적 앞 칸으로
 		//급소 찌르기: 기습 상태인지는 휘두르기 전에 본다
 		final boolean surprise = skill.surpriseDmg > 0 && enemy instanceof Mob && ((Mob)enemy).surprisedBy(hero, true);
 		BloomEffects.beginSkill(hero, enemy, cost); //마나가 가득 찼는지, 집중 상태 기록
+		if (skill.ranged) com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomSkill.markRanged(); //Maze Tower: 2차 특성 섬광 보법 (원거리 스킬)
 		Mana.get(hero).spend(cost);
 		SproutEffects.onSkillUsed(hero); //1차 특성: 투지
 		GladiatorEffects.onSkillStart(); //3차 검투사: 기술 연계용 적중 기록

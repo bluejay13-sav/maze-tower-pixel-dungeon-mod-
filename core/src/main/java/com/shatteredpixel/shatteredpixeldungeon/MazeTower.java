@@ -258,7 +258,7 @@ public class MazeTower {
 	//흘리기
 	public static final float[] B2_PARRY_REDUCE        = {0.15f, 0.25f, 0.40f};
 	public static final float   B2_PARRY_AWAKE_DMG     = 1.00f; //각성: 반격 (파생)
-	//섬광 보법: 근거리 무기 스킬 사거리·피해
+	//섬광 보법: 원거리 스킬(활 조준 사격·지팡이 스킬) 피해, 쓴 뒤 물러나는 칸
 	public static final int[]   B2_FLASH_RANGE         = {1, 1, 2};
 	public static final float[] B2_FLASH_DMG           = {0.10f, 0.20f, 0.20f};
 	public static final float   B2_FLASH_AWAKE_STUN    = 1f;
