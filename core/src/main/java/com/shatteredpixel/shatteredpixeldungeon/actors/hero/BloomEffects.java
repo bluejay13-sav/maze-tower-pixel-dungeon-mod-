@@ -68,6 +68,12 @@ public class BloomEffects {
 		return Math.max(0, base);
 	}
 
+	//평타 한 번 시작 (Hero.onAttackComplete): 새 "한 행동"
+	public static void beginNormal(Hero hero){
+		BloomRules.beginNormal();
+		BloomAttack.onActionStart(hero, false);
+	}
+
 	//마나를 쓰기 직전에 호출
 	public static SkillUse beginSkill(Hero hero, Char target, int cost){
 		SkillUse u = new SkillUse();
@@ -76,6 +82,7 @@ public class BloomEffects {
 		u.manaSpent = cost;
 		u.wasFullMana = m.isFull();
 		BloomRules.beginSkill(cost); //스킬 한 번이 새 "한 행동"
+		BloomAttack.onActionStart(hero, true); //돌진
 		u.focusPrimed = m.focusReady;
 		m.focusReady = false;
 		skillUse = u;
@@ -84,6 +91,7 @@ public class BloomEffects {
 
 	//스킬 타격이 모두 끝난 뒤 호출
 	public static void endSkill(Hero hero){
+		BloomAttack.flushPostHit(); //밀침·기절 등 타격 뒤 효과
 		SkillUse u = skillUse;
 		skillUse = null;
 		if (u == null) return;
@@ -113,14 +121,16 @@ public class BloomEffects {
 	public static float accuracyMulti(Hero hero, Char target){
 		if (isSkill()) return 1f;
 		float acc = 1f;
+		acc *= BloomAttack.accuracyMulti(hero); //확정타
 		FlowTracker flow = hero.buff(FlowTracker.class);
 		if (flow != null && lvl(hero, FLOW) >= 2) acc *= 1f + B2_FLOW_ACC;
 		return acc;
 	}
 
-	//스킬 방어 무시 (집중 각성은 C·D단계)
-	public static boolean skillIgnoresDefense(){
-		return false;
+	//주인공 공격의 방어력 무시 (Char.attack). 돌진 각성·마나 흡수 각성 (집중 각성은 스킬 단계)
+	public static int armorAfterIgnore(Hero hero, Char enemy, int dr){
+		float ignore = BloomAttack.armorIgnore(hero, isSkill());
+		return ignore > 0 ? Math.round(dr * (1f - ignore)) : dr;
 	}
 
 	// =====================================================================
@@ -159,6 +169,13 @@ public class BloomEffects {
 		return processHit(hero, target, dmg, true);
 	}
 
+	//주인공이 준 피해를 받을 때 (Char.damage): 표식, 불꽃 칼날 각성
+	public static int incomingDamage(Char target, int dmg, Object src){
+		if (dmg <= 0 || target == Dungeon.hero || !BloomRules.isHeroKill(src)) return dmg;
+		float m = BloomAttack.incomingMulti(target, src);
+		return m == 1f ? dmg : Math.round(dmg * m);
+	}
+
 	//평타·스킬 적중 한 번 처리
 	private static int processHit(Hero hero, Char enemy, int damage, boolean skill){
 		if (enemy == null || enemy == hero) return damage;
@@ -168,8 +185,11 @@ public class BloomEffects {
 		//넘치는 힘: 마나가 가득 찬 동안 모든 공격
 		int o = lvl(hero, OVERFLOW);
 		if (o >= 0 && Mana.get(hero).isFull()) bonus += B2_OVERFLOW_DMG[o];
+		//돌진 (평타·스킬)
+		bonus += BloomAttack.anyHitBonus(hero, enemy);
 
 		if (!skill){
+			bonus += BloomAttack.normalHitBonus(hero, enemy); //확정타·강타
 			//흐름 (임시)
 			FlowTracker flow = hero.buff(FlowTracker.class);
 			int f = lvl(hero, FLOW);
@@ -195,17 +215,11 @@ public class BloomEffects {
 
 		//--- 적중 시 효과 ---
 		if (!skill){
-			//마나 흡수
-			int md = lvl(hero, MANA_DRAIN);
-			if (md >= 0 && BloomRules.triggerOnHit(MANA_DRAIN)) BloomRules.gainMana(hero, B2_MANA_DRAIN[md]);
+			//기본공격 전용 특성 (표식·불꽃 칼날·물보라·마나 흡수)
+			BloomAttack.onNormalHit(hero, enemy, result);
 			//잔향
 			int ec = lvl(hero, ECHO);
 			if (ec >= 0 && hero.buff(EchoTracker.class) != null && BloomRules.triggerOnHit(ECHO)) BloomRules.gainMana(hero, B2_ECHO_MANA[ec]);
-			//불꽃 칼날
-			int fb = lvl(hero, FLAME_BLADE);
-			if (fb >= 0 && Random.Float() < B2_FLAME_CHANCE[fb] && BloomRules.triggerOnHit(FLAME_BLADE)){
-				ignite(hero, enemy, B2_FLAME_TURNS);
-			}
 		} else {
 			//서리 베기
 			int fs = lvl(hero, FROST_SLASH);
@@ -248,7 +262,7 @@ public class BloomEffects {
 
 	//추가 평타로 이어서 처리하면 true (그때는 끝난 뒤 done을 부른다). false면 부른 쪽이 바로 done을 처리한다.
 	public static boolean afterNormalAttack(final Hero hero, final Char enemy, boolean hit, final Runnable done){
-		return false;
+		return BloomAttack.afterNormalAttack(hero, enemy, hit, done);
 	}
 
 	// =====================================================================
@@ -258,6 +272,7 @@ public class BloomEffects {
 	//byDerived: 파생 피해로 죽었는지. 처치 특성(기세·질풍·결투·기습·물보라·표식 등)은 C단계에서 넣는다.
 	public static void onEnemyKilled(Hero hero, Char enemy, boolean byDerived){
 		BloomRules.debug("kill " + enemy.name() + (byDerived ? " (derived)" : ""));
+		BloomAttack.onKill(hero, enemy, byDerived);
 	}
 
 	// =====================================================================

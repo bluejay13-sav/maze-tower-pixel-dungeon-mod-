@@ -91,6 +91,7 @@ public class Mana extends Buff implements ActionIndicator.Action {
 		//명상: 대기 시 마나 회복 배율
 		m.gain(Math.round(MazeTower.MANA_PER_WAIT_TURN * turns * BloomEffects.waitManaMulti(hero)));
 		m.focusReady = true;
+		Buff.detach(hero, BloomBuffs.ChargeReady.class); //돌진: 제자리에서 기다리면 이동한 기세가 사라진다
 	}
 
 	// ===== 스킬 버튼 (화면 오른쪽 아래 행동 버튼) =====

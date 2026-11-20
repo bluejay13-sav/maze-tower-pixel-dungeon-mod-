@@ -24,6 +24,11 @@ public class Wet extends Buff {
 
 	private int left = MazeTower.WET_AFTER_TURNS;
 
+	//Maze Tower: 2차 특성 물보라 - 물 밖에서 남은 턴을 늘린다
+	public void setLeft( int turns ){
+		left = Math.max(left, turns);
+	}
+
 	@Override
 	public boolean attachTo( com.shatteredpixel.shatteredpixeldungeon.actors.Char target ) {
 		//빙결 상태에서는 젖지 않는다 (물 위에서 얼어 있어도 화염으로 해빙이 일어나게)

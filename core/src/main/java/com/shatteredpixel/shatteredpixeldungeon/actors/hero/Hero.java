@@ -2414,9 +2414,11 @@ public class Hero extends Char {
 
 	@Override
 	public void move(int step, boolean travelling) {
+		int mazeFrom = pos;
 		boolean wasHighGrass = Dungeon.level.map[step] == Terrain.HIGH_GRASS;
 
 		super.move( step, travelling);
+		if (travelling && pos != mazeFrom) BloomAttack.onMove(this); //Maze Tower: 2차 특성 돌진
 		
 		if (!flying && travelling) {
 			if (Dungeon.level.water[pos]) {
@@ -2446,7 +2448,7 @@ public class Hero extends Char {
 			return;
 		}
 		
-		BloomRules.beginNormal(); //Maze Tower: 2차 특성 - 평타 한 번이 새 "한 행동"
+		BloomEffects.beginNormal(this); //Maze Tower: 2차 특성 - 평타 한 번이 새 "한 행동"
 		AttackIndicator.target(attackTarget);
 		boolean wasEnemy = attackTarget.alignment == Alignment.ENEMY
 				|| (attackTarget instanceof Mimic && attackTarget.alignment == Alignment.NEUTRAL);
@@ -2473,7 +2475,7 @@ public class Hero extends Char {
 	//원작 onAttackComplete의 뒷부분 (Maze Tower: 그림자검 텀 때문에 따로 뺐다)
 	private void finishAttackComplete( Char target, boolean hit, boolean wasEnemy ){
 		Invisibility.dispel();
-		spend( attackDelay() );
+		spend( attackDelay() * BloomAttack.attackDelayMulti(this) ); //Maze Tower: 질풍
 
 		if (hit && subClass == HeroSubClass.GLADIATOR && wasEnemy){
 			Buff.affect( this, Combo.class ).hit(target);

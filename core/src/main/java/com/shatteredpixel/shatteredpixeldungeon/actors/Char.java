@@ -412,9 +412,10 @@ public abstract class Char extends Actor {
 
 				//Maze Tower: 방어 무시 스킬 (룬 블레이드 무형검)
 				dr = GladiatorEffects.reduceDefense(dr); //Maze Tower: 향상된 콤보 3레벨 (분노 폭발)
-				if (SwordSkill.ignoringDefense() || BloomEffects.skillIgnoresDefense()){ //집중 2레벨 포함
+				if (SwordSkill.ignoringDefense()){
 					dr = 0;
 				}
+				dr = BloomEffects.armorAfterIgnore(h, enemy, dr); //Maze Tower: 2차 특성 방어력 일부 무시 (돌진·마나 흡수·집중 각성)
 			}
 
 			//we use a float here briefly so that we don't have to constantly round while
@@ -872,6 +873,8 @@ public abstract class Char extends Actor {
 		ElementalReactions.onDamage(this, dmg, src);
 		//Maze Tower: 지팡이 스킬(합성된 마법봉) 피해에 2차 스킬 특성 적용
 		dmg = BloomEffects.onStaffSkillDamage(this, dmg, src);
+		//Maze Tower: 2차 특성 - 주인공이 준 피해 배율 (표식, 불꽃 칼날 각성)
+		dmg = BloomEffects.incomingDamage(this, dmg, src);
 
 		if (!(src instanceof LifeLink || src instanceof Hunger) && buff(LifeLink.class) != null){
 			HashSet<LifeLink> links = buffs(LifeLink.class);
