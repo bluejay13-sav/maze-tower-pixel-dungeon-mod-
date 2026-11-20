@@ -267,7 +267,8 @@ public class CityBossLevel extends Level {
 	public static final int ROOM_SIZE = 13;
 	public static final int ROOM_X = 1, ROOM_Y = 24;
 	public static final int MAZE_TOP_DOOR = 7 + 23*15;
-	public static final int MAZE_THRONE = (ROOM_X + 6) + (ROOM_Y + 6)*15;
+	public static final int MAZE_THRONE = (ROOM_X + 6) + (ROOM_Y + 6)*15;            //여제 옥좌 (6,6)
+	public static final int MAZE_WRAITH_THRONE = (ROOM_X + 6) + (ROOM_Y + 5)*15;     //망령 왕 왕좌 (5,6): 가운데 기둥 바로 위
 
 	//여제 방: 가운데 11×11 + 네 변 가운데 5칸을 1칸씩 확장 (141칸), 한 칸짜리 기둥 8개
 	public static final int[][] EMPRESS_PILLARS = {
@@ -275,7 +276,8 @@ public class CityBossLevel extends Level {
 	};
 	//망령 왕 방: 13×13에서 귀퉁이를 깎은 모양 (153칸), 한 칸짜리 기둥 8개
 	public static final int[][] WRAITH_PILLARS = {
-			{3,3},{3,9},{9,3},{9,9}, {2,6},{10,6},{6,2},{6,10}
+			{3,3},{3,9},{9,3},{9,9}, {2,6},{10,6},{6,2},{6,10},
+			{6,6} //(결정) 방 정가운데에도 한 칸짜리 기둥 (왕좌는 그 바로 위 (5,6))
 	};
 
 	//(행, 열)이 방 안인지 (기둥 칸도 방 안으로 친다)
@@ -352,7 +354,7 @@ public class CityBossLevel extends Level {
 	}
 
 	public int mazeThrone(){
-		return MAZE_THRONE;
+		return mazeEmpressRoom ? MAZE_THRONE : MAZE_WRAITH_THRONE;
 	}
 
 	private void buildMazeRoom(){
@@ -539,7 +541,7 @@ public class CityBossLevel extends Level {
 			boss = mazeEmpressRoom ? new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MazeEmpress()
 					: new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing();
 			boss.state = boss.HUNTING;
-			boss.pos = MAZE_THRONE;
+			boss.pos = mazeThrone();
 			GameScene.add( boss );
 		} else {
 			boss = new DwarfKing();

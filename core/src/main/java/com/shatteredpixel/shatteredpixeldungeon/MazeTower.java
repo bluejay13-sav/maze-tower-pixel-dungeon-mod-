@@ -537,7 +537,9 @@ public class MazeTower {
 	public static final int   WK_LAMP_HERO_GAP  = 2;     //등불은 처음 생길 때 주인공 둘레 이 칸 안에는 생기지 않는다
 	public static final int   WK_LAMP_GAP       = 4;     //등불끼리 이 칸 수 이상 떨어진다 (서로 3칸 안에는 생기지 않음)
 	public static final int   WK_LAMP_TURNS     = 25;    //(결정, 바뀜 50→35→25) 등불이 켜져 있는 턴
-	public static final float WK_LAMP_RANGED_MULTI = 0.75f; //등불이 켜져 있는 동안 왕의 원거리 공격(영혼 화살) 피해 (-25%)
+	public static final float WK_LAMP_RANGED_MULTI = 0.65f; //(결정, 바뀜 -25%→-35%) 등불이 켜져 있는 동안 왕의 원거리 공격(영혼 화살) 피해
+	public static final float WK_COUNTER_MIN    = 0.60f; //어둠 속 푸른 눈을 쳐서 숨은 왕에게 넘어가는 피해 비율 (60~70%, 등불을 밝힐 이유)
+	public static final float WK_COUNTER_MAX    = 0.70f;
 	public static final float WK_LAMP_STUN      = 3f;    //등불이 켜지면 왕 기절
 	public static final int   WK_ZOLT_INTERVAL  = 15;    //졸트라크 쿨타임
 	public static final int   WK_ZOLT_CHARGE    = 1;     //(결정, 바뀜 2→1) 졸트라크 기 모으기 턴

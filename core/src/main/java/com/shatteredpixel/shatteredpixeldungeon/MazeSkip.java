@@ -81,7 +81,9 @@ public class MazeSkip {
 			if (h.type == Heap.Type.FOR_SALE || h.type == Heap.Type.LOCKED_CHEST || h.type == Heap.Type.CRYSTAL_CHEST) continue;
 			ArrayList<Item> keep = new ArrayList<>();
 			for (Item item : h.items){
-				if (item instanceof Key || item instanceof Dewdrop || item instanceof BossTorch){
+				//(결정) 시체 먼지(원작 마법사 퀘스트 물건)도 가져오지 않는다
+				if (item instanceof Key || item instanceof Dewdrop || item instanceof BossTorch
+						|| item instanceof com.shatteredpixel.shatteredpixeldungeon.items.quest.CorpseDust){
 					keep.add(item);
 				} else if (item instanceof Gold){
 					Dungeon.gold += item.quantity();

@@ -524,11 +524,24 @@ public class WraithKing extends Mob {
 		ArrayList<Integer> lanes = new ArrayList<>();
 		ArrayList<Integer> cells = zoltCells(lanes);
 		boolean seen = false;
+		boolean diag = DX[zoltDir] != 0 && DY[zoltDir] != 0;
 		for (int i = 0; i < cells.size(); i++){
 			int c = cells.get(i);
-			//어둠 속에서도 광선은 보인다
-			beamVisual(c, lanes.get(i));
+			//어둠 속에서도 광선은 보인다. 가로·세로는 칸마다 이어 붙이고, 대각선은 아래에서 줄마다 한 번에 그린다
+			if (!diag) beamVisual(c, lanes.get(i));
 			if (Dungeon.level.heroFOV[c]) seen = true;
+		}
+		if (diag){
+			//(결정) 대각선은 칸마다 돌린 조각을 붙이면 이음매가 깨져 보여서, 줄마다 처음 칸부터 끝 칸까지 하나로 길게 늘여 그린다
+			for (int k = -2; k <= 2; k++){
+				int first = -1, last = -1;
+				for (int i = 0; i < cells.size(); i++){
+					if (lanes.get(i) != k) continue;
+					if (first == -1) first = cells.get(i);
+					last = cells.get(i);
+				}
+				if (first != -1) diagBeamVisual(first, last, k);
+			}
 		}
 		for (int c : cells){
 			Char ch = Actor.findChar(c);
@@ -544,6 +557,34 @@ public class WraithKing extends Mob {
 		}
 		if (seen) PixelScene.shake(2, 0.4f);
 		Sample.INSTANCE.play(Assets.Sounds.RAY);
+	}
+
+	//대각선 한 줄을 처음 칸 ~ 끝 칸까지 하나로 늘여 그린다 (양 끝을 반 칸씩 더 늘려 칸 끝까지 닿게)
+	private void diagBeamVisual( int first, int last, int lane ){
+		PointF a = DungeonTilemap.tileCenterToWorld(first);
+		PointF b = DungeonTilemap.tileCenterToWorld(last);
+		float dx = DX[zoltDir], dy = DY[zoltDir];
+		float half = DungeonTilemap.SIZE / 2f;
+		a = new PointF(a.x - dx * half, a.y - dy * half);
+		b = new PointF(b.x + dx * half, b.y + dy * half);
+		float len = (float)Math.sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
+		MovieClip c = BossEffects.clip(edgeLane(lane) ? BossEffects.Fx.WK_ZOLT_EDGE : BossEffects.Fx.WK_ZOLT_CENTER, 15, false);
+		//그림 왼쪽 가운데를 a에 두고 광선 방향으로 돌려 길이만큼 늘인다
+		c.origin.set(0, 8);
+		c.x = a.x;
+		c.y = a.y - 8;
+		float angle = zoltDir * 45f;
+		c.angle = angle;
+		c.scale.x = len / 16f;
+		//나란한 줄 사이가 비지 않게 두께를 조금 늘린다 (대각선 줄 간격 약 11.3픽셀)
+		c.scale.y = 0.8f;
+		if (edgeLane(lane)){
+			double r = Math.toRadians(angle);
+			int[] o = laneOffset(lane);
+			double dot = o[0] * Math.sin(r) + o[1] * -Math.cos(r);
+			if (dot < 0) c.scale.y = -0.8f;
+		}
+		GameScene.effect(c);
 	}
 
 	//가장 바깥 줄인지 (가로·세로는 ±1, 넓힌 대각선은 ±2). 안쪽 줄은 가운데 줄 그림을 쓴다
@@ -634,7 +675,8 @@ public class WraithKing extends Mob {
 	public void counterHit( int dmg, Object src ){
 		if (ambushCell == -1 || countered) return;
 		countered = true;
-		damage(dmg, src);
+		//(결정) 눈을 쳐서 넘어가는 피해는 원래의 60~70%만 (등불을 밝혀 직접 치는 쪽이 이득)
+		damage(Math.max(1, Math.round(dmg * Random.Float(MazeTower.WK_COUNTER_MIN, MazeTower.WK_COUNTER_MAX))), src);
 	}
 
 	private boolean actAmbush(){
