@@ -282,7 +282,7 @@ public class BloomTalentsPane extends ScrollPane {
 			BloomTree.Slot slot = index < tree.slots.size() ? tree.slots.get(index) : null;
 
 			if (slot != null && slot.isChosen() && slot.awakened){
-				awakeGlow = new ColorBlock(1, 1, 0xFFFF8FD0);
+				awakeGlow = new ColorBlock(1, 1, 0xFFFF5FC0); //화사한 분홍
 				add(awakeGlow);
 			}
 
@@ -371,9 +371,9 @@ public class BloomTalentsPane extends ScrollPane {
 			if (awakeGlow != null){
 				glowTime += Game.elapsed;
 				float b = 0.5f + 0.5f * (float)Math.sin(glowTime * 2.2f);
-				awakeGlow.alpha(0.1f + 0.25f * b);
+				awakeGlow.alpha(0.3f + 0.35f * b);
 				if (appearTime <= 0 && flashTime <= 0){
-					bg.hardlight(1f, 0.9f - 0.1f * b, 0.96f - 0.04f * b);
+					bg.hardlight(1f, 0.78f - 0.14f * b, 0.9f - 0.06f * b);
 				}
 			}
 
