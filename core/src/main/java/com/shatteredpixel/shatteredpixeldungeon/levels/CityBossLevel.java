@@ -469,6 +469,27 @@ public class CityBossLevel extends Level {
 		}
 
 		super.occupyCell( ch );
+
+		//Maze Tower: 마탑 보스방 (명세 22번)
+		if (mazeRoom){
+			if (ch == Dungeon.hero){
+				int prev = lastHeroPos;
+				if (prev != -1 && prev != ch.pos && adjacent(prev, ch.pos)) lastHeroStep = ch.pos - prev;
+				lastHeroPos = ch.pos;
+				com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.noise(ch.pos); //근위병은 소리를 따라간다
+				if (prev != -1 && prev != ch.pos) com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ElementTile.onHeroLeft(prev); //밟은 원소 타일은 사라진다
+				com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ElementTile.onHeroEnter(ch); //원소 상태로 반대 원소 타일에 들어서면 반응
+			}
+			com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.onOccupy(ch); //영혼 구슬
+		}
+	}
+
+	//Maze Tower: 주인공이 마지막으로 움직인 방향 (망령 왕 기습: 주인공 뒤 칸)
+	private int lastHeroPos = -1;
+	private int lastHeroStep = 0;
+
+	public int lastHeroStep(){
+		return lastHeroStep;
 	}
 
 	@Override
@@ -481,11 +502,21 @@ public class CityBossLevel extends Level {
 		Mob.holdAllies(this, doorPos);
 		Mob.restoreAllies(this, Dungeon.hero.pos, doorPos);
 
-		DwarfKing boss = new DwarfKing();
-		boss.state = boss.WANDERING;
-		boss.pos = pointToCell(arena.center());
-		GameScene.add( boss );
-		boss.beckon(Dungeon.hero.pos);
+		Mob boss;
+		if (mazeRoom){
+			//Maze Tower: 마탑 20층 보스 (망령 왕 / 마도시의 여제), 옥좌·왕좌 칸에
+			boss = mazeEmpressRoom ? new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MazeEmpress()
+					: new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing();
+			boss.state = boss.HUNTING;
+			boss.pos = MAZE_THRONE;
+			GameScene.add( boss );
+		} else {
+			boss = new DwarfKing();
+			boss.state = boss.WANDERING;
+			boss.pos = pointToCell(arena.center());
+			GameScene.add( boss );
+			boss.beckon(Dungeon.hero.pos);
+		}
 
 		if (heroFOV[boss.pos]) {
 			boss.notice();

@@ -510,6 +510,79 @@ public class MazeTower {
 
 	public static final int   TORCH_FIRE            = 4;   //횃불: 떨어진 자리에 붙는 불의 양
 
+	// ===== 20층 보스 (명세 22번). 정해지지 않은 수치는 원작 드워프 왕(체력 300, 근접 15~25)을 기준으로 잡은 임시값 =====
+	public static final int   B20_HP            = 300;   //체력 (원작 드워프 왕과 같음)
+	public static final int   B20_HP_STRONG     = 450;   //도전 "더 강한 보스"
+	public static final int   B20_EXP           = 40;
+	public static final int   B20_DEF           = 22;    //회피
+	public static final int   B20_ACC           = 26;    //명중
+	public static final int   B20_DR            = 10;    //방어 (0~10)
+	public static final int   B20_DMG_MIN       = 15;    //망령 왕 근접 피해
+	public static final int   B20_DMG_MAX       = 25;
+
+	//망령 왕
+	public static final float WK_PHASE2_HP      = 0.70f; //체력이 이 아래면 2단계 (어둠)
+	public static final float WK_PHASE3_HP      = 0.25f; //체력이 이 아래면 3단계 (깨진 왕관)
+	public static final int   WK_ORB_INTERVAL   = 4;     //1단계: 이 턴마다 영혼 구슬
+	public static final int   WK_ORB_COUNT      = 2;     //한 번에 떨어지는 구슬 수
+	public static final float WK_ORB_HASTE      = 2f;    //주인공이 구슬을 먹으면 신속 (갱신만, 더하지 않음)
+	public static final float WK_SOUL_ATK       = 0.05f; //영혼 1개당 공격력
+	public static final int   WK_SOUL_GUARDS    = 6;     //영혼이 이만큼 이상이면 어두워질 때 근위병 3마리
+	public static final int   WK_SOUL_NOWARN    = 12;    //영혼이 이만큼 이상이면 졸트라크 경고 없음
+	public static final int   WK_SOUL_RAGE      = 18;    //영혼이 이만큼 이상이면 공격력 추가
+	public static final float WK_RAGE_ATK       = 1.0f;  //위의 추가 공격력 (+100%)
+	public static final int   WK_DARK_VIEW      = 1;     //어둠 속 주인공 시야
+	public static final int   WK_LAMPS          = 3;     //기억의 등불 수
+	public static final int   WK_LAMP_TURNS     = 50;    //등불이 켜져 있는 턴
+	public static final float WK_LAMP_STUN      = 3f;    //등불이 켜지면 왕 기절
+	public static final int   WK_ZOLT_INTERVAL  = 15;    //졸트라크 쿨타임
+	public static final int   WK_ZOLT_CHARGE    = 2;     //졸트라크 기 모으기 턴
+	public static final int   WK_ZOLT_MIN       = 25;    //졸트라크 피해 (영혼 강화 전)
+	public static final int   WK_ZOLT_MAX       = 40;
+	public static final int   WK_GUARD_INTERVAL = 7;     //근위병 소환 쿨타임
+	public static final int   WK_DARK_GUARDS    = 3;     //어두워질 때 추가 근위병 (영혼 6개 이상)
+	public static final int   WK_AMBUSH_INTERVAL = 3;    //기습 쿨타임 (어두운 동안)
+	public static final float WK_PHASE3_TAKEN   = 1.5f;  //3단계: 받는 평타·스킬 피해
+	//망령 근위병 (원작 드워프 왕 부하 구울을 조금 약하게)
+	public static final int   WG_HP             = 40;
+	public static final int   WG_DMG_MIN        = 10;
+	public static final int   WG_DMG_MAX        = 16;
+	public static final int   WG_ACC            = 25;
+	public static final int   WG_DEF            = 15;
+	public static final int   WG_DR             = 4;
+	public static final float WG_SPEED          = 2f;    //한 턴에 2칸
+
+	//마도시의 여제
+	public static final float EM_PHASE2_HP      = 0.85f;
+	public static final float EM_PHASE3_HP      = 0.30f;
+	public static final float EM_PETAL_TAKEN    = 0.5f;  //1단계 꽃잎의 보호: 받는 피해
+	public static final float EM_PHASE3_TAKEN   = 1.5f;  //3단계 시든 꽃관: 받는 피해
+	public static final int   EM_TELEPORT_HITS  = 4;     //피해를 연속으로 이만큼 받으면 순간이동
+	public static final int   EM_HIT_RESET_TURNS = 2;    //이 턴 동안 맞지 않으면 연속 횟수가 처음부터
+	public static final int   EM_BOLT_INTERVAL  = 3;     //강화 마탄 쿨타임
+	public static final int   EM_BOLT_MIN       = 10;
+	public static final int   EM_BOLT_MAX       = 16;
+	public static final int   EM_RAIN_INTERVAL  = 7;     //전기비 쿨타임
+	public static final int   EM_RAIN_CELLS     = 5;     //솟는 칸 수 (주인공 칸 + 둘레 2칸 안 무작위)
+	public static final int   EM_RAIN_RADIUS    = 2;
+	public static final int   EM_RAIN_MIN       = 8;
+	public static final int   EM_RAIN_MAX       = 12;
+	public static final float EM_RAIN_STATIC    = 3f;    //정전기 턴
+	public static final int   EM_SPEAR_INTERVAL = 15;    //서리창·화염창 번갈아 (각각 30턴마다)
+	public static final int   EM_SPEAR_DELAY    = 5;     //머리 위에 뜬 뒤 날아가기까지
+	public static final int   EM_SPEAR_MIN      = 15;
+	public static final int   EM_SPEAR_MAX      = 22;
+	public static final float EM_SPEAR_FROSTBITE = 3f;   //서리창 혹한
+	public static final float EM_TILE_FILL      = 0.90f; //원소 감응: 타일 칸(132칸)의 90% = 118칸
+	public static final float EM_TILE_REFILL    = 0.65f; //이 아래(85칸)면 다시 깐다
+	public static final int   EM_TILE_COOLDOWN  = 13;
+	public static final int   EM_TILE_STEAM_MIN = 10;    //원소 타일 위 주인공 증기 반응 피해 (폭발은 기존 폭발 반응 피해)
+	public static final int   EM_TILE_STEAM_MAX = 16;
+	public static final int   EM_STORM_WARN     = 5;     //원소 폭풍 경고 턴
+	public static final int   EM_STORM_TURNS    = 5;     //원소 폭풍 턴
+	public static final int   EM_STORM_MIN      = 6;     //폭풍 구역 안 주인공 피해 (턴마다)
+	public static final int   EM_STORM_MAX      = 10;
+
 	//10층 그림자 간수
 	public static final float TALISMAN_ROOT_TURNS   = 2f;  //봉인 부적: 맞은 대상 속박
 	public static final int   WARDEN_SOULS          = 4;   //영혼 해방: 불러내는 죄수의 영혼 수

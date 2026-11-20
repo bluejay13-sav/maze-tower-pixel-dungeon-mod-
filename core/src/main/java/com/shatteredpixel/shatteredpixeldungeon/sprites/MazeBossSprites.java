@@ -111,6 +111,7 @@ public class MazeBossSprites {
 		int level;
 		if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo)            level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT;
 		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu)     level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT; //(결정) 10층도 5층과 같은 정도로
+		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing || ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MazeEmpress) level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT; //20층 마탑 보스
 		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing) level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT; //(결정) 20층도 5층과 같은 정도로
 		else return;
 		s.parent.add(new com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.Petals(s, level));

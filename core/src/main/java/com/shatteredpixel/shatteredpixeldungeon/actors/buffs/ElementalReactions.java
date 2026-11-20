@@ -320,6 +320,48 @@ public class ElementalReactions {
 
 	private static boolean exploding = false;
 
+	// ===== Maze Tower: 20층 여제 원소 타일용 (명세 22번). 주인공에게도 반응이 일어난다 =====
+
+	//칸을 중심으로 폭발 반응 (노란 타일 + 화염, 원소 타일 위 주인공). 피해·연출은 기존 폭발과 같다
+	public static void explodeAt( int cell ){
+		if (exploding) return;
+		exploding = true;
+		int dmg = Math.round(baseDamage() * MazeTower.REACTION_EXPLOSION_MULTI);
+		ArrayList<Char> hit = new ArrayList<>();
+		for (Char c : Actor.chars()){
+			if (c.isAlive() && Dungeon.level.distance(cell, c.pos) <= 1) hit.add(c);
+		}
+		if (Dungeon.level.heroFOV[cell]){
+			CellEmitter.center(cell).burst(BlastParticle.FACTORY, 30);
+			CellEmitter.center(cell).burst(SparkParticle.FACTORY, 20);
+			com.watabou.utils.PointF from = com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.tileCenterToWorld(cell);
+			ArrayList<Lightning.Arc> arcs = new ArrayList<>();
+			for (Char c : hit){
+				if (c.sprite != null){
+					arcs.add(new Lightning.Arc(from, c.sprite.center()));
+					c.sprite.flash();
+				}
+			}
+			if (!arcs.isEmpty() && Dungeon.hero.sprite != null && Dungeon.hero.sprite.parent != null){
+				Dungeon.hero.sprite.parent.addToFront(new Lightning(arcs, null));
+			}
+			Char at = Actor.findChar(cell);
+			if (at != null) announce(at, "explosion", 0xFF8800);
+			PixelScene.shake(2, 0.3f);
+		}
+		Sample.INSTANCE.play(Assets.Sounds.BLAST);
+		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
+		for (Char c : hit){
+			c.damage(dmg, new ReactionDamage());
+		}
+		exploding = false;
+	}
+
+	//증기 반응 (원소 타일 위 주인공)
+	public static void steamOn( Char ch, int dmg ){
+		steam(ch, dmg);
+	}
+
 	//폭발: BlastParticle + 번개 섬광 (중심에서 맞는 적들로 번개, 화면 흔들림)
 	private static void explode( Char ch ){
 		if (exploding) return;

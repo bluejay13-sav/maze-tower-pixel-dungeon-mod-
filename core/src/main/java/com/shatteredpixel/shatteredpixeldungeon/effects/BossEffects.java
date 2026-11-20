@@ -56,7 +56,39 @@ public class BossEffects {
 		FROST_SHARD("sprites/maze_fx15c_frost_shard.png", 8,  8, 2),
 		FROST_TRAIL("sprites/maze_fx15c_frost_trail.png",16, 16, 4),
 		MELT       ("sprites/maze_fx15c_melt.png",       24, 24, 3),
-		STEAM      ("sprites/maze_fx15c_steam.png",      32, 32, 5);
+		STEAM      ("sprites/maze_fx15c_steam.png",      32, 32, 5),
+		//20층 망령 왕
+		WK_CROWN_BREAK ("sprites/maze_fx20w_crown_break.png", 24, 24, 4),
+		WK_EYES        ("sprites/maze_fx20w_eyes.png",        16, 16, 3),
+		WK_LAMP_LIGHT  ("sprites/maze_fx20w_lamp_light.png",  48, 48, 1),
+		WK_SOUL_ORB    ("sprites/maze_fx20w_soul_orb.png",    16, 16, 3),
+		WK_SOUL_WARN   ("sprites/maze_fx20w_soul_warn.png",   16, 16, 2),
+		WK_SOUL_ABSORB ("sprites/maze_fx20w_soul_absorb.png", 16, 16, 4),
+		WK_ZOLT_CHARGE ("sprites/maze_fx20w_zoltraak_charge.png", 32, 32, 4),
+		WK_ZOLT_CENTER ("sprites/maze_fx20w_zoltraak_beam_center_h.png", 16, 16, 3),
+		WK_ZOLT_EDGE   ("sprites/maze_fx20w_zoltraak_beam_edge_h.png",   16, 16, 3),
+		WK_ZOLT_WARN   ("sprites/maze_fx20w_zoltraak_warn.png", 16, 16, 2),
+		//20층 마도시의 여제
+		EM_PETAL_BACK  ("sprites/maze_fx20e_petal_guard_back.png",  32, 32, 4),
+		EM_PETAL_FRONT ("sprites/maze_fx20e_petal_guard_front.png", 32, 32, 4),
+		EM_BOLT        ("sprites/maze_fx20e_bolt.png",        16, 16, 2),
+		EM_BOLT_WARN   ("sprites/maze_fx20e_bolt_warn.png",   16, 16, 2),
+		EM_RAIN        ("sprites/maze_fx20e_rain.png",        16, 24, 4),
+		EM_RAIN_WARN   ("sprites/maze_fx20e_rain_warn.png",   16, 16, 2),
+		EM_FROST_OVER  ("sprites/maze_fx20e_frost_spear_overhead.png", 20, 7, 3),
+		EM_FROST_FLY   ("sprites/maze_fx20e_frost_spear_fly.png",      30, 7, 3),
+		EM_FROST_HIT   ("sprites/maze_fx20e_frost_spear_hit.png",      16, 16, 4),
+		EM_FIRE_OVER   ("sprites/maze_fx20e_fire_spear_overhead.png",  20, 7, 3),
+		EM_FIRE_FLY    ("sprites/maze_fx20e_fire_spear_fly.png",       30, 7, 3),
+		EM_FIRE_HIT    ("sprites/maze_fx20e_fire_spear_hit.png",       16, 16, 4),
+		EM_TILE_STEAM  ("sprites/maze_fx20e_tile_steam.png",  16, 16, 4),
+		EM_ZONE_FIRE   ("sprites/maze_fx20e_zone_fire.png",   16, 16, 2),
+		EM_ZONE_FROST  ("sprites/maze_fx20e_zone_frost.png",  16, 16, 2),
+		EM_ZONE_SHOCK  ("sprites/maze_fx20e_zone_shock.png",  16, 16, 2),
+		EM_STORM_FIRE  ("sprites/maze_fx20e_storm_fire.png",  16, 24, 4),
+		EM_STORM_FROST ("sprites/maze_fx20e_storm_frost.png", 16, 24, 4),
+		EM_STORM_SHOCK ("sprites/maze_fx20e_storm_shock.png", 16, 24, 4),
+		EM_TELEPORT    ("sprites/maze_fx20e_teleport.png",    24, 24, 5);
 
 		public final String file;
 		public final int w, h, frames;

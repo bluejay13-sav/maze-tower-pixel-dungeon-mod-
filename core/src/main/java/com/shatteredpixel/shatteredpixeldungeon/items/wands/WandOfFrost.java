@@ -57,6 +57,8 @@ public class WandOfFrost extends DamageWand {
 
 	@Override
 	public void onZap(Ballistica bolt) {
+		//Maze Tower: 서리 마법봉이 지나간 칸의 20층 붉은 원소 타일이 사라진다
+		for (int c : bolt.subPath(1, bolt.dist)) com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ElementTile.onFrost(c);
 
 		Heap heap = Dungeon.level.heaps.get(bolt.collisionPos);
 		if (heap != null) {

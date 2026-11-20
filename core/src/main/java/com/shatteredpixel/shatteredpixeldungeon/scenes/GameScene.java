@@ -1144,7 +1144,11 @@ public class GameScene extends PixelScene {
 			//Maze Tower: 바닥에 깔리는 블롭(수액 웅덩이·냉기 결정)은 캐릭터·아이템 아래 층에 그린다
 			if (gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor
 					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapPuddle
-					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.FrostCrystals){
+					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.FrostCrystals
+					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapDrop
+					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SoulOrb
+					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SoulOrb.Warn
+					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ElementTile){
 				floorEmitters.add( new BlobEmitter( gas ) );
 				return;
 			}

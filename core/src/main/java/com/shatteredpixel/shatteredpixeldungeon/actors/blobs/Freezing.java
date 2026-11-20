@@ -66,6 +66,7 @@ public class Freezing extends Blob {
 	}
 	
 	public static void freeze( int cell ){
+		com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ElementTile.onFrost(cell); //Maze Tower: 냉기가 닿으면 20층 붉은 원소 타일이 사라진다
 		Char ch = Actor.findChar( cell );
 		if (ch != null && !ch.isImmune(Freezing.class)) {
 			if (ch.buff(Frost.class) != null){

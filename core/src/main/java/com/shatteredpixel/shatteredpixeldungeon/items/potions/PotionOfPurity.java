@@ -70,6 +70,7 @@ public class PotionOfPurity extends Potion {
 				for (Blob blob : blobs) {
 					blob.clear(i);
 				}
+				com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ElementTile.onPurify(i); //Maze Tower: 20층 원소 타일도 지운다
 				
 				if (Dungeon.level.heroFOV[i]) {
 					CellEmitter.get( i ).burst( Speck.factory( Speck.DISCOVER ), 2 );
