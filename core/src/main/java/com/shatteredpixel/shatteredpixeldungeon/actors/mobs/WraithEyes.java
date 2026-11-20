@@ -5,6 +5,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -74,7 +75,9 @@ public class WraithEyes extends Mob {
 			super();
 			texture("sprites/maze_fx20w_eyes.png");
 			TextureFilm f = new TextureFilm(texture, 16, 16);
-			idle = MazeBossSprites.anim(f, 4, true, 0, 1, 2, 1);
+			//(결정) 새 눈 4프레임: 불씨 → 실눈 → 노려봄 ↔ 동공이 꿈틀 → 다시 감음 (한 프레임 0.18초)
+			idle = MazeBossSprites.anim(f, 1, true, 0, 0, 1, 2, 3, 2, 3, 2, 1, 0);
+			idle.delay = 0.18f;
 			run = idle.clone();
 			attack = idle.clone();
 			zap = idle.clone();
@@ -85,6 +88,13 @@ public class WraithEyes extends Mob {
 		@Override
 		protected float fadeTime() {
 			return 0.15f;
+		}
+
+		@Override
+		public void update() {
+			super.update();
+			//(결정) 원작 미믹처럼 알아채기 어렵게: 완전한 어둠 속에서 35%만 비친다
+			if (ch != null && ch.isAlive()) alpha(MazeTower.WK_EYES_ALPHA);
 		}
 	}
 }

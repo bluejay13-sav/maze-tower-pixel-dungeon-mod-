@@ -163,7 +163,11 @@ public class WraithKing extends Mob {
 		Char e = enemy;
 		if (e == null) return;
 		if (hit(this, e, false)){
-			e.damage(damageRoll(), this);
+			int dmg = damageRoll();
+			//(결정) 등불이 켜져 있는 동안(2단계 밝음)은 원거리 공격 피해 -25%
+			if (phase == 2 && !dark) dmg = Math.round(dmg * MazeTower.WK_LAMP_RANGED_MULTI);
+			dmg = Math.max(0, dmg - e.drRoll());
+			e.damage(dmg, this);
 			if (e == Dungeon.hero && !e.isAlive()) Dungeon.fail(this);
 		} else if (e.sprite != null){
 			e.sprite.showStatus(CharSprite.NEUTRAL, e.defenseVerb());
@@ -478,7 +482,8 @@ public class WraithKing extends Mob {
 	private int[] laneOffset( int k ){
 		int dx = DX[zoltDir], dy = DY[zoltDir];
 		if (k == 0) return new int[]{0, 0};
-		if (dx != 0 && dy != 0) return k < 0 ? new int[]{dx, 0} : new int[]{0, dy};
+		//대각선: 가로·세로로 |k|칸 옆의 나란한 대각선 ((결정) 대각선은 양쪽으로 한 줄씩 더, k = -2 ~ 2)
+		if (dx != 0 && dy != 0) return k < 0 ? new int[]{dx * -k, 0} : new int[]{0, dy * k};
 		return new int[]{-dy * k, dx * k};
 	}
 
@@ -487,7 +492,8 @@ public class WraithKing extends Mob {
 		int w = Dungeon.level.width();
 		int x0 = pos % w, y0 = pos / w;
 		int dx = DX[zoltDir], dy = DY[zoltDir];
-		for (int k = -1; k <= 1; k++){
+		int reach = (DX[zoltDir] != 0 && DY[zoltDir] != 0) ? 2 : 1; //(결정) 대각선 광선은 한 칸 더 넓게
+		for (int k = -reach; k <= reach; k++){
 			int[] o = laneOffset(k);
 			for (int i = (k == 0 ? 1 : 0); i < 40; i++){
 				int x = x0 + o[0] + dx * i, y = y0 + o[1] + dy * i;
@@ -540,10 +546,16 @@ public class WraithKing extends Mob {
 		Sample.INSTANCE.play(Assets.Sounds.RAY);
 	}
 
+	//가장 바깥 줄인지 (가로·세로는 ±1, 넓힌 대각선은 ±2). 안쪽 줄은 가운데 줄 그림을 쓴다
+	private boolean edgeLane( int lane ){
+		int reach = (DX[zoltDir] != 0 && DY[zoltDir] != 0) ? 2 : 1;
+		return Math.abs(lane) == reach;
+	}
+
 	//가로 그림을 광선 방향으로 돌린다(대각선은 45도 + 길게). 바깥 두 줄은 그림의 위쪽이 바깥을 향하게, 반대쪽 줄은 뒤집는다
 	private void beamVisual( int cell, int lane ){
 		boolean diag = DX[zoltDir] != 0 && DY[zoltDir] != 0;
-		MovieClip c = BossEffects.clip(lane == 0 ? BossEffects.Fx.WK_ZOLT_CENTER : BossEffects.Fx.WK_ZOLT_EDGE, 15, false);
+		MovieClip c = BossEffects.clip(edgeLane(lane) ? BossEffects.Fx.WK_ZOLT_EDGE : BossEffects.Fx.WK_ZOLT_CENTER, 15, false);
 		PointF p = DungeonTilemap.tileCenterToWorld(cell);
 		c.origin.set(8, 8);
 		c.x = p.x - 8;
@@ -551,7 +563,7 @@ public class WraithKing extends Mob {
 		float angle = zoltDir * 45f;
 		c.angle = angle;
 		if (diag) c.scale.x = 1.42f;
-		if (lane != 0){
+		if (edgeLane(lane)){
 			//돌린 뒤 그림의 위쪽 방향 = (sin, -cos). 이 줄이 그쪽에 있으면 그대로, 아니면 뒤집는다
 			double r = Math.toRadians(angle);
 			int[] o = laneOffset(lane);
@@ -633,19 +645,45 @@ public class WraithKing extends Mob {
 		countered = false;
 		if (wasCountered){
 			if (Dungeon.level.heroFOV[cell]) GLog.p(Messages.get(this, "ambush_blocked"));
-		} else if (Dungeon.level.adjacent(cell, Dungeon.hero.pos) && Actor.findChar(cell) == null && Dungeon.hero.isAlive()){
-			//막지 못하면 그 칸으로 순간이동해 주인공을 덮친다 (반드시 맞는다)
-			pos = cell;
-			Dungeon.level.occupyCell(this);
-			if (sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).strike(cell, Dungeon.hero.pos);
-			attack(Dungeon.hero, 1f, 0f, Char.INFINITE_ACCURACY);
+		} else if (Dungeon.hero.isAlive()){
+			//(결정) 눈을 치지 않았으면 주인공이 어느 쪽으로 움직였든 반드시 덮친다:
+			//주인공 바로 옆 칸(눈이 있던 칸이 그대로 옆이면 그 칸)으로 순간이동해 방어력 50%를 무시하는 일격
+			int at = -1;
+			if (Dungeon.level.adjacent(cell, Dungeon.hero.pos) && Actor.findChar(cell) == null) at = cell;
+			if (at == -1){
+				ArrayList<Integer> opts = new ArrayList<>();
+				for (int n : PathFinder.NEIGHBOURS8){
+					int c = Dungeon.hero.pos + n;
+					if (c >= 0 && c < Dungeon.level.length() && Dungeon.level.passable[c] && Actor.findChar(c) == null) opts.add(c);
+				}
+				if (!opts.isEmpty()) at = Random.element(opts);
+			}
+			if (at != -1){
+				pos = at;
+				Dungeon.level.occupyCell(this);
+				if (sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).strike(at, Dungeon.hero.pos);
+			}
+			ambushStrike(Dungeon.hero);
 			if (!Dungeon.hero.isAlive()){
 				Dungeon.fail(this);
 			}
-			vanish(false);
+			if (at != -1) vanish(false);
 		}
 		spend(TICK);
 		return true;
+	}
+
+	//기습 일격: 반드시 맞고, 방어력을 50%(WK_AMBUSH_ARMOR_IGNORE)만 적용한다
+	private void ambushStrike( Char target ){
+		int dmg = damageRoll();
+		int armor = Math.round(target.drRoll() * (1f - MazeTower.WK_AMBUSH_ARMOR_IGNORE));
+		dmg = Math.max(0, dmg - armor);
+		if (target.sprite != null){
+			target.sprite.flash();
+			com.shatteredpixel.shatteredpixeldungeon.effects.Wound.hit(target);
+		}
+		Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
+		target.damage(dmg, this);
 	}
 
 	private void cancelAmbush(){

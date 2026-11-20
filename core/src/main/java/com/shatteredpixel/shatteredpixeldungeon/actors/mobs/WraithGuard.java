@@ -94,13 +94,34 @@ public class WraithGuard extends Mob {
 			play(idle);
 		}
 
+		//어둠 속 푸른빛 (깜깜한 안개 위에 그린다)
+		private com.watabou.noosa.Halo glow;
+
+		@Override
+		public void kill() {
+			if (glow != null) glow.killAndErase();
+			super.kill();
+		}
+
 		@Override
 		public void update() {
 			super.update();
-			//어둠 속 은은한 푸른빛: 시야 밖(어두운 칸)에서도 흐리게 보인다
+			//어둠 속 은은한 푸른빛: 시야 밖(깜깜한 칸)에서도 빛만은 보인다
 			WraithKing k = WraithKing.find();
-			boolean dark = k != null && k.isDark();
+			boolean dark = k != null && k.isDark() && ch != null && ch.isAlive();
 			visibleOutOfFFOV = dark;
+			if (dark && glow == null){
+				glow = new com.watabou.noosa.Halo(9f, 0x5AA0FF, 0.3f);
+				com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.effectOverFog(glow);
+			} else if (!dark && glow != null){
+				glow.killAndErase();
+				glow = null;
+			}
+			if (glow != null){
+				com.watabou.utils.PointF c = center();
+				glow.point(c.x, c.y);
+				glow.alpha(0.22f + 0.1f * (float)Math.sin(com.watabou.noosa.Game.timeTotal * 2.5f));
+			}
 			if (dark){
 				float p = 0.75f + 0.25f * (float)Math.sin(com.watabou.noosa.Game.timeTotal * 2.5f);
 				rm = 0.6f * p; gm = 0.85f * p; bm = 1.3f * p;

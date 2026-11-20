@@ -494,6 +494,15 @@ public class CityBossLevel extends Level {
 		if (k == null || !k.isDark()) return;
 		java.util.Arrays.fill(fieldOfView, false);
 		fieldOfView[c.pos] = true;
+		//(결정) 어둠은 회색이 아니라 깜깜한 검정: 보스방 칸들의 "본 적 있음"을 지워 안개가 완전히 검게 덮이게 한다
+		//(지금 보이는 칸만 이 뒤에 다시 "본 적 있음"이 된다)
+		for (int y = ROOM_Y - 1; y <= ROOM_Y + ROOM_SIZE; y++){
+			for (int x = 0; x < width(); x++){
+				int cell = x + y * width();
+				visited[cell] = false;
+				mapped[cell] = false;
+			}
+		}
 		for (int n : com.watabou.utils.PathFinder.NEIGHBOURS8){
 			int cell = c.pos + n;
 			if (cell < 0 || cell >= length()) continue;

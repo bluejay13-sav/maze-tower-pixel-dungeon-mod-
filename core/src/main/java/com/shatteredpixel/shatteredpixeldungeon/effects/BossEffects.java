@@ -59,7 +59,7 @@ public class BossEffects {
 		STEAM      ("sprites/maze_fx15c_steam.png",      32, 32, 5),
 		//20층 망령 왕
 		WK_CROWN_BREAK ("sprites/maze_fx20w_crown_break.png", 24, 24, 4),
-		WK_EYES        ("sprites/maze_fx20w_eyes.png",        16, 16, 3),
+		WK_EYES        ("sprites/maze_fx20w_eyes.png",        16, 16, 4),
 		WK_LAMP_LIGHT  ("sprites/maze_fx20w_lamp_light.png",  48, 48, 1),
 		WK_SOUL_ORB    ("sprites/maze_fx20w_soul_orb.png",    16, 16, 3),
 		WK_SOUL_WARN   ("sprites/maze_fx20w_soul_warn.png",   16, 16, 2),
