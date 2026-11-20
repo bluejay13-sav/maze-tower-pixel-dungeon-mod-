@@ -298,11 +298,16 @@ public class MazeEmpress extends Mob {
 		CityBossLevel l = level();
 		if (l == null) return;
 		int h = Dungeon.hero.pos;
+		int w = Dungeon.level.width();
 		ArrayList<Integer> cells = new ArrayList<>();
 		cells.add(h);
+		//(결정) 주인공 둘레 6×6칸 안 (6은 짝수라 주인공이 가운데 2×2 중 한 칸에 오도록 창을 무작위로 놓는다)
+		int left = h % w - (MazeTower.EM_RAIN_AREA / 2 - Random.Int(2));
+		int top  = h / w - (MazeTower.EM_RAIN_AREA / 2 - Random.Int(2));
 		ArrayList<Integer> near = new ArrayList<>();
 		for (int c : l.roomFloorCells()){
-			if (c != h && Dungeon.level.distance(c, h) <= MazeTower.EM_RAIN_RADIUS) near.add(c);
+			int x = c % w, y = c / w;
+			if (c != h && x >= left && x < left + MazeTower.EM_RAIN_AREA && y >= top && y < top + MazeTower.EM_RAIN_AREA) near.add(c);
 		}
 		while (cells.size() < MazeTower.EM_RAIN_CELLS && !near.isEmpty()){
 			cells.add(near.remove(Random.Int(near.size())));
@@ -312,14 +317,29 @@ public class MazeEmpress extends Mob {
 		showRainWarn();
 	}
 
+	//경고: 명암을 섞은 노란 빛 고임 + 튀는 불꽃 (effects/CellWarnFx)
+	private com.shatteredpixel.shatteredpixeldungeon.effects.CellWarnFx rainLook;
+
 	private void showRainWarn(){
 		clear(rainFx);
-		if (rainCells == null) return;
-		for (int c : rainCells) rainFx.add(BossEffects.atCell(BossEffects.Fx.EM_RAIN_WARN, c, 4, true));
+		clearRainLook();
+		if (rainCells == null || Dungeon.hero.sprite == null || Dungeon.hero.sprite.parent == null) return;
+		ArrayList<Integer> list = new ArrayList<>();
+		for (int c : rainCells) list.add(c);
+		rainLook = new com.shatteredpixel.shatteredpixeldungeon.effects.CellWarnFx(list, 0x3A3208, 0xC9A52A, 0xFFF0A0, 0xFFE066);
+		rainLook.attach(Dungeon.hero.sprite.parent);
+	}
+
+	private void clearRainLook(){
+		if (rainLook != null){
+			rainLook.kill();
+			rainLook = null;
+		}
 	}
 
 	private void fireRain(){
 		clear(rainFx);
+		clearRainLook();
 		int[] cells = rainCells;
 		rainCells = null;
 		boolean seen = false;
@@ -508,9 +528,10 @@ public class MazeEmpress extends Mob {
 	}
 
 	private static boolean inBand( int band, int v ){
-		if (band == 0) return v <= 3;
-		if (band == 1) return v >= 4 && v <= 8;
-		return v >= 9;
+		//(결정, 바뀜) 3등분(0~3 / 4~8 / 9~12)보다 한 칸씩 넓게: 0~4 / 3~9 / 8~12 (이웃 띠와 한 칸 겹친다)
+		if (band == 0) return v <= 4;
+		if (band == 1) return v >= 3 && v <= 9;
+		return v >= 8;
 	}
 
 	private ArrayList<Integer> zoneCells( int[] z ){
@@ -684,6 +705,7 @@ public class MazeEmpress extends Mob {
 	@Override
 	public void die( Object cause ) {
 		clear(boltFx); clear(rainFx); clear(warnZoneFx); clear(stormFx);
+		clearRainLook();
 		clearZoneLooks();
 		clearBoltLine();
 		boltPath = null; rainCells = null; spearType = 0; stormZone = null; warnZone = null;
@@ -703,7 +725,7 @@ public class MazeEmpress extends Mob {
 	//불러온 뒤 화면 연출을 다시 만든다
 	private void restoreFx(){
 		if (boltPath != null && boltLine == null) showBoltWarn();
-		if (rainCells != null && rainFx.isEmpty()) showRainWarn();
+		if (rainCells != null && rainLook == null) showRainWarn();
 		if ((warnZone != null && warnZoneLook == null) || (stormZone != null && stormLook == null)) showZoneFx();
 		for (MovieClip m : boltFx)     m.visible = true;
 	}

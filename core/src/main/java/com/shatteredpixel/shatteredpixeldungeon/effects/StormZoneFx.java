@@ -25,8 +25,8 @@ public class StormZoneFx {
 
 	public static final int FIRE = 1, FROST = 2, SHOCK = 3;
 
-	private static final int[] BASE  = {0, 0xC8452A, 0x3E86C8, 0xD8C24A};
-	private static final int[] RIM   = {0, 0xFF9A55, 0x9FD8FF, 0xFFF29A};
+	private static final int[] BASE  = {0, 0xFF5A2A, 0x3E86C8, 0xD8C24A};
+	private static final int[] RIM   = {0, 0xFFC070, 0x9FD8FF, 0xFFF29A};
 	private static final int[] DEEP  = {0, 0x5A1810, 0x14304E, 0x4E4410};
 
 	private final Group floor = new Group(), sky = new Group();
@@ -91,10 +91,11 @@ public class StormZoneFx {
 			super.update();
 			time += Game.elapsed;
 			float wave = 0.8f + 0.2f * (float)Math.sin(time * 1.8f + phase);
-			float k = storm ? 1f : 0.55f;
-			deep.alpha(0.22f * k * wave);
-			base.alpha(0.20f * k * shade * wave);
-			rim.alpha(0.12f * k * wave);
+			//경고는 옅게, 폭풍은 진하게. 불은 청록 바닥에서 묻혀 보여서 더 진하게
+			float k = (storm ? 1f : 0.7f) * (element == FIRE ? 1.3f : 1f);
+			deep.alpha(Math.min(0.6f, 0.30f * k * wave));
+			base.alpha(Math.min(0.6f, 0.32f * k * shade * wave));
+			rim.alpha(Math.min(0.5f, 0.22f * k * wave));
 		}
 	}
 
@@ -116,7 +117,7 @@ public class StormZoneFx {
 				//잔 정전기 불꽃
 				acc += Game.elapsed * cells.size() * 0.6f;
 			} else {
-				acc += Game.elapsed * cells.size() * (element == FIRE ? 1.4f : 1.1f);
+				acc += Game.elapsed * cells.size() * (element == FIRE ? 2.4f : 1.4f);
 			}
 			while (acc >= 1f){
 				acc -= 1f;
@@ -124,7 +125,7 @@ public class StormZoneFx {
 				float x = (c % w) * DungeonTilemap.SIZE + Random.Float(16), y = (c / w) * DungeonTilemap.SIZE + Random.Float(16);
 				Fade p = (Fade) recycle(Fade.class);
 				if (element == FIRE){
-					p.reset(x - 6, y - 18, Random.oneOf(0xFFE29A, 0xFFA54A, 0xE8552E, 0x8A2A18), Random.Float(1f, 2f), Random.Float(0.35f, 0.55f));
+					p.reset(x - 6, y - 18, Random.oneOf(0xFFF0B0, 0xFFE29A, 0xFFA54A, 0xFF6A2E, 0xC83A1E), Random.Float(1.5f, 2.5f), Random.Float(0.4f, 0.6f));
 					p.speed.set(Random.Float(10, 18), Random.Float(40, 60));
 				} else if (element == FROST){
 					p.reset(x, y - 16, Random.oneOf(0xFFFFFF, 0xDDEEFF, 0xA8D4FF), Random.Float(1f, 2f), Random.Float(0.6f, 0.9f));

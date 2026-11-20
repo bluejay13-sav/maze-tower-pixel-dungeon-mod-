@@ -23,7 +23,7 @@ public class BoltWarnLine extends Group {
 	private static final float[][] LAYERS = {
 			{7f,   0x7A52E0, 0.16f},
 			{3.5f, 0xB08CFF, 0.30f},
-			{1.2f, 0xF4ECFF, 0.60f},
+			{1.2f, 0xD6E4FF, 0.65f}, //가운데 심은 옅은 푸른빛
 	};
 
 	private final PointF a, b;
@@ -48,9 +48,10 @@ public class BoltWarnLine extends Group {
 				float s = i * SEG;
 				float l = Math.min(SEG + 0.5f, len - s); //이음매가 벌어지지 않게 조금 겹친다
 				ColorBlock c = new ColorBlock(l, t, 0xFF000000 | (int)layer[1]);
-				c.origin.set(0, t / 2f);
+				//ColorBlock은 1×1을 늘린 것이라 돌리는 중심도 늘리기 전 크기(0.5)로 준다. 그래야 두꺼운 줄도 경로 가운데에 놓인다
+				c.origin.set(0, 0.5f);
 				c.x = a.x + ux * s;
-				c.y = a.y + uy * s - t / 2f;
+				c.y = a.y + uy * s - 0.5f;
 				c.angle = angle;
 				//여제 쪽이 진하고 끝으로 갈수록 옅다
 				float fade = 1f - 0.55f * (s / Math.max(len, 1f));
@@ -63,7 +64,6 @@ public class BoltWarnLine extends Group {
 		}
 		for (int i = 0; i < glints.length; i++){
 			ColorBlock g = new ColorBlock(2f, 2f, 0xFFFFFFFF);
-			g.origin.set(1f, 1f);
 			add(g);
 			glints[i] = g;
 		}

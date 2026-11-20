@@ -211,8 +211,6 @@ public class WraithKing extends Mob {
 			for (int c : pendingOrbs){
 				SoulOrb.remove(SoulOrb.Warn.class, c);
 				GameScene.add(Blob.seed(c, 1, SoulOrb.class));
-				Char ch = Actor.findChar(c);
-				if (ch != null) onOccupy(ch);
 			}
 			pendingOrbs = new int[0];
 		}
@@ -234,11 +232,12 @@ public class WraithKing extends Mob {
 				if (d < bestDist){ bestDist = d; best = i; }
 			}
 		}
+		int oldPos = pos;
 		if (best != -1 && getCloser(best)){
 			spend(1f / speed());
-		} else {
-			spend(TICK);
+			return moveSprite(oldPos, pos); //그림도 함께 움직인다 (빠뜨리면 그림만 제자리에 남는다)
 		}
+		spend(TICK);
 		return true;
 	}
 
@@ -249,6 +248,7 @@ public class WraithKing extends Mob {
 		for (int c : l.roomFloorCells()){
 			if (l.roomEdge(c) || c == l.mazeThrone()) continue;
 			if (Actor.findChar(c) != null || SoulOrb.at(c) || SoulOrb.Warn.at(c)) continue;
+			if (Dungeon.level.distance(c, pos) <= 1) continue; //(결정) 왕이 있는 칸과 그 주변 1칸에는 떨어지지 않는다
 			cells.add(c);
 		}
 		ArrayList<Integer> chosen = new ArrayList<>();

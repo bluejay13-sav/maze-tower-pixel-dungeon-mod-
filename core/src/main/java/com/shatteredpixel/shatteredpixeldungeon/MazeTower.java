@@ -563,7 +563,8 @@ public class MazeTower {
 	public static final int   EM_BOLT_MIN       = 10;
 	public static final int   EM_BOLT_MAX       = 16;
 	public static final int   EM_RAIN_INTERVAL  = 7;     //전기비 쿨타임
-	public static final int   EM_RAIN_CELLS     = 5;     //솟는 칸 수 (주인공 칸 + 둘레 2칸 안 무작위)
+	public static final int   EM_RAIN_CELLS     = 10;    //(결정, 바뀜 5→10) 솟는 칸 수 (주인공 칸 + 둘레 6×6 안 무작위)
+	public static final int   EM_RAIN_AREA      = 6;     //전기비 범위: 주인공 둘레 6×6칸
 	public static final int   EM_RAIN_RADIUS    = 2;
 	public static final int   EM_RAIN_MIN       = 8;
 	public static final int   EM_RAIN_MAX       = 12;
