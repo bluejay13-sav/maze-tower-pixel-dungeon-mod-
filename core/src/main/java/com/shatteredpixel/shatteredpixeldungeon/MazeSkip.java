@@ -52,6 +52,19 @@ public class MazeSkip {
 		}
 		Statistics.deepestFloor = Math.max(Statistics.deepestFloor, target);
 
+		//반드시 주는 것: 주문서 가방·물약 가방(없으면, 먼저 넣어야 주문서·물약이 가방으로 들어간다),
+		//9층부터 개화의 핵, 14·19층은 만개의 핵도
+		ArrayList<Item> give = new ArrayList<>();
+		if (Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder.class) == null){
+			give.add(new com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder());
+		}
+		if (Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier.class) == null){
+			give.add(new com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier());
+		}
+		if (target >= MazeTower.SKIP_BLOOM_DEPTH)     give.add(new com.shatteredpixel.shatteredpixeldungeon.items.BloomCore());
+		if (target >= MazeTower.SKIP_FULLBLOOM_DEPTH) give.add(new com.shatteredpixel.shatteredpixeldungeon.items.FullBloomCore());
+		loot.addAll(0, give);
+
 		//가방에 넣는다. 가방이 차면 목표 층의 도착 칸에 내려놓는다
 		int arrive = arrivalCell(last);
 		for (Item item : loot){

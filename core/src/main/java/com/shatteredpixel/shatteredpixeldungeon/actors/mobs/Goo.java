@@ -85,11 +85,11 @@ public class Goo extends Mob {
 	//  불이 붙으면 체력 SAP_BURN_UNTIL(40%)까지 계속 탄다. 체력에 따라 s1~s3로 쪼그라들고(단계를 건너뛰지 않고 한 단계에 2턴씩),
 	//  40%에 닿으면 불이 꺼지며 s4가 되고 수액 방울 3개를 흩뿌린다. s4 동안은 물리 피해 감소·방어력이 없다.
 	//  방울 2개를 흡수하면 기본 모습으로 돌아오고 물리 피해 감소·방어력이 다시 생긴다(체력은 회복하지 않음).
-	//  불에 타지 않은 채 40%가 되면 아무 일도 없다. (제안, 사용자 확인 필요인 "다시 불붙으면 반복"은 넣지 않아 한 번뿐)
+	//  불에 타지 않은 채 40%가 되면 아무 일도 없다. 기본 모습으로 돌아온 뒤 다시 불이 붙으면 같은 순서로 다시 쪼그라든다.
 	private int stage = 0;        //0 기본, 1~3 쪼그라드는 중, 4 다 쪼그라듦
 	private int stageTimer = 0;   //지금 단계에 머문 턴
 	private int absorbed = 0;     //s4에서 흡수한 방울 수
-	private boolean cycleDone = false; //쪼그라들기를 이미 한 번 했다
+	private boolean cycleDone = false; //쪼그라들기를 한 번이라도 했다 (기록용, 다시 불붙는 것을 막지 않음)
 
 	public int mazeStage(){ return stage; }
 
@@ -185,7 +185,8 @@ public class Goo extends Mob {
 
 	//처음 불이 붙었을 때 (횃불·화염 마법 등 어떤 화상이든). 이미 불붙어 있거나 쪼그라들기를 이미 했으면 효과 없음(false)
 	private boolean torchHit(){
-		if (!maze() || torched || cycleDone || stage != 0) return false;
+		//(결정) 기본 모습으로 돌아온 뒤 다시 불이 붙으면 s1부터 2턴씩 다시 쪼그라들고 방울을 다시 흩뿌린다 (몇 번이든)
+		if (!maze() || torched || stage != 0) return false;
 		torched = true;
 		if (buff(Burning.class) == null) Buff.affect(this, Burning.class).reignite(this);
 		if (sprite != null){

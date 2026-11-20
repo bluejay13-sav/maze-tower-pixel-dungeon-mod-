@@ -635,6 +635,9 @@ public class MazeTower {
 	//베타 테스트용 층 건너뛰기 치트 (명세 8번): 목표 층(각 보스층 바로 앞)과 도착할 때의 레벨
 	public static final int[] SKIP_DEPTHS = {4, 9, 14, 19};
 	public static final int[] SKIP_LEVELS = {6, 11, 15, 19};
+	public static final int   SKIP_BLOOM_DEPTH     = 9;  //이 층부터는 건너뛸 때 개화의 핵을 준다
+	public static final int   SKIP_FULLBLOOM_DEPTH = 14; //이 층부터는 만개의 핵도 준다 (주문서·물약 가방은 언제나)
+	public static final int   CHEAT_STR = 20;            //치트 "힘 20으로" (명세 8번)
 	public static final float ROOT_SP_PETAL_CHANCE       = 12f;  //뿌리 지하 특수 바닥 중 벚꽃잎이 있는 그림이 나오는 확률 % (원작 그림 바꾸기 비율 50)
 	public static final float BOSS_WALL_DECO_KEEP  = 0.3f; //5·10층 보스층: 벽 장식 중 남기는 비율
 	public static final float BOSS_FLOOR_DECO_KEEP = 0.3f; //5·10층 보스층: 바닥 장식 중 남기는 비율

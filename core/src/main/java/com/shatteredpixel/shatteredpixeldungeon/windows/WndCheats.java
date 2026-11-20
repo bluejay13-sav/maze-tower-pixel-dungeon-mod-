@@ -37,7 +37,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornDagger;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortbow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSpear;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
-import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.brews.AquaBrew;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfStormClouds;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfFireblast;
@@ -230,10 +229,13 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addPair(new RedButton(Messages.get(this, "strength"), 7){
+		//(결정) 힘의 물약 지급 대신 힘을 바로 20으로
+		addPair(new RedButton(Messages.get(this, "str20"), 7){
 			@Override
 			protected void onClick() {
-				give(new PotionOfStrength().identify());
+				Dungeon.hero.STR = MazeTower.CHEAT_STR;
+				Dungeon.hero.sprite.showStatus(com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite.POSITIVE, Messages.get(WndCheats.class, "str_set", MazeTower.CHEAT_STR));
+				com.shatteredpixel.shatteredpixeldungeon.Badges.validateStrengthAttained();
 			}
 		}, new RedButton(Messages.get(this, "water_items"), 7){
 			@Override

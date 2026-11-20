@@ -84,6 +84,7 @@ public class MazeEmpress extends Mob {
 
 	private int boltCd = 1;
 	private int[] boltPath = null;     //예고한 강화 마탄 궤적 (다음 턴에 쏜다)
+	private int boltFrom = -1;         //예고할 때 여제가 있던 칸 (순간이동해도 궤적은 그대로)
 	private int rainCd = MazeTower.EM_RAIN_INTERVAL / 2;
 	private int[] rainCells = null;    //예고한 전기비 칸
 
@@ -167,6 +168,7 @@ public class MazeEmpress extends Mob {
 		if (spearType != 0){
 			spearTimer--;
 			if (spearTimer <= 0 && !heroHidden) throwSpear();
+			else showSpearCount();
 		}
 
 		if (phase == 3) stormTick();
@@ -187,6 +189,8 @@ public class MazeEmpress extends Mob {
 			nextSpear = nextSpear == ElementTile.FROST ? ElementTile.FIRE : ElementTile.FROST;
 			spearTimer = MazeTower.EM_SPEAR_DELAY;
 			spearCd = MazeTower.EM_SPEAR_INTERVAL;
+			Buff.affect(this, SpearCountdown.class);
+			showSpearCount();
 			if (Dungeon.level.heroFOV[pos]) GLog.w(Messages.get(this, spearType == ElementTile.FROST ? "frost_spear" : "fire_spear"));
 			Sample.INSTANCE.play(Assets.Sounds.CHARGEUP, 0.7f, 1.2f);
 		}
@@ -208,6 +212,7 @@ public class MazeEmpress extends Mob {
 			path.add(c);
 		}
 		if (path.isEmpty()) return;
+		boltFrom = pos;
 		boltPath = new int[path.size()];
 		for (int i = 0; i < path.size(); i++) boltPath[i] = path.get(i);
 		showBoltWarn();
@@ -219,27 +224,41 @@ public class MazeEmpress extends Mob {
 		return (float)(Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI);
 	}
 
+	//궤적 경고: 칸마다 그림을 돌려 붙이면 대각선에서 깨져서, 이어진 빛줄기를 코드로 그린다 (effects/BoltWarnLine)
+	private com.shatteredpixel.shatteredpixeldungeon.effects.BoltWarnLine boltLine;
+
+	private void clearBoltLine(){
+		if (boltLine != null){
+			boltLine.killAndErase();
+			boltLine = null;
+		}
+	}
+
 	private void showBoltWarn(){
 		clear(boltFx);
-		if (boltPath == null) return;
-		float angle = boltAngle();
-		for (int c : boltPath){
-			MovieClip m = BossEffects.atCell(BossEffects.Fx.EM_BOLT_WARN, c, 4, true);
-			m.origin.set(8, 8);
-			m.angle = angle;
-			boltFx.add(m);
+		clearBoltLine();
+		if (boltPath == null || Dungeon.hero.sprite == null || Dungeon.hero.sprite.parent == null) return;
+		PointF a = DungeonTilemap.tileCenterToWorld(boltFrom >= 0 ? boltFrom : pos);
+		PointF b = DungeonTilemap.tileCenterToWorld(boltPath[boltPath.length - 1]);
+		//마지막 칸 끝까지 닿도록 반 칸 더 늘린다
+		float dx = b.x - a.x, dy = b.y - a.y, l = (float)Math.sqrt(dx*dx + dy*dy);
+		if (l > 0){
+			b = new PointF(b.x + dx / l * DungeonTilemap.SIZE / 2f, b.y + dy / l * DungeonTilemap.SIZE / 2f);
 		}
+		boltLine = new com.shatteredpixel.shatteredpixeldungeon.effects.BoltWarnLine(a, b);
+		Dungeon.hero.sprite.parent.addToBack(boltLine); //캐릭터 아래 바닥 쪽에
 	}
 
 	private void fireBolt(){
 		clear(boltFx);
+		clearBoltLine();
 		int[] path = boltPath;
 		boltPath = null;
 		//날아가는 강화 마탄
 		if (sprite != null){
 			int end = path[path.length - 1];
 			MovieClip m = BossEffects.clip(BossEffects.Fx.EM_BOLT, 12, true);
-			PointF a = DungeonTilemap.tileCenterToWorld(pos), b = DungeonTilemap.tileCenterToWorld(end);
+			PointF a = DungeonTilemap.tileCenterToWorld((boltFrom >= 0 ? boltFrom : pos)), b = DungeonTilemap.tileCenterToWorld(end);
 			m.origin.set(8, 8);
 			m.x = a.x - 8; m.y = a.y - 8;
 			m.angle = (float)(Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI);
@@ -316,6 +335,7 @@ public class MazeEmpress extends Mob {
 	private void throwSpear(){
 		final int type = spearType;
 		spearType = 0;
+		Buff.detach(this, SpearCountdown.class);
 		Ballistica b = new Ballistica(pos, Dungeon.hero.pos, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET);
 		int end = b.collisionPos;
 		boolean blocked = Dungeon.level.solid[end];
@@ -355,6 +375,68 @@ public class MazeEmpress extends Mob {
 			if (type == ElementTile.FROST) Buff.affect(ch, Frostbite.class, MazeTower.EM_SPEAR_FROSTBITE);
 			else                           Buff.affect(ch, Burning.class).reignite(ch);
 			tileReaction(ch, type);
+		}
+	}
+
+	//창이 날아오기까지 남은 턴을 여제 머리 위에 숫자로 (보스 체력 바 밑 아이콘에도 같은 숫자)
+	private void showSpearCount(){
+		if (spearType == 0 || sprite == null || !Dungeon.level.heroFOV[pos]) return;
+		int left = Math.max(0, spearTimer);
+		int color = spearType == ElementTile.FROST ? 0x88CCFF : 0xFF8844;
+		sprite.showStatus(color, left > 0 ? Integer.toString(left) : "!");
+	}
+
+	//보스 체력 바 밑에 보이는 창 아이콘: 남은 턴을 숫자로 보여 준다
+	public static class SpearCountdown extends Buff {
+
+		{
+			type = buffType.NEUTRAL;
+			announced = false;
+		}
+
+		private MazeEmpress empress(){
+			return target instanceof MazeEmpress ? (MazeEmpress) target : null;
+		}
+
+		@Override
+		public boolean act() {
+			MazeEmpress e = empress();
+			if (e == null || e.spearType == 0) detach();
+			spend(TICK);
+			return true;
+		}
+
+		@Override
+		public int icon() {
+			MazeEmpress e = empress();
+			if (e == null || e.spearType == 0) return com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.NONE;
+			return e.spearType == ElementTile.FROST ? com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.FROST
+					: com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.FIRE;
+		}
+
+		@Override
+		public float iconFadePercent() {
+			MazeEmpress e = empress();
+			if (e == null) return 0;
+			return Math.max(0, Math.min(1, 1f - Math.max(0, e.spearTimer) / (float) MazeTower.EM_SPEAR_DELAY));
+		}
+
+		@Override
+		public String iconTextDisplay() {
+			MazeEmpress e = empress();
+			return e == null ? "" : Integer.toString(Math.max(0, e.spearTimer));
+		}
+
+		@Override
+		public String name() {
+			MazeEmpress e = empress();
+			return Messages.get(this, e != null && e.spearType == ElementTile.FIRE ? "name_fire" : "name_frost");
+		}
+
+		@Override
+		public String desc() {
+			MazeEmpress e = empress();
+			return Messages.get(this, "desc", e == null ? 0 : Math.max(0, e.spearTimer));
 		}
 	}
 
@@ -588,6 +670,7 @@ public class MazeEmpress extends Mob {
 	@Override
 	public void die( Object cause ) {
 		clear(boltFx); clear(rainFx); clear(warnZoneFx); clear(stormFx);
+		clearBoltLine();
 		boltPath = null; rainCells = null; spearType = 0; stormZone = null; warnZone = null;
 		ElementTile.removeAll();
 		Dungeon.level.mazeBossPos = pos; //보스가 쓰러진 자리 (역행 중 흔적)
@@ -604,7 +687,7 @@ public class MazeEmpress extends Mob {
 
 	//불러온 뒤 화면 연출을 다시 만든다
 	private void restoreFx(){
-		if (boltPath != null && boltFx.isEmpty()) showBoltWarn();
+		if (boltPath != null && boltLine == null) showBoltWarn();
 		if (rainCells != null && rainFx.isEmpty()) showRainWarn();
 		if ((warnZone != null && warnZoneFx.isEmpty()) || (stormZone != null && stormFx.isEmpty())) showZoneFx();
 		for (MovieClip m : boltFx)     m.visible = true;
@@ -620,6 +703,7 @@ public class MazeEmpress extends Mob {
 		bundle.put("quiet", quietTurns);
 		bundle.put("bolt_cd", boltCd);
 		if (boltPath != null) bundle.put("bolt_path", boltPath);
+		bundle.put("bolt_from", boltFrom);
 		bundle.put("rain_cd", rainCd);
 		if (rainCells != null) bundle.put("rain_cells", rainCells);
 		bundle.put("spear_type", spearType);
@@ -641,6 +725,7 @@ public class MazeEmpress extends Mob {
 		quietTurns = bundle.getInt("quiet");
 		boltCd = bundle.getInt("bolt_cd");
 		boltPath = bundle.contains("bolt_path") ? bundle.getIntArray("bolt_path") : null;
+		boltFrom = bundle.contains("bolt_from") ? bundle.getInt("bolt_from") : -1;
 		rainCd = bundle.getInt("rain_cd");
 		rainCells = bundle.contains("rain_cells") ? bundle.getIntArray("rain_cells") : null;
 		spearType = bundle.getInt("spear_type");
