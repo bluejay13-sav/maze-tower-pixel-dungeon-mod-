@@ -213,14 +213,6 @@ public class FogOfWar extends Image {
 						continue;
 					}
 					
-					//Maze Tower: 망령 왕의 어둠 속 기둥은 아래 칸(깜깜한 바닥)과 상관없이 보인다
-					if (Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel
-							&& ((com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel) Dungeon.level).mazeShownPillar(cell)) {
-						fillCell(fog, j, i, FOG_COLORS[getCellFog(cell)][brightness]);
-						cell++;
-						continue;
-					}
-
 					//wall tiles
 					if (wall(cell)) {
 						

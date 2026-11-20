@@ -540,11 +540,6 @@ public class CityBossLevel extends Level {
 		return k != null && k.isDark();
 	}
 
-	//Maze Tower: 어두운 동안 기둥(왕좌 포함)은 보인다 (FogOfWar가 기둥 칸은 아래 칸과 상관없이 자기 안개로 칠한다)
-	public boolean mazeShownPillar( int cell ){
-		return wraithDark() && isPillar(cell);
-	}
-
 	//Maze Tower: Dungeon.observe 뒤에 부른다. (결정) 어두운 동안 주인공이 움직여도 지나온 칸·옆 칸이 탐색되지 않는다.
 	//원작은 주인공 옆 칸을 늘 "본 적 있음"으로 하고 안개를 주인공 근처만 다시 그려서, 지나온 자리에 회색 자국이 남았다
 	public void mazeAfterObserve(){
@@ -552,9 +547,9 @@ public class CityBossLevel extends Level {
 		for (int y = ROOM_Y - 1; y <= ROOM_Y + ROOM_SIZE; y++){
 			for (int x = 0; x < width(); x++){
 				int cell = x + y * width();
-				boolean pillar = isPillar(cell);
-				visited[cell] = pillar || heroFOV[cell];
-				mapped[cell] = pillar;
+				//기둥(왕좌 포함) 칸도 깜깜하게 두고, 그림은 안개 위에 따로 그린다 (WraithPillarBodies·WraithPillarTops·WraithThrone)
+				visited[cell] = heroFOV[cell];
+				mapped[cell] = false;
 			}
 		}
 		GameScene.updateFog();

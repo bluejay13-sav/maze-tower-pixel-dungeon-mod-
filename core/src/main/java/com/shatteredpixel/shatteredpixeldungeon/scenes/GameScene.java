@@ -1166,6 +1166,14 @@ public class GameScene extends PixelScene {
 		sortMobSprites();
 	}
 
+	//Maze Tower: 다른 층(안개 위 등)으로 옮겼던 캐릭터 그림을 캐릭터 층으로 되돌린다 (망령 근위병)
+	public static void addMobSpriteBack( CharSprite sprite ){
+		if (scene != null){
+			scene.mobs.add( sprite );
+			sortMobSprites();
+		}
+	}
+
 	//ensures that mob sprites are drawn from top to bottom, in case of overlap
 	public static void sortMobSprites(){
 		if (scene != null){

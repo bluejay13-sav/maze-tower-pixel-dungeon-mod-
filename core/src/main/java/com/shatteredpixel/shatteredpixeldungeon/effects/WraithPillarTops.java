@@ -38,6 +38,8 @@ public class WraithPillarTops extends DungeonWallsTilemap {
 		WraithPillarTops t = new WraithPillarTops(l);
 		DungeonWallsTilemap.skipCells.clear();
 		DungeonWallsTilemap.skipCells.addAll(skip);
+		//기둥 몸통도 안개 위에 같은 밝기로 (몸통만 안개 아래에 두면 윗부분보다 어둡고 깨져 보였다)
+		GameScene.effectOverFog(com.shatteredpixel.shatteredpixeldungeon.tiles.WraithPillarBodies.create(l));
 		GameScene.effectOverFog(t);
 	}
 

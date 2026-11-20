@@ -103,6 +103,7 @@ public class WraithGuard extends Mob {
 
 		//어둠 속 푸른빛 (깜깜한 안개 위에 그린다)
 		private com.watabou.noosa.Halo glow;
+		private boolean overFog = false; //그림이 안개 위 층에 있는지
 
 		@Override
 		public void kill() {
@@ -128,6 +129,16 @@ public class WraithGuard extends Mob {
 				com.watabou.utils.PointF c = center();
 				glow.point(c.x, c.y);
 				glow.alpha(0.22f + 0.1f * (float)Math.sin(com.watabou.noosa.Game.timeTotal * 2.5f));
+			}
+			//(결정) 어둠 속에서 몸통 칸이 보이면(주인공 바로 옆) 머리(위 칸)까지 보이도록 그림을 안개 위 층으로 옮긴다.
+			//몸통이 다시 어둠에 묻히거나 방이 밝아지면 원래 층(캐릭터 층)으로 돌아온다
+			boolean shown = dark && Dungeon.level.heroFOV[ch.pos];
+			if (shown != overFog && parent != null){
+				com.watabou.noosa.Group from = parent;
+				from.erase(this);
+				if (shown) com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.effectOverFog(this);
+				else       com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.addMobSpriteBack(this);
+				overFog = shown;
 			}
 			if (dark){
 				float p = 0.75f + 0.25f * (float)Math.sin(com.watabou.noosa.Game.timeTotal * 2.5f);

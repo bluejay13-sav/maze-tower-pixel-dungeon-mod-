@@ -147,8 +147,7 @@ public class WraithKing extends Mob {
 
 	@Override
 	protected boolean doAttack( Char enemy ) {
-		if (Dungeon.level.adjacent(pos, enemy.pos)) return super.doAttack(enemy);
-		//떨어진 적에게는 영혼 화살
+		//(결정) 기본 공격은 붙어 있든 떨어져 있든 마법 공격(영혼 화살)
 		boolean visible = Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[enemy.pos];
 		if (visible && sprite instanceof WraithKingSprite){
 			((WraithKingSprite) sprite).shootSoul(enemy.pos);
@@ -168,10 +167,10 @@ public class WraithKing extends Mob {
 		spend(attackDelay());
 		Char e = enemy;
 		if (e == null) return;
-		if (hit(this, e, false)){
+		if (hit(this, e, true)){ //마법 공격
 			int dmg = damageRoll();
-			//(결정) 등불이 켜져 있는 동안(2단계 밝음)은 원거리 공격 피해 -25%
-			if (phase == 2 && !dark) dmg = Math.round(dmg * MazeTower.WK_LAMP_RANGED_MULTI);
+			//(결정) 기본 공격(마법) 피해 -30%, 방어력은 그대로 적용
+			dmg = Math.round(dmg * MazeTower.WK_BASIC_MULTI);
 			dmg = Math.max(0, dmg - e.drRoll());
 			e.damage(dmg, this);
 			if (e == Dungeon.hero && !e.isAlive()) Dungeon.fail(this);
