@@ -268,7 +268,7 @@ public class CityBossLevel extends Level {
 	public static final int ROOM_X = 1, ROOM_Y = 24;
 	public static final int MAZE_TOP_DOOR = 7 + 23*15;
 	public static final int MAZE_THRONE = (ROOM_X + 6) + (ROOM_Y + 6)*15;            //여제 옥좌 (6,6)
-	public static final int MAZE_WRAITH_THRONE = (ROOM_X + 6) + (ROOM_Y + 5)*15;     //망령 왕 왕좌 (5,6): 가운데 기둥 바로 위
+	public static final int MAZE_WRAITH_THRONE = (ROOM_X + 6) + (ROOM_Y + 5)*15;     //망령 왕이 나오는 칸 (5,6): 가운데 왕좌 바로 위
 
 	//여제 방: 가운데 11×11 + 네 변 가운데 5칸을 1칸씩 확장 (141칸), 한 칸짜리 기둥 8개
 	public static final int[][] EMPRESS_PILLARS = {
@@ -277,7 +277,7 @@ public class CityBossLevel extends Level {
 	//망령 왕 방: 13×13에서 귀퉁이를 깎은 모양 (153칸), 한 칸짜리 기둥 8개
 	public static final int[][] WRAITH_PILLARS = {
 			{3,3},{3,9},{9,3},{9,9}, {2,6},{10,6},{6,2},{6,10},
-			{6,6} //(결정) 방 정가운데에도 한 칸짜리 기둥 (왕좌는 그 바로 위 (5,6))
+			{6,6} //(결정) 방 정가운데는 왕좌(석상 칸): 기둥처럼 막는 칸으로 친다. 왕은 그 바로 위 (5,6)에서 나온다
 	};
 
 	//(행, 열)이 방 안인지 (기둥 칸도 방 안으로 친다)
@@ -357,11 +357,22 @@ public class CityBossLevel extends Level {
 		return mazeEmpressRoom ? MAZE_THRONE : MAZE_WRAITH_THRONE;
 	}
 
+	//(결정) 망령 왕 방 정가운데 (6,6)은 벽 기둥이 아니라 왕좌: 지나갈 수 없고 졸트라크를 막는다(원작 석상 칸, 시야는 막지 않음)
+	public static final int MAZE_WRAITH_SEAT = (ROOM_X + 6) + (ROOM_Y + 6)*15;
+
+	//원작 드워프 왕 방의 특수 석상 그림을 쓰지 않을 칸 (망령 왕 왕좌)
+	public static boolean mazeThroneCell( int cell ){
+		return cell == MAZE_WRAITH_SEAT && Dungeon.level instanceof CityBossLevel
+				&& ((CityBossLevel) Dungeon.level).mazeRoom && !((CityBossLevel) Dungeon.level).mazeEmpressRoom;
+	}
+
 	private void buildMazeRoom(){
 		for (int r = 0; r < ROOM_SIZE; r++){
 			for (int c = 0; c < ROOM_SIZE; c++){
 				if (!inRoomShape(mazeEmpressRoom, r, c)) continue;
-				Painter.set(this, cellOf(r, c), isPillarRC(mazeEmpressRoom, r, c) ? Terrain.WALL : Terrain.EMPTY);
+				int t = isPillarRC(mazeEmpressRoom, r, c) ? Terrain.WALL : Terrain.EMPTY;
+				if (!mazeEmpressRoom && r == 6 && c == 6) t = Terrain.STATUE; //왕좌
+				Painter.set(this, cellOf(r, c), t);
 			}
 		}
 		Painter.set(this, MAZE_TOP_DOOR, Terrain.LOCKED_DOOR);
@@ -760,7 +771,7 @@ public class CityBossLevel extends Level {
 					data[i] = 13*8 + 4;
 
 				//statues
-				} else if (map[i] == Terrain.STATUE) {
+				} else if (map[i] == Terrain.STATUE && !mazeThroneCell(i)) { //Maze Tower: 마탑 보스방 왕좌는 원작 석상 그림 그대로
 
 					//throne statues
 					if (i < tileW*32){
@@ -844,6 +855,7 @@ public class CityBossLevel extends Level {
 		@Override
 		public String name(int tileX, int tileY) {
 			int cell = (this.tileX + tileX) + (this.tileY + tileY)*tileW;
+			if (mazeThroneCell(cell)) return Messages.get(CityBossLevel.class, "maze_wraith_throne_name"); //Maze Tower: 망령 왕의 왕좌
 
 			//demon halls tiles
 			if (cell < Dungeon.level.width*22){
@@ -866,6 +878,7 @@ public class CityBossLevel extends Level {
 		@Override
 		public String desc(int tileX, int tileY) {
 			int cell = (this.tileX + tileX) + (this.tileY + tileY)*tileW;
+			if (mazeThroneCell(cell)) return Messages.get(CityBossLevel.class, "maze_wraith_throne_desc"); //Maze Tower
 
 			//demon halls tiles
 			if (cell < Dungeon.level.width*22){
@@ -916,7 +929,7 @@ public class CityBossLevel extends Level {
 			//lower part: statues and banners
 			for (int i = tileW*22; i < tileW * tileH; i++){
 
-				if (map[i] == Terrain.STATUE) {
+				if (map[i] == Terrain.STATUE && !mazeThroneCell(i)) { //Maze Tower
 
 					//throne statues
 					if (i < tileW*32){
@@ -1029,7 +1042,7 @@ public class CityBossLevel extends Level {
 			for (int i = tileW*21; i < tileW * tileH; i++){
 
 				//Statues that need to face left instead of right
-				if (map[i] == Terrain.STATUE && i%tileW > 7){
+				if (map[i] == Terrain.STATUE && i%tileW > 7 && !mazeThroneCell(i)){ //Maze Tower
 					data[i-tileW] = 14*8 + 4;
 				} else if (map[i] == Terrain.CUSTOM_DECO){
 					data[i-tileW] = 13*8 + 5;
