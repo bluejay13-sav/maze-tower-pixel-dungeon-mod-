@@ -115,6 +115,8 @@ public class Assets {
 		public static final String MAZE_TALENT2_ICONS = "interfaces/maze_talent2_icons.png";
 		//Maze Tower: 2차 특성 상태 아이콘 (7×7, 가로 8칸 간격)
 		public static final String MAZE_BUFFS2_SMALL = "interfaces/maze_buffs2_small.png";
+		//Maze Tower: 만개 각성한 2차 특성 칸을 감싸는 덩굴 (22×28, 특성 칸 20×26보다 사방 1칸 크게)
+		public static final String MAZE_AWAKEN_VINE = "interfaces/maze_awaken_vine.png";
 		public static final String TALENT_BUTTON    = "interfaces/talent_button.png";
 
 		public static final String HERO_ICONS       = "interfaces/hero_icons.png";

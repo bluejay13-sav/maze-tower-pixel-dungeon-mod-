@@ -270,8 +270,7 @@ public class BloomTalentsPane extends ScrollPane {
 		private Image bg;
 		private Image icon;
 		private ColorBlock fill;
-		private ColorBlock awakeGlow; //만개 각성: 칸 위에 살짝 겹치는 분홍빛 (숨 쉬듯 밝아졌다 어두워짐)
-		private float glowTime = 0;
+		private Image awakeVine; //만개 각성: 칸을 감싸는 덩굴 (interfaces/maze_awaken_vine.png, 사방 1칸 크게)
 
 		public SlotButton(int index){
 			super();
@@ -281,10 +280,6 @@ public class BloomTalentsPane extends ScrollPane {
 			BloomTree tree = BloomTree.get(Dungeon.hero);
 			BloomTree.Slot slot = index < tree.slots.size() ? tree.slots.get(index) : null;
 
-			if (slot != null && slot.isChosen() && slot.awakened){
-				awakeGlow = new ColorBlock(1, 1, 0xFFFF5FC0); //화사한 분홍
-			}
-
 			fill = new ColorBlock(0, 4, 0xFFFFFF44);
 			add(fill);
 
@@ -292,8 +287,6 @@ public class BloomTalentsPane extends ScrollPane {
 			//특성 최대 레벨 3 → 원작 3포인트 특성 테두리
 			bg.frame(20*(MazeTower.BLOOM_MAX_TALENT_LEVEL-1), 0, TalentButton.WIDTH, TalentButton.HEIGHT);
 			add(bg);
-			//각성 분홍빛은 칸 그림 위에 살짝 겹친다 (뒤에 두면 칸 그림에 가려 보이지 않는다)
-			if (awakeGlow != null) add(awakeGlow);
 
 			if (slot != null && slot.isChosen()){
 				icon = new BloomTalentIcon(slot.chosen);
@@ -305,6 +298,12 @@ public class BloomTalentsPane extends ScrollPane {
 				bg.alpha(0.3f);
 			}
 			if (icon != null) add(icon);
+
+			//만개 각성: 칸 테두리를 덩굴이 감싼다 (아이콘 칸은 가리지 않는 그림)
+			if (slot != null && slot.isChosen() && slot.awakened){
+				awakeVine = new Image(Assets.Interfaces.MAZE_AWAKEN_VINE);
+				add(awakeVine);
+			}
 		}
 
 		private BloomTree.Slot slot(){
@@ -326,11 +325,10 @@ public class BloomTalentsPane extends ScrollPane {
 
 			bg.x = x;
 			bg.y = y;
-			if (awakeGlow != null){
-				//칸 테두리 안쪽에만 (은은하게)
-				awakeGlow.x = x + 1;
-				awakeGlow.y = y + 1;
-				awakeGlow.size(TalentButton.WIDTH - 2, TalentButton.HEIGHT - 2);
+			if (awakeVine != null){
+				awakeVine.x = x - 1;
+				awakeVine.y = y - 1;
+				PixelScene.align(awakeVine);
 			}
 
 			if (icon != null){
@@ -367,16 +365,6 @@ public class BloomTalentsPane extends ScrollPane {
 		@Override
 		public void update() {
 			super.update();
-
-			//만개 각성: 은은한 분홍빛으로 숨 쉬듯 빛난다
-			if (awakeGlow != null){
-				glowTime += Game.elapsed;
-				float b = 0.5f + 0.5f * (float)Math.sin(glowTime * 2.2f);
-				awakeGlow.alpha(0.23f + 0.09f * b); //은은하지만 보이게 (23~32%)
-				if (appearTime <= 0 && flashTime <= 0){
-					bg.hardlight(1f, 0.78f - 0.14f * b, 0.9f - 0.06f * b);
-				}
-			}
 
 			if (appearDelay >= 0){
 				appearDelay -= Game.elapsed;
