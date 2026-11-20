@@ -169,9 +169,8 @@ public class WraithKing extends Mob {
 		if (e == null) return;
 		if (hit(this, e, true)){ //마법 공격
 			int dmg = damageRoll();
-			//(결정) 기본 공격(마법) 피해 -30%, 방어력은 그대로 적용
+			//(결정) 기본 공격은 마법: 피해 -50%, 마법이라 방어력을 무시한다
 			dmg = Math.round(dmg * MazeTower.WK_BASIC_MULTI);
-			dmg = Math.max(0, dmg - e.drRoll());
 			e.damage(dmg, this);
 			if (e == Dungeon.hero && !e.isAlive()) Dungeon.fail(this);
 		} else if (e.sprite != null){
@@ -462,7 +461,11 @@ public class WraithKing extends Mob {
 		//영혼 11개 이하면 범위 경고
 		if (souls < MazeTower.WK_SOUL_NOWARN){
 			for (int c : zoltCells()){
-				zoltWarn.add(BossEffects.atCell(BossEffects.Fx.WK_ZOLT_WARN, c, 4, true));
+				MovieClip w = BossEffects.atCell(BossEffects.Fx.WK_ZOLT_WARN, c, 4, true);
+				//(결정) 어둠 속에서도 범위 경고가 전부 보인다 (안개 위로 옮김)
+				if (w.parent != null) w.parent.erase(w);
+				GameScene.effectOverFog(w);
+				zoltWarn.add(w);
 			}
 		}
 	}
@@ -594,7 +597,7 @@ public class WraithKing extends Mob {
 			double dot = o[0] * Math.sin(r) + o[1] * -Math.cos(r);
 			if (dot < 0) c.scale.y = -0.8f;
 		}
-		GameScene.effect(c);
+		GameScene.effectOverFog(c); //(결정) 어둠 속에서도 광선 전체가 보인다 (안개 위)
 	}
 
 	//가장 바깥 줄인지 (가로·세로는 ±1, 넓힌 대각선은 ±2). 안쪽 줄은 가운데 줄 그림을 쓴다
@@ -621,7 +624,7 @@ public class WraithKing extends Mob {
 			double dot = o[0] * Math.sin(r) + o[1] * -Math.cos(r);
 			if (dot < 0) c.scale.y = -1;
 		}
-		GameScene.effect(c);
+		GameScene.effectOverFog(c); //(결정) 어둠 속에서도 광선 전체가 보인다 (안개 위)
 	}
 
 	// ----- 기습 -----

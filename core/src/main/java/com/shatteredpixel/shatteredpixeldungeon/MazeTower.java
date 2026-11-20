@@ -537,7 +537,7 @@ public class MazeTower {
 	public static final int   WK_LAMP_HERO_GAP  = 2;     //등불은 처음 생길 때 주인공 둘레 이 칸 안에는 생기지 않는다
 	public static final int   WK_LAMP_GAP       = 4;     //등불끼리 이 칸 수 이상 떨어진다 (서로 3칸 안에는 생기지 않음)
 	public static final int   WK_LAMP_TURNS     = 25;    //(결정, 바뀜 50→35→25) 등불이 켜져 있는 턴
-	public static final float WK_BASIC_MULTI    = 0.70f; //(결정, 바뀜) 왕의 기본 공격(마법 영혼 화살, 붙어 있어도) 피해 -30%. 예전: 등불이 켜진 동안 원거리만 -35%
+	public static final float WK_BASIC_MULTI    = 0.50f; //(결정, 바뀜 -30%→-50%) 왕의 기본 공격(마법 영혼 화살, 붙어 있어도, 방어 무시) 피해 -50%. 예전: 등불이 켜진 동안 원거리만 -35%
 	public static final float WK_COUNTER_MIN    = 0.10f; //(결정, 바뀜 60~70%→10%) 기습 중 푸른 눈을 쳐서 숨은 왕에게 넘어가는 피해 비율 (90% 감소)
 	public static final float WK_COUNTER_MAX    = 0.10f;
 	public static final float WK_LAMP_STUN      = 3f;    //등불이 켜지면 왕 기절
@@ -562,7 +562,7 @@ public class MazeTower {
 	public static final int   WG_DMG_MIN        = 10;
 	public static final int   WG_DMG_MAX        = 16;
 	public static final int   WG_ACC            = 25;
-	public static final int   WG_DEF            = 15;
+	public static final int   WG_DEF            = 8;     //(결정, 바뀜 15→8) 회피
 	public static final int   WG_DR             = 4;
 	public static final float WG_SPEED          = 2f;    //한 턴에 2칸
 
