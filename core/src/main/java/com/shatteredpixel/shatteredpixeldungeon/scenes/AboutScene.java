@@ -254,7 +254,21 @@ public class AboutScene extends PixelScene {
 		freesound.setRect(transifex.left()-10, transifex.bottom() + 8, colWidth+20, 0);
 		content.add(freesound);
 
-		content.setSize( fullWidth, freesound.bottom()+10 + insets.bottom );
+		//*** Maze Tower Credits *** (원작 크레딧은 그대로 두고 아래에 덧붙인다)
+		addLine(freesound.bottom() + 6, content);
+		String mazeBy = com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOD_AUTHOR.isEmpty() ? ""
+				: "\nModded by: _" + com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOD_AUTHOR + "_";
+		CreditsBlock maze = new CreditsBlock(true,
+				0xFFA8CF,
+				"Maze Tower",
+				null,
+				"An unofficial mod of Shattered Pixel Dungeon." + mazeBy + "\nNot affiliated with or endorsed by Shattered Pixel.",
+				com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOD_LINK_TEXT.isEmpty() ? null : com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOD_LINK_TEXT,
+				com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOD_LINK.isEmpty() ? null : com.shatteredpixel.shatteredpixeldungeon.MazeTower.MOD_LINK);
+		maze.setRect((Camera.main.width - colWidth)/2f, freesound.bottom() + 14, colWidth, 0);
+		content.add(maze);
+
+		content.setSize( fullWidth, maze.bottom()+10 + insets.bottom );
 
 		list.setRect( 0, 0, w, h );
 		list.scrollTo(0, 0);
