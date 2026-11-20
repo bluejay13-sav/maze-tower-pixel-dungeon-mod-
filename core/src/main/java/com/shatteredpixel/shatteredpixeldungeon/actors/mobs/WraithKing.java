@@ -528,7 +528,7 @@ public class WraithKing extends Mob {
 		int reach = (DX[zoltDir] != 0 && DY[zoltDir] != 0) ? 2 : 1; //(결정) 대각선 광선은 한 칸 더 넓게
 		for (int k = -reach; k <= reach; k++){
 			int[] o = laneOffset(k);
-			for (int i = (k == 0 ? 1 : 0); i < 40; i++){
+			for (int i = 1; i < 40; i++){ //(결정) 옆 줄도 왕 다음 칸부터 (왕의 바로 옆에는 광선 없음)
 				int x = x0 + o[0] + dx * i, y = y0 + o[1] + dy * i;
 				if (x < 0 || y < 0 || x >= w || y >= Dungeon.level.height()) break;
 				int c = x + y * w;
@@ -561,53 +561,9 @@ public class WraithKing extends Mob {
 		for (int c : cells){
 			if (Dungeon.level.heroFOV[c]) seen = true;
 		}
-		//(결정) 광선은 처음 방식(그림)으로, 하나의 광선으로 보이게 줄마다 그림을 나눠 쓴다:
-		//가운데 줄 = 흰 심이 있는 가운데 그림, 그 바깥 줄 = 흰 심 없이 바깥으로 갈수록 짙어지는 몸통 그림,
-		//가장 바깥 = 테두리 그림. 바깥 줄이 벽에 막혀 끝나면 그 다음부터는 안쪽 줄이 테두리가 되어 광선이 자연스럽게 좁아진다.
-		//가로·세로는 칸마다 이어 붙이고, 대각선은 같은 그림이 이어지는 구간마다 하나로 길게 늘여 그린다 (어둠 속에서도 보이게 안개 위)
-		{
-			boolean diag = DX[zoltDir] != 0 && DY[zoltDir] != 0;
-			int reach = diag ? 2 : 1;
-			java.util.HashMap<Integer, ArrayList<Integer>> byLane = new java.util.HashMap<>();
-			for (int i = 0; i < cells.size(); i++){
-				if (!byLane.containsKey(lanes.get(i))) byLane.put(lanes.get(i), new ArrayList<Integer>());
-				byLane.get(lanes.get(i)).add(cells.get(i));
-			}
-			for (int k = -reach; k <= reach; k++){
-				ArrayList<Integer> run = byLane.get(k);
-				if (run == null) continue;
-				int start = (k == 0) ? 1 : 0; //가운데 줄은 왕 다음 칸부터
-				//바깥쪽 이웃 줄이 몇 걸음째까지 이어지는지
-				int outerEnd = -1;
-				if (k != 0 && Math.abs(k) < reach){
-					int ko = k + Integer.signum(k);
-					ArrayList<Integer> outer = byLane.get(ko);
-					outerEnd = outer == null ? 0 : outer.size(); //바깥 줄은 0걸음째부터 시작
-				}
-				int segFirst = -1, segLast = -1;
-				BossEffects.Fx segArt = null;
-				for (int j = 0; j < run.size(); j++){
-					int step = start + j;
-					BossEffects.Fx art;
-					if (k == 0) art = BossEffects.Fx.WK_ZOLT_CENTER;
-					//테두리: 안쪽이 몸통이면(넓은 대각선의 가장 바깥 줄) 몸통의 짙은 색과 이어지는 넓은 테두리, 가운데와 바로 붙으면 원래 테두리
-					else if (Math.abs(k) == reach || step >= outerEnd) art = Math.abs(k) >= 2 ? BossEffects.Fx.WK_ZOLT_EDGE_WIDE : BossEffects.Fx.WK_ZOLT_EDGE;
-					else art = BossEffects.Fx.WK_ZOLT_BODY;
-					if (!diag){
-						beamVisual(run.get(j), k, art);
-						continue;
-					}
-					if (art != segArt && segArt != null){
-						diagBeamVisual(segFirst, segLast, k, segArt);
-						segFirst = -1;
-					}
-					if (segFirst == -1) segFirst = run.get(j);
-					segLast = run.get(j);
-					segArt = art;
-				}
-				if (diag && segArt != null) diagBeamVisual(segFirst, segLast, k, segArt);
-			}
-		}
+		//(결정) 광선은 칸마다 그 칸의 광선 조각을 그려 빈틈없이 채운 하나의 광선 (흰 심 → 푸른색 → 짙은 푸른색 명암, 바깥에 짙은 테두리).
+		//줄마다 그림을 돌려 늘이면 대각선에서 칸 귀퉁이가 비고 여러 줄로 보였다 (effects/ZoltBeamFx, 어둠 속에서도 보이게 안개 위)
+		GameScene.groupOverFog(new com.shatteredpixel.shatteredpixeldungeon.effects.ZoltBeamFx(cells, pos, DX[zoltDir], DY[zoltDir]));
 		for (int c : cells){
 			Char ch = Actor.findChar(c);
 			if (ch == null || ch == this) continue;
@@ -624,49 +580,6 @@ public class WraithKing extends Mob {
 		}
 		if (seen) PixelScene.shake(2, 0.4f);
 		Sample.INSTANCE.play(Assets.Sounds.RAY);
-	}
-
-	//대각선 한 구간을 처음 칸 ~ 끝 칸까지 하나로 늘여 그린다 (양 끝을 반 칸씩 더 늘려 칸 끝까지 닿게)
-	private void diagBeamVisual( int first, int last, int lane, BossEffects.Fx art ){
-		PointF a = DungeonTilemap.tileCenterToWorld(first);
-		PointF b = DungeonTilemap.tileCenterToWorld(last);
-		float dx = DX[zoltDir], dy = DY[zoltDir];
-		float half = DungeonTilemap.SIZE / 2f;
-		a = new PointF(a.x - dx * half, a.y - dy * half);
-		b = new PointF(b.x + dx * half, b.y + dy * half);
-		float len = (float)Math.sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
-		MovieClip c = BossEffects.clip(art, 15, false);
-		//그림 왼쪽 가운데를 a에 두고 광선 방향으로 돌려 길이만큼 늘인다
-		c.origin.set(0, 8);
-		c.x = a.x;
-		c.y = a.y - 8;
-		float angle = zoltDir * 45f;
-		c.angle = angle;
-		c.scale.x = len / 16f;
-		//나란한 줄 사이가 비지 않게 두께를 조금 늘린다 (대각선 줄 간격 약 11.3픽셀)
-		c.scale.y = outwardFlip(lane, angle) ? -0.8f : 0.8f;
-		GameScene.effectOverFog(c); //(결정) 어둠 속에서도 광선 전체가 보인다 (안개 위)
-	}
-
-	//가운데가 아닌 줄의 그림(몸통·테두리)은 위쪽(짙은 쪽·테두리)이 바깥을 향해야 한다. 돌린 뒤 그림의 위쪽 = (sin, -cos)
-	private boolean outwardFlip( int lane, float angle ){
-		if (lane == 0) return false;
-		double r = Math.toRadians(angle);
-		int[] o = laneOffset(lane);
-		return o[0] * Math.sin(r) + o[1] * -Math.cos(r) < 0;
-	}
-
-	//가로 그림을 광선 방향으로 돌려 한 칸에 그린다 (가로·세로 광선)
-	private void beamVisual( int cell, int lane, BossEffects.Fx art ){
-		MovieClip c = BossEffects.clip(art, 15, false);
-		PointF p = DungeonTilemap.tileCenterToWorld(cell);
-		c.origin.set(8, 8);
-		c.x = p.x - 8;
-		c.y = p.y - 8;
-		float angle = zoltDir * 45f;
-		c.angle = angle;
-		if (outwardFlip(lane, angle)) c.scale.y = -1;
-		GameScene.effectOverFog(c); //(결정) 어둠 속에서도 광선 전체가 보인다 (안개 위)
 	}
 
 	// ----- 기습 -----
