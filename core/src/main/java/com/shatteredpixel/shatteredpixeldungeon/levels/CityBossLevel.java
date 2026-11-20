@@ -534,7 +534,7 @@ public class CityBossLevel extends Level {
 	//Maze Tower: 시야에는 있지만 안개를 걷지 않는 칸 (망령 왕 기습의 푸른 눈, FogOfWar에서 본다)
 	public int mazeDarkCell = -1;
 
-	private boolean wraithDark(){
+	public boolean wraithDark(){
 		if (!mazeRoom || mazeEmpressRoom) return false;
 		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing k = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.find();
 		return k != null && k.isDark();

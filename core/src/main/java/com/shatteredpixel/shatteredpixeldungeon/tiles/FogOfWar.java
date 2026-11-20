@@ -78,6 +78,12 @@ public class FogOfWar extends Image {
 	//should be divisible by 2
 	private static final int PIX_PER_TILE = 2;
 
+	//Maze Tower: "본 적 있음" 안개 아래 칸이 보이는 밝기 (0~1). 안개 위에 그리는 그림을 같은 밝기로 맞출 때 쓴다
+	public static float visitedShade(){
+		int b = Math.max(0, Math.min(FOG_COLORS[VISITED].length - 1, com.shatteredpixel.shatteredpixeldungeon.SPDSettings.brightness() + 1));
+		return 1f - ((FOG_COLORS[VISITED][b] >>> 24) / 255f);
+	}
+
 	/*
 	TODO currently the center of each fox pixel is aligned with the inside of a cell
 	might be possible to create a better fog effect by aligning them with edges of a cell,

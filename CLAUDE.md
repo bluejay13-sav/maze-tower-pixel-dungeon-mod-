@@ -758,6 +758,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
   - (결정) 기습 때 왕은 언제나 푸른 눈이 있던 칸에서 나타나 친다(주인공이 움직였어도 그 칸 그대로, 그 칸이 막혔을 때만 주인공 옆 칸).
   - (결정) 1단계에서 맞아 순간이동할 때는 영혼 구슬(떨어진 것·예고 중인 것)에서 2칸 이상 4칸 이내인 칸으로(`WK_TP_ORB_MIN/MAX`, 그런 칸이 없으면 방 안 아무 칸).
   - (결정) 어두운 동안 주인공이 움직여도 지나온 칸·옆 칸이 탐색되지 않는다(언제나 깜깜, 주인공 칸만 보임). 기둥(왕좌 포함)은 보인다(`CityBossLevel.mazeAfterObserve` ← `Dungeon.observe`, `mazeShownPillar` → `FogOfWar`).
+  - (결정) 기둥 윗면은 원작에서 기둥 바로 위 칸에 그려져 어둠 속에서 잘려 보이므로, 어두운 동안에만 그 윗면을 안개 위에 한 번 더 그린다(기둥 몸통과 같은 밝기, `effects/WraithPillarTops`, `FogOfWar.visitedShade`). 비교 샘플 `docs/sprites/boss_fx/check_dark_pillar.png`(밝을 때 / 고치기 전 / 고친 뒤).
   - (결정) 여러 번 때리는 공격(연격·반월베기 등 스킬 연타, 연속 베기 추가 평타, 분노 폭발)은 맞은 적이 다른 곳으로 순간이동하거나 은신하면 남은 타격을 멈춘다(`SwordSkill.stillThere`, `BloomAttack.extraStrike`, `Combo` 분노 폭발).
   - (결정) 대각선 인간을 죽이는 마법은 칸마다 돌린 조각을 붙이면 이음매가 깨져 보여서, 줄마다 처음 칸부터 끝 칸까지 하나로 길게 늘여 그린다(`diagBeamVisual`).
   - (결정) 등불이 켜져 있는 동안(2단계 밝음) 왕의 원거리 공격(영혼 화살) 피해 (결정, 바뀜) -35%(`WK_LAMP_RANGED_MULTI`). 영혼 화살은 주인공 방어력만큼 줄어든다.
