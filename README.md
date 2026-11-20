@@ -44,7 +44,7 @@ Follow the original [desktop compile guide](docs/getting-started-desktop.md):
 
 Maze Tower, like Shattered Pixel Dungeon and Pixel Dungeon, is licensed under the
 **GNU General Public License v3.0** — see [LICENSE.txt](LICENSE.txt).
-All original credits are kept in the in-game About screen. The full source code of every Maze Tower release is in this repository.
+All original credits are kept in the in-game About screen. The full source code of every Maze Tower release is in this repository: https://github.com/bluejay13-sav/maze-tower-pixel-dungeon-mod-
 
 ---
 
