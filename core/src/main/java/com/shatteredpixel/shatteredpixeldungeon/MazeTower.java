@@ -514,7 +514,7 @@ public class MazeTower {
 	public static final int   B20_HP            = 300;   //체력 (원작 드워프 왕과 같음)
 	public static final int   B20_HP_STRONG     = 450;   //도전 "더 강한 보스"
 	public static final int   B20_EXP           = 40;
-	public static final int   B20_DEF           = 22;    //회피
+	public static final int   B20_DEF           = 20;    //(결정, 바뀜 22→20) 회피 (여제)
 	public static final int   B20_ACC           = 26;    //명중
 	public static final int   B20_DR            = 10;    //방어 (0~10)
 	public static final float B20_PHASE_DROP    = 0.01f; //단계가 넘어가는 피해는 다음 단계 최대 체력보다 이만큼 낮은 체력에서 멈춘다
@@ -538,7 +538,7 @@ public class MazeTower {
 	public static final int   WK_LAMP_GAP       = 4;     //등불끼리 이 칸 수 이상 떨어진다 (서로 3칸 안에는 생기지 않음)
 	public static final int   WK_LAMP_TURNS     = 25;    //(결정, 바뀜 50→35→25) 등불이 켜져 있는 턴
 	public static final float WK_BASIC_MULTI    = 0.40f; //(결정, 바뀜 -30%→-50%→-60%) 왕의 기본 공격 피해 -60%: 바로 옆은 일반 근접(방어 적용), 떨어지면 마법 영혼 화살(방어 무시). 예전: 등불이 켜진 동안 원거리만 -35%
-	public static final int   WK_DEF            = 18;    //(결정) 망령 왕 회피 (20층 공통 22보다 조금 낮게)
+	public static final int   WK_DEF            = 17;    //(결정, 바뀜 18→17) 망령 왕 회피
 	public static final float WK_COUNTER_MIN    = 0.10f; //(결정, 바뀜 60~70%→10%) 기습 중 푸른 눈을 쳐서 숨은 왕에게 넘어가는 피해 비율 (90% 감소)
 	public static final float WK_COUNTER_MAX    = 0.10f;
 	public static final float WK_LAMP_STUN      = 3f;    //등불이 켜지면 왕 기절
