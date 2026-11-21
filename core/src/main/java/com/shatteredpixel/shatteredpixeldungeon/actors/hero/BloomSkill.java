@@ -53,7 +53,8 @@ public class BloomSkill {
 		int burstStacks = 0;
 		boolean burstTransferred = false;
 		boolean impactDone = false;
-		boolean flash = false;                        //섬광 보법이 이번 원거리 스킬에 발동 (준비되었을 때만)
+		boolean flash = false;                        //섬광 보법이 이번 스킬에 발동 (준비되었을 때만)
+		boolean flashIn = false;                      //근거리 스킬: 떨어진 적에게 돌진해 들어갔다 (물러나지 않음)
 	}
 
 	static State state = null;
@@ -88,6 +89,36 @@ public class BloomSkill {
 			state.flash = true;
 			Buff.affect(hero, BloomBuffs.FlashCooldown.class, B2_FLASH_COOLDOWN);
 		}
+	}
+
+	//(결정) 섬광 보법 근거리: 떨어진 적에게 근거리 스킬을 쓰면 그 적 바로 앞 칸으로 돌진한 뒤 벤다.
+	//돌진할 수 있는 거리는 물러나는 칸 수와 같다 (1·2레벨 1칸 → 2칸 떨어진 적, 3레벨 2칸 → 3칸 떨어진 적).
+	//가는 길(직선)에 벽·적·낭떠러지·함정이 있으면 못 한다. 준비되었을 때만. 돌진할 칸, 못 하면 -1
+	public static int dashInCell(Hero hero, Char enemy){
+		int fl = lvl(hero, FLASH_STEP);
+		if (fl < 0 || hero.buff(BloomBuffs.FlashCooldown.class) != null) return -1;
+		if (hero.rooted || Dungeon.level.adjacent(hero.pos, enemy.pos)) return -1;
+		if (Dungeon.level.distance(hero.pos, enemy.pos) > B2_FLASH_RANGE[fl] + 1) return -1;
+		Ballistica b = new Ballistica(hero.pos, enemy.pos, Ballistica.PROJECTILE);
+		if (b.collisionPos != enemy.pos) return -1;
+		int land = -1;
+		for (int i = 1; i < b.path.size(); i++){
+			int c = b.path.get(i);
+			if (c == enemy.pos) break;
+			if (!Dungeon.level.passable[c] || Dungeon.level.avoid[c] || Actor.findChar(c) != null) return -1;
+			land = c;
+		}
+		if (land == -1 || !Dungeon.level.adjacent(land, enemy.pos)) return -1;
+		return land;
+	}
+
+	//근거리 스킬로 돌진했다 (SwordSkill.perform, beginSkill 뒤). 피해 증가·각성 기절은 원거리와 같다
+	public static void markDashIn(){
+		Hero hero = Dungeon.hero;
+		if (state == null || hero == null || lvl(hero, FLASH_STEP) < 0) return;
+		state.flash = true;
+		state.flashIn = true;
+		Buff.affect(hero, BloomBuffs.FlashCooldown.class, B2_FLASH_COOLDOWN);
 	}
 
 	// =====================================================================
@@ -308,7 +339,7 @@ public class BloomSkill {
 
 		//섬광 보법: 원거리 스킬을 쓴 뒤 대상 반대쪽으로 1~2칸 물러난다 (물러날 수 있을 때만)
 		int fl = lvl(hero, FLASH_STEP);
-		if (s != null && s.flash && fl >= 0 && u.target != null && hero.isAlive()){
+		if (s != null && s.flash && !s.flashIn && fl >= 0 && u.target != null && hero.isAlive()){
 			int cell = retreatCell(hero, u.target.pos, B2_FLASH_RANGE[fl]);
 			if (cell != hero.pos) dash(hero, cell);
 		}
