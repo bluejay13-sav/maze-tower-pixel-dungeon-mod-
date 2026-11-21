@@ -148,6 +148,7 @@ public class TextInput extends Component {
 		container.setActor(textField);
 		stage.setKeyboardFocus(textField);
 		Game.platform.setOnscreenKeyboardVisible(true, multiline);
+		Game.platform.setTextInputActive(true); //Maze Tower
 	}
 
 	public void enterPressed(){
@@ -259,6 +260,7 @@ public class TextInput extends Component {
 			skin.dispose();
 			Game.inputHandler.removeInputProcessor(stage);
 			Game.platform.setOnscreenKeyboardVisible(false, false);
+			Game.platform.setTextInputActive(false); //Maze Tower
 			if (!DeviceCompat.isDesktop()) Game.platform.updateSystemUI();
 		}
 	}

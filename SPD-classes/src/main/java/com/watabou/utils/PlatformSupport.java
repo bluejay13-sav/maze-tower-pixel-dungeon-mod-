@@ -80,6 +80,11 @@ public abstract class PlatformSupport {
 		return Gdx.net.openURI( uri );
 	}
 
+	//Maze Tower: 글 입력 칸이 열리고 닫힐 때 (데스크톱은 이때만 한글 입력기를 켬)
+	public void setTextInputActive( boolean active ){
+		//does nothing by default
+	}
+
 	public void setOnscreenKeyboardVisible(boolean value, boolean multiline){
 		//by default ignore multiline
 		Gdx.input.setOnscreenKeyboardVisible(value, Input.OnscreenKeyboardType.Default);

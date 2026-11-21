@@ -29,7 +29,10 @@ import com.watabou.noosa.audio.Music;
 public class DesktopWindowListener implements Lwjgl3WindowListener {
 	
 	@Override
-	public void created ( Lwjgl3Window lwjgl3Window ) { }
+	public void created ( Lwjgl3Window lwjgl3Window ) {
+		//Maze Tower: 게임 창의 한글 입력기를 꺼서 한/영 상태와 상관없이 같은 키로 조작
+		DesktopIme.setWindow( lwjgl3Window.getWindowHandle() );
+	}
 	
 	@Override
 	public void maximized ( boolean b ) {
@@ -47,6 +50,7 @@ public class DesktopWindowListener implements Lwjgl3WindowListener {
 		}
 	}
 	public void focusGained () {
+		DesktopIme.apply(); //Maze Tower
 		if (!SPDSettings.playMusicInBackground()){
 			Music.INSTANCE.resume();
 		}

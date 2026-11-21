@@ -57,6 +57,12 @@ public class DesktopPlatformSupport extends PlatformSupport {
 		}
 	}
 
+	//Maze Tower: 글 입력 칸이 열려 있을 때만 한글 입력기를 켠다 (DesktopIme)
+	@Override
+	public void setTextInputActive( boolean active ) {
+		DesktopIme.setEnabled( active );
+	}
+
 	private static boolean first = true;
 
 	@Override
