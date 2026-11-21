@@ -101,16 +101,34 @@ public class MazeTower {
 
 	// ===== 사냥꾼과 활 =====
 
-	//낡은 단궁 (1티어): 근접 피해(인접한 적)와 원거리 피해를 따로 가진다. 강화 1당 증가량은 _SCALE
-	public static final int BOW_MELEE_MIN = 1, BOW_MELEE_MIN_SCALE = 1;
-	public static final int BOW_MELEE_MAX = 4, BOW_MELEE_MAX_SCALE = 1;
-	public static final int BOW_RANGED_MIN = 2, BOW_RANGED_MIN_SCALE = 1;
-	public static final int BOW_RANGED_MAX = 8, BOW_RANGED_MAX_SCALE = 2;
+	//활 7종: 근접 피해(인접한 적)와 원거리 피해를 따로 가진다. 배열은 [티어] (0은 안 씀)
+	//  1티어 단궁 / 2티어 탄궁·장궁 / 3티어 각궁·석궁 / 4티어 정량궁·정령의 활. 힘 요구치는 원작 공식(티어)이라 검 7종과 같다
+	//  강화 1당 증가량: 근접 +1/+1, 원거리 +1/+BOW_RANGED_MAX_SCALE[티어]
+	public static final int[] BOW_MELEE_MIN  = {0, 1, 2, 3, 4};
+	public static final int[] BOW_MELEE_MAX  = {0, 4, 7, 10, 13};
+	public static final int[] BOW_RANGED_MIN = {0, 2, 3, 4, 5};
+	public static final int[] BOW_RANGED_MAX = {0, 8, 12, 16, 20};
+	public static final int[] BOW_RANGED_MAX_SCALE = {0, 2, 3, 4, 5};
 	//2칸 거리 원거리 평타의 명중 배율 (0.7 = -30%). 3칸 이상은 패널티 없음
 	public static final float BOW_CLOSE_RANGE_ACCURACY = 0.7f;
-	//조준 사격: 원거리 피해의 1배, 맞으면 1칸 밀쳐냄 (화살 1발)
+	//활 스킬 (원거리 피해 배율, 모두 마나 SKILL_MANA_COST)
+	//조준 사격: 단궁 100% / 탄궁 120% / 장궁 140%, 명중 +30%, 밀쳐내기 없음
 	public static final float SKILL_AIMED_SHOT_DMG = 1.0f;
-	//근접 평타·조준 사격이 밀쳐내는 거리
+	public static final float SKILL_PELLET_AIMED_DMG = 1.2f;
+	public static final float SKILL_LONG_AIMED_DMG = 1.4f;
+	public static final float SKILL_AIMED_ACCURACY = 1.3f;
+	//속사 (각궁): 80% 화살 두 발 (화살 2개)
+	public static final int   SKILL_RAPID_HITS = 2;
+	public static final float SKILL_RAPID_DMG = 0.8f;
+	//장전 (석궁): 1턴, 다음 원거리 평타 = 평타 100% + 130% = 230%, 명중 +30%
+	public static final float SKILL_LOAD_DMG = 2.3f;
+	public static final float SKILL_LOAD_ACCURACY = 1.3f;
+	//집중 (정량궁): 1턴, 다음 원거리 평타 = 평타 100% + 180% = 280%, 명중 +50%
+	public static final float SKILL_FOCUS_DMG = 2.8f;
+	public static final float SKILL_FOCUS_ACCURACY = 1.5f;
+	//꿰뚫기 (정령의 활): 벽을 관통하는 화살 180% (보이는 적이면 길이 막혀도 맞힌다)
+	public static final float SKILL_PIERCE_DMG = 1.8f;
+	//활 근접 평타가 밀쳐내는 거리
 	public static final int BOW_KNOCKBACK = 1;
 	//사냥꾼 시작 화살
 	public static final int HUNTRESS_START_ARROWS = 100;

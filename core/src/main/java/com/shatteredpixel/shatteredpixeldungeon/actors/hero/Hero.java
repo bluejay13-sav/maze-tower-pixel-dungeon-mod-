@@ -1525,7 +1525,14 @@ public class Hero extends Char {
 			}
 			//attack target cleared on onAttackComplete
 			//Maze Tower: 활로 인접하지 않은 적을 공격하면 화살을 쏜다
-			if (WornShortbow.isShot(this, attackTarget)){
+			//Maze Tower: 장전·집중해 둔 원거리 평타는 스킬 판정으로 강화된다
+			com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.BowCharge charged = buff(com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.BowCharge.class);
+			if (charged != null && WornShortbow.isShot(this, attackTarget)){
+				Char t = attackTarget;
+				curAction = null;
+				attackTarget = null;
+				com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill.fireCharged(this, WornShortbow.equipped(this), charged, t);
+			} else if (WornShortbow.isShot(this, attackTarget)){
 				WornShortbow.fireAnimation(this, attackTarget, new Callback() {
 					@Override
 					public void call() {

@@ -21,16 +21,16 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Callback;
 
-//Maze Tower: 낡은 단궁 (사냥꾼 시작 무기, 1티어, 활 계열).
+//Maze Tower: 단궁 (사냥꾼 시작 무기, 1티어, 활 계열). 활 7종의 바탕 클래스이기도 하다(나머지 6종이 물려받는다).
+//  (예전 이름 "낡은 단궁". 저장 파일과 맞도록 클래스 이름은 그대로 둔다)
 //  1칸(인접)   근접 평타: 근접 피해, 맞히면 1칸 밀쳐냄, 화살 안 씀
 //  2칸         원거리 평타: 원거리 피해, 명중 -30%, 화살 1발
 //  3칸 이상    원거리 평타: 원거리 피해, 화살 1발
-//스킬은 조준 사격 (SwordSkill, 원거리 피해 100%, 맞으면 1칸 밀쳐냄, 화살 1발).
-//그림은 임시로 원작 정령의 활. 수치는 MazeTower.
+//스킬은 SwordSkill 표 (단궁은 조준 사격 100%, 명중 +30%, 화살 1발). 그림은 MazeItemSprites, 수치는 MazeTower (티어별 배열).
 public class WornShortbow extends MeleeWeapon {
 
 	{
-		image = ItemSpriteSheet.SPIRIT_BOW;
+		image = com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.BOW_SHORT;
 		hitSound = Assets.Sounds.HIT;
 		hitSoundPitch = 1.1f;
 
@@ -43,20 +43,20 @@ public class WornShortbow extends MeleeWeapon {
 	//근접 피해 (무기 정보의 기본 피해로도 쓰인다)
 	@Override
 	public int min(int lvl) {
-		return MazeTower.BOW_MELEE_MIN + lvl * MazeTower.BOW_MELEE_MIN_SCALE;
+		return MazeTower.BOW_MELEE_MIN[tier] + lvl;
 	}
 
 	@Override
 	public int max(int lvl) {
-		return MazeTower.BOW_MELEE_MAX + lvl * MazeTower.BOW_MELEE_MAX_SCALE;
+		return MazeTower.BOW_MELEE_MAX[tier] + lvl;
 	}
 
 	public int rangedMin(int lvl){
-		return MazeTower.BOW_RANGED_MIN + lvl * MazeTower.BOW_RANGED_MIN_SCALE;
+		return MazeTower.BOW_RANGED_MIN[tier] + lvl;
 	}
 
 	public int rangedMax(int lvl){
-		return MazeTower.BOW_RANGED_MAX + lvl * MazeTower.BOW_RANGED_MAX_SCALE;
+		return MazeTower.BOW_RANGED_MAX[tier] + lvl * MazeTower.BOW_RANGED_MAX_SCALE[tier];
 	}
 
 	//지금 화살을 쏘는 중인지 (원거리 평타·조준 사격의 타격 판정 동안만 true)
@@ -118,15 +118,50 @@ public class WornShortbow extends MeleeWeapon {
 
 	//활 시위를 당기는 동작 뒤에 화살이 날아가고, 닿으면 then을 부른다
 	public static void fireAnimation(final Hero hero, final Char target, final Callback then){
+		fireAnimation(hero, target, then, SHOT_PLAIN);
+	}
+
+	//화살 모양: 보통 / 장전된 화살(회색) / 꿰뚫는 화살(푸른 마법 입자)
+	public static final int SHOT_PLAIN = 0, SHOT_LOADED = 1, SHOT_MAGIC = 2;
+
+	public static void fireAnimation(final Hero hero, final Char target, final Callback then, final int kind){
 		hero.sprite.attack(target.pos, new Callback() {
 			@Override
 			public void call() {
 				hero.sprite.idle();
-				Sample.INSTANCE.play(Assets.Sounds.ATK_SPIRITBOW, 1, 1, 0.95f);
-				((MissileSprite)hero.sprite.parent.recycle(MissileSprite.class))
-						.reset(hero.sprite, target.sprite, new Arrow(), then);
+				launchArrow(hero, target, then, kind);
 			}
 		});
+	}
+
+	//시위 동작 없이 화살만 날린다 (속사의 두 번째 화살 등)
+	public static void launchArrow(final Hero hero, final Char target, final Callback then, int kind){
+		Sample.INSTANCE.play(kind == SHOT_LOADED ? Assets.Sounds.ATK_CROSSBOW : Assets.Sounds.ATK_SPIRITBOW, 1, 1, 0.95f);
+		final MissileSprite m = (MissileSprite)hero.sprite.parent.recycle(MissileSprite.class);
+		final com.watabou.noosa.particles.Emitter trail;
+		if (kind == SHOT_MAGIC){
+			trail = new com.watabou.noosa.particles.Emitter();
+			hero.sprite.parent.add(trail);
+		} else {
+			trail = null;
+		}
+		m.reset(hero.sprite, target.sprite, new Arrow(), new Callback() {
+			@Override
+			public void call() {
+				if (trail != null){
+					trail.on = false;
+					trail.autoKill = true;
+				}
+				then.call();
+			}
+		});
+		m.resetColor();
+		if (kind == SHOT_LOADED) m.tint(0x8C8C8C, 0.6f); //장전된 화살: 회색
+		if (trail != null){
+			m.tint(0x55AAFF, 0.35f);
+			trail.pos(m);
+			trail.pour(com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile.MagicParticle.FACTORY, 0.01f);
+		}
 	}
 
 	//타격 판정 직전: 원거리면 화살 1발을 쓰고 원거리 피해로 친다

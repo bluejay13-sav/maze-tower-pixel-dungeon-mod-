@@ -48,6 +48,12 @@ public class SwordSkill {
 	public boolean ranged = false;
 	//근접 스킬이 닿는 거리 (1 = 인접. 무형검은 MazeTower.SKILL_RUNIC_BLADE_RANGE칸, 마탄이 날아가 닿을 수 있어야 한다)
 	public int reach = 1;
+	//Maze Tower: 강화형 활 스킬 (석궁 장전·정량궁 집중). -1 = 아님. 쓰면 1턴을 쓰고 다음 원거리 평타가 이 스킬 판정으로 강화된다
+	public int charge = -1;
+	//벽을 꿰뚫는 화살 (정령의 활 꿰뚫기): 보이는 적이면 길이 막혀도 맞힌다
+	public boolean pierce = false;
+	//날아가는 화살 모양 (WornShortbow.SHOT_*)
+	public int shotKind = WornShortbow.SHOT_PLAIN;
 
 	private SwordSkill(String nameKey, int hits, float dmgPerHit, float accMulti, boolean ignoreDefense, float elementChanceMulti){
 		this.nameKey = nameKey;
@@ -60,6 +66,13 @@ public class SwordSkill {
 
 	private static SwordSkill basic(String key, float dmg){
 		return new SwordSkill(key, 1, dmg, 1f, false, 1f);
+	}
+
+	//조준 사격 (단궁·탄궁·장궁): 명중 +30%, 밀쳐내기 없음
+	private static SwordSkill aimed(float dmg){
+		SwordSkill s = new SwordSkill("aimed", 1, dmg, MazeTower.SKILL_AIMED_ACCURACY, false, 1f);
+		s.ranged = true;
+		return s;
 	}
 
 	//무기별 스킬. 표에 없는 무기는 null (스킬 없음)
@@ -77,9 +90,32 @@ public class SwordSkill {
 			s.reach = MazeTower.SKILL_RUNIC_BLADE_RANGE;
 			return s;
 		}
-		if (c == WornShortbow.class){
-			SwordSkill s = basic("aimed", MazeTower.SKILL_AIMED_SHOT_DMG);
+		//Maze Tower: 활 7종
+		if (c == WornShortbow.class) return aimed(MazeTower.SKILL_AIMED_SHOT_DMG);
+		if (c == PelletBow.class)    return aimed(MazeTower.SKILL_PELLET_AIMED_DMG);
+		if (c == Longbow.class)      return aimed(MazeTower.SKILL_LONG_AIMED_DMG);
+		if (c == HornBow.class){
+			SwordSkill s = new SwordSkill("rapid", MazeTower.SKILL_RAPID_HITS, MazeTower.SKILL_RAPID_DMG, 1f, false, 1f);
 			s.ranged = true;
+			return s;
+		}
+		if (c == MazeCrossbow.class){
+			SwordSkill s = basic("load", MazeTower.SKILL_LOAD_DMG);
+			s.ranged = true;
+			s.charge = BowCharge.LOAD;
+			return s;
+		}
+		if (c == GreatBow.class){
+			SwordSkill s = basic("focus", MazeTower.SKILL_FOCUS_DMG);
+			s.ranged = true;
+			s.charge = BowCharge.FOCUS;
+			return s;
+		}
+		if (c == MazeSpiritBow.class){
+			SwordSkill s = basic("pierce", MazeTower.SKILL_PIERCE_DMG);
+			s.ranged = true;
+			s.pierce = true;
+			s.shotKind = WornShortbow.SHOT_MAGIC;
 			return s;
 		}
 		if (c == WornDagger.class){
@@ -123,7 +159,12 @@ public class SwordSkill {
 		String hitsTxt = hits > 1
 				? Messages.get(SwordSkill.class, "dmg_multi", Math.round(dmgPerHit*100), hits, Math.round(dmgPerHit*hits*100))
 				: Messages.get(SwordSkill.class, "dmg_single", Math.round(dmgPerHit*100));
-		String desc = Messages.get(SwordSkill.class, "info", name(), hitsTxt, (Dungeon.hero != null ? manaCost(Dungeon.hero) : MazeTower.SKILL_MANA_COST));
+		int cost = Dungeon.hero != null ? manaCost(Dungeon.hero) : MazeTower.SKILL_MANA_COST;
+		String desc;
+		//Maze Tower: 활 스킬은 설명 첫머리가 다르다 (화살을 쏨 / 장전·집중은 피해 없음)
+		if (charge >= 0)  desc = Messages.get(SwordSkill.class, "info_charge", name(), cost).trim();
+		else if (ranged)  desc = Messages.get(SwordSkill.class, "info_ranged", name(), hitsTxt, cost);
+		else              desc = Messages.get(SwordSkill.class, "info", name(), hitsTxt, cost);
 		String extra = surpriseDmg > 0
 				? Messages.get(SwordSkill.class, nameKey + "_desc", Math.round(surpriseDmg*100))
 				: Messages.get(SwordSkill.class, nameKey + "_desc");
@@ -148,6 +189,12 @@ public class SwordSkill {
 			return;
 		}
 
+		//Maze Tower: 강화형 활 스킬 (장전·집중)은 대상을 고르지 않고 바로 쓴다
+		if (skill.charge >= 0){
+			BowCharge.use(hero, wep, skill.charge, manaCost(hero));
+			return;
+		}
+
 		wep.usesTargeting = true;
 		GameScene.selectCell(new CellSelector.Listener() {
 			@Override
@@ -159,7 +206,7 @@ public class SwordSkill {
 
 			@Override
 			public String prompt() {
-				return Messages.get(SwordSkill.class, "prompt");
+				return Messages.get(SwordSkill.class, skill.ranged ? "prompt_ranged" : "prompt"); //Maze Tower: 활 스킬은 떨어진 적도
 			}
 		});
 	}
@@ -178,7 +225,7 @@ public class SwordSkill {
 				ActionIndicator.shake();
 				return;
 			}
-			if (!WornShortbow.clearShot(hero.pos, enemy.pos)){
+			if (!skill.pierce && !WornShortbow.clearShot(hero.pos, enemy.pos)){ //꿰뚫기는 벽 너머도 맞힌다
 				GLog.w(Messages.get(SwordSkill.class, "no_path"));
 				return;
 			}
@@ -204,6 +251,12 @@ public class SwordSkill {
 			ActionIndicator.shake(); //마나 부족: 스킬 버튼 흔들림
 			return;
 		}
+		launch(hero, wep, skill, enemy, cost, dashIn, true);
+	}
+
+	//Maze Tower: 대상 확인이 끝난 스킬을 실제로 쓴다.
+	//  spendMana = false: 강화된 평타 (장전·집중으로 이미 마나를 낸 원거리 평타. 스킬 판정이지만 마나는 다시 쓰지 않는다)
+	private static void launch(final Hero hero, final MeleeWeapon wep, final SwordSkill skill, final Char enemy, final int cost, int dashIn, boolean spendMana){
 		//급소 찌르기: 기습 상태인지는 휘두르기 전에 본다
 		final boolean surprise = skill.surpriseDmg > 0 && enemy instanceof Mob && ((Mob)enemy).surprisedBy(hero, true);
 		BloomEffects.beginSkill(hero, enemy, cost); //마나가 가득 찼는지, 집중 상태 기록
@@ -212,7 +265,7 @@ public class SwordSkill {
 			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomSkill.markDashIn(); //Maze Tower: 섬광 보법 (근거리 스킬 돌진)
 			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomSkill.dash(hero, dashIn);
 		}
-		Mana.get(hero).spend(cost);
+		if (spendMana) Mana.get(hero).spend(cost);
 		SproutEffects.onSkillUsed(hero); //1차 특성: 투지
 		GladiatorEffects.onSkillStart(); //3차 검투사: 기술 연계용 적중 기록
 
@@ -224,7 +277,7 @@ public class SwordSkill {
 				doHit(hero, wep, skill, enemy, 0, surprise);
 			}
 		};
-		if (skill.ranged) WornShortbow.fireAnimation(hero, enemy, strike); //화살이 날아가 닿으면 타격
+		if (skill.ranged) WornShortbow.fireAnimation(hero, enemy, strike, skill.shotKind); //화살이 날아가 닿으면 타격
 		else              hero.sprite.attack(enemy.pos, strike);
 	}
 
@@ -243,24 +296,51 @@ public class SwordSkill {
 		if (hit){
 			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 		}
-		if (skill.ranged) WornShortbow.endShot(hero, enemy, hit, shot, true); //박힌 화살, 밀쳐내기
+		if (skill.ranged) WornShortbow.endShot(hero, enemy, hit, shot, false); //박힌 화살 (Maze Tower: 활 스킬은 밀쳐내지 않는다)
+		if (shot && hit) SkillEffects.afterHit(skill.nameKey, hero, enemy); //Maze Tower: 활 스킬이 맞으면 피가 튀는 등
 		GladiatorEffects.onSkillHit(hero, enemy, hit, wasEnemy); //검투사: 타격 한 번마다 연속 타격 +1
 		active = null;
 		noBlood = false;
 
 		//(결정) 맞은 적이 다른 곳으로 순간이동했거나 은신하면 남은 타격은 멈춘다
-		if (index + 1 < skill.hits && enemy.isAlive() && hero.isAlive() && stillThere(enemy) && hero.sprite != null && hero.sprite.parent != null){
+		//Maze Tower: 화살을 여러 발 쏘는 스킬(속사)은 화살이 떨어지면 멈춘다
+		if (index + 1 < skill.hits && enemy.isAlive() && hero.isAlive() && stillThere(enemy) && hero.sprite != null && hero.sprite.parent != null
+				&& (!skill.ranged || Arrow.count(hero) > 0)){
 			Delayer wait = new Delayer(MazeTower.SKILL_HIT_INTERVAL){
 				@Override
 				protected void onComplete() {
 					super.onComplete();
-					doHit(hero, wep, skill, enemy, index + 1, surprise);
+					if (skill.ranged && hero.sprite != null && hero.sprite.parent != null && enemy.sprite != null){
+						//다음 화살이 날아가 닿으면 타격
+						WornShortbow.launchArrow(hero, enemy, new Callback() {
+							@Override
+							public void call() {
+								doHit(hero, wep, skill, enemy, index + 1, surprise);
+							}
+						}, skill.shotKind);
+					} else {
+						doHit(hero, wep, skill, enemy, index + 1, surprise);
+					}
 				}
 			};
 			hero.sprite.parent.add(wait);
 		} else {
 			finish(hero, wep);
 		}
+	}
+
+	//Maze Tower: 장전·집중으로 강화된 원거리 평타. Hero.actAttack에서 부른다.
+	//스킬 판정이라 2차 스킬 특성·추적자 사냥감 지정 등이 붙는다. 마나는 장전·집중할 때 이미 냈다.
+	public static void fireCharged(final Hero hero, final WornShortbow bow, final BowCharge charge, final Char enemy){
+		SwordSkill skill = basic(charge.kind == BowCharge.LOAD ? "loaded" : "focused",
+				charge.kind == BowCharge.LOAD ? MazeTower.SKILL_LOAD_DMG : MazeTower.SKILL_FOCUS_DMG);
+		skill = new SwordSkill(skill.nameKey, 1, skill.dmgPerHit,
+				charge.kind == BowCharge.LOAD ? MazeTower.SKILL_LOAD_ACCURACY : MazeTower.SKILL_FOCUS_ACCURACY, false, 1f);
+		skill.ranged = true;
+		skill.shotKind = charge.kind == BowCharge.LOAD ? WornShortbow.SHOT_LOADED : WornShortbow.SHOT_PLAIN;
+		int paid = charge.paid;
+		charge.detach();
+		launch(hero, bow, skill, enemy, paid, -1, false);
 	}
 
 	//여러 번 때리는 공격: 첫 타격 때 적이 있던 칸

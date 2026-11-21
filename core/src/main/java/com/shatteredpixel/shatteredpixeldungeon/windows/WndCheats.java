@@ -251,6 +251,13 @@ public class WndCheats extends Window {
 			protected void onClick() {
 				give(new WornDagger().identify());
 				give(new WornShortbow().identify());
+				//Maze Tower: 활 7종
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.PelletBow().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Longbow().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.HornBow().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MazeCrossbow().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.GreatBow().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MazeSpiritBow().identify());
 				give(new Arrow().quantity(50));
 				give(new ThrowingSpear().quantity(2).identify());
 			}
