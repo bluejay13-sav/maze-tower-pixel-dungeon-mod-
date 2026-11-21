@@ -15,6 +15,11 @@ This test build lets you try three boss fights right away, as the Warrior:
 
 Windows 10/11, 64-bit only. License: GPL v3.0. Source code: this repository (`boss-trial` branch).
 
+**Android**
+1. On your phone, download `MazeTower-BossTrial-android.apk` below.
+2. Open it. If asked, allow your browser or file app to "install unknown apps".
+3. Android 5.0 or newer. It installs separately from Shattered Pixel Dungeon.
+
 ---
 
 **미궁의 마탑 – 보스전 체험판 v1 (Windows)**
@@ -33,3 +38,8 @@ Windows 10/11, 64-bit only. License: GPL v3.0. Source code: this repository (`bo
 4. "Windows의 PC 보호" 창이 뜨면 **추가 정보 → 실행**을 누르세요.
 
 Windows 10/11 64비트 전용. 라이선스: GPL v3.0. 소스 코드: 이 저장소(`boss-trial` 브랜치).
+
+**안드로이드**
+1. 휴대폰에서 아래 `MazeTower-BossTrial-android.apk`를 받습니다.
+2. 받은 파일을 엽니다. "출처를 알 수 없는 앱 설치"를 물어보면 허용하세요.
+3. 안드로이드 5.0 이상. 원작 녹픽던과 따로 설치됩니다.
