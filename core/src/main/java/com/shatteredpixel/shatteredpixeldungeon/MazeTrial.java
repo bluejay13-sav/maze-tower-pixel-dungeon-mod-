@@ -167,24 +167,14 @@ public class MazeTrial {
 	public static java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> kit( int target ){
 		java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> items = new java.util.ArrayList<>();
 		if (!on() || (target != MazeTower.TRIAL_CITY_DEPTH && target != MazeTower.TRIAL_SAP_DEPTH)) return items;
-		//마법봉 가방 먼저 (그래야 마법봉이 가방으로 들어간다)
-		if (Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster.class) == null){
-			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster());
-		}
-		//(결정) 모든 마법봉 감정된 채 +1, 모든 반지 감정된 채 +2
-		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.WAND.classes){
-			com.shatteredpixel.shatteredpixeldungeon.items.Item w = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
-			if (w == null) continue;
-			w.upgrade(MazeTower.TRIAL_WAND_UPGRADE);
-			items.add(w.identify());
-		}
+		//(결정) 모든 반지 감정된 채 +2 (마법봉·유물·장신구는 게임 메뉴의 체험판 아이템 창에서 골라 받는다, WndTrialItems)
 		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING.classes){
 			com.shatteredpixel.shatteredpixeldungeon.items.Item r = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
 			if (r == null) continue;
 			r.upgrade(MazeTower.TRIAL_RING_UPGRADE);
 			items.add(r.identify());
 		}
-		//(결정) 반지·마법봉은 5층·20층 둘 다, 아래 물약·주문서·검·갑옷은 20층만
+		//(결정) 반지는 5층·20층 둘 다, 아래 물약·주문서·검·갑옷은 20층만
 		if (target != MazeTower.TRIAL_CITY_DEPTH) return items;
 		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION.classes){
 			com.shatteredpixel.shatteredpixeldungeon.items.Item p = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);

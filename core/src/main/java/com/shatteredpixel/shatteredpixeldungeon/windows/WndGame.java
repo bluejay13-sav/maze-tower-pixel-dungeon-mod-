@@ -73,6 +73,18 @@ public class WndGame extends Window {
 			curBtn.icon(Icons.get(Icons.MAGNIFY));
 		}
 
+		//Maze Tower: 보스전 체험판 아이템 고르기 (마법봉·유물·장신구, 배포한 체험판에서도 보임)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on() && Dungeon.hero != null && Dungeon.hero.isAlive()) {
+			addButton( curBtn = new RedButton( Messages.get(WndTrialItems.class, "button") ) {
+				@Override
+				protected void onClick() {
+					hide();
+					GameScene.show(new WndTrialItems());
+				}
+			});
+			curBtn.icon(Icons.get(Icons.BACKPACK));
+		}
+
 		// Challenges window
 		if (Dungeon.challenges > 0) {
 			addButton( curBtn = new RedButton( Messages.get(this, "challenges") ) {

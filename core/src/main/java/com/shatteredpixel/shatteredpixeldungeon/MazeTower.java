@@ -36,7 +36,7 @@ public class MazeTower {
 	public static final int TRIAL_POTIONS = 5;
 	public static final int TRIAL_SCROLLS = 5;
 	public static final int TRIAL_UPGRADES = 12;
-	//같은 때 주는 마법봉(모든 종류, 감정됨)·반지(모든 종류, 감정됨) 강화 수치
+	//체험판 아이템 고르기 창(WndTrialItems)의 마법봉 강화 수치, 체험판 지급 반지(모든 종류, 감정됨) 강화 수치
 	public static final int TRIAL_WAND_UPGRADE = 1;
 	public static final int TRIAL_RING_UPGRADE = 2;
 	//배포용: 크레딧 화면(AboutScene) 맨 아래 미궁의 마탑 칸. 제작자 이름과 저장소 주소 (비워 두면 그 줄을 숨긴다)
