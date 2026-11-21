@@ -23,6 +23,22 @@ android {
         targetSdkVersion appAndroidTargetSDK
     }
 
+    //Maze Tower: 배포용 APK 서명. 열쇠 위치·비밀번호는 저장소에 올리지 않는 local.properties에 둔다
+    //(maze.keystore, maze.keystore.password, maze.key.alias). 없으면 서명 없이 만든다
+    def mazeProps = new Properties()
+    def mazeLocal = rootProject.file('local.properties')
+    if (mazeLocal.exists()) mazeLocal.withInputStream { mazeProps.load(it) }
+    signingConfigs {
+        if (mazeProps.getProperty('maze.keystore') != null) {
+            mazeRelease {
+                storeFile file(mazeProps.getProperty('maze.keystore'))
+                storePassword mazeProps.getProperty('maze.keystore.password')
+                keyAlias mazeProps.getProperty('maze.key.alias')
+                keyPassword mazeProps.getProperty('maze.keystore.password')
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix ".indev"
@@ -33,6 +49,7 @@ android {
             }
         }
         release {
+            if (signingConfigs.findByName('mazeRelease') != null) signingConfig signingConfigs.mazeRelease
 
             //These lines enable R8, which is a code shrinker/optimizer/obfuscator.
             //This makes release APKs smaller and more efficient, but also makes debugging trickier
