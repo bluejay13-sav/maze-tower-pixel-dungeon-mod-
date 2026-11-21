@@ -156,6 +156,12 @@ public class HeroSelectScene extends PixelScene {
 
 				if (GamesInProgress.selectedClass == null) return;
 
+				//Maze Tower: 보스전 체험판은 이름 대신 도전할 보스(5층 / 20층)를 고른다
+				if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on()){
+					com.shatteredpixel.shatteredpixeldungeon.MazeTrial.showSelect();
+					return;
+				}
+
 				//Maze Tower: 시작하기 전에 캐릭터 이름을 정한다 (비워 두면 직업 이름)
 				ShatteredPixelDungeon.scene().addToFront( new WndTextInput(
 						Messages.get(HeroSelectScene.class, "maze_name_title"),
@@ -415,6 +421,8 @@ public class HeroSelectScene extends PixelScene {
 
 		//Maze Tower: 선택할 수 없는 직업(결투가·성직자)이 골라져 있으면 비운다
 		if (GamesInProgress.selectedClass != null && !MazeTower.isPlayableClass(GamesInProgress.selectedClass)) GamesInProgress.selectedClass = null;
+		//Maze Tower: 보스전 체험판은 전사만 고를 수 있다
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on()) GamesInProgress.selectedClass = HeroClass.WARRIOR;
 
 		if (GamesInProgress.selectedClass != null){
 			setSelectedHero(GamesInProgress.selectedClass);
@@ -483,7 +491,7 @@ public class HeroSelectScene extends PixelScene {
 			infoButton.setPos(heroName.right(), heroName.top() + (heroName.height() - infoButton.height())/2f);
 			align(infoButton);
 
-			btnOptions.visible = btnOptions.active = !SPDSettings.intro();
+			btnOptions.visible = btnOptions.active = !SPDSettings.intro() && !com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on(); //Maze Tower: 체험판은 도전·시드 등 선택 숨김
 
 		} else {
 			title.visible = false;
@@ -499,7 +507,7 @@ public class HeroSelectScene extends PixelScene {
 			infoButton.visible = infoButton.active = false;
 			infoButton.setPos(startBtn.right(), startBtn.top());
 
-			btnOptions.visible = btnOptions.active = !SPDSettings.intro();
+			btnOptions.visible = btnOptions.active = !SPDSettings.intro() && !com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on(); //Maze Tower: 체험판은 도전·시드 등 선택 숨김
 			btnOptions.setPos(startBtn.left()-btnOptions.width(), startBtn.top());
 
 			optionsPane.setPos(heroBtns.get(0).left(), startBtn.top() - optionsPane.height() - 2);
@@ -612,7 +620,7 @@ public class HeroSelectScene extends PixelScene {
 		public void update() {
 			super.update();
 			if (cl != GamesInProgress.selectedClass){
-				if (!cl.isUnlocked()){
+				if (!cl.isUnlocked() || com.shatteredpixel.shatteredpixeldungeon.MazeTrial.locked(cl)){ //Maze Tower: 체험판은 전사 말고는 어둡게
 					icon.brightness(0.1f);
 				} else {
 					icon.brightness(0.6f);
@@ -626,7 +634,10 @@ public class HeroSelectScene extends PixelScene {
 		protected void onClick() {
 			super.onClick();
 
-			if( !cl.isUnlocked() ){
+			if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.locked(cl)){
+				//Maze Tower: 보스전 체험판은 전사만
+				ShatteredPixelDungeon.scene().addToFront( new WndMessage(Messages.get(com.shatteredpixel.shatteredpixeldungeon.MazeTrial.class, "warrior_only")));
+			} else if( !cl.isUnlocked() ){
 				ShatteredPixelDungeon.scene().addToFront( new WndMessage(cl.unlockMsg()));
 			} else if (GamesInProgress.selectedClass == cl) {
 				Window w = new WndHeroInfo(cl);

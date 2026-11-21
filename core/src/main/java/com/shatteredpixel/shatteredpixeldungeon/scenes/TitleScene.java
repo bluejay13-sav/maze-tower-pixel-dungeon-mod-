@@ -69,6 +69,7 @@ public class TitleScene extends PixelScene {
 	private Image signs;
 
 	private StyledButton btnPlay;
+	private StyledButton btnContinue; //Maze Tower: 보스전 체험판 이어하기 (저장된 판이 있을 때만)
 	private StyledButton btnSupport;
 	private StyledButton btnRankings;
 	private StyledButton btnJournal;
@@ -147,9 +148,9 @@ public class TitleScene extends PixelScene {
 		btnPlay = new StyledButton(GREY_TR, Messages.get(this, "enter")){
 			@Override
 			protected void onClick() {
-				//Maze Tower: 보스전 체험판은 보스 고르기 창
+				//Maze Tower: 보스전 체험판은 영웅 선택 화면(전사만)으로 바로 간다. 저장된 판은 "이어하기" 버튼으로
 				if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on()){
-					com.shatteredpixel.shatteredpixeldungeon.MazeTrial.showSelect();
+					com.shatteredpixel.shatteredpixeldungeon.MazeTrial.newGame();
 					return;
 				}
 				if (GamesInProgress.checkAll().size() == 0){
@@ -175,6 +176,19 @@ public class TitleScene extends PixelScene {
 		};
 		btnPlay.icon(Icons.get(Icons.ENTER));
 		add(btnPlay);
+
+		//Maze Tower: 보스전 체험판은 저장된 판이 있으면 "이어하기" 버튼 (가장 최근 판을 바로 불러옴)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on() && com.shatteredpixel.shatteredpixeldungeon.MazeTrial.latestSave() != null){
+			btnPlay.text(Messages.get(com.shatteredpixel.shatteredpixeldungeon.MazeTrial.class, "new_game"));
+			btnContinue = new StyledButton(GREY_TR, Messages.get(com.shatteredpixel.shatteredpixeldungeon.MazeTrial.class, "continue")){
+				@Override
+				protected void onClick() {
+					com.shatteredpixel.shatteredpixeldungeon.MazeTrial.continueLatest();
+				}
+			};
+			btnContinue.icon(Icons.get(Icons.ENTER));
+			add(btnContinue);
+		}
 
 		btnSupport = new SupportButton(GREY_TR, Messages.get(this, "support"));
 		//Maze Tower: 후원 버튼 끔
@@ -244,6 +258,14 @@ public class TitleScene extends PixelScene {
 			btnChanges.setRect(btnRankings.left(), btnRankings.bottom()+ GAP, btnRankings.width(), BTN_HEIGHT);
 			btnSettings.setRect(btnChanges.right()+2, btnChanges.top(), btnRankings.width(), BTN_HEIGHT);
 			btnAbout.setRect(btnChanges.left(), btnChanges.bottom()+GAP, btnPlay.width(), BTN_HEIGHT);
+		}
+		//Maze Tower: 이어하기 버튼이 있으면 플레이 줄을 반으로 나눠 새 게임 | 이어하기
+		if (btnContinue != null){
+			float full = btnPlay.width();
+			btnPlay.setRect(btnPlay.left(), btnPlay.top(), (full/2)-1, BTN_HEIGHT);
+			btnContinue.setRect(btnPlay.right()+2, btnPlay.top(), (full/2)-1, BTN_HEIGHT);
+			align(btnPlay);
+			align(btnContinue);
 		}
 
 		version = new BitmapText( "v" + Game.version, pixelFont);
@@ -319,6 +341,10 @@ public class TitleScene extends PixelScene {
 		//signs.am = alpha; handles this itself
 
 		btnPlay.enable(alpha != 0);
+		if (btnContinue != null){ //Maze Tower
+			btnContinue.enable(alpha != 0);
+			btnContinue.alpha(alpha);
+		}
 		btnSupport.enable(alpha != 0);
 		btnRankings.enable(alpha != 0);
 		btnJournal.enable(alpha != 0);

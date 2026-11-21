@@ -20,9 +20,10 @@ import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 
 //Maze Tower: 보스전 체험판 (MazeTower.BOSS_TRIAL이 켜진 빌드에서만).
-//시작 화면의 "플레이"를 누르면 보스 셋 중 하나를 고르고, 전사로 새 게임을 시작해 곧바로 층 건너뛰기(MazeSkip)로
-//보스층 바로 앞 층에 도착한다(그 층까지의 아이템·레벨을 모두 받은 채). 5층 썩은 수액 덩어리는 4층에서,
-//20층 망령 왕·마도시의 여제는 19층에서 시작한다. 보스를 쓰러뜨리면 체험 완료 창이 뜬다.
+//시작 화면 "새 게임" → 원작 영웅 선택 화면(전사만 고를 수 있음) → 시작 → 보스 셋 중 하나를 고르고, 전사로 새 게임을 시작해
+//곧바로 층 건너뛰기(MazeSkip)로 보스층 입구에 도착한다. 5층 썩은 수액 덩어리는 5층(레벨 6, 1~5층 아이템),
+//20층 망령 왕·마도시의 여제는 20층(레벨 19, 지급품)에서 시작한다. 저장된 판은 시작 화면 "이어하기"로 바로 불러온다.
+//보스를 쓰러뜨리면 체험 완료 창이 뜬다.
 public class MazeTrial {
 
 	public static final int NONE = 0, SAP = 1, WRAITH = 2, EMPRESS = 3;
@@ -36,22 +37,48 @@ public class MazeTrial {
 		return MazeTower.BOSS_TRIAL;
 	}
 
-	//시작 화면 "플레이": 보스 고르기 (저장된 판이 있으면 이어하기도)
+	//체험판은 전사만 고를 수 있다 (영웅 선택 화면에서 다른 직업은 어둡게, 누르면 안내)
+	public static boolean locked( HeroClass cl ){
+		return on() && cl != HeroClass.WARRIOR;
+	}
+
+	//시작 화면 "새 게임": 원작처럼 영웅 선택 화면 (전사만 고를 수 있음). 시작을 누르면 showSelect
+	public static void newGame(){
+		GamesInProgress.selectedClass = HeroClass.WARRIOR;
+		GamesInProgress.curSlot = 1;
+		ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene.class);
+	}
+
+	//가장 최근에 한 저장된 판 (없으면 null)
+	public static GamesInProgress.Info latestSave(){
+		GamesInProgress.Info best = null;
+		for (GamesInProgress.Info info : GamesInProgress.checkAll()){
+			if (best == null || info.lastPlayed > best.lastPlayed) best = info;
+		}
+		return best;
+	}
+
+	//시작 화면 "이어하기": 가장 최근 저장된 판을 바로 불러온다
+	public static void continueLatest(){
+		GamesInProgress.Info info = latestSave();
+		if (info == null) return;
+		GamesInProgress.curSlot = info.slot;
+		Dungeon.hero = null;
+		Dungeon.daily = Dungeon.dailyReplay = false;
+		ActionIndicator.clearAction();
+		com.shatteredpixel.shatteredpixeldungeon.ui.FinisherIndicator.clearAction(null);
+		InterlevelScene.mode = InterlevelScene.Mode.CONTINUE;
+		ShatteredPixelDungeon.switchScene(InterlevelScene.class);
+	}
+
+	//영웅 선택 화면의 시작 버튼: 도전할 보스 고르기 (5층 / 20층 두 보스)
 	public static void showSelect(){
-		final boolean hasSaves = !GamesInProgress.checkAll().isEmpty();
-		String[] opts = hasSaves
-				? new String[]{ Messages.get(MazeTrial.class, "sap"), Messages.get(MazeTrial.class, "wraith"), Messages.get(MazeTrial.class, "empress"), Messages.get(MazeTrial.class, "continue") }
-				: new String[]{ Messages.get(MazeTrial.class, "sap"), Messages.get(MazeTrial.class, "wraith"), Messages.get(MazeTrial.class, "empress") };
 		ShatteredPixelDungeon.scene().addToFront(new WndOptions(
 				Messages.get(MazeTrial.class, "title"),
 				Messages.get(MazeTrial.class, "desc"),
-				opts){
+				Messages.get(MazeTrial.class, "sap"), Messages.get(MazeTrial.class, "wraith"), Messages.get(MazeTrial.class, "empress")){
 			@Override
 			protected void onSelect(int index) {
-				if (index == 3){
-					ShatteredPixelDungeon.switchNoFade(StartScene.class);
-					return;
-				}
 				start(index == 0 ? SAP : index == 1 ? WRAITH : EMPRESS);
 			}
 		});
@@ -61,7 +88,7 @@ public class MazeTrial {
 	public static void start( int which ){
 		boss = which;
 		applyBossChoice();
-		pendingSkip = which == SAP ? 4 : 19;
+		pendingSkip = which == SAP ? MazeTower.TRIAL_SAP_DEPTH : MazeTower.TRIAL_CITY_DEPTH;
 		int slot = GamesInProgress.firstEmpty();
 		if (slot == -1){
 			slot = 1;
@@ -95,7 +122,8 @@ public class MazeTrial {
 			@Override
 			public void call() {
 				Hero hero = Dungeon.hero;
-				int lvl = MazeSkip.levelFor(depth);
+				//보스층에서 바로 시작하지만 레벨은 그 앞 층 건너뛰기와 같다 (5층 → 레벨 6, 20층 → 레벨 19)
+				int lvl = MazeSkip.levelFor(depth - 1);
 				while (hero.lvl < lvl){
 					hero.earnExp(hero.maxExp() - hero.exp, MazeTrial.class);
 				}
@@ -138,7 +166,24 @@ public class MazeTrial {
 	//모든 물약 감정된 채 5개씩, 모든 주문서 감정된 채 5개씩(강화의 주문서만 12개), 전사 계열 검 7종(감정됨), 힘 16 갑옷(비늘 갑옷, 감정됨)
 	public static java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> kit( int target ){
 		java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> items = new java.util.ArrayList<>();
-		if (!on() || target != 19) return items;
+		if (!on() || target != MazeTower.TRIAL_CITY_DEPTH) return items;
+		//마법봉 가방 먼저 (그래야 마법봉이 가방으로 들어간다)
+		if (Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster.class) == null){
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster());
+		}
+		//(결정) 모든 마법봉 감정된 채 +1, 모든 반지 감정된 채 +2
+		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.WAND.classes){
+			com.shatteredpixel.shatteredpixeldungeon.items.Item w = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
+			if (w == null) continue;
+			w.upgrade(MazeTower.TRIAL_WAND_UPGRADE);
+			items.add(w.identify());
+		}
+		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING.classes){
+			com.shatteredpixel.shatteredpixeldungeon.items.Item r = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
+			if (r == null) continue;
+			r.upgrade(MazeTower.TRIAL_RING_UPGRADE);
+			items.add(r.identify());
+		}
 		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION.classes){
 			com.shatteredpixel.shatteredpixeldungeon.items.Item p = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
 			if (p == null) continue;

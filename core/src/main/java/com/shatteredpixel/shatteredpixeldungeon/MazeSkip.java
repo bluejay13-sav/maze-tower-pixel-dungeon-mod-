@@ -94,6 +94,13 @@ public class MazeSkip {
 					Statistics.goldCollected += item.quantity();
 				} else if (item instanceof EnergyCrystal){
 					Dungeon.energy += item.quantity();
+				} else if (item instanceof com.shatteredpixel.shatteredpixeldungeon.items.journal.DocumentPage){
+					//(결정) 쪽지는 가방에 넣지 않고 일지에 읽은 상태로 바로 넣는다
+					com.shatteredpixel.shatteredpixeldungeon.items.journal.DocumentPage p = (com.shatteredpixel.shatteredpixeldungeon.items.journal.DocumentPage) item;
+					p.document().findPage(p.page());
+					p.document().readPage(p.page());
+				} else if (item instanceof com.shatteredpixel.shatteredpixeldungeon.items.journal.Guidebook){
+					readGuidebook();
 				} else {
 					loot.add(item);
 				}
@@ -105,8 +112,26 @@ public class MazeSkip {
 		for (int pos : emptied) l.heaps.remove(pos);
 	}
 
-	//올라가는 계단(다음 층 입구) 바로 앞 빈 칸
+	//원작 안내서(1층에 놓인 책)를 주운 것처럼 안내서 쪽지들을 일지에 넣되, 모두 읽은 상태로
+	private static void readGuidebook(){
+		com.shatteredpixel.shatteredpixeldungeon.journal.Document g = com.shatteredpixel.shatteredpixeldungeon.journal.Document.ADVENTURERS_GUIDE;
+		String[] pages = {
+				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_INTRO,
+				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_EXAMINING,
+				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_SURPRISE_ATKS,
+				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_IDING,
+				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_FOOD,
+				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_ALCHEMY,
+				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_DIEING };
+		for (String p : pages){
+			g.findPage(p);
+			g.readPage(p);
+		}
+	}
+
+	//올라가는 계단(다음 층 입구) 바로 앞 빈 칸. (체험판) 보스층으로 바로 건너뛰면 평소처럼 그 층 입구에 선다
 	public static int arrivalCell( Level l ){
+		if (Dungeon.bossLevel()) return l.entrance();
 		int exit = l.exit();
 		for (int n : PathFinder.NEIGHBOURS4){
 			int c = exit + n;

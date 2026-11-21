@@ -29,10 +29,16 @@ public class MazeTower {
 	//보스전 체험판 빌드 (MazeTrial): true면 시작 화면 "플레이"가 보스 고르기 창이 되고, 고른 보스층 바로 앞까지 건너뛰어 시작한다.
 	//본편(main 브랜치)은 false. 체험판 브랜치(boss-trial)에서만 true로 둔다
 	public static final boolean BOSS_TRIAL = true;
-	//보스전 체험판에서 19층으로 건너뛸 때 주는 물약·주문서 수 (종류마다), 강화의 주문서 수 (MazeTrial.kit)
+	//보스전 체험판에서 바로 시작하는 보스층 (레벨은 그 앞 층 건너뛰기와 같다: 5층 레벨 6, 20층 레벨 19)
+	public static final int TRIAL_SAP_DEPTH = 5;
+	public static final int TRIAL_CITY_DEPTH = 20;
+	//보스전 체험판 20층 보스로 건너뛸 때 주는 물약·주문서 수 (종류마다), 강화의 주문서 수 (MazeTrial.kit)
 	public static final int TRIAL_POTIONS = 5;
 	public static final int TRIAL_SCROLLS = 5;
 	public static final int TRIAL_UPGRADES = 12;
+	//같은 때 주는 마법봉(모든 종류, 감정됨)·반지(모든 종류, 감정됨) 강화 수치
+	public static final int TRIAL_WAND_UPGRADE = 1;
+	public static final int TRIAL_RING_UPGRADE = 2;
 	//배포용: 크레딧 화면(AboutScene) 맨 아래 미궁의 마탑 칸. 제작자 이름과 저장소 주소 (비워 두면 그 줄을 숨긴다)
 	public static final String MOD_AUTHOR = "bluejay13-sav";
 	public static final String MOD_LINK_TEXT = "github.com/bluejay13-sav/...";

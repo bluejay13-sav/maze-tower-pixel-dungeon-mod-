@@ -22,9 +22,9 @@ Text is available in Korean and English.
 ## Boss Trial (test build)
 
 The Boss Trial release lets you try three boss fights right away, as the Warrior:
-- Floor 5: Rotting Sap Mass (start on floor 4, level 6)
-- Floor 20: Wraith King (start on floor 19, level 19)
-- Floor 20: Mage-City Empress (start on floor 19, level 19)
+- Floor 5: Rotting Sap Mass (start at the boss floor entrance, level 6)
+- Floor 20: Wraith King (start at the boss floor entrance, level 19)
+- Floor 20: Mage-City Empress (start at the boss floor entrance, level 19)
 
 You start with every item from the floors before the boss. Climb the stairs up to reach the boss room.
 
@@ -56,9 +56,9 @@ All original credits are kept in the in-game About screen. The full source code 
 ## 보스전 체험판
 
 전사로 보스전 세 가지를 바로 해 볼 수 있는 시험 버전입니다.
-- 5층 썩은 수액 덩어리 (4층·레벨 6에서 시작)
-- 20층 망령 왕 (19층·레벨 19에서 시작)
-- 20층 마도시의 여제 (19층·레벨 19에서 시작)
+- 5층 썩은 수액 덩어리 (보스층 입구·레벨 6에서 시작)
+- 20층 망령 왕 (보스층 입구·레벨 19에서 시작)
+- 20층 마도시의 여제 (보스층 입구·레벨 19에서 시작)
 
 보스층 바로 앞 층까지의 아이템을 모두 받은 채 시작하며, 올라가는 계단으로 올라가면 보스방입니다.
 
