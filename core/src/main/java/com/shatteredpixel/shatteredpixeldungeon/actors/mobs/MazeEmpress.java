@@ -360,13 +360,14 @@ public class MazeEmpress extends Mob {
 			}
 			Char ch = Actor.findChar(c);
 			if (ch == null || ch == this || ch.alignment == Alignment.ENEMY) continue;
+			int st = ElementTile.reactingStatus(ch, ElementTile.SHOCK);
 			ch.damage(Random.NormalIntRange(MazeTower.EM_RAIN_MIN, MazeTower.EM_RAIN_MAX), new Electricity());
 			if (!ch.isAlive()){
 				if (ch == Dungeon.hero) Dungeon.fail(this);
 				continue;
 			}
 			Buff.affect(ch, StaticCharge.class, MazeTower.EM_RAIN_STATIC);
-			tileReaction(ch, ElementTile.SHOCK);
+			elementHit(ch, ElementTile.SHOCK, st);
 		}
 		if (seen) Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 	}
@@ -408,6 +409,7 @@ public class MazeEmpress extends Mob {
 
 		if (hitHero){
 			Char ch = Dungeon.hero;
+			int st = ElementTile.reactingStatus(ch, type);
 			ch.damage(Random.NormalIntRange(MazeTower.EM_SPEAR_MIN, MazeTower.EM_SPEAR_MAX), this);
 			if (!ch.isAlive()){
 				Dungeon.fail(this);
@@ -415,7 +417,7 @@ public class MazeEmpress extends Mob {
 			}
 			if (type == ElementTile.FROST) Buff.affect(ch, Frostbite.class, MazeTower.EM_SPEAR_FROSTBITE);
 			else                           Buff.affect(ch, Burning.class).reignite(ch);
-			tileReaction(ch, type);
+			elementHit(ch, type, st);
 		}
 	}
 
@@ -522,9 +524,19 @@ public class MazeEmpress extends Mob {
 	}
 
 	//원소 공격이 원소 타일 위의 대상에게 닿으면 반응 (원소 타일 자체는 그대로)
-	private void tileReaction( Char ch, int element ){
-		if (!ch.isAlive()) return;
-		ElementTile.react(ch, element, ElementTile.at(ch.pos));
+	private boolean tileReaction( Char ch, int element ){
+		if (!ch.isAlive()) return false;
+		boolean r = ElementTile.react(ch, element, ElementTile.at(ch.pos));
+		if (ch == Dungeon.hero && !ch.isAlive()) Dungeon.fail(this);
+		return r;
+	}
+
+	//(결정) 여제의 원소 공격이 원소 상태를 지닌 대상에게 닿아도 반응한다 (정전기 상태에서 화염창 = 폭발, 화상 상태에서 서리창 = 증기 등).
+	//발밑 원소 타일과 먼저 반응하고, 타일과 반응하지 않았으면 맞기 전에 지니고 있던 상태와 반응한다 (한 번만)
+	private void elementHit( Char ch, int element, int statusBefore ){
+		if (tileReaction(ch, element)) return;
+		if (!ch.isAlive() || statusBefore == 0) return;
+		ElementTile.react(ch, element, statusBefore);
 		if (ch == Dungeon.hero && !ch.isAlive()) Dungeon.fail(this);
 	}
 
@@ -571,6 +583,7 @@ public class MazeEmpress extends Mob {
 			Char h = Dungeon.hero;
 			if (cells.contains(h.pos) && h.isAlive()){
 				int el = stormZone[2];
+				int st = ElementTile.reactingStatus(h, el);
 				h.damage(Random.NormalIntRange(MazeTower.EM_STORM_MIN, MazeTower.EM_STORM_MAX),
 						el == ElementTile.SHOCK ? new Electricity() : this);
 				if (!h.isAlive()){
@@ -580,7 +593,7 @@ public class MazeEmpress extends Mob {
 					else if (el == ElementTile.FROST) Buff.affect(h, Chill.class, 2f);
 					else                              Buff.affect(h, StaticCharge.class, 2f);
 					//폭풍은 원소 타일과도 반응한다 (반응한 타일은 지워지지 않는다)
-					tileReaction(h, el);
+					elementHit(h, el, st);
 				}
 			}
 			if (stormZone[3] <= 0){

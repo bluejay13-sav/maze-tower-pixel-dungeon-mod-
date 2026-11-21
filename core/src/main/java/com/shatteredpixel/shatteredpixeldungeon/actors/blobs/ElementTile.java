@@ -138,11 +138,27 @@ public class ElementTile extends Blob {
 	public static void onHeroEnter( Char hero ){
 		int t = at(hero.pos);
 		if (t == 0) return;
-		int status = 0;
-		if (hero.buff(Burning.class) != null) status = FIRE;
-		else if (hero.buff(StaticCharge.class) != null) status = SHOCK;
-		else if (hero.buff(Chill.class) != null || hero.buff(Frostbite.class) != null) status = FROST;
+		int status = statusOf(hero);
 		if (status != 0) react(hero, status, t);
+	}
+
+	//원소 attack에 맞을 때 반응할 수 있는, 대상이 지닌 원소 상태 (불 ↔ 전격·냉기). 없으면 0
+	public static int reactingStatus( Char ch, int attack ){
+		boolean burning = ch.buff(Burning.class) != null;
+		if (attack == FIRE){
+			if (ch.buff(StaticCharge.class) != null) return SHOCK;
+			if (ch.buff(Chill.class) != null || ch.buff(Frostbite.class) != null) return FROST;
+			return 0;
+		}
+		return burning ? FIRE : 0;
+	}
+
+	//대상이 지닌 원소 상태 (화상 = 불, 정전기 = 전격, 냉기·혹한 = 냉기, 없으면 0)
+	public static int statusOf( Char ch ){
+		if (ch.buff(Burning.class) != null) return FIRE;
+		if (ch.buff(StaticCharge.class) != null) return SHOCK;
+		if (ch.buff(Chill.class) != null || ch.buff(Frostbite.class) != null) return FROST;
+		return 0;
 	}
 
 	//원소 attack이 타일 tile 위의 대상에게 닿았다. 반응이 일어나면 true

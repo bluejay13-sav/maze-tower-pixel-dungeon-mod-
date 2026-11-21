@@ -226,6 +226,11 @@ public class WraithKing extends Mob {
 		}
 
 		if (phase == 1) return actHarvest();
+		//쓰러지는 연출이 끝날 때까지 왕은 움직이지 않는다 (연출이 끊기지 않게)
+		if (phase == 3 && sprite instanceof WraithKingSprite && ((WraithKingSprite) sprite).isCollapsing()){
+			spend(TICK);
+			return true;
+		}
 		if (phase == 3) return actCrawl();
 
 		//2단계
@@ -557,6 +562,23 @@ public class WraithKing extends Mob {
 				if (lanes != null) lanes.add(k);
 			}
 		}
+		//(결정) 대각선 광선에서 양옆 이웃 줄이 모두 없는 칸(기둥 옆으로 홀로 빠져나간 줄)은 광선 그림에서 빠지므로(ZoltBeamFx)
+		//피해·경고에서도 뺀다. 홀로 남은 칸끼리는 서로 이웃이 아니라서 빼도 다른 칸이 새로 홀로 남지 않는다
+		if (dx != 0 && dy != 0){
+			java.util.HashSet<Integer> set = new java.util.HashSet<>(cells);
+			set.add(pos);
+			int[] pA = dx * dy < 0 ? new int[]{1, 0} : new int[]{-1, 0};
+			int[] pB = {0, 1};
+			for (int i = cells.size() - 1; i >= 0; i--){
+				int c = cells.get(i);
+				boolean pos1 = set.contains(c + pA[0] + pA[1] * w) || set.contains(c + pB[0] + pB[1] * w);
+				boolean neg1 = set.contains(c - pA[0] - pA[1] * w) || set.contains(c - pB[0] - pB[1] * w);
+				if (!pos1 && !neg1){
+					cells.remove(i);
+					if (lanes != null) lanes.remove(i);
+				}
+			}
+		}
 		return cells;
 	}
 
@@ -712,9 +734,40 @@ public class WraithKing extends Mob {
 		if (target.sprite != null){
 			target.sprite.flash();
 			com.shatteredpixel.shatteredpixeldungeon.effects.Wound.hit(target);
+			ambushClawFx(target);
 		}
 		Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG);
 		target.damage(dmg, this);
+	}
+
+	//(결정) 기습이 성공했을 때의 피격 연출: 왕이 있는 쪽에서 주인공을 할퀴는 망령의 발톱 자국 세 줄
+	//(짙은 남색 몸통 + 옅은 푸른 테두리, 차례로 빠르게), 몸에서 피어오르는 그림자 넋, 약한 화면 흔들림
+	private void ambushClawFx( Char target ){
+		if (target.sprite == null || target.sprite.parent == null) return;
+		PointF t = target.sprite.destinationCenter();
+		PointF k = sprite != null ? sprite.destinationCenter() : t;
+		//왕 쪽에서 반대쪽으로 긁는다
+		float dir = (float)Math.atan2(t.y - k.y, t.x - k.x);
+		if (k == t || (k.x == t.x && k.y == t.y)) dir = (float)(Math.PI / 4);
+		float sweep = 1.4f;
+		float start = dir + (float)Math.PI - sweep / 2f;
+		//발톱 자국 한 줄 (조금 굵게)
+		float px = -(float)Math.sin(dir), py = (float)Math.cos(dir);
+		//어둠 속에서도 칸 밖으로 뻗은 발톱이 안개에 가리지 않게 안개 위에 그린다
+		com.watabou.noosa.Group fx = new com.watabou.noosa.Group();
+		GameScene.groupOverFog(fx);
+		for (int i = 0; i <= 0; i++){ //(결정, 바뀜) 발톱 자국은 한 번만 (예전 세 줄)
+			PointF c = new PointF(t.x + px * i * 3f + (float)Math.cos(dir) * 7f, t.y + py * i * 3f + (float)Math.sin(dir) * 7f);
+			float delay = (i + 1) * 0.04f;
+			new com.shatteredpixel.shatteredpixeldungeon.effects.SlashTrail(10f, 3f, start, sweep, delay, 0.09f, 0.28f)
+					.trailColor(0x1C2440).solid()
+					.show(fx, c);
+			new com.shatteredpixel.shatteredpixeldungeon.effects.SlashTrail(11.2f, 1f, start, sweep, delay, 0.09f, 0.28f)
+					.trailColor(0x8FD3FF)
+					.show(fx, c);
+		}
+		target.sprite.emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle.UP, 8);
+		PixelScene.shake(1.5f, 0.2f);
 	}
 
 	private void cancelAmbush(){
@@ -956,10 +1009,20 @@ public class WraithKing extends Mob {
 		//(결정) 서 있는 시트의 9~12는 사망이 아니라 3단계로 바뀔 때 한 번 재생하는 '쓰러짐'
 		private boolean collapsing = false;
 
+		//(결정) 쓰러짐은 천천히: 한 프레임 0.25초, 마지막에 엎드린 모습으로 잠깐 멈춘다 (약 1.5초)
+		private Animation collapseAnim;
+
 		public WraithKingSprite(){
 			super();
-			setAttack(MazeBossSprites.apply(this, MazeBossSprites.Look.WRAITHKING));
+			com.watabou.noosa.TextureFilm film = MazeBossSprites.apply(this, MazeBossSprites.Look.WRAITHKING);
+			setAttack(film);
+			collapseAnim = new Animation(4, false);
+			collapseAnim.frames(film, 9, 10, 11, 12, 12, 12);
 			play(idle);
+		}
+
+		public boolean isCollapsing(){
+			return collapsing;
 		}
 
 		//(결정) 공격 6~8: 서 있는 모습은 지팡이를 들어 구슬이 빛나고(인간을 죽이는 마법 기 모으기·발사도 이 동작), 기어다니는 모습은 할퀴기
@@ -981,8 +1044,15 @@ public class WraithKing extends Mob {
 			reveal = 0;
 			hidden = false;
 			alpha(1f);
-			play(die);
-			BossEffects.at(BossEffects.Fx.WK_CROWN_BREAK, x + width / 2f, y + 2, 8, false);
+			play(collapseAnim);
+			//(결정) 한눈에 알아보게: 왕관 깨짐을 천천히, 하얗게 번쩍, 푸른 넋이 크게 흩어지고, 화면이 흔들리며 머리 위에 글자
+			BossEffects.at(BossEffects.Fx.WK_CROWN_BREAK, x + width / 2f, y + 2, 6, false);
+			flash();
+			emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle.UP, 18);
+			emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.factory(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.LIGHT), 6);
+			showStatus(0x66AAFF, Messages.get(WraithKing.class, "phase3_status"));
+			PixelScene.shake(3f, 0.6f);
+			GameScene.flash(0x223366);
 		}
 
 		public void crawl(){
@@ -997,7 +1067,7 @@ public class WraithKing extends Mob {
 		@Override
 		public void play( Animation anim ) {
 			//쓰러지는 중에 다른 동작(이동·공격)이 오면 쓰러짐을 끝내고 기어다니는 시트의 같은 동작으로
-			if (collapsing && anim != die){
+			if (collapsing && anim != collapseAnim){
 				Animation old = anim;
 				Animation oldRun = run, oldAtk = attack, oldZap = zap;
 				crawl();
@@ -1042,7 +1112,16 @@ public class WraithKing extends Mob {
 			alpha(1f);
 			hidden = false;
 			play(attack);
+			//(결정) 어둠 속 기습: 왕이 나타난 칸은 깜깜한 안개 아래라 모습이 가려지고, 기둥 바로 아래면 머리도 기둥에 가린다.
+			//그래서 모습을 드러내는 동안만 왕 그림을 안개 위 층으로 올린다 (연출이 끝나면 되돌림)
+			if (parent != null && ((WraithKing) ch).isDark() && !overFog){
+				parent.erase(this);
+				GameScene.effectOverFog(this);
+				overFog = true;
+			}
 		}
+
+		private boolean overFog = false;
 
 		@Override
 		public void onComplete( Animation anim ) {
@@ -1052,7 +1131,7 @@ public class WraithKing extends Mob {
 				return;
 			}
 			//쓰러짐이 끝나면 기어다니는 모습 (MobSprite가 사라지게 하지 않도록 먼저 가로챈다)
-			if (collapsing && anim == die){
+			if (collapsing && anim == collapseAnim){
 				crawl();
 				return;
 			}
@@ -1068,8 +1147,16 @@ public class WraithKing extends Mob {
 			super.update();
 			if (!(ch instanceof WraithKing) || !ch.isAlive()) return;
 			if (reveal > 0){
+				visible = true; //나타난 칸이 시야 밖이어도 드러내는 동안은 보인다
 				reveal -= com.watabou.noosa.Game.elapsed;
-				if (reveal <= 0) place(ch.pos);
+				if (reveal <= 0){
+					place(ch.pos);
+					if (overFog && parent != null){
+						parent.erase(this);
+						GameScene.addMobSpriteBack(this);
+						overFog = false;
+					}
+				}
 			}
 			//어둠 속에 숨은 동안 그림을 숨긴다. 시야 계산이 visible을 다시 켜도 깜빡이지 않게 투명도로 숨긴다
 			boolean hide = ((WraithKing) ch).shrouded() && reveal <= 0;

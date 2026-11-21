@@ -63,6 +63,7 @@ public class MazeSkip {
 		}
 		if (target >= MazeTower.SKIP_BLOOM_DEPTH)     give.add(new com.shatteredpixel.shatteredpixeldungeon.items.BloomCore());
 		if (target >= MazeTower.SKIP_FULLBLOOM_DEPTH) give.add(new com.shatteredpixel.shatteredpixeldungeon.items.FullBloomCore());
+		give.addAll(MazeTrial.kit(target)); //Maze Tower: 보스전 체험판 20층 보스용 지급품 (체험판에서만)
 		loot.addAll(0, give);
 
 		//가방에 넣는다. 가방이 차면 목표 층의 도착 칸에 내려놓는다

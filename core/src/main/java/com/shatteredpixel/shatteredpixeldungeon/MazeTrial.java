@@ -134,6 +134,35 @@ public class MazeTrial {
 		});
 	}
 
+	//(결정) 체험판에서 19층으로 건너뛸 때(20층 보스) 더 주는 물건 (MazeSkip.generate에서 받는다):
+	//모든 물약 감정된 채 5개씩, 모든 주문서 감정된 채 5개씩(강화의 주문서만 12개), 전사 계열 검 7종(감정됨), 힘 16 갑옷(비늘 갑옷, 감정됨)
+	public static java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> kit( int target ){
+		java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> items = new java.util.ArrayList<>();
+		if (!on() || target != 19) return items;
+		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION.classes){
+			com.shatteredpixel.shatteredpixeldungeon.items.Item p = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
+			if (p == null) continue;
+			p.identify();
+			items.add(p.quantity(MazeTower.TRIAL_POTIONS));
+		}
+		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.SCROLL.classes){
+			com.shatteredpixel.shatteredpixeldungeon.items.Item s = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
+			if (s == null) continue;
+			s.identify();
+			boolean upgrade = s instanceof com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
+			items.add(s.quantity(upgrade ? MazeTower.TRIAL_UPGRADES : MazeTower.TRIAL_SCROLLS));
+		}
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword().identify());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Shortsword().identify());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Rapier().identify());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Scimitar().identify());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Longsword().identify());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Katana().identify());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.RunicBlade().identify());
+		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.armor.ScaleArmor().identify()); //4티어, 힘 16
+		return items;
+	}
+
 	// ===== 저장 (Hero 번들) =====
 	private static final String BOSS = "maze_trial_boss";
 
