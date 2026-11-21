@@ -65,7 +65,7 @@ public class MazeSkip {
 		if (target >= MazeTower.SKIP_FULLBLOOM_DEPTH) give.add(new com.shatteredpixel.shatteredpixeldungeon.items.FullBloomCore());
 		ArrayList<Item> kit = MazeTrial.kit(target); //Maze Tower: 보스전 체험판 20층 보스용 지급품 (체험판에서만)
 		//(결정) 체험판 20층 보스는 지나온 층의 아이템 대신 지급품만 준다 (가방·핵은 그대로)
-		if (!kit.isEmpty()) loot.clear();
+		if (!kit.isEmpty() && target == MazeTower.TRIAL_CITY_DEPTH) loot.clear();
 		give.addAll(kit);
 		loot.addAll(0, give);
 

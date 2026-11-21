@@ -166,7 +166,7 @@ public class MazeTrial {
 	//모든 물약 감정된 채 5개씩, 모든 주문서 감정된 채 5개씩(강화의 주문서만 12개), 전사 계열 검 7종(감정됨), 힘 16 갑옷(비늘 갑옷, 감정됨)
 	public static java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> kit( int target ){
 		java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> items = new java.util.ArrayList<>();
-		if (!on() || target != MazeTower.TRIAL_CITY_DEPTH) return items;
+		if (!on() || (target != MazeTower.TRIAL_CITY_DEPTH && target != MazeTower.TRIAL_SAP_DEPTH)) return items;
 		//마법봉 가방 먼저 (그래야 마법봉이 가방으로 들어간다)
 		if (Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster.class) == null){
 			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster());
@@ -184,6 +184,8 @@ public class MazeTrial {
 			r.upgrade(MazeTower.TRIAL_RING_UPGRADE);
 			items.add(r.identify());
 		}
+		//(결정) 반지·마법봉은 5층·20층 둘 다, 아래 물약·주문서·검·갑옷은 20층만
+		if (target != MazeTower.TRIAL_CITY_DEPTH) return items;
 		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION.classes){
 			com.shatteredpixel.shatteredpixeldungeon.items.Item p = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
 			if (p == null) continue;
