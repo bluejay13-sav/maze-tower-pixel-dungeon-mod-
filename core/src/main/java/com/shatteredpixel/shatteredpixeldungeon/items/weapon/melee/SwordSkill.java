@@ -166,6 +166,7 @@ public class SwordSkill {
 
 	private static void perform(final Hero hero, final MeleeWeapon wep, final SwordSkill skill, int target){
 		final Char enemy = Actor.findChar(target);
+		int dashIn = -1; //섬광 보법으로 돌진할 칸
 		if (enemy == null || enemy == hero || hero.isCharmedBy(enemy) || !Dungeon.level.heroFOV[target]) {
 			GLog.w(Messages.get(SwordSkill.class, "no_target"));
 			return;
@@ -190,8 +191,12 @@ public class SwordSkill {
 			}
 		//나머지 스킬은 인접한 단일 대상
 		} else if (!Dungeon.level.adjacent(hero.pos, enemy.pos)){
-			GLog.w(Messages.get(SwordSkill.class, "not_adjacent"));
-			return;
+			//Maze Tower: 2차 특성 섬광 보법 (근거리 스킬): 떨어진 적이면 바로 앞 칸으로 돌진
+			dashIn = com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomSkill.dashInCell(hero, enemy);
+			if (dashIn == -1){
+				GLog.w(Messages.get(SwordSkill.class, "not_adjacent"));
+				return;
+			}
 		}
 		final int cost = manaCost(hero);
 		if (Mana.get(hero).cur() < cost){
@@ -203,6 +208,10 @@ public class SwordSkill {
 		final boolean surprise = skill.surpriseDmg > 0 && enemy instanceof Mob && ((Mob)enemy).surprisedBy(hero, true);
 		BloomEffects.beginSkill(hero, enemy, cost); //마나가 가득 찼는지, 집중 상태 기록
 		if (skill.ranged) com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomSkill.markRanged(); //Maze Tower: 2차 특성 섬광 보법 (원거리 스킬)
+		if (dashIn != -1){
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomSkill.markDashIn(); //Maze Tower: 섬광 보법 (근거리 스킬 돌진)
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomSkill.dash(hero, dashIn);
+		}
 		Mana.get(hero).spend(cost);
 		SproutEffects.onSkillUsed(hero); //1차 특성: 투지
 		GladiatorEffects.onSkillStart(); //3차 검투사: 기술 연계용 적중 기록
