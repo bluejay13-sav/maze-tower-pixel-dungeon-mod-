@@ -23,7 +23,7 @@ import com.watabou.utils.PointF;
 //  1. 화면 가장자리부터 어두워지고, 밝은 원이 왕 쪽으로 좁혀져 왕이 마지막으로 남는다 (가장자리는 부드럽게)
 //  2. 완전히 깜깜해진다
 //  3. 깜깜한 가운데 왕의 푸른 눈이 한 번 선명하게 빛났다가 사라진다
-//     (결정) 기습 전 푸른 눈 동작(fx20w_eyes)을 더 밝게 만든 그림(maze_fx20w_eyes_bright.png)을 25%가 아니라 또렷하게 쓴다
+//     (결정, 바뀜) 기습 전 푸른 눈 그림(maze_fx20w_eyes.png) 그대로, 25%로 흐리게 하지 않고 100%로 또렷하게 쓴다 (밝게 고친 그림은 쓰지 않음)
 //  4. 끝나면 onDone (그때 실제 어둠 상태가 된다). 화면 흔들림은 없다.
 //안개 위 층(GameScene.effectOverFog)에 그려 다른 모든 칸을 덮는다.
 public class WraithDarkIntro extends Group {
@@ -67,7 +67,7 @@ public class WraithDarkIntro extends Group {
 		right = new ColorBlock(1, 1, 0xFF000000);
 		add(top); add(bottom); add(left); add(right);
 
-		eyes = new Image("sprites/maze_fx20w_eyes_bright.png");
+		eyes = new Image("sprites/maze_fx20w_eyes.png");
 		eyeFilm = new TextureFilm(eyes.texture, 16, 16);
 		eyes.frame(eyeFilm.get(0));
 		eyes.x = eyeAt.x - 8f;
