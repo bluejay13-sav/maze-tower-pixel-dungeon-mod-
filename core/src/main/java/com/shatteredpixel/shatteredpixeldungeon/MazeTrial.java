@@ -63,41 +63,10 @@ public class MazeTrial {
 		return best;
 	}
 
-	//(2026-11-22) 시작 화면 "이어하기": 저장된 판 목록에서 골라 불러온다 (최근에 한 판이 위, 하나뿐이어도 고르게)
+	//(2026-11-22) 시작 화면 "이어하기": 원작 저장 칸 화면(StartScene). 칸을 누르면 원작 창에서 이어하기 / 삭제,
+	//  빈 칸("새 게임")을 누르면 체험판 새 게임(newGame)
 	public static void continueLatest(){
-		final java.util.ArrayList<GamesInProgress.Info> saves = new java.util.ArrayList<>(GamesInProgress.checkAll());
-		if (saves.isEmpty()) return;
-		java.util.Collections.sort(saves, new java.util.Comparator<GamesInProgress.Info>() {
-			@Override
-			public int compare( GamesInProgress.Info a, GamesInProgress.Info b ) {
-				return Long.compare(b.lastPlayed, a.lastPlayed);
-			}
-		});
-		String[] opts = new String[saves.size()];
-		for (int i = 0; i < opts.length; i++){
-			GamesInProgress.Info s = saves.get(i);
-			opts[i] = Messages.get(MazeTrial.class, "save_slot", s.slot, Messages.titleCase(s.heroClass.title()), s.level, s.depth);
-		}
-		ShatteredPixelDungeon.scene().addToFront(new WndOptions(
-				Messages.get(MazeTrial.class, "continue_title"),
-				Messages.get(MazeTrial.class, "continue_desc"),
-				opts){
-			@Override
-			protected void onSelect( int index ) {
-				load(saves.get(index));
-			}
-		});
-	}
-
-	private static void load( GamesInProgress.Info info ){
-		if (info == null) return;
-		GamesInProgress.curSlot = info.slot;
-		Dungeon.hero = null;
-		Dungeon.daily = Dungeon.dailyReplay = false;
-		ActionIndicator.clearAction();
-		com.shatteredpixel.shatteredpixeldungeon.ui.FinisherIndicator.clearAction(null);
-		InterlevelScene.mode = InterlevelScene.Mode.CONTINUE;
-		ShatteredPixelDungeon.switchScene(InterlevelScene.class);
+		ShatteredPixelDungeon.switchNoFade(StartScene.class);
 	}
 
 	//영웅 선택 화면의 시작 버튼: 도전할 보스 고르기 (5층 / 20층 두 보스)
