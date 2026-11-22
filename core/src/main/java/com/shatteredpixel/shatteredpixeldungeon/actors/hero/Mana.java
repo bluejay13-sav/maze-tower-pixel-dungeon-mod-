@@ -184,6 +184,12 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	public Visual primaryVisual() {
 		MeleeWeapon w = skillWeapon();
 		Item src = w != null ? w : skillRing();
+		if (w == null && src != null){
+			//(2026-11-21) 고리지기 반지 스킬은 반지 그림 대신 스킬 버튼 그림 (fx4_13)
+			com.watabou.noosa.Image ri = HunterEffects.ringButtonIcon(skillRing());
+			if (!canAfford()) ri.tint(0x808080, 0.75f);
+			return ri;
+		}
 		ItemSprite ico = src == null ? new ItemSprite() : new ItemSprite(src);
 		//마나가 부족하면 회색으로
 		if (!canAfford()) ico.tint(0x808080, 0.75f);

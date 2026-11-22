@@ -497,6 +497,18 @@ public class HunterEffects {
 	// =====================================================================
 
 	//반지마다 스킬 이름 키 (null = 스킬 없음: 회피·신속·힘·인내)
+	//(2026-11-21) 반지 스킬 버튼 그림 (sprites/maze_fx4_13.png 16×16 × 7: 정확성·분노·원소·완력·충전·부유함·저격)
+	private static final String[] BUTTON_ORDER = {"pressure", "frenzy", "purify", "toss", "burst", "goldfist", "volley"};
+
+	public static com.watabou.noosa.Image ringButtonIcon(Ring r){
+		String k = skillKey(r);
+		int idx = 0;
+		for (int i = 0; i < BUTTON_ORDER.length; i++) if (BUTTON_ORDER[i].equals(k)) idx = i;
+		com.watabou.noosa.Image img = new com.watabou.noosa.Image("sprites/maze_fx4_13.png");
+		img.frame(idx * 16, 0, 16, 16);
+		return img;
+	}
+
 	public static String skillKey(Ring r){
 		if (r instanceof RingOfAccuracy)      return "pressure";
 		if (r instanceof RingOfFuror)         return "frenzy";
@@ -875,8 +887,9 @@ public class HunterEffects {
 		@Override
 		public Visual primaryVisual() {
 			Ring r = ring();
-			ItemSprite s = r == null ? new ItemSprite() : new ItemSprite(r);
-			if (r != null && !canAfford(Dungeon.hero, r)) s.tint(0x808080, 0.75f);
+			if (r == null) return new ItemSprite();
+			com.watabou.noosa.Image s = ringButtonIcon(r);
+			if (!canAfford(Dungeon.hero, r)) s.tint(0x808080, 0.75f);
 			return s;
 		}
 
