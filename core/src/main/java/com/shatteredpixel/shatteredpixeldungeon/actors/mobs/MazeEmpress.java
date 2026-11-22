@@ -64,7 +64,7 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 	{
 		spriteClass = EmpressSprite.class;
 
-		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? MazeTower.B20_HP_STRONG : MazeTower.B20_HP;
+		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? MazeTower.EM_HP_STRONG : MazeTower.EM_HP;
 		EXP = MazeTower.B20_EXP;
 		defenseSkill = MazeTower.B20_DEF;
 

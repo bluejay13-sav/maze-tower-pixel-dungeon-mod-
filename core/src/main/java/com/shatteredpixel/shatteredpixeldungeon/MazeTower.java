@@ -116,9 +116,9 @@ public class MazeTower {
 	//  강화 1당 증가량: 근접 +1/+1, 원거리 +1/+BOW_RANGED_MAX_SCALE[티어]
 	public static final int[] BOW_MELEE_MIN  = {0, 1, 2, 3, 4};
 	public static final int[] BOW_MELEE_MAX  = {0, 4, 7, 10, 13};
-	public static final int[] BOW_RANGED_MIN = {0, 2, 3, 4, 5};
-	public static final int[] BOW_RANGED_MAX = {0, 8, 12, 16, 20};
-	public static final int[] BOW_RANGED_MAX_SCALE = {0, 2, 3, 4, 5};
+	public static final int[] BOW_RANGED_MIN = {0, 1, 2, 3, 4}; //(결정, 2026-11-21 밸런스) 2,3,4,5 → 1,2,3,4
+	public static final int[] BOW_RANGED_MAX = {0, 7, 10, 14, 17}; //(결정, 밸런스) 8,12,16,20 → 7,10,14,17 (원거리 평타 ≈ 같은 힘 검의 75%)
+	public static final int[] BOW_RANGED_MAX_SCALE = {0, 1, 2, 3, 4}; //(결정, 밸런스) 2,3,4,5 → 1,2,3,4
 	//2칸 거리 원거리 평타의 명중 배율 (0.7 = -30%). 3칸 이상은 패널티 없음
 	public static final float BOW_CLOSE_RANGE_ACCURACY = 0.7f;
 	//활 스킬 (원거리 피해 배율, 모두 마나 SKILL_MANA_COST)
@@ -127,17 +127,17 @@ public class MazeTower {
 	public static final float SKILL_PELLET_AIMED_DMG = 1.2f;
 	public static final float SKILL_LONG_AIMED_DMG = 1.4f;
 	public static final float SKILL_AIMED_ACCURACY = 1.3f;
-	//속사 (각궁): 80% 화살 두 발 (화살 2개)
+	//속사 (각궁): 85% 화살 두 발 (화살 2개)
 	public static final int   SKILL_RAPID_HITS = 2;
-	public static final float SKILL_RAPID_DMG = 0.8f;
-	//장전 (석궁): 1턴, 다음 원거리 평타 = 평타 100% + 130% = 230%, 명중 +30%
-	public static final float SKILL_LOAD_DMG = 2.3f;
+	public static final float SKILL_RAPID_DMG = 0.85f; //(결정, 밸런스) 0.8 → 0.85
+	//장전 (석궁): 1턴, 다음 원거리 평타 = 평타 100% + 110% = 210%, 명중 +30%
+	public static final float SKILL_LOAD_DMG = 2.1f; //(결정, 밸런스) 2.3 → 2.1 (평타 100% + 110%)
 	public static final float SKILL_LOAD_ACCURACY = 1.3f;
-	//집중 (정량궁): 1턴, 다음 원거리 평타 = 평타 100% + 180% = 280%, 명중 +50%
-	public static final float SKILL_FOCUS_DMG = 2.8f;
+	//집중 (정량궁): 1턴, 다음 원거리 평타 = 평타 100% + 140% = 240%, 명중 +50%
+	public static final float SKILL_FOCUS_DMG = 2.4f; //(결정, 밸런스) 2.8 → 2.4 (평타 100% + 140%)
 	public static final float SKILL_FOCUS_ACCURACY = 1.5f;
-	//꿰뚫기 (정령의 활): 벽을 관통하는 화살 180% (보이는 적이면 길이 막혀도 맞힌다)
-	public static final float SKILL_PIERCE_DMG = 1.8f;
+	//꿰뚫기 (정령의 활): 벽을 관통하는 화살 200% (보이는 적이면 길이 막혀도 맞힌다)
+	public static final float SKILL_PIERCE_DMG = 2.0f; //(결정, 밸런스) 1.8 → 2.0
 	//활 근접 평타가 밀쳐내는 거리
 	public static final int BOW_KNOCKBACK = 1;
 	//사냥꾼 시작 화살
@@ -438,10 +438,10 @@ public class MazeTower {
 
 	//사냥감 지정: 스킬로 맞힌 적을 사냥감으로 (턴), 사냥감에게 기본공격 피해 +
 	public static final float[] T3_PREY_TURNS = {0f, 2f, 2f, 2f, 3f};
-	public static final float[] T3_PREY_DMG   = {0f, 0.15f, 0.20f, 0.25f, 0.35f};
+	public static final float[] T3_PREY_DMG   = {0f, 0.10f, 0.15f, 0.20f, 0.25f}; //(결정, 밸런스) 15/20/25/35% → 10/15/20/25%
 	//저격: 활을 든 채 떨어진 칸당 피해 + (최대 T3_SNIPE_MAX_TILES칸)
-	public static final float[] T3_SNIPE_PER_TILE = {0f, 0.02f, 0.03f, 0.04f, 0.05f};
-	public static final int     T3_SNIPE_MAX_TILES = 8;
+	public static final float[] T3_SNIPE_PER_TILE = {0f, 0.01f, 0.02f, 0.03f, 0.04f}; //(결정, 밸런스) 2/3/4/5% → 1/2/3/4%
+	public static final int     T3_SNIPE_MAX_TILES = 5; //(결정, 밸런스) 8 → 5
 	//덫: 사냥감이 다가오면 1칸마다 느려짐 확률, 느려짐 턴
 	public static final float[] T3_SNARE_CHANCE = {0f, 0.10f, 0.20f, 0.30f, 0.40f};
 	public static final float   T3_SNARE_TURNS  = 2f;
@@ -455,7 +455,7 @@ public class MazeTower {
 	//공명: 두 반지 강화 수치 차이 중 낮은 쪽을 끌어올리는 비율 (내림)
 	public static final float[] T3_RESONANCE = {0f, 0.25f, 0.50f, 0.75f, 1.00f};
 	//맨손 사냥: 무기를 들지 않았을 때 근접 피해 +
-	public static final float[] T3_BARE_HUNT = {0f, 0.10f, 0.30f, 0.50f, 0.70f};
+	public static final float[] T3_BARE_HUNT = {0f, 0.10f, 0.20f, 0.30f, 0.40f}; //(결정, 밸런스) 10/30/50/70% → 10/20/30/40%
 	//반지 꽃: 처치 시 마나 +, 체력 +
 	public static final int[]   T3_RING_BLOOM_MANA = {0, 3, 6, 9, 12};
 	public static final int     T3_RING_BLOOM_HP   = 2;
@@ -622,8 +622,7 @@ public class MazeTower {
 	public static final int   TORCH_FIRE            = 4;   //횃불: 떨어진 자리에 붙는 불의 양
 
 	// ===== 20층 보스 (명세 22번). 정해지지 않은 수치는 원작 드워프 왕(체력 300, 근접 15~25)을 기준으로 잡은 임시값 =====
-	public static final int   B20_HP            = 300;   //체력 (원작 드워프 왕과 같음)
-	public static final int   B20_HP_STRONG     = 450;   //도전 "더 강한 보스"
+	//(결정, 2026-11-21 밸런스) 체력은 보스마다 따로: 망령 왕 WK_HP, 여제 EM_HP (예전 공통 B20_HP 300 / 450)
 	public static final int   B20_EXP           = 40;
 	public static final int   B20_DEF           = 20;    //(결정, 바뀜 22→20) 회피 (여제)
 	public static final int   B20_ACC           = 26;    //명중
@@ -649,7 +648,12 @@ public class MazeTower {
 	public static final int   WK_LAMP_HERO_GAP  = 2;     //등불은 처음 생길 때 주인공 둘레 이 칸 안에는 생기지 않는다
 	public static final int   WK_LAMP_GAP       = 4;     //등불끼리 이 칸 수 이상 떨어진다 (서로 3칸 안에는 생기지 않음)
 	public static final int   WK_LAMP_TURNS     = 25;    //(결정, 바뀜 50→35→25) 등불이 켜져 있는 턴
-	public static final float WK_BASIC_MULTI    = 0.40f; //(결정, 바뀜 -30%→-50%→-60%) 왕의 기본 공격 피해 -60%: 바로 옆은 일반 근접(방어 적용), 떨어지면 마법 영혼 화살(방어 무시). 예전: 등불이 켜진 동안 원거리만 -35%
+	public static final int   WK_HP             = 600;   //(결정, 밸런스) 체력 300 → 600
+	public static final int   WK_HP_STRONG      = 900;   //도전 "더 강한 보스" (450 → 900)
+	//(결정, 밸런스) 기본 공격 배율을 둘로 나눔 (예전 WK_BASIC_MULTI 0.4 공통)
+	public static final float WK_MELEE_MULTI    = 1.1f;  //바로 옆 근접 (방어 적용): 15~25 × 1.1 = 17~28
+	public static final float WK_ARROW_MULTI    = 0.56f; //떨어진 주인공에게 영혼 화살 (방어 무시): 8~14
+	public static final float WK_AMBUSH_MULTI   = 1.0f;  //기습 일격 (× WK_AMBUSH_DMG)
 	public static final int   WK_DEF            = 17;    //(결정, 바뀜 18→17) 망령 왕 회피
 	public static final float WK_COUNTER_MIN    = 0.10f; //(결정, 바뀜 60~70%→10%) 기습 중 푸른 눈을 쳐서 숨은 왕에게 넘어가는 피해 비율 (90% 감소)
 	public static final float WK_COUNTER_MAX    = 0.10f;
@@ -657,8 +661,8 @@ public class MazeTower {
 	public static final int   WK_ZOLT_INTERVAL  = 15;    //졸트라크 쿨타임
 	public static final int   WK_ZOLT_CHARGE    = 1;     //(결정, 바뀜 2→1) 졸트라크 기 모으기 턴
 	public static final int   WK_ZOLT_DARK_CUT  = 4;     //(결정, 바뀜 2→4) 어둠 속에서는 인간을 죽이는 마법 쿨타임이 이만큼 짧다 (15 → 11)
-	public static final int   WK_ZOLT_MIN       = 25;    //졸트라크 피해 (영혼 강화 전)
-	public static final int   WK_ZOLT_MAX       = 40;
+	public static final int   WK_ZOLT_MIN       = 35;    //(결정, 밸런스) 25 → 35    //졸트라크 피해 (영혼 강화 전)
+	public static final int   WK_ZOLT_MAX       = 56;    //(결정, 밸런스) 40 → 56
 	public static final int   WK_GUARD_INTERVAL = 7;     //근위병 소환 쿨타임
 	public static final int   WK_DARK_GUARDS    = 3;     //어두워질 때 추가 근위병 (영혼 5개 이상)
 	public static final int   WK_AMBUSH_INTERVAL = 3;    //기습 쿨타임 (어두운 동안)
@@ -678,14 +682,16 @@ public class MazeTower {
 	public static final float WK_CRAWL_SPEED    = 0.7f;  //(결정) 3단계 기어다니는 왕의 이동 속도 (주인공에게서 도망친다)
 	//망령 근위병 (원작 드워프 왕 부하 구울을 조금 약하게)
 	public static final int   WG_HP             = 40;
-	public static final int   WG_DMG_MIN        = 10;
-	public static final int   WG_DMG_MAX        = 16;
+	public static final int   WG_DMG_MIN        = 14;    //(결정, 밸런스) 10 → 14
+	public static final int   WG_DMG_MAX        = 22;    //(결정, 밸런스) 16 → 22
 	public static final int   WG_ACC            = 25;
 	public static final int   WG_DEF            = 8;     //(결정, 바뀜 15→8) 회피
 	public static final int   WG_DR             = 4;
 	public static final float WG_SPEED          = 2f;    //한 턴에 2칸
 
 	//마도시의 여제
+	public static final int   EM_HP             = 540;   //(결정, 2026-11-21 밸런스) 체력 300 → 540
+	public static final int   EM_HP_STRONG      = 810;   //도전 "더 강한 보스" (450 → 810)
 	public static final float EM_PHASE2_HP      = 0.85f;
 	public static final float EM_PHASE3_HP      = 0.30f;
 	public static final float EM_PETAL_TAKEN    = 0.5f;  //1단계 꽃잎의 보호: 받는 피해
@@ -693,34 +699,34 @@ public class MazeTower {
 	public static final int   EM_TELEPORT_HITS  = 2;     //(결정, 바뀜 4→2) 피해를 연속으로 이만큼 받으면 순간이동
 	public static final int   EM_HIT_RESET_TURNS = 2;    //이 턴 동안 맞지 않으면 연속 횟수가 처음부터
 	public static final int   EM_BOLT_INTERVAL  = 3;     //강화 마탄 쿨타임
-	public static final int   EM_BOLT_MIN       = 10;
-	public static final int   EM_BOLT_MAX       = 16;
+	public static final int   EM_BOLT_MIN       = 14;    //(결정, 밸런스) 10 → 14
+	public static final int   EM_BOLT_MAX       = 22;    //(결정, 밸런스) 16 → 22
 	public static final int   EM_RAIN_INTERVAL  = 7;     //전기비 쿨타임
 	public static final int   EM_RAIN_CELLS     = 10;    //(결정, 바뀜 5→10) 솟는 칸 수 (주인공 칸 + 둘레 6×6 안 무작위)
 	public static final int   EM_RAIN_AREA      = 6;     //전기비 범위: 주인공 둘레 6×6칸
 	public static final int   EM_RAIN_RADIUS    = 2;
-	public static final int   EM_RAIN_MIN       = 8;
-	public static final int   EM_RAIN_MAX       = 12;
+	public static final int   EM_RAIN_MIN       = 11;    //(결정, 밸런스) 8 → 11
+	public static final int   EM_RAIN_MAX       = 17;    //(결정, 밸런스) 12 → 17
 	public static final float EM_RAIN_STATIC    = 3f;    //정전기 턴
 	public static final int   EM_SPEAR_INTERVAL = 15;    //서리창·화염창 번갈아 (각각 30턴마다)
 	public static final int   EM_SPEAR_DELAY_MIN = 3;    //창이 머리 위에 뜬 뒤 날아가기까지 (3~4턴, 무작위)
 	public static final int   EM_SPEAR_DELAY_MAX = 4;
 	//(결정, 2026-11-21) 서리창·화염창 조준선(조준선·창 겨누기·발밑 표식)을 보여 주는 남은 턴: 날아오기 2턴 전부터
 	public static final int   EM_SPEAR_AIM_TURNS = 2;
-	public static final int   EM_SPEAR_MIN      = 15;
-	public static final int   EM_SPEAR_MAX      = 22;
+	public static final int   EM_SPEAR_MIN      = 21;    //(결정, 밸런스) 15 → 21
+	public static final int   EM_SPEAR_MAX      = 31;    //(결정, 밸런스) 22 → 31
 	public static final float EM_SPEAR_FROSTBITE = 3f;   //서리창 혹한
 	public static final float EM_TILE_FILL      = 0.90f; //원소 감응: 타일 칸(132칸)의 90% = 118칸
 	public static final float EM_TILE_REFILL    = 0.80f; //(결정, 완화 65%→80%) 이 아래(106칸)면 다시 깐다
 	public static final int   EM_TILE_COOLDOWN  = 13;    //(지금은 안 씀) 예전 원소 감응 쿨타임. 이제 기술을 쓸 때마다 타일 수를 확인한다
 	public static final float EM_SENSING_TIME   = 0.5f;  //원소 감응에 드는 시간 (턴)
-	public static final int   EM_TILE_STEAM_MIN = 10;    //원소 타일 위 주인공 증기 반응 피해 (폭발은 기존 폭발 반응 피해)
-	public static final int   EM_TILE_STEAM_MAX = 16;
+	public static final int   EM_TILE_STEAM_MIN = 14;    //원소 타일 위 주인공 증기 반응 피해 (폭발은 기존 폭발 반응 피해)
+	public static final int   EM_TILE_STEAM_MAX = 22;    //(결정, 밸런스) 10~16 → 14~22
 	public static final int   EM_STORM_WARN     = 5;     //원소 폭풍 경고 턴
 	public static final int   EM_STORM_FIRST_WARN = 3;   //처음 원소 폭풍만 경고 3턴
 	public static final int   EM_STORM_TURNS    = 5;     //원소 폭풍 턴
-	public static final int   EM_STORM_MIN      = 6;     //폭풍 구역 안 주인공 피해 (턴마다)
-	public static final int   EM_STORM_MAX      = 10;
+	public static final int   EM_STORM_MIN      = 8;     //폭풍 구역 안 주인공 피해 (턴마다)
+	public static final int   EM_STORM_MAX      = 14;    //(결정, 밸런스) 6~10 → 8~14
 
 	// ===== 25층 최종보스: 심장을 진 짐승 (지시서 claude_code_tasks_1122_boss25.md + 1122b_boss25_update.md) =====
 	//사슴(짐승) 기본 수치 (사용자 결정: 원작 요그와 같은 체력)

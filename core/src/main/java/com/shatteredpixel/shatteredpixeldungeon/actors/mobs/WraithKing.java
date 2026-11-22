@@ -58,7 +58,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 	{
 		spriteClass = WraithKingSprite.class;
 
-		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? MazeTower.B20_HP_STRONG : MazeTower.B20_HP;
+		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? MazeTower.WK_HP_STRONG : MazeTower.WK_HP;
 		EXP = MazeTower.B20_EXP;
 		defenseSkill = MazeTower.WK_DEF; //(결정) 망령 왕 회피는 여제보다 조금 낮게
 
@@ -127,7 +127,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 
 	@Override
 	public int damageRoll() {
-		return Math.round(Random.NormalIntRange(MazeTower.B20_DMG_MIN, MazeTower.B20_DMG_MAX) * power() * (basicMelee ? MazeTower.WK_BASIC_MULTI : 1f));
+		return Math.round(Random.NormalIntRange(MazeTower.B20_DMG_MIN, MazeTower.B20_DMG_MAX) * power() * (basicMelee ? MazeTower.WK_MELEE_MULTI : 1f));
 	}
 
 	@Override
@@ -151,7 +151,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 
 	@Override
 	protected boolean doAttack( Char enemy ) {
-		//(결정, 바뀜) 바로 옆(1칸)의 적에게는 일반 근접 공격(방어력 적용), 떨어진 적에게는 마법 공격(영혼 화살, 방어 무시). 둘 다 기본 공격 피해 -60%
+		//(결정, 바뀜) 바로 옆(1칸)의 적에게는 일반 근접 공격(방어력 적용), 떨어진 적에게는 마법 공격(영혼 화살, 방어 무시). 근접 × WK_MELEE_MULTI, 영혼 화살 × WK_ARROW_MULTI
 		if (Dungeon.level.adjacent(pos, enemy.pos)){
 			basicMelee = true;
 			boolean done = super.doAttack(enemy);
@@ -188,8 +188,8 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 		if (e == null) return;
 		if (hit(this, e, true)){ //마법 공격
 			int dmg = damageRoll();
-			//(결정) 기본 공격(마법): 피해 -60%, 마법이라 방어력을 무시한다
-			dmg = Math.round(dmg * MazeTower.WK_BASIC_MULTI);
+			//(결정) 기본 공격(마법, 영혼 화살): 마법이라 방어력을 무시한다
+			dmg = Math.round(dmg * MazeTower.WK_ARROW_MULTI); //(결정, 밸런스) 영혼 화살 배율
 			e.damage(dmg, this);
 			if (e == Dungeon.hero && !e.isAlive()) Dungeon.fail(this);
 		} else if (e.sprite != null){
@@ -764,7 +764,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 
 	//기습 일격: 반드시 맞고, 방어력을 50%(WK_AMBUSH_ARMOR_IGNORE)만 적용한다
 	private void ambushStrike( Char target ){
-		int dmg = Math.round(damageRoll() * MazeTower.WK_AMBUSH_DMG); //(결정) 기습 피해 +30%
+		int dmg = Math.round(damageRoll() * MazeTower.WK_AMBUSH_MULTI * MazeTower.WK_AMBUSH_DMG); //(결정) 기습 피해 +30%
 		int armor = Math.round(target.drRoll() * (1f - MazeTower.WK_AMBUSH_ARMOR_IGNORE));
 		dmg = Math.max(0, dmg - armor);
 		if (target.sprite != null){
