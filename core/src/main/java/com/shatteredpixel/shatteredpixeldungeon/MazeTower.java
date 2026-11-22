@@ -36,6 +36,10 @@ public class MazeTower {
 	public static final int TRIAL_POTIONS = 5;
 	public static final int TRIAL_SCROLLS = 5;
 	public static final int TRIAL_UPGRADES = 12;
+	//(2026-11-21) 체험판 사냥꾼에게 주는 화살 (5층 / 20층, 시작 화살 100발에 더함), 투창 수 (20층)
+	public static final int TRIAL_ARROWS_SAP = 100;
+	public static final int TRIAL_ARROWS_CITY = 300;
+	public static final int TRIAL_JAVELINS = 3;
 	//체험판 아이템 고르기 창(WndTrialItems)의 마법봉 강화 수치, 체험판 지급 반지(모든 종류, 감정됨) 강화 수치
 	public static final int TRIAL_WAND_UPGRADE = 1;
 	public static final int TRIAL_RING_UPGRADE = 2;

@@ -20,7 +20,7 @@ import com.watabou.noosa.Game;
 import com.watabou.utils.Bundle;
 
 //Maze Tower: 보스전 체험판 (MazeTower.BOSS_TRIAL이 켜진 빌드에서만).
-//시작 화면 "새 게임" → 원작 영웅 선택 화면(전사만 고를 수 있음) → 시작 → 보스 셋 중 하나를 고르고, 전사로 새 게임을 시작해
+//시작 화면 "새 게임" → 원작 영웅 선택 화면(전사·사냥꾼) → 시작 → 보스 셋 중 하나를 고르고, 고른 직업으로 새 게임을 시작해
 //곧바로 층 건너뛰기(MazeSkip)로 보스층 입구에 도착한다. 5층 썩은 수액 덩어리는 5층(레벨 6, 1~5층 아이템),
 //20층 망령 왕·마도시의 여제는 20층(레벨 19, 지급품)에서 시작한다. 저장된 판은 시작 화면 "이어하기"로 바로 불러온다.
 //보스를 쓰러뜨리면 체험 완료 창이 뜬다.
@@ -37,12 +37,17 @@ public class MazeTrial {
 		return MazeTower.BOSS_TRIAL;
 	}
 
-	//체험판은 전사만 고를 수 있다 (영웅 선택 화면에서 다른 직업은 어둡게, 누르면 안내)
+	//(결정, 2026-11-21) 체험판은 전사·사냥꾼만 고를 수 있다 (영웅 선택 화면에서 다른 직업은 어둡게, 누르면 안내)
 	public static boolean locked( HeroClass cl ){
-		return on() && cl != HeroClass.WARRIOR;
+		return on() && cl != HeroClass.WARRIOR && cl != HeroClass.HUNTRESS;
 	}
 
-	//시작 화면 "새 게임": 원작처럼 영웅 선택 화면 (전사만 고를 수 있음). 시작을 누르면 showSelect
+	//체험판에서는 사냥꾼도 처음부터 열려 있다 (원작은 배지가 있어야 열림)
+	public static boolean unlocked( HeroClass cl ){
+		return cl.isUnlocked() || (on() && !locked(cl));
+	}
+
+	//시작 화면 "새 게임": 원작처럼 영웅 선택 화면 (전사·사냥꾼만 고를 수 있음). 시작을 누르면 showSelect
 	public static void newGame(){
 		GamesInProgress.selectedClass = HeroClass.WARRIOR;
 		GamesInProgress.curSlot = 1;
@@ -84,7 +89,7 @@ public class MazeTrial {
 		});
 	}
 
-	//전사로 새 게임을 시작한다 (빈 저장 칸, 없으면 1번 칸을 덮어씀)
+	//영웅 선택 화면에서 고른 직업(전사·사냥꾼)으로 새 게임을 시작한다 (빈 저장 칸, 없으면 1번 칸을 덮어씀)
 	public static void start( int which ){
 		boss = which;
 		applyBossChoice();
@@ -95,7 +100,7 @@ public class MazeTrial {
 			Dungeon.deleteGame(slot, true);
 		}
 		GamesInProgress.curSlot = slot;
-		GamesInProgress.selectedClass = HeroClass.WARRIOR;
+		if (GamesInProgress.selectedClass == null || locked(GamesInProgress.selectedClass)) GamesInProgress.selectedClass = HeroClass.WARRIOR;
 		MazeNames.pending = "";
 		Dungeon.hero = null;
 		Dungeon.daily = Dungeon.dailyReplay = false;
@@ -162,7 +167,7 @@ public class MazeTrial {
 		});
 	}
 
-	//(결정) 체험판에서 19층으로 건너뛸 때(20층 보스) 더 주는 물건 (MazeSkip.generate에서 받는다):
+	//(결정) 체험판에서 19층으로 건너뛸 때(20층 보스) 더 주는 물건 (MazeSkip.generate에서 받는다). (2026-11-21) 사냥꾼은 검 대신 활 7종·투창, 화살은 5층·20층 모두:
 	//모든 물약 감정된 채 5개씩, 모든 주문서 감정된 채 5개씩(강화의 주문서만 12개), 전사 계열 검 7종(감정됨), 힘 16 갑옷(비늘 갑옷, 감정됨)
 	public static java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> kit( int target ){
 		java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> items = new java.util.ArrayList<>();
@@ -174,6 +179,9 @@ public class MazeTrial {
 			r.upgrade(MazeTower.TRIAL_RING_UPGRADE);
 			items.add(r.identify());
 		}
+		boolean huntress = Dungeon.hero != null && Dungeon.hero.heroClass == HeroClass.HUNTRESS;
+		//(결정, 2026-11-21) 사냥꾼은 화살을 넉넉히 (5층·20층 모두)
+		if (huntress) items.add(new com.shatteredpixel.shatteredpixeldungeon.items.Arrow().quantity(target == MazeTower.TRIAL_CITY_DEPTH ? MazeTower.TRIAL_ARROWS_CITY : MazeTower.TRIAL_ARROWS_SAP));
 		//(결정) 반지는 5층·20층 둘 다, 아래 물약·주문서·검·갑옷은 20층만
 		if (target != MazeTower.TRIAL_CITY_DEPTH) return items;
 		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION.classes){
@@ -189,6 +197,17 @@ public class MazeTrial {
 			boolean upgrade = s instanceof com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade;
 			items.add(s.quantity(upgrade ? MazeTower.TRIAL_UPGRADES : MazeTower.TRIAL_SCROLLS));
 		}
+		if (huntress){
+			//(결정, 2026-11-21) 사냥꾼: 활 7종(감정됨) + 고리지기 연속 투척을 시험할 투창
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortbow().identify());
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.PelletBow().identify());
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Longbow().identify());
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.HornBow().identify());
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MazeCrossbow().identify());
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.GreatBow().identify());
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MazeSpiritBow().identify());
+			items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Javelin().quantity(MazeTower.TRIAL_JAVELINS).identify());
+		} else {
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword().identify());
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Shortsword().identify());
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Rapier().identify());
@@ -196,6 +215,7 @@ public class MazeTrial {
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Longsword().identify());
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Katana().identify());
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.RunicBlade().identify());
+		}
 		items.add(new com.shatteredpixel.shatteredpixeldungeon.items.armor.ScaleArmor().identify()); //4티어, 힘 16
 		return items;
 	}
