@@ -150,8 +150,19 @@ public class HeartBeastSprite extends MobSprite {
 	}
 
 	//의태 처치 뒤 위에서 아래로 다시 만들어진다
-	public void rebuild(){
+	//(2026-11-22) delay초 기다린 뒤(그동안 안 보임) 붉은 살점 줄무늬가 위에서 아래로 차오르며 만들어지고, 끝나면 발밑 고리
+	public void rebuild( float delay ){
 		reveal = 0;
+		revealDelay = delay;
+	}
+
+	private float revealDelay = 0;
+	private float dissolve = -1; //의태로 바뀌는 중 (0 → 1, 위에서부터 사라짐)
+	private float baseY;
+
+	public void dissolve(){
+		dissolve = 0;
+		baseY = y;
 	}
 
 	// ---------- 매 프레임 ----------
@@ -213,9 +224,28 @@ public class HeartBeastSprite extends MobSprite {
 		RectF r = film.get(row * cols + col);
 		if (r != null){
 			if (reveal >= 0){
-				reveal = Math.min(1f, reveal + Game.elapsed / 0.9f);
-				r = new RectF(r.left, r.top, r.right, r.top + (r.bottom - r.top) * Math.max(0.04f, reveal));
-				if (reveal >= 1) reveal = -1;
+				if (revealDelay > 0){
+					revealDelay -= Game.elapsed;
+					alpha(0f);
+				} else {
+					alpha(1f);
+					reveal = Math.min(1f, reveal + Game.elapsed / 0.9f);
+					r = new RectF(r.left, r.top, r.right, r.top + (r.bottom - r.top) * Math.max(0.04f, reveal));
+					//줄무늬: 한 줄 걸러 붉게, 다 차면 원래 색
+					if (reveal < 1f && ((int)(reveal * 20)) % 2 == 0) hardlight(1f, 0.25f, 0.3f); else resetColor();
+					if (reveal >= 1){
+						reveal = -1;
+						resetColor();
+						com.shatteredpixel.shatteredpixeldungeon.effects.Heart25Fx.footRing(this);
+					}
+				}
+			}
+			if (dissolve >= 0){
+				dissolve = Math.min(1f, dissolve + Game.elapsed / 1.1f);
+				float h = r.bottom - r.top;
+				r = new RectF(r.left, r.top + h * Math.min(0.96f, dissolve), r.right, r.bottom);
+				y = baseY + H * Math.min(0.96f, dissolve);
+				if (dissolve >= 1){ visible = false; }
 			}
 			frame(r);
 		}
@@ -300,6 +330,32 @@ public class HeartBeastSprite extends MobSprite {
 	}
 
 	// ---------- 효과 ----------
+	//(2026-11-22) 돌진 잔상: 지금 그림을 붉게 물들인 흐린 사본이 남아 빠르게 사라지고, 발치에 붉은 먼지
+	public void afterimage(){
+		if (parent == null || !visible || frame == null) return;
+		final Image a = new Image(texture);
+		a.frame(new RectF(frame.left, frame.top, frame.right, frame.bottom));
+		a.flipHorizontal = flipHorizontal;
+		a.x = x; a.y = y;
+		a.hardlight(1f, 0.15f, 0.25f);
+		a.alpha(0.42f);
+		parent.addToBack(a);
+		parent.add(new com.watabou.noosa.Gizmo(){
+			float t = 0.22f;
+			@Override public void update(){
+				t -= Game.elapsed;
+				a.alpha(Math.max(0, t / 0.22f * 0.42f));
+				if (t <= 0){ a.killAndErase(); killAndErase(); }
+			}
+		});
+		if (Random.Int(2) == 0){
+			Emitter e = new Emitter();
+			e.pos(x + 8, y + H - 4, 16, 3);
+			parent.add(e);
+			e.burst(BloodParticle.FACTORY, 2);
+		}
+	}
+
 	public void petalBurst(){
 		if (parent == null) return;
 		Emitter e = new Emitter();

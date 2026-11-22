@@ -223,8 +223,10 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 		if (!BossHealthBar.isAssigned() && level() != null && level().locked) BossHealthBar.assignBoss(this);
 		if (fresh){
 			fresh = false;
-			if (hsprite() != null) hsprite().rebuild();
+			if (hsprite() != null) hsprite().rebuild(0f);
 		}
+		if (p2Intro) return playP2Intro();
+		if (p3Intro) return playP3Intro();
 		if (dying){ spend(TICK); return true; }
 		switch (phase){
 			case 1: return actPhase1();
@@ -353,21 +355,61 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 		phase = 2;
 		eatLeft = 0;
 		HP = HT;
+		//살점은 바로 맵에서 빠지고(먹을 수 없음), 터지는 그림은 진입 연출에서
+		ArrayList<HeartFlesh> fl = new ArrayList<>();
 		for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])){
-			if (m instanceof HeartFlesh) ((HeartFlesh) m).vanish(true);
+			if (m instanceof HeartFlesh){ fl.add((HeartFlesh) m); ((HeartFlesh) m).swellAndBurst(); }
 		}
 		mimicTimer = MazeTower.B25_MIMIC_FIRST;
 		chargeTimer = MazeTower.B25_CHARGE_INTERVAL;
 		state = HUNTING;
-		if (hsprite() != null){
-			hsprite().roar(new Callback() {
-				@Override public void call() { if (sprite != null) sprite.idle(); }
-			});
-		}
-		Heart25Fx.shake();
-		Sample.INSTANCE.play(Assets.Sounds.CHALLENGE, 1f, 0.7f);
+		p2Intro = true;
 		GLog.n(Messages.get(this, "phase2"));
 		BossHealthBar.assignBoss(this);
+	}
+
+	//(2026-11-22) 2페이즈 진입 연출 (참고 움짤 25F_2): 살점이 부풀어 밝아지다 터짐(연출은 살점 그림이 이어서) → 짐승이 일어섬 →
+	//정면으로 돌아섬 → 화면 가장자리가 어둡게 조여듦 → 몸이 크게 일그러짐 → 정면 포효(소리 고리 + 1px 흔들림). 약 5초, 그동안 턴이 멈춘다.
+	private boolean p2Intro = false;
+
+	private boolean playP2Intro(){
+		p2Intro = false;
+		final HeartBeastSprite s = hsprite();
+		if (s == null || s.parent == null || !s.visible){
+			spend(TICK);
+			return true;
+		}
+		busy = true;
+		s.parent.add(new Gizmo(){
+			float t = 0;
+			int step = 0;
+			@Override
+			public void update() {
+				t += Game.elapsed;
+				if (step == 0 && t >= 1.4f){ step++; s.faceSide(); s.idle(); }
+				if (step == 1 && t >= 2.0f){ step++; s.face(pos, pos + Dungeon.level.width()); s.idle(); }
+				if (step == 2 && t >= 2.4f){ step++; s.parent.add(new Heart25Fx.DarkEdges(2.2f)); Sample.INSTANCE.play(Assets.Sounds.CHALLENGE, 0.6f, 0.5f); }
+				if (step == 3 && t >= 3.4f){ step++; s.strongGlitch = true; }
+				if (step == 4 && t >= 4.2f){
+					step++;
+					s.strongGlitch = false;
+					s.scale.set(1.08f);
+					Heart25Fx.roarRings(s.parent, s.x + HeartBeastSprite.W / 2f, s.y + 6);
+					Heart25Fx.shake();
+					Sample.INSTANCE.play(Assets.Sounds.CHALLENGE, 1f, 0.7f);
+				}
+				if (step == 5 && t >= 4.5f){ step++; s.scale.set(1f); }
+				if (step == 6 && t >= 5.0f){
+					killAndErase();
+					s.faceSide();
+					s.idle();
+					busy = false;
+					spend(TICK);
+					next();
+				}
+			}
+		});
+		return false;
 	}
 
 	// ---------------- 2페이즈 (사슴) ----------------
@@ -504,13 +546,16 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 		if (cells.isEmpty()){ done.call(); return; }
 		PointF last = DungeonTilemap.tileCenterToWorld(cells.get(cells.size() - 1)), first = DungeonTilemap.tileCenterToWorld(from);
 		s.run((float)Math.toDegrees(Math.atan2(last.y - first.y, last.x - first.x)));
-		final float perCell = 0.045f;
+		final float perCell = 0.06f; //(2026-11-22) 달리는 모습이 보이게 조금 느리게
 		s.parent.add(new Gizmo(){
 			float t = 0;
 			int passedIdx = 0;
+			float trail = 0;
 			@Override
 			public void update() {
 				t += Game.elapsed;
+				trail += Game.elapsed;
+				if (trail >= 0.025f){ trail = 0; s.afterimage(); } //(2026-11-22) 돌진 잔상
 				float f = t / perCell;
 				int i = (int)f;
 				if (i >= pts.size() - 1){
@@ -608,14 +653,25 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 
 		MimicHero m = new MimicHero();
 		m.setup(cls, HP, kills, usedClasses);
-		m.pos = pos;
+		//(2026-11-22, 참고 움짤 25F_3) 시체는 짐승 옆 칸(영웅 쪽)에 생기고, 짐승은 살점 물줄기가 되어 시체로 흘러 들어간다
+		int corpse = -1, best = Integer.MAX_VALUE;
+		for (int n : PathFinder.NEIGHBOURS8){
+			int c = pos + n;
+			if (!Dungeon.level.passable[c] || Actor.findChar(c) != null) continue;
+			int d = Dungeon.hero != null ? Dungeon.level.distance(c, Dungeon.hero.pos) : 0;
+			if (d < best){ best = d; corpse = c; }
+		}
+		m.pos = corpse != -1 ? corpse : pos;
 		clearFx();
-		final int at = pos;
-		if (hsprite() != null) hsprite().bleed(20);
 		Dungeon.level.mobs.remove(this);
 		Actor.remove(this);
 		HP = 0; //(2026-11-22) 의태 동안 맵에서 빠진 사슴: 영웅이 겨눴던 체력 막대가 옛 자리에 남지 않게 (체력은 의태 영웅이 들고 있음)
-		if (sprite != null) sprite.killAndErase();
+		if (hsprite() != null && hsprite().visible && hsprite().parent != null){
+			hsprite().strongGlitch = false;
+			MimicHero.pendingDeer = hsprite(); //소환 연출에서 물줄기가 되어 사라진다
+		} else if (sprite != null){
+			sprite.killAndErase();
+		}
 		GameScene.add(m);
 		Heart25Fx.shake();
 		BossHealthBar.assignBoss(m, true);
@@ -634,7 +690,7 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 		b.mimicTimer = MazeTower.B25_MIMIC_NEXT;
 		b.chargeTimer = MazeTower.B25_CHARGE_INTERVAL;
 		b.pos = m.pos;
-		b.fresh = true;
+		b.fresh = false;
 		if (b.kills >= MazeTower.B25_MIMIC_KILLS){
 			b.HP = Math.min(b.HP, Math.max(1, (int)Math.floor(b.HT * MazeTower.B25_PHASE3_HP)));
 			b.phase = 3;
@@ -642,6 +698,8 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 		}
 		GameScene.add(b);
 		BossHealthBar.assignBoss(b, true);
+		//(2026-11-22, 참고 움짤 25F_8) 의태 영웅이 줄무늬로 무너진 뒤(약 0.65초) 그 자리에서 짐승이 위에서 아래로 다시 만들어진다
+		if (b.hsprite() != null) b.hsprite().rebuild(0.65f);
 		if (b.phase == 3) b.enterPhase3();
 	}
 
@@ -651,16 +709,46 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 		p3Left = MazeTower.B25_P3_TURNS;
 		bounceCd = 1;
 		waveCd = MazeTower.B25_WAVE_CD;
-		if (hsprite() != null){
-			hsprite().bpm = MazeTower.B25_BPM_RAGE;
-			hsprite().strongGlitch = true;
-			hsprite().roar(new Callback() {
-				@Override public void call() { if (sprite != null) sprite.idle(); }
-			});
-		}
-		Sample.INSTANCE.play(Assets.Sounds.CHALLENGE, 1f, 0.6f);
+		p3Intro = true;
 		GLog.n(Messages.get(this, "phase3"));
 		BossHealthBar.bleed(true);
+	}
+
+	//(2026-11-22, 참고 움짤 25F_9) 3페이즈 진입: 다시 만들어진 뒤 포효(점 고리가 퍼짐) → 강한 글리치·70 bpm. 흔들림 없음. 그동안 턴이 멈춘다
+	private boolean p3Intro = false;
+
+	private boolean playP3Intro(){
+		p3Intro = false;
+		final HeartBeastSprite s = hsprite();
+		if (s == null || s.parent == null || !s.visible){
+			if (s != null){ s.bpm = MazeTower.B25_BPM_RAGE; s.strongGlitch = true; }
+			spend(TICK);
+			return true;
+		}
+		busy = true;
+		s.parent.add(new Gizmo(){
+			float t = 0;
+			int step = 0;
+			@Override
+			public void update() {
+				t += Game.elapsed;
+				if (step == 0 && t >= 1.0f){
+					step++;
+					s.roar(null);
+					Heart25Fx.roarRings(s.parent, s.x + (s.flipHorizontal ? 8 : HeartBeastSprite.W - 8), s.y + 4);
+					Sample.INSTANCE.play(Assets.Sounds.CHALLENGE, 1f, 0.6f);
+				}
+				if (step == 1 && t >= 1.6f){ step++; s.bpm = MazeTower.B25_BPM_RAGE; s.strongGlitch = true; }
+				if (step == 2 && t >= 2.4f){
+					killAndErase();
+					s.idle();
+					busy = false;
+					spend(TICK);
+					next();
+				}
+			}
+		});
+		return false;
 	}
 
 	private int stage(){

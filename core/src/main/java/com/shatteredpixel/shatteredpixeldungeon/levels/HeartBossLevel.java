@@ -47,7 +47,7 @@ public class HeartBossLevel extends Level {
 	{
 		color1 = 0x801500;
 		color2 = 0xa68521;
-		if (!com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active()) viewDistance = Math.min(4, viewDistance);
+		//(결정, 2026-11-22) 25층 보스 맵은 전체가 밝혀져 있다 (updateFieldOfView)
 	}
 
 	//테두리 1칸 + 벽 1칸 + 방 + 벽 + 통로 4칸 + 테두리
@@ -106,6 +106,15 @@ public class HeartBossLevel extends Level {
 			if (map[i] == Terrain.EMPTY && Random.Int(6) == 0) map[i] = Terrain.EMPTY_DECO;
 		}
 		return true;
+	}
+
+	//(결정, 2026-11-22) 25층은 보스 맵 전체가 늘 밝혀져 있다 (영웅이 모든 칸을 본다)
+	@Override
+	public void updateFieldOfView( Char c, boolean[] fieldOfView ) {
+		super.updateFieldOfView(c, fieldOfView);
+		if (c == Dungeon.hero){
+			java.util.Arrays.fill(fieldOfView, true);
+		}
 	}
 
 	@Override

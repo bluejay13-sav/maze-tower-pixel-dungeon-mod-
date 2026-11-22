@@ -79,6 +79,9 @@ public class MimicHero extends Mob {
 		properties.add(Property.DEMONIC);
 	}
 
+	//짐승이 의태로 바뀔 때 소환 연출로 넘겨주는 짐승 그림 (물줄기가 되어 사라짐)
+	public static com.shatteredpixel.shatteredpixeldungeon.sprites.HeartBeastSprite pendingDeer = null;
+
 	public int cls = WARRIOR;
 	public int deerHP, kills, used;
 	private boolean summoned = false;
@@ -690,11 +693,10 @@ public class MimicHero extends Mob {
 
 	private void drawTrap( int cell ){
 		if (trapImages.containsKey(cell)) return;
-		Image i = new Image("sprites/maze_b7_flesh_fx.png");
-		i.frame(new TextureFilm(i.texture, 24, 24).get(6 * 12 + 9));
-		i.hardlight(0.8f, 0.1f, 0.2f);
+		//(2026-11-22) 붉은 바닥에서도 보이게: 뼈색 촉수 세 갈래 + 어두운 테두리 (sprites/maze_b7_vein_trap.png, 16×16)
+		Image i = new Image("sprites/maze_b7_vein_trap.png");
 		PointF p = DungeonTilemap.tileToWorld(cell);
-		i.x = p.x - 4; i.y = p.y - 4;
+		i.x = p.x; i.y = p.y;
 		GameScene.effect(i);
 		trapImages.put(cell, i);
 		updateTrapAlpha(cell);
@@ -1084,10 +1086,15 @@ public class MimicHero extends Mob {
 			boolean on = (beat % period) < period * 3 / 16f;
 			if (!cinematic && cut < 0 && ch != null && ch.invisible <= 0) brightness(on ? 1.15f : 1f);
 			if (cut >= 0){
-				cut = Math.min(1f, cut + Game.elapsed / 0.8f);
+				//(2026-11-22, 참고 움짤 25F_8) 하얗게 번쩍(0.15초) → 머리부터 한 줄씩 붉은 살점 줄무늬가 되어 흩어짐
+				flashLeft -= Game.elapsed;
+				if (flashLeft > 0){ lightness(1f); return; }
+				resetColor();
+				cut = Math.min(1f, cut + Game.elapsed / 0.55f);
 				RectF f = new TextureFilm(texture, 36, 24).get(0);
 				float h = f.bottom - f.top;
 				int px = (int)(cut * 24);
+				while (stripes < px && parent != null){ stripe(f, stripes); stripes++; }
 				frame(new RectF(f.left, f.top + h * cut, f.right, f.bottom));
 				y = baseY + px;
 				if (cut >= 1){ killAndErase(); }
@@ -1095,15 +1102,54 @@ public class MimicHero extends Mob {
 		}
 
 		private float baseY;
+		private float flashLeft = 0;
+		private int stripes = 0;
 
 		public void collapse(){
 			if (parent == null) return;
 			baseY = y;
 			cut = 0;
-			com.watabou.noosa.particles.Emitter e = new com.watabou.noosa.particles.Emitter();
-			e.pos(x + 12, y, 12, 24);
-			parent.add(e);
-			e.burst(BloodParticle.BURST, 24);
+			flashLeft = 0.15f;
+			stripes = 0;
+		}
+
+		//한 줄(1px)을 붉은 살점 줄무늬로 떼어 내 옆으로 밀리며 흐려지게
+		private void stripe( RectF f, int row ){
+			final Image s = new Image(texture);
+			float h = f.bottom - f.top;
+			s.frame(new RectF(f.left, f.top + h * row / 24f, f.right, f.top + h * (row + 1) / 24f));
+			s.flipHorizontal = flipHorizontal;
+			s.hardlight(1f, 0.2f, 0.28f);
+			s.x = x; s.y = baseY + row;
+			final float drift = Random.Float(-6f, 6f);
+			parent.add(s);
+			parent.add(new Gizmo(){
+				float t = 0;
+				@Override public void update(){
+					t += Game.elapsed;
+					s.x += drift * Game.elapsed;
+					s.y += 10 * Game.elapsed;
+					s.alpha(Math.max(0, 1f - t / 0.45f));
+					if (t >= 0.45f){ s.killAndErase(); killAndErase(); }
+				}
+			});
+		}
+
+		//(2026-11-22) 그림(36×24)에서 몸 가운데가 그림 가운데보다 4px 왼쪽이라, 몸이 칸 가운데에 오게 옮긴다 (좌우 반전이면 반대로)
+		static final int BODY_SHIFT = 4;
+
+		@Override
+		public PointF worldToCamera( int cell ) {
+			PointF p = super.worldToCamera(cell);
+			p.x += flipHorizontal ? -BODY_SHIFT : BODY_SHIFT;
+			return p;
+		}
+
+		@Override
+		public void turnTo( int from, int to ) {
+			boolean before = flipHorizontal;
+			super.turnTo(from, to);
+			if (before != flipHorizontal && !isMoving) x += flipHorizontal ? -2 * BODY_SHIFT : 2 * BODY_SHIFT;
 		}
 
 		@Override
@@ -1117,49 +1163,73 @@ public class MimicHero extends Mob {
 			super.onComplete(anim);
 		}
 
-		//소환 연출 (약 3.9초). 끝나면 done
+		//소환 연출 (2026-11-22, 참고 움짤 25F_3, 약 4.6초). 끝나면 done
+		//시체 칸 바닥에 핏빛 고리 → 창백한 시체가 누운 채 떠오름 → 짐승이 위에서부터 살점 물줄기가 되어 시체로 흘러 들어감
+		//(물줄기가 닿을 때마다 누움 → 60° → 30°, 혈관이 번짐) → 마지막 살점 창이 위에서 내리꽂혀 바로 서서 착지 → 0.9초 맨손 → 무기 생성
 		public void summon( final Callback done ){
 			cinematic = true;
 			alpha(0f);
+			final com.shatteredpixel.shatteredpixeldungeon.sprites.HeartBeastSprite deer = pendingDeer;
+			pendingDeer = null;
 			final Image corpse = new Image(HERO[cls]);
 			corpse.frame(new TextureFilm(corpse.texture, 12, 15).get(0));
 			corpse.origin.set(6, 7.5f);
-			corpse.hardlight(0.95f, 0.75f, 0.75f);
-			final float cx = x + width / 2f - 6, cy = y + height - 15;
-			corpse.x = cx; corpse.y = cy - 6;
+			corpse.hardlight(0.82f, 0.82f, 0.88f);
+			final float cx = x + width / 2f - 6 - BODY_SHIFT * (flipHorizontal ? -1 : 1), cy = y + height - 15;
+			corpse.x = cx; corpse.y = cy + 4;
 			corpse.angle = 90;
+			corpse.alpha(0f);
 			parent.add(corpse);
+			Heart25Fx.ellipse(parent, cx + 6, cy + 14, 2, 10, 0.9f, 0xFFC0182A, 16);
 			final MimicSprite self = this;
+			final Group g = parent;
 			parent.add(new Gizmo(){
 				float t = 0;
-				int hits = 0;
-				final float[] angles = {90, 60, 30, 0};
+				float streamT = 0;
+				int step = 0;
 				@Override
 				public void update() {
 					t += Game.elapsed;
-					//살점 창 4번
-					if (hits < 4 && t >= 0.35f * (hits + 1)){
-						hits++;
-						boolean last = hits == 4;
-						float dir = last ? 90 : Random.Float(0, 360);
-						spear(corpse, dir, last);
-						corpse.angle = angles[Math.min(3, hits)];
-						float red = 0.75f - 0.15f * hits;
-						corpse.hardlight(1f, Math.max(0.2f, red), Math.max(0.2f, red));
-						if (last){
-							corpse.y = cy;
-							corpse.scale.set(1f, 0.87f);
-							Heart25Fx.shake();
-							com.watabou.noosa.particles.Emitter e = new com.watabou.noosa.particles.Emitter();
-							e.pos(cx, cy + 13, 12, 2);
-							parent.add(e);
-							e.burst(BloodParticle.BURST, 10);
+					//떠오름 (0 ~ 0.9초)
+					if (t < 0.9f){
+						float k = t / 0.9f;
+						corpse.alpha(k);
+						corpse.y = cy + 4 - 10 * k;
+						if (step == 0 && t > 0.45f){ step++; Heart25Fx.ellipse(g, cx + 6, cy + 14, 2, 12, 0.9f, 0xFFC0182A, 16); }
+					}
+					//짐승이 물줄기가 됨 (1.0 ~ 2.2초)
+					if (step <= 1 && t >= 1.0f){
+						step = 2;
+						if (deer != null && deer.parent != null) deer.dissolve();
+					}
+					if (t >= 1.0f && t < 2.2f && deer != null && deer.parent != null){
+						streamT += Game.elapsed;
+						while (streamT > 0.02f){
+							streamT -= 0.02f;
+							float sx = deer.x + 6 + Random.Float(20), sy = deer.y + 4 + Random.Float(16);
+							fleshBit(g, sx, sy, corpse.x + 6, corpse.y + 7);
 						}
 					}
-					if (hits == 4 && t > 1.55f) corpse.scale.set(1f, 0.93f);
-					if (hits == 4 && t > 1.65f) corpse.scale.set(1f, 1f);
+					if (step == 2 && t >= 1.5f){ step++; corpse.angle = 60; corpse.hardlight(1f, 0.6f, 0.62f); Heart25Fx.nudge(corpse, -1, 0); }
+					if (step == 3 && t >= 1.9f){ step++; corpse.angle = 30; corpse.hardlight(1f, 0.45f, 0.48f); Heart25Fx.nudge(corpse, -1, 0); }
+					if (step == 4 && t >= 2.2f){ step++; if (deer != null) deer.killAndErase(); spear(corpse, 90, true); }
+					//마지막 창: 바로 서서 착지
+					if (step == 5 && t >= 2.35f){
+						step++;
+						corpse.angle = 0;
+						corpse.y = cy;
+						corpse.scale.set(1f, 0.87f);
+						Heart25Fx.shake();
+						Heart25Fx.ellipse(g, cx + 6, cy + 14, 3, 12, 0.4f, 0xFFF0C0C8, 14);
+						com.watabou.noosa.particles.Emitter e = new com.watabou.noosa.particles.Emitter();
+						e.pos(cx, cy + 13, 12, 2);
+						g.add(e);
+						e.burst(BloodParticle.BURST, 10);
+					}
+					if (step == 6 && t > 2.5f){ step++; corpse.scale.set(1f, 0.93f); }
+					if (step == 7 && t > 2.6f){ step++; corpse.scale.set(1f, 1f); }
 					//0.9초 맨손 대기 → 무기 생성 (손목 꿈틀 0.3 → 혈관이 자람 0.7 → 굳음 0.3)
-					float wStart = 1.4f + 0.9f;
+					float wStart = 2.35f + 0.9f;
 					if (t >= wStart){
 						float k = Math.min(1f, (t - wStart) / 1.3f);
 						if (t < wStart + 0.3f) corpse.x = cx + (Random.Int(3) - 1) * 0.5f;
@@ -1174,6 +1244,24 @@ public class MimicHero extends Mob {
 							done.call();
 						}
 					}
+				}
+			});
+		}
+
+		//짐승에서 시체로 날아가는 살점 조각 (위로 휘는 궤적)
+		private static void fleshBit( final Group g, final float sx, final float sy, final float tx, final float ty ){
+			final ColorBlock b = new ColorBlock(Random.Int(2) == 0 ? 2 : 1, 1, Random.Int(3) == 0 ? 0xFFFFA3C7 : 0xFFC0182A);
+			b.x = sx; b.y = sy;
+			g.add(b);
+			final float life = Random.Float(0.35f, 0.5f), lift = Random.Float(8, 18);
+			g.add(new Gizmo(){
+				float t = 0;
+				@Override public void update(){
+					t += Game.elapsed;
+					float k = Math.min(1f, t / life);
+					b.x = sx + (tx - sx) * k;
+					b.y = sy + (ty - sy) * k - (float)Math.sin(k * Math.PI) * lift;
+					if (k >= 1f){ b.killAndErase(); killAndErase(); }
 				}
 			});
 		}

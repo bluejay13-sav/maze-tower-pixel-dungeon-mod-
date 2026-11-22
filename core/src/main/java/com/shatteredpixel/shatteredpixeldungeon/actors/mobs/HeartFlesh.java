@@ -128,6 +128,12 @@ public class HeartFlesh extends NPC {
 		removeFromLevel();
 	}
 
+	//(2026-11-22) 2페이즈 진입: 부풀어 밝아지다(약 1.4초) 터진다. 맵에서는 바로 빠진다
+	public void swellAndBurst(){
+		if (sprite instanceof FleshSprite) ((FleshSprite) sprite).swellExplode();
+		removeFromLevel();
+	}
+
 	//먹히는 중 (짐승이 한 턴 먹을 때마다): 살점이 조금씩 작아지고 핏방울
 	public void bitten( int left ){
 		if (sprite instanceof FleshSprite) ((FleshSprite) sprite).bite(left);
@@ -289,6 +295,7 @@ public class HeartFlesh extends NPC {
 
 		public void eatenAway(){ playFx(1, 7, 11, 0.04f, null); }
 		public void explode(){ playFx(6, 0, 11, 0.06f, null); }
+		public void swellExplode(){ playFx(6, 0, 5, 0.23f, new int[]{6, 6, 11, 60}); }
 		//불에 탐: 4줄(타오름) → 6줄(재로 흩어짐)
 		public void burn(){ playFx(3, 0, 11, 0.05f, new int[]{5, 0, 11, 60}); }
 	}

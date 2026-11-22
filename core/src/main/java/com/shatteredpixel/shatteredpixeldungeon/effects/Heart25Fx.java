@@ -183,6 +183,98 @@ public class Heart25Fx {
 		}
 	}
 
+	//발밑 납작한 고리 (점으로 된 타원이 퍼지며 사라짐). 착지·재구성 때
+	public static void footRing( Image s ){
+		if (s == null || s.parent == null) return;
+		ellipse(s.parent, s.x + s.width() / 2f, s.y + s.height() - 1, 4, 12, 0.35f, 0xFFF0C0C8, 14);
+	}
+
+	public static void cellRing( int cell, float maxR, float life ){
+		PointF p = DungeonTilemap.tileCenterToWorld(cell);
+		Group g = new Group();
+		GameScene.groupEffect(g);
+		ellipse(g, p.x, p.y + 5, 3, maxR, life, 0xFFC0182A, 16);
+	}
+
+	//점 n개로 된 납작한 타원(가로:세로 = 2:1)이 r0 → r1로 퍼지며 흐려진다
+	public static void ellipse( final Group parent, final float cx, final float cy, final float r0, final float r1, final float life, int color, int n ){
+		final ColorBlock[] dots = new ColorBlock[n];
+		for (int i = 0; i < n; i++){ dots[i] = new ColorBlock(1, 1, color); parent.add(dots[i]); }
+		parent.add(new Gizmo(){
+			float t = 0;
+			@Override public void update(){
+				t += Game.elapsed;
+				float k = Math.min(1f, t / life);
+				float r = r0 + (r1 - r0) * k;
+				for (int i = 0; i < dots.length; i++){
+					double a = Math.PI * 2 * i / dots.length;
+					dots[i].x = cx + (float)Math.cos(a) * r;
+					dots[i].y = cy + (float)Math.sin(a) * r / 2f;
+					dots[i].alpha(1f - k);
+				}
+				if (k >= 1){ for (ColorBlock d : dots) d.killAndErase(); killAndErase(); }
+			}
+		});
+	}
+
+	//포효: 머리 쪽에서 점으로 된 동그란 소리 고리 세 겹이 차례로 퍼짐 (분홍빛)
+	public static void roarRings( final Group parent, final float cx, final float cy ){
+		for (int k = 0; k < 3; k++){
+			final int kk = k;
+			parent.add(new Gizmo(){
+				float wait = 0.15f * kk;
+				@Override public void update(){
+					wait -= Game.elapsed;
+					if (wait <= 0){
+						killAndErase();
+						final ColorBlock[] dots = new ColorBlock[20];
+						for (int i = 0; i < dots.length; i++){ dots[i] = new ColorBlock(1, 1, 0xFFFFA3C7); parent.add(dots[i]); }
+						parent.add(new Gizmo(){
+							float t = 0;
+							@Override public void update(){
+								t += Game.elapsed;
+								float q = Math.min(1f, t / 0.55f);
+								float r = 6 + 26 * q;
+								for (int i = 0; i < dots.length; i++){
+									double a = Math.PI * 2 * i / dots.length;
+									dots[i].x = cx + (float)Math.cos(a) * r;
+									dots[i].y = cy + (float)Math.sin(a) * r;
+									dots[i].alpha(1f - q);
+								}
+								if (q >= 1){ for (ColorBlock d : dots) d.killAndErase(); killAndErase(); }
+							}
+						});
+					}
+				}
+			});
+		}
+	}
+
+	//화면 가장자리를 서서히 어둡게 조였다가 풀기 (2페이즈 진입)
+	public static class DarkEdges extends Image {
+		private float t = 0;
+		private final float life;
+		public DarkEdges( float life ){
+			super("sprites/maze_fx20w_dark_hole.png");
+			this.life = life;
+			alpha(0);
+		}
+		@Override
+		public void update() {
+			super.update();
+			t += Game.elapsed;
+			if (t >= life || Dungeon.hero == null || Dungeon.hero.sprite == null){ killAndErase(); return; }
+			PointF c = Dungeon.hero.sprite.center();
+			float r = 120f;
+			origin.set(width / 2f, height / 2f);
+			scale.set(r * 2 / width);
+			x = c.x - width / 2f;
+			y = c.y - height / 2f;
+			float k = t / life;
+			alpha(0.7f * (float)Math.sin(Math.PI * k));
+		}
+	}
+
 	public static Emitter emitterAt( int cell ){
 		return CellEmitter.center(cell);
 	}
