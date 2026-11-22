@@ -218,18 +218,19 @@ public class Heart25Fx {
 	}
 
 	//포효: 머리 쪽에서 점으로 된 동그란 소리 고리 세 겹이 차례로 퍼짐 (분홍빛)
-	public static void roarRings( final Group parent, final float cx, final float cy ){
+	public static void roarRings( final Group host, final float cx, final float cy ){
+		//(주의) 안쪽 Gizmo에서 "parent"는 Gizmo 자신의 부모 칸이라, 지운 뒤엔 null이 된다. 그래서 host라는 이름을 쓴다
 		for (int k = 0; k < 3; k++){
 			final int kk = k;
-			parent.add(new Gizmo(){
+			host.add(new Gizmo(){
 				float wait = 0.15f * kk;
 				@Override public void update(){
 					wait -= Game.elapsed;
 					if (wait <= 0){
 						killAndErase();
 						final ColorBlock[] dots = new ColorBlock[20];
-						for (int i = 0; i < dots.length; i++){ dots[i] = new ColorBlock(1, 1, 0xFFFFA3C7); parent.add(dots[i]); }
-						parent.add(new Gizmo(){
+						for (int i = 0; i < dots.length; i++){ dots[i] = new ColorBlock(1, 1, 0xFFFFA3C7); host.add(dots[i]); }
+						host.add(new Gizmo(){
 							float t = 0;
 							@Override public void update(){
 								t += Game.elapsed;
