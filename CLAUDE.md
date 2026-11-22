@@ -20,7 +20,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 ## 진행 상태
 테스트 빌드 10단계 모두 완료(사용자 점검 플레이 통과). 아래 명세는 실제 구현과 사용자 결정에 맞춰 갱신되어 있다.
 이펙트 단계(11~14)도 완료. 사용자와 함께 여러 번 조정했고, 명세 9번은 최종 구현 기준으로 적혀 있다.
-직업 단계(15~19)도 완료. 20단계(전사 3차 검투사), 21단계(전사 4차 결실), 22단계(클리어 조건·전직 아이템 그림), 23단계(원소·마법봉 보강, 지팡이 합성 스킬), 24-1단계(두 갈래 엔딩과 역행), 24-2단계(캐릭터 이름), 24단계(보스: 5·10·15층 패턴, 20·25층 외형), 28단계(던전 외형)도 완료. **2차 특성 개편(A~F)도 완료**: 특성 30개·5칸·0~3레벨·만개 각성(명세 4·7번), 플레이하며 수치를 다듬는 중. 원작의 다른 무기 처리는 보류. 다음 작업은 아래 "앞으로의 진행 단계"를 따르고, 단계마다 시작 전에 사용자와 기획을 확정한다.
+직업 단계(15~19)도 완료. 20단계(전사 3차 검투사), 21단계(전사 4차 결실), 22단계(클리어 조건·전직 아이템 그림), 23단계(원소·마법봉 보강, 지팡이 합성 스킬), 24-1단계(두 갈래 엔딩과 역행), 24-2단계(캐릭터 이름), 24단계(보스: 5·10·15층 패턴, 20·25층 외형), 28단계(던전 외형)도 완료. **2차 특성 개편(A~F)도 완료**: 특성 30개·5칸·0~3레벨·만개 각성(명세 4·7번), 플레이하며 수치를 다듬는 중. 원작의 다른 무기 처리는 보류. **사냥꾼(명세 23번)**: 활 7종·3차 추적자·고리지기·4차 정령 매를 본편에 구현(사용자 플레이 확인 전). 체험판 직업 선택(전사/사냥꾼)은 본편 확정 뒤에. 다음 작업은 아래 "앞으로의 진행 단계"를 따르고, 단계마다 시작 전에 사용자와 기획을 확정한다.
 (구현)·(결정) 표시는 원래 명세와 달라졌거나 명세에 없던 것을 구현·결정한 부분이다.
 
 ## 준비
@@ -944,6 +944,15 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 | 매의 눈 | 매 주변 시야 +1/2/3/4칸, 4레벨에 매가 지나간 곳의 함정·비밀문 발견 |
 | 사냥 신호 | 매가 쪼은 적에게 내 다음 기본공격 피해 +10/20/30/40% |
 | 영웅적인 에너지 | 갑옷 충전 소모 12/23/32/40% 감소(전사 4차와 같음) |
+
+#### (구현) 사냥꾼 구현 메모 (2026-11-21, 본편만 — 체험판은 본편 수정을 마친 뒤 옮긴다)
+- 활 7종: 단궁 = `WornShortbow`(클래스 이름은 저장 파일 때문에 그대로, 나머지 6종의 바탕), `PelletBow`·`Longbow`·`HornBow`·`MazeCrossbow`·`GreatBow`·`MazeSpiritBow`. 피해는 티어별 배열 `BOW_MELEE_*`·`BOW_RANGED_*`, 스킬 수치 `SKILL_*_DMG`·`SKILL_AIMED_ACCURACY` 등(`MazeTower`). 드랍은 원작 무기 티어 칸(`Generator` WEP_T1~T4)에 검처럼. 그림은 임시(코드로 찍음) `sprites/maze_bow_*.png`, 원본 `docs/sprites/bows/`, 미리보기 `check_bows.png` — 사용자가 쓸 그림을 정해 주기로 함.
+- 스킬은 `SwordSkill` 표: 조준 사격(명중 +30%, 밀쳐내기 없음), 속사(화살 2발, 두 번째 화살도 날아감), 꿰뚫기(`pierce`, 보이는 적이면 벽 너머도), 장전·집중은 `BowCharge`(대상 없이 1턴, 마나 냄, 스킬 특성 안 받음) → 다음 원거리 평타를 `Hero.actAttack`이 `SwordSkill.fireCharged`로 쏨(스킬 판정, 마나는 다시 안 씀). 피격 연출 `SkillEffects.afterHit`.
+- 3차: `HeroSubClass.TRACKER`·`RINGKEEPER`(원작 저격수·관리자와 따로, 아이콘만 빌림). 특성 `PREY_MARK`·`LONG_SHOT`·`SNARE`·`PREY_DRAIN` / `RING_PULSE`·`RING_RESONANCE`·`BARE_HUNT`·`RING_BLOOM`. 효과는 `actors/hero/HunterEffects`(원작 자리: `Hero.attackProc`·`attackDelay`·`drRoll`·`damage`, `Char.attack`(방어 무시·회피 반격)·`hit`(혈점)·`move`(덫·추진력), `Buff.attachTo`(정화), `Ring.buffedLvl`(공명)·`info`(고리지기 설명), `BloomEffects.onEnemyKilled`). 수치 `T3_PREY_*`·`T3_SNIPE_*`·`T3_SNARE_*`·`T3_RING_*`·`RK_*`.
+- 고리지기 반지 스킬: 무기를 들지 않았을 때, 스킬 있는 반지(감정된 것)마다. 첫째는 오른쪽 아래 스킬 버튼(`Mana`), 둘째는 검투사 필살기 버튼 자리(`HunterEffects.SecondRingButton` → `FinisherIndicator`). 근접 반지 스킬은 무기 없이 `SwordSkill.ringSkill`/`launchRing` 흐름. 연속 투척은 투척 무기를 실제로 던지고 원작 내구도·떨어뜨리기(`MissileWeapon.mazeAfterThrow`). 역경 누적은 `HunterEffects.Adversity`(저장됨).
+- 4차 정령 매: 원작 `SpiritHawk`을 마탑 규칙으로(`ORIGINAL_ARMOR_ABILITY`가 false일 때): 20턴 + 오래 머무는 매, 쪼면 실명 2턴 + 사냥 신호(`HunterEffects.HawkSignal`), 매의 눈 시야·4레벨 비밀 발견, 검게 칠한 매. 특성 `HAWK_LINGER`·`HAWK_EYE`·`HUNT_SIGNAL` + `HEROIC_ENERGY`. 수치 `HAWK_*`·`T4_HAWK_*`·`T4_HUNT_SIGNAL`.
+- 확인한 것: 빌드, 게임 실행(1분, 오류 없음). 사냥꾼으로 실제 플레이·보스전 확인은 아직 안 함.
+- 치트 "단검·활 7종·화살 50·투창 얻기".
 
 ## 구현 순서 (단계마다 사용자 확인) — 모두 완료
 
