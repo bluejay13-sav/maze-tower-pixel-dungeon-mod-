@@ -247,6 +247,7 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 			if (f == null){ eatLeft = 0; }
 			else {
 				eatLeft--;
+				if (eatLeft > 0) f.bitten(eatLeft); //먹히는 동안 살점이 조금씩 작아짐
 				if (eatLeft <= 0) finishEat(f);
 				spend(TICK);
 				return true;
@@ -613,6 +614,7 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 		if (hsprite() != null) hsprite().bleed(20);
 		Dungeon.level.mobs.remove(this);
 		Actor.remove(this);
+		HP = 0; //(2026-11-22) 의태 동안 맵에서 빠진 사슴: 영웅이 겨눴던 체력 막대가 옛 자리에 남지 않게 (체력은 의태 영웅이 들고 있음)
 		if (sprite != null) sprite.killAndErase();
 		GameScene.add(m);
 		Heart25Fx.shake();

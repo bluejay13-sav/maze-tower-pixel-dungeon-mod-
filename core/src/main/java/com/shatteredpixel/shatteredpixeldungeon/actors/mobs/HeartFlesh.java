@@ -68,10 +68,31 @@ public class HeartFlesh extends NPC {
 	public void damage( int dmg, Object src ) {
 		//유독 가스: 원작 가스는 상태이상이 아니라 피해를 주므로 여기서 오염으로 받는다
 		if (src instanceof ToxicGas) contaminate(POISON);
+		else if (isFire(src)) burnAway();
+	}
+
+	//(결정, 2026-11-22) 불(화염 물약·불 마법봉·불 함정·횃불 등)에 닿으면 살점이 타서 재로 흩어진다(짐승이 먹을 수 없게 됨).
+	//그림은 원작 시트(maze_b7_flesh_fx.png)의 4줄(타오름)·6줄(재로 흩어짐).
+	private static boolean isFire( Object src ){
+		if (src == null) return false;
+		if (src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire
+				|| src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning) return true;
+		String n = src instanceof Class ? ((Class<?>) src).getSimpleName() : src.getClass().getSimpleName();
+		return n.contains("Fire") || n.contains("Burning") || n.contains("Inferno") || n.contains("Flame");
+	}
+
+	private boolean burning = false;
+
+	public void burnAway(){
+		if (burning) return;
+		burning = true;
+		if (sprite instanceof FleshSprite) ((FleshSprite) sprite).burn();
+		removeFromLevel();
 	}
 
 	@Override
 	public boolean add( Buff buff ) {
+		if (buff instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning){ burnAway(); return false; }
 		if (buff instanceof Paralysis) contaminate(PARALYSIS);
 		else if (buff instanceof Chill || buff instanceof Frost || buff instanceof Frostbite) contaminate(CHILL);
 		else if (buff instanceof Poison) contaminate(POISON);
@@ -104,6 +125,18 @@ public class HeartFlesh extends NPC {
 			if (explode) ((FleshSprite) sprite).explode();
 			else ((FleshSprite) sprite).eatenAway();
 		}
+		removeFromLevel();
+	}
+
+	//먹히는 중 (짐승이 한 턴 먹을 때마다): 살점이 조금씩 작아지고 핏방울
+	public void bitten( int left ){
+		if (sprite instanceof FleshSprite) ((FleshSprite) sprite).bite(left);
+	}
+
+	//맵에서 뺀다. (2026-11-22) 체력을 0으로 해서 영웅이 겨눴던 체력 막대가 남지 않게
+	private void removeFromLevel(){
+		HP = 0;
+		if (sprite != null) sprite.visible = false;
 		Dungeon.level.mobs.remove(this);
 		Actor.remove(this);
 	}
@@ -214,25 +247,49 @@ public class HeartFlesh extends NPC {
 			}
 		}
 
-		private void playFx( int row, float delay ){
-			final MovieClip c = new MovieClip(FX);
-			TextureFilm film = new TextureFilm(c.texture, 24, 24);
-			Object[] f = new Object[12];
-			for (int i = 0; i < 12; i++) f[i] = row * 12 + i;
-			MovieClip.Animation a = new MovieClip.Animation(Math.round(1 / delay), false).frames(film, f);
-			c.listener = new MovieClip.Listener() {
-				@Override
-				public void onComplete( MovieClip.Animation anim ) { c.killAndErase(); }
-			};
-			c.play(a);
-			c.x = x + (width - 24) / 2f;
-			c.y = y + (height - 24) / 2f;
-			if (parent != null) parent.add(c);
+		//fx 시트의 row줄 from~to칸을 살점 자리에서 한 번 재생하고 살점 그림은 지운다. then이 있으면 이어서 다른 줄
+		private void playFx( int row, int from, int to, float delay, final int[] then ){
+			if (parent == null){ killAndErase(); return; }
+			final float px = x + (width - 24) / 2f, py = y + (height - 24) / 2f;
+			final com.watabou.noosa.Group g = parent;
+			clip(g, px, py, row, from, to, delay, then);
 			if (spread != null){ spread.killAndErase(); spread = null; }
 			killAndErase();
 		}
 
-		public void eatenAway(){ playFx(1, 0.07f); }
-		public void explode(){ playFx(6, 0.06f); }
+		private static void clip( final com.watabou.noosa.Group g, final float px, final float py, int row, int from, int to, float delay, final int[] then ){
+			final MovieClip c = new MovieClip(FX);
+			TextureFilm film = new TextureFilm(c.texture, 24, 24);
+			Object[] f = new Object[to - from + 1];
+			for (int i = from; i <= to; i++) f[i - from] = row * 12 + i;
+			MovieClip.Animation a = new MovieClip.Animation(Math.round(1 / delay), false).frames(film, f);
+			c.listener = new MovieClip.Listener() {
+				@Override
+				public void onComplete( MovieClip.Animation anim ) {
+					c.killAndErase();
+					if (then != null) clip(g, px, py, then[0], then[1], then[2], then[3] / 1000f, null);
+				}
+			};
+			c.play(a);
+			c.x = px; c.y = py;
+			g.add(c);
+		}
+
+		//(2026-11-22) 먹히는 3턴 동안 조금씩 작아지고 핏방울. 다 먹으면 남은 부분만 빠르게 부서진다 (예전엔 0.8초 남아 있는 것처럼 보였음)
+		public void bite( int left ){
+			float k = 1f - 0.15f * (MazeTower.B25_EAT_TURNS - left);
+			scale.set(Math.max(0.55f, k));
+			if (parent != null){
+				com.watabou.noosa.particles.Emitter e = new com.watabou.noosa.particles.Emitter();
+				e.pos(x + 4, y + 4, width - 8, height - 8);
+				parent.add(e);
+				e.burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle.BURST, 4);
+			}
+		}
+
+		public void eatenAway(){ playFx(1, 7, 11, 0.04f, null); }
+		public void explode(){ playFx(6, 0, 11, 0.06f, null); }
+		//불에 탐: 4줄(타오름) → 6줄(재로 흩어짐)
+		public void burn(){ playFx(3, 0, 11, 0.05f, new int[]{5, 0, 11, 60}); }
 	}
 }
