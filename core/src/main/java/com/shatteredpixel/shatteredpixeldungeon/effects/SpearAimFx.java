@@ -15,7 +15,7 @@ import java.util.ArrayList;
 //Maze Tower: 여제 서리창·화염창이 날아오기 1턴 전의 조준선 (명세 22번, 2026-11-21 결정).
 //  조준선: 창에서 주인공 쪽으로 가는 1픽셀 점선(2픽셀 켜짐·2픽셀 꺼짐), 끝 쪽으로 흐르듯 움직인다.
 //          강화 마탄의 굵은 보라 궤적과 헷갈리지 않게 가늘게.
-//  막힘:   벽·기둥에 막히면 선이 그 앞에서 끊기고 끊긴 자리에 같은 색의 작은 ×.
+//  막힘:   벽·기둥에 막히면 선이 그 앞에서 끊긴다. ((결정, 2026-11-21) 끊긴 자리의 × 표시는 없앰)
 //  발밑:   선이 주인공에게 닿을 때만 주인공 발밑에 납작한 고리가 은은하게 깜빡인다.
 //경로는 MazeEmpress가 실제 창과 같은 Ballistica로 정해 넘겨 준다.
 public class SpearAimFx extends Group {
@@ -26,7 +26,6 @@ public class SpearAimFx extends Group {
 	private static final float RING_RX = 5f, RING_RY = 2f;
 
 	private final ArrayList<ColorBlock> dashes = new ArrayList<>();
-	private final ColorBlock[] cross = new ColorBlock[2];
 	private final ColorBlock[] ring = new ColorBlock[RING_POINTS];
 
 	private PointF from, to, foot;
@@ -35,12 +34,6 @@ public class SpearAimFx extends Group {
 	private float time = 0;
 
 	public SpearAimFx(){
-		for (int i = 0; i < 2; i++){
-			cross[i] = new ColorBlock(5, 1, 0xFFFFFFFF);
-			cross[i].origin.set(2.5f, 0.5f);
-			cross[i].angle = i == 0 ? 45 : -45;
-			add(cross[i]);
-		}
 		for (int i = 0; i < RING_POINTS; i++){
 			ring[i] = new ColorBlock(1, 1, 0xFFFFFFFF);
 			add(ring[i]);
@@ -99,13 +92,6 @@ public class SpearAimFx extends Group {
 			b.y = from.y + uy * s - 0.5f;
 			//끝 쪽으로 갈수록 조금 옅게
 			b.alpha(0.95f - 0.35f * (s / Math.max(1f, len)));
-		}
-
-		for (ColorBlock c : cross){
-			c.visible = blocked;
-			c.hardlight(color);
-			c.x = to.x - 2.5f;
-			c.y = to.y - 0.5f;
 		}
 
 		boolean ringOn = !blocked && foot != null;

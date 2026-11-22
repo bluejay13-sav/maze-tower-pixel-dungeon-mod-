@@ -431,7 +431,7 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 		int left = Math.max(0, spearTimer);
 		int color = spearType == ElementTile.FROST ? 0x88CCFF : 0xFF8844;
 		if (spearArmed()){
-			//(결정, 2026-11-21) 날아오기 1턴 전에는 남은 턴 숫자를 여제 머리 위가 아니라 창 옆에
+			//(결정, 2026-11-21) 조준하는 동안(날아오기 2턴 전부터)은 남은 턴 숫자를 여제 머리 위가 아니라 창 옆에
 			PointF c = sprite.center();
 			boolean heroLeft = Dungeon.hero.sprite != null && Dungeon.hero.sprite.center().x < c.x;
 			com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText.show(c.x + (heroLeft ? 12 : -12), sprite.y - 8,
@@ -443,7 +443,7 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 
 	//창이 다음 여제 턴에 날아가는 상태 (주인공이 숨어 있으면 창이 주인공을 알아채지 못하므로 아님)
 	boolean spearArmed(){
-		return spearType != 0 && spearTimer <= 1 && isAlive()
+		return spearType != 0 && spearTimer <= MazeTower.EM_SPEAR_AIM_TURNS && isAlive()
 				&& Dungeon.hero != null && Dungeon.hero.isAlive() && Dungeon.hero.invisible <= 0 && Dungeon.hero.sprite != null;
 	}
 
@@ -896,7 +896,7 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 				spear.y = y - 9;
 				spear.visible = visible;
 				if (armed){
-					//(결정) 날아오기 1턴 전: 창이 주인공 쪽을 겨눈다
+					//(결정) 조준하는 동안: 창이 주인공 쪽을 겨눈다
 					PointF h = Dungeon.hero.sprite.center();
 					spear.scale.x = 1;
 					spear.angle = (float)(Math.atan2(h.y - (y - 5.5f), h.x - c.x) * 180 / Math.PI);
@@ -910,7 +910,7 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 			updateAim(e, armed);
 		}
 
-		//(결정, 2026-11-21) 창이 날아오기 1턴 전에만 조준선·창 겨누기·발밑 표식 (effects/SpearAimFx)
+		//(결정, 2026-11-21) 창이 날아오기 2턴 전부터(EM_SPEAR_AIM_TURNS) 조준선·창 겨누기·발밑 표식 (effects/SpearAimFx)
 		private com.shatteredpixel.shatteredpixeldungeon.effects.SpearAimFx aim;
 		private boolean wasArmed = false;
 

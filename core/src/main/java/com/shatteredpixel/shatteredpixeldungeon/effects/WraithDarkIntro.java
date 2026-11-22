@@ -117,8 +117,8 @@ public class WraithDarkIntro extends Group {
 			layoutHole(0);
 			float t = time - shrink - black;
 			int i = 0;
-			while (i < EYE_TIMES.length && t >= EYE_TIMES[i]){
-				t -= EYE_TIMES[i];
+			while (i < EYE_TIMES.length && t >= EYE_TIMES[i] * MazeTower.WK_DARK_EYE_SPEED){
+				t -= EYE_TIMES[i] * MazeTower.WK_DARK_EYE_SPEED;
 				i++;
 			}
 			if (i < EYE_TIMES.length){

@@ -369,6 +369,8 @@ public class MazeTower {
 
 	//정전기: 전격 피해를 받으면 걸리는 턴 수
 	public static final float STATIC_TURNS = 2f;
+	//(결정, 2026-11-21) 젖음 물방울 그림(fx3_14)의 진하기 (은은하게)
+	public static final float WET_FX_ALPHA = 0.45f;
 	//젖음: 물에서 나온 뒤 유지되는 턴 수
 	public static final int WET_AFTER_TURNS = 2;
 	//빙결: 젖은 적에게 냉기가 닿으면 걸리는 원작 Frost의 턴 수
@@ -665,8 +667,10 @@ public class MazeTower {
 	public static final float WK_ZOLT_ARMOR_IGNORE = 0.7f; //(결정) 인간을 죽이는 마법은 주인공 방어력의 이만큼을 무시한다
 	public static final float WK_EYES_ALPHA     = 0.25f; //(결정, 바뀜 35%→25%) 어둠 속 푸른 눈의 진하기 (원작 미믹처럼 알아채기 어렵게)
 	//(결정, 2026-11-21) 1→2단계 "어둠이 찾아옴" 연출: 밝은 원이 왕 쪽으로 좁혀지는 시간, 완전히 깜깜한 시간, 마지막 원 반지름(픽셀)
-	public static final float WK_DARK_SHRINK_TIME = 2.0f;
-	public static final float WK_DARK_BLACK_TIME  = 0.7f;
+	//(결정, 바뀜) 더 빠르게: 2초 → 1초, 0.7초 → 0.35초, 눈 빛남은 0.6배 (연출 중 주인공은 행동하지 않는다)
+	public static final float WK_DARK_SHRINK_TIME = 1.0f;
+	public static final float WK_DARK_BLACK_TIME  = 0.35f;
+	public static final float WK_DARK_EYE_SPEED   = 0.6f;
 	public static final float WK_DARK_LAST_R      = 20f;
 	public static final int   WK_TP_ORB_MIN     = 2;     //(결정) 1단계에 맞아서 순간이동할 때: 영혼 구슬에서 이 칸 이상
 	public static final int   WK_TP_ORB_MAX     = 4;     //... 이 칸 이내
@@ -701,6 +705,8 @@ public class MazeTower {
 	public static final int   EM_SPEAR_INTERVAL = 15;    //서리창·화염창 번갈아 (각각 30턴마다)
 	public static final int   EM_SPEAR_DELAY_MIN = 3;    //창이 머리 위에 뜬 뒤 날아가기까지 (3~4턴, 무작위)
 	public static final int   EM_SPEAR_DELAY_MAX = 4;
+	//(결정, 2026-11-21) 서리창·화염창 조준선(조준선·창 겨누기·발밑 표식)을 보여 주는 남은 턴: 날아오기 2턴 전부터
+	public static final int   EM_SPEAR_AIM_TURNS = 2;
 	public static final int   EM_SPEAR_MIN      = 15;
 	public static final int   EM_SPEAR_MAX      = 22;
 	public static final float EM_SPEAR_FROSTBITE = 3f;   //서리창 혹한
