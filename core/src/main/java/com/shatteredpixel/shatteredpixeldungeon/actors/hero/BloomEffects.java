@@ -233,6 +233,7 @@ public class BloomEffects {
 		BloomAttack.onKill(hero, enemy, byDerived);
 		BloomSkill.onKill(hero, enemy, byDerived);
 		BloomCommon.onKill(hero, enemy, byDerived);
+		HunterEffects.onEnemyKilled(hero, enemy); //Maze Tower: 사냥꾼 3차 (마나 흡수·반지 꽃)
 	}
 
 	// =====================================================================

@@ -209,7 +209,11 @@ public enum Talent {
 	GRIT(12),       //전사 투지
 	MANA_CYCLE(40), //마법사 마나 순환
 	//Maze Tower: 3차(만개) 특성 중 원작에 없는 것
-	SKILL_LINK(7, 4); //검투사 기술 연계
+	SKILL_LINK(7, 4), //검투사 기술 연계
+	//Maze Tower: 사냥꾼 3차 추적자 / 고리지기, 4차 정령 매 (아이콘은 원작 것을 빌려 씀)
+	PREY_MARK(107, 4), LONG_SHOT(106, 4), SNARE(110, 4), PREY_DRAIN(109, 4),
+	RING_PULSE(73, 4), RING_RESONANCE(108, 4), BARE_HUNT(142, 4), RING_BLOOM(112, 4),
+	HAWK_LINGER(121, 4), HAWK_EYE(119, 4), HUNT_SIGNAL(120, 4);
 
 	public static class ImprovisedProjectileCooldown extends FlavourBuff{
 		public int icon() { return BuffIndicator.TIME; }
@@ -1120,6 +1124,12 @@ public enum Talent {
 			case GLADIATOR:
 				Collections.addAll(tierTalents, CLEAVE, LETHAL_DEFENSE, ENHANCED_COMBO);
 				if (!MazeTower.ORIGINAL_TALENTS) tierTalents.add(SKILL_LINK); //Maze Tower: 기술 연계
+				break;
+			case TRACKER: //Maze Tower: 사냥꾼 추적자
+				Collections.addAll(tierTalents, PREY_MARK, LONG_SHOT, SNARE, PREY_DRAIN);
+				break;
+			case RINGKEEPER: //Maze Tower: 사냥꾼 고리지기
+				Collections.addAll(tierTalents, RING_PULSE, RING_RESONANCE, BARE_HUNT, RING_BLOOM);
 				break;
 			case BATTLEMAGE:
 				Collections.addAll(tierTalents, EMPOWERED_STRIKE, MYSTICAL_CHARGE, EXCESS_CHARGE);

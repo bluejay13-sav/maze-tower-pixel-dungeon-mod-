@@ -105,6 +105,7 @@ public class SpiritHawk extends ArmorAbility {
 				armor.updateQuickslot();
 
 				ally = new HawkAlly();
+				if (!MAZE_ORIGINAL()) ally.timeRemaining = com.shatteredpixel.shatteredpixeldungeon.MazeTower.HAWK_TURNS + com.shatteredpixel.shatteredpixeldungeon.MazeTower.T4_HAWK_LINGER[Math.min(4, hero.pointsInTalent(Talent.HAWK_LINGER))]; //Maze Tower: 정령 매 지속
 				ally.pos = Random.element(spawnPoints);
 				GameScene.add(ally);
 
@@ -128,7 +129,19 @@ public class SpiritHawk extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
+		if (!MAZE_ORIGINAL()) return new Talent[]{Talent.HAWK_LINGER, Talent.HAWK_EYE, Talent.HUNT_SIGNAL, Talent.HEROIC_ENERGY}; //Maze Tower: 사냥꾼 4차 정령 매 특성
 		return new Talent[]{Talent.EAGLE_EYE, Talent.GO_FOR_THE_EYES, Talent.SWIFT_SPIRIT, Talent.HEROIC_ENERGY};
+	}
+
+	//Maze Tower: 원작 정령 매 그대로 쓸지 (false면 사냥꾼 4차 결실 규칙)
+	static boolean MAZE_ORIGINAL(){
+		return com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_ARMOR_ABILITY;
+	}
+
+	//Maze Tower: 매의 눈 (시야 +칸)
+	static int eyeBonus(){
+		if (MAZE_ORIGINAL()) return Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE);
+		return com.shatteredpixel.shatteredpixeldungeon.MazeTower.T4_HAWK_EYE[Math.min(4, Dungeon.hero.pointsInTalent(Talent.HAWK_EYE))];
 	}
 
 	private static HawkAlly getHawk(){
@@ -150,7 +163,7 @@ public class SpiritHawk extends ArmorAbility {
 
 			flying = true;
 			if (Dungeon.hero != null) {
-				viewDistance = (int) GameMath.gate(6, 6 + Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE), 8);
+				viewDistance = MAZE_ORIGINAL() ? (int) GameMath.gate(6, 6 + Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE), 8) : 6 + eyeBonus(); //Maze Tower: 매의 눈
 				baseSpeed = 2f + Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT) / 2f;
 			} else {
 				viewDistance = 6;
@@ -188,6 +201,16 @@ public class SpiritHawk extends ArmorAbility {
 		@Override
 		public int attackProc(Char enemy, int damage) {
 			damage = super.attackProc( enemy, damage );
+			//Maze Tower: 쪼으면 실명, 사냥 신호 (원작 특성 대신)
+			if (!MAZE_ORIGINAL()){
+				Buff.prolong( enemy, Blindness.class, com.shatteredpixel.shatteredpixeldungeon.MazeTower.HAWK_BLIND );
+				int sig = Math.min(4, Dungeon.hero.pointsInTalent(Talent.HUNT_SIGNAL));
+				if (sig > 0 && enemy.isAlive()){
+					com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.HawkSignal s = Buff.prolong(enemy, com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.HawkSignal.class, com.shatteredpixel.shatteredpixeldungeon.MazeTower.HAWK_SIGNAL_TURNS);
+					s.bonus = com.shatteredpixel.shatteredpixeldungeon.MazeTower.T4_HUNT_SIGNAL[sig];
+				}
+				return damage;
+			}
 			switch (Dungeon.hero.pointsInTalent(Talent.GO_FOR_THE_EYES)){
 				case 1:
 					Buff.prolong( enemy, Blindness.class, 2);
@@ -217,11 +240,18 @@ public class SpiritHawk extends ArmorAbility {
 				Dungeon.hero.interrupt();
 				return true;
 			}
-			viewDistance = 6+Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE);
+			viewDistance = 6 + eyeBonus(); //Maze Tower: 매의 눈
 			baseSpeed = 2f + Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT)/2f;
 			boolean result = super.act();
 			Dungeon.level.updateFieldOfView( this, fieldOfView );
 			GameScene.updateFog(pos, viewDistance+(int)Math.ceil(speed()));
+			//Maze Tower: 매의 눈 4레벨 - 매가 지나간 곳의 함정·비밀문을 찾아낸다
+			if (!MAZE_ORIGINAL() && Dungeon.hero.pointsInTalent(Talent.HAWK_EYE) >= 4){
+				for (int n : PathFinder.NEIGHBOURS9){
+					int c = pos + n;
+					if (c >= 0 && c < Dungeon.level.length() && Dungeon.level.secret[c]) Dungeon.level.discover(c);
+				}
+			}
 			return result;
 		}
 
@@ -298,6 +328,7 @@ public class SpiritHawk extends ArmorAbility {
 			super();
 
 			texture( Assets.Sprites.SPIRIT_HAWK );
+			if (!MAZE_ORIGINAL()) tint(0x1A1022, 0.75f); //Maze Tower: 검은 꽃잎으로 된 매
 
 			TextureFilm frames = new TextureFilm( texture, 15, 15 );
 

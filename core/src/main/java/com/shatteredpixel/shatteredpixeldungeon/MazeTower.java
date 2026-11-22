@@ -392,6 +392,7 @@ public class MazeTower {
 	//만개의 핵으로 고를 수 있는 3차 전직 (지금은 전사 검투사 하나만)
 	public static HeroSubClass[] fullBloomPaths( HeroClass cls ){
 		if (cls == HeroClass.WARRIOR) return new HeroSubClass[]{HeroSubClass.GLADIATOR};
+		if (cls == HeroClass.HUNTRESS) return new HeroSubClass[]{HeroSubClass.RINGKEEPER, HeroSubClass.TRACKER}; //사냥꾼: 고리지기 / 추적자
 		return new HeroSubClass[0];
 	}
 
@@ -423,6 +424,59 @@ public class MazeTower {
 	//으깨기 범위 (대상 중심 칸 수. 원작은 주인공 중심 3칸 = 7×7)
 	public static final int CRUSH_RADIUS = 2;
 
+	// ===== 사냥꾼 3차: 추적자 (배열은 [0레벨, 1레벨, 2레벨, 3레벨, 4레벨]) =====
+
+	//사냥감 지정: 스킬로 맞힌 적을 사냥감으로 (턴), 사냥감에게 기본공격 피해 +
+	public static final float[] T3_PREY_TURNS = {0f, 2f, 2f, 2f, 3f};
+	public static final float[] T3_PREY_DMG   = {0f, 0.15f, 0.20f, 0.25f, 0.35f};
+	//저격: 활을 든 채 떨어진 칸당 피해 + (최대 T3_SNIPE_MAX_TILES칸)
+	public static final float[] T3_SNIPE_PER_TILE = {0f, 0.02f, 0.03f, 0.04f, 0.05f};
+	public static final int     T3_SNIPE_MAX_TILES = 8;
+	//덫: 사냥감이 다가오면 1칸마다 느려짐 확률, 느려짐 턴
+	public static final float[] T3_SNARE_CHANCE = {0f, 0.10f, 0.20f, 0.30f, 0.40f};
+	public static final float   T3_SNARE_TURNS  = 2f;
+	//마나 흡수: 사냥감을 처치하면 마나 +
+	public static final int[]   T3_PREY_MANA = {0, 8, 12, 16, 20};
+
+	// ===== 사냥꾼 3차: 고리지기 =====
+
+	//고리의 맥: 반지 고유 패시브 수치 배율 +
+	public static final float[] T3_RING_PULSE = {0f, 0.15f, 0.30f, 0.45f, 0.60f};
+	//공명: 두 반지 강화 수치 차이 중 낮은 쪽을 끌어올리는 비율 (내림)
+	public static final float[] T3_RESONANCE = {0f, 0.25f, 0.50f, 0.75f, 1.00f};
+	//맨손 사냥: 무기를 들지 않았을 때 근접 피해 +
+	public static final float[] T3_BARE_HUNT = {0f, 0.10f, 0.30f, 0.50f, 0.70f};
+	//반지 꽃: 처치 시 마나 +, 체력 +
+	public static final int[]   T3_RING_BLOOM_MANA = {0, 3, 6, 9, 12};
+	public static final int     T3_RING_BLOOM_HP   = 2;
+	//반지 패시브 (고리의 맥 배율이 곱해진다)
+	public static final float RK_CRIT_PER_ACC   = 0.003f; //정확성: 명중 보너스 1%당 급소 확률
+	public static final float RK_CRIT_DMG       = 1.3f;   //정확성: 급소 피해 배율
+	public static final float RK_COUNTER_DMG    = 0.30f;  //회피: 흘리기 반격 (맨손 평타 대비)
+	public static final int   RK_MOMENTUM_TILES = 3;      //신속: 추진력 최대 칸
+	public static final float RK_MOMENTUM_DMG   = 0.06f;  //신속: 칸당 피해 +
+	public static final float RK_HEAT_SPEED     = 0.05f;  //분노: 중첩당 공격 속도 +
+	public static final int   RK_HEAT_MAX       = 5;
+	public static final float RK_HEAT_TURNS     = 10f;
+	public static final int   RK_ADVERSITY_NEED  = 400;   //인내: 반지로 줄인 피해 누적이 이만큼 되면
+	public static final int   RK_ADVERSITY_ARMOR = 8;     //인내: 최소·최대 방어력 +
+	public static final float RK_SPARE_STR_DMG  = 0.02f;  //힘: 남는 힘 1당 맨손 피해 +
+	public static final float RK_FLOW_CHARGE    = 0.15f;  //충전: 맨손 명중 시 마법봉 충전
+	public static final float RK_STEAL_CHANCE   = 0.05f;  //부유함: 소매치기 확률
+	//반지 스킬 (마나 SKILL_MANA_COST)
+	public static final float RK_PRESSURE_TURNS = 3f;     //정확성 혈점 찌르기
+	public static final int   RK_FRENZY_HITS = 5;         //분노 광란 연타
+	public static final float RK_FRENZY_DMG  = 0.40f;
+	public static final float RK_PURIFY_TURNS = 3f;       //원소 정화 면역
+	public static final float RK_THROW_DMG = 2.0f;        //완력 던지기
+	public static final int   RK_THROW_DIST = 2;
+	public static final float RK_THROW_STUN = 1f;
+	public static final float RK_BURST_DMG = 1.0f;        //충전 터뜨리기 기본
+	public static final float RK_BURST_PER_CHARGE = 0.30f;
+	public static final int   RK_GOLD_PER_DEPTH = 10;     //금화 주먹: 층 × 이만큼
+	public static final float RK_GOLD_DMG = 2.5f;
+	public static final int   RK_VOLLEY_COUNT = 2;        //저격 연속 투척
+
 	// ===== 4차 전직 (결실) =====
 
 	//20층 보스(드워프 왕)가 결실의 핵을 떨어뜨리는지 (왕의 왕관 대신)
@@ -434,6 +488,10 @@ public class MazeTower {
 			return new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility[]{
 					new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.HeroicLeap(),
 					new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure()};
+		}
+		if (cls == HeroClass.HUNTRESS){ //사냥꾼: 정령 매 하나
+			return new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility[]{
+					new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.huntress.SpiritHawk()};
 		}
 		return new com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbility[0];
 	}
@@ -452,6 +510,14 @@ public class MazeTower {
 			default: return 0;
 		}
 	}
+
+	// ===== 사냥꾼 4차: 정령 매 (충전 35%, 원작과 같음) =====
+	public static final float   HAWK_TURNS = 20f;                          //매가 머무는 턴
+	public static final float[] T4_HAWK_LINGER = {0f, 5f, 10f, 15f, 20f};    //오래 머무는 매: +턴
+	public static final int[]   T4_HAWK_EYE = {0, 1, 2, 3, 4};              //매의 눈: 시야 +칸 (4레벨은 함정·비밀문 발견)
+	public static final float   HAWK_BLIND = 2f;                            //쪼은 적 실명 턴
+	public static final float[] T4_HUNT_SIGNAL = {0f, 0.10f, 0.20f, 0.30f, 0.40f}; //사냥 신호: 다음 기본공격 피해 +
+	public static final float   HAWK_SIGNAL_TURNS = 10f;                    //사냥 신호가 남아 있는 턴
 
 	// ===== 4차 특성 (배열은 [0레벨, 1레벨, 2레벨, 3레벨, 4레벨], 높은 레벨이 아래 레벨을 대체) =====
 

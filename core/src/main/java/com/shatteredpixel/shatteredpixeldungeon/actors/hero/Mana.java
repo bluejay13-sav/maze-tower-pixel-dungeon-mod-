@@ -11,6 +11,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortbow;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandMana;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
@@ -126,13 +127,22 @@ public class Mana extends Buff implements ActionIndicator.Action {
 		return null;
 	}
 
+	//Maze Tower: 고리지기 반지 스킬 (무기를 들지 않았을 때, 스킬이 있는 첫 반지)
+	private com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring skillRing(){
+		if (!(target instanceof Hero)) return null;
+		com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring[] r = HunterEffects.skillRings((Hero)target);
+		return r.length > 0 ? r[0] : null;
+	}
+
 	private static Wand staffWand(MeleeWeapon w){
 		return w instanceof MagesStaff ? ((MagesStaff)w).imbuedWand() : null;
 	}
 
 	//장착한 검이 바뀌었으면 버튼을 갱신한다. 상태창(StatusPane)이 매 프레임 호출한다.
 	public void refreshSkillButton(){
-		MeleeWeapon w = skillWeapon();
+		HunterEffects.SecondRingButton.INSTANCE.refresh(); //Maze Tower: 고리지기 두 번째 반지 스킬 버튼
+		Object w = skillWeapon();
+		if (w == null) w = skillRing(); //Maze Tower: 고리지기 반지 스킬 (맨손)
 		if (w == null){
 			lastWeapon = null;
 			ActionIndicator.clearAction(this);
@@ -146,11 +156,12 @@ public class Mana extends Buff implements ActionIndicator.Action {
 		}
 		lastAffordable = canAfford();
 	}
-	private MeleeWeapon lastWeapon;
+	private Object lastWeapon;
 	private boolean lastAffordable = true;
 
 	private boolean canAfford(){
 		if (!(target instanceof Hero)) return true;
+		if (skillWeapon() == null && skillRing() != null) return HunterEffects.canAfford((Hero)target, skillRing());
 		if (cur() < SwordSkill.manaCost((Hero)target)) return false;
 		//조준 사격은 화살도 1발 있어야 한다
 		if (skillWeapon() instanceof WornShortbow && Arrow.count((Hero)target) <= 0) return false;
@@ -162,6 +173,7 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	@Override
 	public String actionName() {
 		MeleeWeapon w = skillWeapon();
+		if (w == null && skillRing() != null) return HunterEffects.skillName(skillRing());
 		if (w == null) return "";
 		Wand sw = staffWand(w);
 		if (sw != null) return WandMana.skillName(sw);
@@ -171,7 +183,8 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	@Override
 	public Visual primaryVisual() {
 		MeleeWeapon w = skillWeapon();
-		ItemSprite ico = w == null ? new ItemSprite() : new ItemSprite(w);
+		Item src = w != null ? w : skillRing();
+		ItemSprite ico = src == null ? new ItemSprite() : new ItemSprite(src);
 		//마나가 부족하면 회색으로
 		if (!canAfford()) ico.tint(0x808080, 0.75f);
 		return ico;
@@ -194,6 +207,7 @@ public class Mana extends Buff implements ActionIndicator.Action {
 	@Override
 	public void doAction() {
 		MeleeWeapon w = skillWeapon();
+		if (w == null && skillRing() != null){ HunterEffects.useRingSkill((Hero)target, skillRing()); return; } //Maze Tower: 고리지기
 		if (w == null) return;
 		if (w instanceof MagesStaff) w.execute((Hero)target, MagesStaff.AC_ZAP); //지팡이: 합성된 마법봉 발사
 		else w.execute((Hero)target, MeleeWeapon.AC_ABILITY);

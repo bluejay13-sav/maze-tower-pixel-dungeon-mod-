@@ -440,6 +440,12 @@ abstract public class MissileWeapon extends Weapon {
 		}
 	}
 	
+	//Maze Tower: 고리지기 연속 투척 (저격의 반지 스킬)이 던진 뒤 원작처럼 내구도·떨어뜨리기를 처리한다
+	public void mazeAfterThrow( Char enemy, int cell, boolean hit ){
+		if (hit) rangedHit(enemy, cell);
+		else rangedMiss(cell);
+	}
+
 	protected void rangedMiss( int cell ) {
 		parent = null;
 		if (!spawnedForEffect) super.onThrow(cell);

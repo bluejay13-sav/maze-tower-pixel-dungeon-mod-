@@ -69,6 +69,10 @@ public class Buff extends Actor {
 		if (target.isImmune( getClass() )) {
 			return false;
 		}
+		//Maze Tower: 고리지기 정화 (원소의 반지 스킬): 잠깐 동안 나쁜 상태이상이 붙지 않는다
+		if (type == buffType.NEGATIVE && target.buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.Purity.class) != null) {
+			return false;
+		}
 		
 		this.target = target;
 

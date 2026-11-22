@@ -416,6 +416,7 @@ public abstract class Char extends Actor {
 					dr = 0;
 				}
 				dr = BloomEffects.armorAfterIgnore(h, enemy, dr); //Maze Tower: 2차 특성 방어력 일부 무시 (돌진·마나 흡수·집중 각성)
+				dr = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.armorAfterIgnore(h, dr); //Maze Tower: 고리지기 완력의 반지 반지 너클
 			}
 
 			//we use a float here briefly so that we don't have to constantly round while
@@ -623,6 +624,7 @@ public abstract class Char extends Actor {
 				//TODO enemy.defenseSound? currently miss plays for monks/crab even when they parry
 				Sample.INSTANCE.play(Assets.Sounds.MISS);
 			}
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.onDodged(this, enemy); //Maze Tower: 고리지기 회피의 반지 흘리기 반격
 			
 			return false;
 			
@@ -655,6 +657,11 @@ public abstract class Char extends Actor {
 
 		if (defender.buff(MonkEnergy.MonkAbility.Focus.FocusBuff.class) != null){
 			defStat = INFINITE_EVASION;
+		}
+
+		//Maze Tower: 고리지기 혈점 찌르기를 맞은 대상은 회피 0, 반드시 맞는다
+		if (defender.buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.PressurePoint.class) != null){
+			acuStat = INFINITE_ACCURACY;
 		}
 
 		//Maze Tower: 무너진 돌무더기는 피할 수 없다 (반드시 맞는다)
@@ -1369,7 +1376,9 @@ public abstract class Char extends Actor {
 		} else {
 			previousPos = -1;
 		}
+		int mazeOldPos = pos;
 		pos = step;
+		com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.onCharMoved(this, mazeOldPos); //Maze Tower: 추적자 덫, 고리지기 추진력
 
 		//Maze Tower: 물에 들어가면 젖음
 		if (Wet.onWater(this)) Buff.affect(this, Wet.class);

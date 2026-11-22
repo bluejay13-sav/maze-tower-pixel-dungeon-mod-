@@ -204,7 +204,8 @@ public class Ring extends KindofMisc {
 		if (isKnown()) {
 			desc += "\n\n" + statsInfo();
 		}
-		
+		desc += com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.ringInfo(this); //Maze Tower: 고리지기에게만 보이는 반지 고유 능력
+
 		return desc;
 	}
 	
@@ -347,8 +348,14 @@ public class Ring extends KindofMisc {
 
 	@Override
 	public int buffedLvl() {
+		//Maze Tower: 고리지기 공명 (낮은 쪽 반지를 끌어올림)
+		return mazeBaseLvl() + com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.resonanceBonus(this);
+	}
+
+	//Maze Tower: 공명을 빼고 계산한 반지 레벨 (원작 buffedLvl)
+	public int mazeBaseLvl() {
 		int lvl = super.buffedLvl();
-		if (Dungeon.hero.buff(EnhancedRings.class) != null){
+		if (Dungeon.hero != null && Dungeon.hero.buff(EnhancedRings.class) != null){
 			lvl++;
 		}
 		return lvl;

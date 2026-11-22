@@ -697,6 +697,7 @@ public class Hero extends Char {
 		if (buff(HoldFast.class) != null){
 			dr += buff(HoldFast.class).armorBonus();
 		}
+		dr += HunterEffects.adversityArmor(this); //Maze Tower: 고리지기 인내의 반지 역경 (방어력 +)
 		
 		return dr;
 	}
@@ -843,6 +844,7 @@ public class Hero extends Char {
 				delay = ((Weapon)belongings.weapon).augment.delayFactor(delay);
 			}
 
+			speed *= HunterEffects.heatSpeedMulti(this); //Maze Tower: 고리지기 분노의 반지 열기
 			return delay/(speed * classAttackSpeed()); //Maze Tower: 도적 공격 속도
 		}
 	}
@@ -1602,6 +1604,7 @@ public class Hero extends Char {
 		}
 
 		damage = BloomEffects.onHeroAttackProc( this, enemy, damage ); //Maze Tower: 2차 특성 피해·적중 효과
+		damage = HunterEffects.onHeroAttackProc( this, enemy, damage ); //Maze Tower: 사냥꾼 3차·4차 (사냥감·저격·반지 패시브·사냥 신호)
 		damage = Talent.onAttackProc( this, enemy, damage );
 
 		if (wep != null) {
@@ -1748,7 +1751,9 @@ public class Hero extends Char {
 		dmg = Math.round(damage);
 
 		//we ceil this one to avoid letting the player easily take 0 dmg from tenacity early
+		int mazeBeforeTenacity = dmg;
 		dmg = (int)Math.ceil(dmg * RingOfTenacity.damageMultiplier( this ));
+		HunterEffects.onTenacityReduced(this, mazeBeforeTenacity - dmg); //Maze Tower: 고리지기 인내의 반지 역경 (줄인 피해 누적)
 
 		int preHP = HP + shielding();
 		if (src instanceof Hunger) preHP -= shielding();

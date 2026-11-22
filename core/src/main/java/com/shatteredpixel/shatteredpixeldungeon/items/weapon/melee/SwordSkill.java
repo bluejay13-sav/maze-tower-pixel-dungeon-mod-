@@ -54,6 +54,19 @@ public class SwordSkill {
 	public boolean pierce = false;
 	//날아가는 화살 모양 (WornShortbow.SHOT_*)
 	public int shotKind = WornShortbow.SHOT_PLAIN;
+	//Maze Tower: 타격마다 / 스킬이 끝날 때 따로 할 일 (고리지기 반지 스킬: 던지기·충전 터뜨리기·금화 주먹)
+	public interface HitHook { void onHit(Hero hero, Char enemy, boolean hit, int index); }
+	public HitHook afterHit = null;
+	public Runnable onEnd = null;
+
+	//Maze Tower: 고리지기 반지 스킬 (맨손, 인접한 적). 무기 없이 SwordSkill 흐름을 그대로 쓴다
+	public static SwordSkill ringSkill(String key, int hits, float dmg){
+		return new SwordSkill(key, hits, dmg, 1f, false, 1f);
+	}
+
+	public static void launchRing(Hero hero, SwordSkill skill, Char enemy, int cost){
+		launch(hero, null, skill, enemy, cost, -1, true);
+	}
 
 	private SwordSkill(String nameKey, int hits, float dmgPerHit, float accMulti, boolean ignoreDefense, float elementChanceMulti){
 		this.nameKey = nameKey;
@@ -299,6 +312,7 @@ public class SwordSkill {
 		if (skill.ranged) WornShortbow.endShot(hero, enemy, hit, shot, false); //박힌 화살 (Maze Tower: 활 스킬은 밀쳐내지 않는다)
 		if (shot && hit) SkillEffects.afterHit(skill.nameKey, hero, enemy); //Maze Tower: 활 스킬이 맞으면 피가 튀는 등
 		GladiatorEffects.onSkillHit(hero, enemy, hit, wasEnemy); //검투사: 타격 한 번마다 연속 타격 +1
+		if (skill.afterHit != null) skill.afterHit.onHit(hero, enemy, hit, index); //Maze Tower: 반지 스킬
 		active = null;
 		noBlood = false;
 
@@ -325,7 +339,7 @@ public class SwordSkill {
 			};
 			hero.sprite.parent.add(wait);
 		} else {
-			finish(hero, wep);
+			finish(hero, wep, skill);
 		}
 	}
 
@@ -351,14 +365,16 @@ public class SwordSkill {
 		return enemy.isAlive() && enemy.pos == startPos && enemy.invisible <= 0;
 	}
 
-	private static void finish(Hero hero, MeleeWeapon wep){
+	private static void finish(Hero hero, MeleeWeapon wep, SwordSkill skill){
+		if (skill != null && skill.onEnd != null) skill.onEnd.run(); //Maze Tower: 반지 스킬 (금화 주먹 처치 시 돌려받기 등)
 		BloomEffects.endSkill(hero); //처치 시 마나 반환, 흐름·잔향·흘리기
 		GladiatorEffects.onSkillEnd(hero); //검투사 기술 연계: 타격이 끝난 뒤 연속 타격 +
 
 		Invisibility.dispel();
 		hero.belongings.abilityWeapon = wep;
 		float delay = hero.attackDelay();
-		wep.afterAbilityUsed(hero);
+		if (wep != null) wep.afterAbilityUsed(hero);
+		else hero.belongings.abilityWeapon = null; //Maze Tower: 반지 스킬 (맨손)
 		hero.spendAndNext(delay);
 		Item.updateQuickslot();
 	}

@@ -48,7 +48,11 @@ public enum HeroSubClass {
 	MONK(HeroIcon.MONK),
 
 	PRIEST(HeroIcon.PRIEST),
-	PALADIN(HeroIcon.PALADIN);
+	PALADIN(HeroIcon.PALADIN),
+
+	//Maze Tower: 사냥꾼 3차 (만개). 원작 저격수·관리자와 따로 둔다 (원작 효과가 섞이지 않게). 아이콘은 원작 것을 빌려 씀
+	TRACKER(HeroIcon.SNIPER),
+	RINGKEEPER(HeroIcon.WARDEN);
 
 	int icon;
 
