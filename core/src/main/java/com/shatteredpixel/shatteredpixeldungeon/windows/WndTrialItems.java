@@ -164,7 +164,7 @@ public class WndTrialItems extends Window {
 
 	// ---------------- 탭 ----------------
 	private void buildTabs(){
-		for (com.watabou.noosa.Gizmo c : tabParts) c.killAndErase();
+		for (com.watabou.noosa.Gizmo c : tabParts){ remove(c); c.destroy(); } //지운 버튼의 입력도 끊는다 (killAndErase만 하면 마우스를 올릴 때 오류)
 		tabParts.clear();
 		for (int i = 0; i < TABS; i++){
 			final int t = i;
@@ -311,7 +311,7 @@ public class WndTrialItems extends Window {
 	}
 
 	private void buildGrid(){
-		for (Component c : gridParts) c.killAndErase();
+		for (Component c : gridParts){ remove(c); c.destroy(); } //지운 버튼의 입력도 끊는다
 		gridParts.clear();
 		ArrayList<Class<?>> list = classes(tab);
 		int per = COLS * ROWS;
