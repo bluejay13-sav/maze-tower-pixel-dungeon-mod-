@@ -1,0 +1,1212 @@
+/*
+ * Maze Tower (가칭 미궁의 마탑)
+ * Shattered Pixel Dungeon 기반 아종. GPLv3.
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
+
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.CorrosiveGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Fire;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Freezing;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ParalyticGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.StenchGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Charm;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Heart25Fx;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx;
+import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ElmoParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.FlameParticle;
+import com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle;
+import com.shatteredpixel.shatteredpixeldungeon.items.Arrow;
+import com.shatteredpixel.shatteredpixeldungeon.levels.HeartBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.MobSprite;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.noosa.ColorBlock;
+import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
+import com.watabou.noosa.Group;
+import com.watabou.noosa.Image;
+import com.watabou.noosa.MovieClip;
+import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.Bundle;
+import com.watabou.utils.Callback;
+import com.watabou.utils.PathFinder;
+import com.watabou.utils.PointF;
+import com.watabou.utils.Random;
+import com.watabou.utils.RectF;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+
+//Maze Tower: 25층 2페이즈 의태 영웅 (지시서 1122 3·4절, 1122b 3절). 잠식된 시체 자체가 사슴이다.
+//처치하면 시체가 머리부터 발끝까지 무너지고 그 자리에서 사슴이 다시 만들어진다(사슴 체력 -25%). 경험치·드랍 없음.
+//예고 공격은 바닥 경고·조준선을 보여 주고 나간다. 맞으면 방어력의 50%만 적용(도적 기습은 30%).
+//기술을 시전하는 순간마다 화면 1px 흔들림(평타 제외).
+public class MimicHero extends Mob {
+
+	public static final int WARRIOR = 0, MAGE = 1, ROGUE = 2, HUNTRESS = 3;
+
+	{
+		spriteClass = MimicSprite.class;
+		EXP = 0;
+		state = HUNTING;
+		properties.add(Property.MINIBOSS);
+		properties.add(Property.DEMONIC);
+	}
+
+	public int cls = WARRIOR;
+	public int deerHP, kills, used;
+	private boolean summoned = false;
+	private boolean busy = false;
+
+	//전사
+	private int leapCd = MazeTower.MW_LEAP_FIRST;
+	private int leapTarget = -1;
+	private boolean raged = false;
+	//마법사
+	private int thornCd = MazeTower.MM_THORN_FIRST;
+	private int thornCenter = -1;
+	private int castPos = -1;
+	private int blinkCd = 0;
+	//도적
+	private int stealthCd = MazeTower.MR_STEALTH_FIRST;
+	private int poisonCd = MazeTower.MR_POISON_FIRST;
+	private int coatLeft = 0;
+	private HashSet<Integer> trail = new HashSet<>();
+	//사냥꾼
+	private int pierceCd = MazeTower.MH_PIERCE_CD;
+	private int[] aimPath = new int[0];
+	private int trapCd = MazeTower.MH_TRAP_CD;
+	private HashMap<Integer, Integer> traps = new HashMap<>(); //칸 → 깔린 뒤 지난 턴
+	private boolean trapsRevealed = false;
+
+	//연출 (저장하지 않음)
+	private Heart25Fx.CellWarn warn;
+	private Group aimLine;
+	private final ArrayList<ColorBlock> aimDots = new ArrayList<>();
+	private final HashMap<Integer, Image> trapImages = new HashMap<>();
+	private final HashMap<Integer, Image> trailImages = new HashMap<>();
+
+	public void setup( int cls, int deerHP, int kills, int used ){
+		this.cls = cls;
+		this.deerHP = deerHP;
+		this.kills = kills;
+		this.used = used;
+		applyStats();
+	}
+
+	private void applyStats(){
+		switch (cls){
+			case WARRIOR:  HP = HT = MazeTower.MW_HP; defenseSkill = MazeTower.MW_DEF; break;
+			case MAGE:     HP = HT = MazeTower.MM_HP; defenseSkill = MazeTower.MM_DEF; break;
+			case ROGUE:    HP = HT = MazeTower.MR_HP; defenseSkill = MazeTower.MR_DEF; break;
+			default:       HP = HT = MazeTower.MH_HP; defenseSkill = MazeTower.MH_DEF; break;
+		}
+	}
+
+	public static MimicHero find(){
+		if (Dungeon.level == null) return null;
+		for (Mob m : Dungeon.level.mobs) if (m instanceof MimicHero && m.isAlive()) return (MimicHero) m;
+		return null;
+	}
+
+	// ===== 수치 =====
+	@Override
+	public int attackSkill( Char target ) {
+		switch (cls){
+			case WARRIOR: return MazeTower.MW_ACC;
+			case MAGE:    return MazeTower.MM_ACC;
+			case ROGUE:   return MazeTower.MR_ACC;
+			default:      return MazeTower.MH_ACC;
+		}
+	}
+
+	@Override
+	public int damageRoll() {
+		switch (cls){
+			case WARRIOR: return Math.round(Random.NormalIntRange(MazeTower.MW_MIN, MazeTower.MW_MAX) * (raged ? 1f + MazeTower.MW_RAGE_DMG : 1f));
+			case MAGE:    return Random.NormalIntRange(MazeTower.MM_MIN, MazeTower.MM_MAX);
+			case ROGUE:   return Random.NormalIntRange(MazeTower.MR_MIN, MazeTower.MR_MAX);
+			default:
+				int d = Random.NormalIntRange(MazeTower.MH_MIN, MazeTower.MH_MAX);
+				return enemy != null && Dungeon.level.adjacent(pos, enemy.pos) ? Math.round(d * MazeTower.MH_CLAW_MULTI) : d;
+		}
+	}
+
+	@Override
+	public int drRoll() {
+		int max;
+		switch (cls){
+			case WARRIOR: max = MazeTower.MW_DR; break;
+			case MAGE:    max = MazeTower.MM_DR; break;
+			case ROGUE:   max = MazeTower.MR_DR; break;
+			default:      max = MazeTower.MH_DR; break;
+		}
+		return super.drRoll() + Random.NormalIntRange(0, max);
+	}
+
+	@Override
+	public float speed() {
+		float s = super.speed();
+		if (cls == ROGUE){
+			s *= MazeTower.MR_MOVE_SPEED;
+			if (invisible > 0) s *= MazeTower.MR_STEALTH_SPEED;
+		}
+		return s;
+	}
+
+	@Override
+	protected boolean canAttack( Char enemy ) {
+		if (cls == MAGE || cls == HUNTRESS){
+			if (Dungeon.level.adjacent(pos, enemy.pos)) return cls == HUNTRESS ? cornered() : true;
+			return new Ballistica(pos, enemy.pos, Ballistica.PROJECTILE).collisionPos == enemy.pos;
+		}
+		return super.canAttack(enemy);
+	}
+
+	// ===== 피해 =====
+	@Override
+	public void damage( int dmg, Object src ) {
+		//마법사 가시밭 경고 중: 번개·불 피해를 받으면 시전이 끊김
+		if (cls == MAGE && thornCenter != -1 && src != null){
+			String n = src.getClass().getSimpleName();
+			if (n.contains("Lightning") || n.contains("Electric") || n.contains("Shock") || src instanceof Burning || src instanceof Fire || n.contains("Fire")){
+				cancelCharge();
+			}
+		}
+		super.damage(dmg, src);
+		if (cls == WARRIOR && !raged && isAlive() && HP <= HT * MazeTower.MW_RAGE_HP){
+			raged = true;
+			if (sprite != null){
+				sprite.showStatus(CharSprite.NEGATIVE, Messages.get(this, "rage"));
+				sprite.hardlight(1f, 0.55f, 0.55f);
+			}
+		}
+	}
+
+	@Override
+	public void die( Object cause ) {
+		clearFx();
+		final int at = pos;
+		if (sprite instanceof MimicSprite){
+			((MimicSprite) sprite).collapse();
+		}
+		super.die(cause);
+		HeartBeast.returnFrom(this);
+	}
+
+	@Override
+	public void rollToDropLoot() {}
+
+	// ===== 행동 =====
+	@Override
+	protected boolean act() {
+		if (busy) return false;
+		if (!summoned){
+			summoned = true;
+			if (sprite instanceof MimicSprite && sprite.visible){
+				busy = true;
+				((MimicSprite) sprite).summon(new Callback() {
+					@Override
+					public void call() {
+						busy = false;
+						spend(TICK);
+						next();
+					}
+				});
+				return false;
+			}
+		}
+		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()) fieldOfView = new boolean[Dungeon.level.length()];
+		Dungeon.level.updateFieldOfView(this, fieldOfView);
+		Hero hero = Dungeon.hero;
+		enemy = hero;
+		enemySeen = true;
+		state = HUNTING;
+
+		if (paralysed > 0 || buff(Charm.class) != null){
+			if (thornCenter != -1 || aimPath.length > 0) cancelCharge();
+			return super.act();
+		}
+		if (cls == HUNTRESS) updateTraps();
+		if (cls == ROGUE) checkTrailReveal();
+
+		if (hero != null && hero.isAlive()){
+			Boolean r = null;
+			switch (cls){
+				case WARRIOR:  r = actWarrior(hero); break;
+				case MAGE:     r = actMage(hero); break;
+				case ROGUE:    r = actRogue(hero); break;
+				case HUNTRESS: r = actHuntress(hero); break;
+			}
+			if (r != null) return r;
+		}
+		return super.act();
+	}
+
+	private boolean sees( Hero h ){
+		return fieldOfView[h.pos] && h.invisible <= 0;
+	}
+
+	// ---------------- 전사 ----------------
+	private Boolean actWarrior( Hero hero ){
+		if (leapTarget != -1){
+			final int target = leapTarget;
+			leapTarget = -1;
+			return leap(target);
+		}
+		leapCd--;
+		if (leapCd <= 0 && sees(hero) && Dungeon.level.distance(pos, hero.pos) <= MazeTower.MW_LEAP_RANGE
+				&& Dungeon.level.distance(pos, hero.pos) > 1){
+			leapCd = MazeTower.MW_LEAP_CD;
+			leapTarget = hero.pos;
+			if (sprite != null) sprite.turnTo(pos, hero.pos);
+			showWarn(area3(hero.pos));
+			Heart25Fx.shake();
+			spend(TICK);
+			return true;
+		}
+		return null;
+	}
+
+	private boolean leap( final int target ){
+		final Hero hero = Dungeon.hero;
+		final ArrayList<Integer> area = area3(target);
+		//착지 칸에 영웅이 있으면 인접한 1칸으로 무작위로 밀려남
+		int land = target;
+		Char there = Actor.findChar(land);
+		if (there != null && there != this && there != hero){
+			land = pos;
+		}
+		final int landCell = land;
+		final int from = pos;
+		final Callback done = new Callback() {
+			@Override
+			public void call() {
+				if (hero.isAlive() && area.contains(hero.pos)){
+					strike(hero, MazeTower.MW_LEAP_MIN, MazeTower.MW_LEAP_MAX, MazeTower.B25_TELEGRAPH_ARMOR, raged ? 1f + MazeTower.MW_RAGE_DMG : 1f);
+					if (hero.isAlive() && hero.pos == landCell){
+						ArrayList<Integer> free = new ArrayList<>();
+						for (int n : PathFinder.NEIGHBOURS8){
+							int c = landCell + n;
+							if (Dungeon.level.passable[c] && Actor.findChar(c) == null) free.add(c);
+						}
+						if (!free.isEmpty()){
+							int to = Random.element(free);
+							Actor.add(new com.shatteredpixel.shatteredpixeldungeon.effects.Pushing(hero, hero.pos, to));
+							hero.pos = to;
+							Dungeon.level.occupyCell(hero);
+						}
+					}
+				}
+				move(landCell, false);
+				//착지: 3×3 번쩍 → 가운데에서 균열, 파편·핏방울
+				Heart25Fx.CellWarn flash = Heart25Fx.CellWarn.show(area, null, 0xFF6070, 0);
+				flash.fadeOut();
+				MovieClip c = MazeFx.atCell(MazeFx.Fx.LEAP, landCell);
+				if (c != null) c.hardlight(1f, 0.2f, 0.25f);
+				CellEmitter.center(landCell).burst(BloodParticle.BURST, 10);
+				CellEmitter.get(landCell).burst(Speck.factory(Speck.ROCK), 5);
+				Sample.INSTANCE.play(Assets.Sounds.BLAST, 0.8f, 0.8f);
+				if (warn != null){ warn.fadeOut(); warn = null; }
+			}
+		};
+		if (sprite != null && sprite.visible){
+			busy = true;
+			sprite.jump(from, landCell == from ? target : landCell, new Callback() {
+				@Override
+				public void call() {
+					done.call();
+					if (sprite != null) sprite.place(pos);
+					busy = false;
+					spend(TICK);
+					next();
+				}
+			});
+			return false;
+		}
+		done.call();
+		spend(TICK);
+		return true;
+	}
+
+	// ---------------- 마법사 ----------------
+	private Boolean actMage( final Hero hero ){
+		//가시밭: 지난 턴에 경고한 3×3
+		if (thornCenter != -1){
+			int c = thornCenter;
+			thornCenter = -1;
+			ArrayList<Integer> area = area3(c);
+			if (castPos != pos){ //충격파 등으로 밀려나면 끊김
+				cancelCharge();
+			} else {
+				for (int cell : area){
+					CellEmitter.get(cell).burst(BloodParticle.BURST, 3);
+					thornFx(cell);
+				}
+				if (area.contains(hero.pos)){
+					strike(hero, MazeTower.MM_THORN_MIN, MazeTower.MM_THORN_MAX, MazeTower.B25_TELEGRAPH_ARMOR, 1f);
+				}
+				if (warn != null){ warn.fadeOut(); warn = null; }
+				Sample.INSTANCE.play(Assets.Sounds.HIT_STAB, 1f, 0.7f);
+				spend(TICK);
+				return true;
+			}
+		}
+		blinkCd--;
+		thornCd--;
+		//피의 점멸: 영웅이 인접하면 4칸 떨어진 곳으로
+		if (Dungeon.level.adjacent(pos, hero.pos) && blinkCd <= 0){
+			int to = blinkCell(hero);
+			if (to != -1){
+				blinkCd = MazeTower.MM_BLINK_CD;
+				CellEmitter.center(pos).burst(BloodParticle.BURST, 10);
+				Heart25Fx.shake();
+				move(to, false);
+				if (sprite != null) sprite.place(to);
+				CellEmitter.center(to).burst(BloodParticle.BURST, 6);
+				Sample.INSTANCE.play(Assets.Sounds.PUFF);
+				spend(TICK);
+				return true;
+			}
+		}
+		if (thornCd <= 0 && sees(hero)){
+			thornCd = MazeTower.MM_THORN_CD;
+			thornCenter = hero.pos;
+			castPos = pos;
+			if (sprite != null) sprite.turnTo(pos, hero.pos);
+			showWarn(area3(hero.pos));
+			Heart25Fx.shake();
+			spend(TICK);
+			return true;
+		}
+		//3~4칸 유지: 가까우면 물러나고, 멀거나 시야가 끊기면 다가간다
+		int d = Dungeon.level.distance(pos, hero.pos);
+		if (d < MazeTower.MM_KEEP_MIN && sees(hero)){
+			int old = pos;
+			if (getFurther(hero.pos)){
+				spend(1 / speed());
+				return moveSprite(old, pos);
+			}
+		}
+		return null;
+	}
+
+	private int blinkCell( Hero hero ){
+		HeartBossLevel lv = Dungeon.level instanceof HeartBossLevel ? (HeartBossLevel) Dungeon.level : null;
+		ArrayList<Integer> cand = new ArrayList<>();
+		for (int c = 0; c < Dungeon.level.length(); c++){
+			if (lv != null && !lv.inRoom(c)) continue;
+			if (!Dungeon.level.passable[c] || Actor.findChar(c) != null) continue;
+			if (Dungeon.level.distance(c, hero.pos) == MazeTower.MM_BLINK_DIST) cand.add(c);
+		}
+		return cand.isEmpty() ? -1 : Random.element(cand);
+	}
+
+	//끝으로 갈수록 가늘어지는 혈관 가시 (코드 그림)
+	private void thornFx( int cell ){
+		final PointF p = DungeonTilemap.tileToWorld(cell);
+		final Group g = new Group();
+		for (int k = 0; k < 3; k++){
+			float bx = p.x + 3 + k * 4 + Random.Int(2);
+			int h = 6 + Random.Int(4);
+			for (int i = 0; i < h; i++){
+				int w = i < h / 3 ? 2 : 1;
+				ColorBlock b = new ColorBlock(w, 1, i < h / 2 ? 0xFF8A1020 : 0xFFE05060);
+				b.x = bx; b.y = p.y + 14 - i;
+				g.add(b);
+			}
+		}
+		GameScene.groupEffect(g);
+		g.parent.add(new Gizmo(){
+			float t = 0.45f;
+			@Override public void update(){ t -= Game.elapsed; if (t <= 0){ g.killAndErase(); killAndErase(); } }
+		});
+	}
+
+	// ---------------- 도적 ----------------
+	private Boolean actRogue( Hero hero ){
+		if (coatLeft > 0) coatLeft--;
+		stealthCd--;
+		poisonCd--;
+		if (poisonCd <= 0 && invisible <= 0){
+			poisonCd = MazeTower.MR_POISON_CD;
+			coatLeft = MazeTower.MR_POISON_TURNS;
+			Heart25Fx.shake();
+			if (sprite != null){
+				sprite.showStatus(0xB070FF, Messages.get(this, "coat"));
+				sprite.centerEmitter().burst(ElmoParticle.FACTORY, 4);
+			}
+			spend(TICK);
+			return true;
+		}
+		if (stealthCd <= 0 && invisible <= 0){
+			stealthCd = MazeTower.MR_STEALTH_CD;
+			CellEmitter.get(pos).burst(Speck.factory(Speck.SMOKE), 8);
+			Heart25Fx.shake();
+			Buff.affect(this, Invisibility.class, MazeTower.MR_STEALTH_TURNS);
+			if (Dungeon.level.distance(pos, hero.pos) <= 1){
+				ArrayList<Integer> cand = new ArrayList<>();
+				for (int c = 0; c < Dungeon.level.length(); c++){
+					if (Dungeon.level.distance(c, hero.pos) <= MazeTower.MR_STEALTH_SHIFT && Dungeon.level.passable[c]
+							&& Actor.findChar(c) == null) cand.add(c);
+				}
+				if (!cand.isEmpty()){
+					int to = Random.element(cand);
+					move(to, false);
+					if (sprite != null) sprite.place(to);
+					addTrail(to);
+				}
+			}
+			Sample.INSTANCE.play(Assets.Sounds.PUFF);
+			spend(TICK);
+			return true;
+		}
+		return null;
+	}
+
+	@Override
+	public void move( int step, boolean travelling ) {
+		super.move(step, travelling);
+		if (cls == ROGUE && invisible > 0) addTrail(step);
+	}
+
+	private void addTrail( int cell ){
+		trail.add(cell);
+		drawTrail(cell);
+	}
+
+	private void drawTrail( int cell ){
+		if (trailImages.containsKey(cell) || !(Dungeon.level != null)) return;
+		Image i = new Image("sprites/maze_b7_flesh_fx.png");
+		i.frame(new TextureFilm(i.texture, 24, 24).get(1 * 12 + 9));
+		PointF p = DungeonTilemap.tileToWorld(cell);
+		i.x = p.x - 4; i.y = p.y - 4;
+		i.alpha(0.85f);
+		GameScene.effect(i);
+		trailImages.put(cell, i);
+	}
+
+	//핏방울 흔적이 남은 칸에 피해를 주는 물약을 뿌려 두면 은신이 풀린다
+	private void checkTrailReveal(){
+		if (invisible <= 0) return;
+		HashSet<Integer> check = new HashSet<>(trail);
+		check.add(pos);
+		for (Blob b : Dungeon.level.blobs.values()){
+			if (!(b instanceof ToxicGas || b instanceof ParalyticGas || b instanceof CorrosiveGas || b instanceof Fire
+					|| b instanceof Freezing || b instanceof StenchGas || b instanceof Electricity)) continue;
+			if (b.volume <= 0) continue;
+			for (int c : check){
+				if (b.cur[c] > 0){ reveal(); return; }
+			}
+		}
+	}
+
+	//은신 해제: 그림자 막이 찢겨 흩어짐 → 하얗게 번쩍 → 윤곽이 잠깐 빛남 → 1px 움찔
+	public void reveal(){
+		if (invisible <= 0 && buff(Invisibility.class) == null) return;
+		Buff.detach(this, Invisibility.class);
+		invisible = 0;
+		if (sprite != null){
+			sprite.alpha(1f);
+			CellEmitter.get(pos).burst(ShadowParticle.UP, 14);
+			sprite.flash();
+			sprite.parent.add(new Gizmo(){
+				float t = 0.25f;
+				@Override public void update(){
+					t -= Game.elapsed;
+					if (sprite != null) sprite.lightness(t > 0 ? 0.75f : 0.5f);
+					if (t <= 0){ if (sprite != null) sprite.resetColor(); killAndErase(); }
+				}
+			});
+			Heart25Fx.nudge(sprite, Random.Int(2) == 0 ? -1 : 1, 0);
+		}
+		for (Image i : trailImages.values()) i.killAndErase();
+		trailImages.clear();
+		trail.clear();
+	}
+
+	// ---------------- 사냥꾼 ----------------
+	private boolean cornered(){
+		Hero h = Dungeon.hero;
+		if (h == null) return false;
+		for (int n : PathFinder.NEIGHBOURS8){
+			int c = pos + n;
+			if (Dungeon.level.passable[c] && Actor.findChar(c) == null && Dungeon.level.distance(c, h.pos) > Dungeon.level.distance(pos, h.pos)) return false;
+		}
+		return true;
+	}
+
+	private Boolean actHuntress( final Hero hero ){
+		//관통 혈시: 지난 턴 조준선
+		if (aimPath.length > 0){
+			final int[] path = aimPath;
+			aimPath = new int[0];
+			clearAim(false);
+			for (int c : path){
+				if (c == hero.pos){
+					strike(hero, MazeTower.MH_PIERCE_MIN, MazeTower.MH_PIERCE_MAX, MazeTower.B25_TELEGRAPH_ARMOR, 1f);
+					break;
+				}
+			}
+			if (sprite != null && path.length > 0){
+				final int last = path[path.length - 1];
+				fireArrow(last, true, null);
+			}
+			Sample.INSTANCE.play(Assets.Sounds.ATK_SPIRITBOW, 1f, 0.8f);
+			//쏠 때 2칸 뒤로 물러남
+			for (int i = 0; i < MazeTower.MH_PIERCE_BACK; i++){
+				int old = pos;
+				if (getFurther(hero.pos)) { if (sprite != null) sprite.place(pos); }
+				else break;
+			}
+			spend(TICK);
+			return true;
+		}
+		pierceCd--;
+		trapCd--;
+		if (trapCd <= 0){
+			trapCd = MazeTower.MH_TRAP_CD;
+			placeTraps(hero);
+			Heart25Fx.shake();
+			spend(TICK);
+			return true;
+		}
+		if (pierceCd <= 0 && sees(hero)){
+			pierceCd = MazeTower.MH_PIERCE_CD;
+			Ballistica b = new Ballistica(pos, hero.pos, Ballistica.STOP_SOLID);
+			ArrayList<Integer> line = new ArrayList<>();
+			for (int c : b.subPath(1, b.dist)){
+				if (Dungeon.level.solid[c]) break;
+				line.add(c);
+			}
+			int[] a = new int[line.size()];
+			for (int i = 0; i < a.length; i++) a[i] = line.get(i);
+			aimPath = a;
+			showAim(line);
+			if (sprite != null) sprite.turnTo(pos, hero.pos);
+			Heart25Fx.shake();
+			spend(TICK);
+			return true;
+		}
+		//4칸 유지: 인접하면 물러나기만 하고, 구석에 몰리면 발톱
+		int d = Dungeon.level.distance(pos, hero.pos);
+		if (d < MazeTower.MH_KEEP){
+			int old = pos;
+			if (getFurther(hero.pos)){
+				spend(1 / speed());
+				return moveSprite(old, pos);
+			}
+			if (d > 1 || cornered()) return null; //구석: 일반 공격(발톱)으로
+		}
+		return null;
+	}
+
+	private void showAim( ArrayList<Integer> line ){
+		clearAim(false);
+		aimLine = new Group();
+		if (line.isEmpty()) return;
+		PointF a = sprite != null ? sprite.center() : DungeonTilemap.tileCenterToWorld(pos);
+		PointF b = DungeonTilemap.tileCenterToWorld(line.get(line.size() - 1));
+		float len = (float)Math.hypot(b.x - a.x, b.y - a.y);
+		float ang = (float)Math.toDegrees(Math.atan2(b.y - a.y, b.x - a.x));
+		for (float s = 4; s < len; s += 4){
+			ColorBlock d = new ColorBlock(2, 1, 0xFFE0283C);
+			d.origin.set(0, 0.5f);
+			d.angle = ang;
+			d.x = a.x + (b.x - a.x) * s / len;
+			d.y = a.y + (b.y - a.y) * s / len;
+			d.alpha(0.85f);
+			aimLine.add(d);
+			aimDots.add(d);
+		}
+		GameScene.groupEffect(aimLine);
+	}
+
+	//조준선 지우기. broken이면 토막 나 떨어지며 사라진다
+	private void clearAim( boolean broken ){
+		if (aimLine == null) return;
+		final Group g = aimLine;
+		final ArrayList<ColorBlock> dots = new ArrayList<>(aimDots);
+		aimDots.clear();
+		aimLine = null;
+		if (!broken){ g.killAndErase(); return; }
+		g.parent.add(new Gizmo(){
+			float t = 0;
+			@Override public void update(){
+				t += Game.elapsed;
+				for (int i = 0; i < dots.size(); i++){
+					ColorBlock m = dots.get(i);
+					m.y += Game.elapsed * 30f * (1 + (i % 3));
+					m.alpha(Math.max(0, 0.85f - t * 2f));
+				}
+				if (t > 0.45f){ g.killAndErase(); killAndErase(); }
+			}
+		});
+	}
+
+	private void placeTraps( Hero hero ){
+		ArrayList<Integer> cand = new ArrayList<>();
+		HeartBossLevel lv = Dungeon.level instanceof HeartBossLevel ? (HeartBossLevel) Dungeon.level : null;
+		for (int c = 0; c < Dungeon.level.length(); c++){
+			if (lv != null && !lv.inRoom(c)) continue;
+			if (!Dungeon.level.passable[c] || Actor.findChar(c) != null || traps.containsKey(c)) continue;
+			if (Dungeon.level.distance(c, pos) <= MazeTower.MH_TRAP_RANGE) cand.add(c);
+		}
+		for (int i = 0; i < MazeTower.MH_TRAP_COUNT && !cand.isEmpty(); i++){
+			Integer c = Random.element(cand);
+			cand.remove(c);
+			traps.put(c, 0);
+			drawTrap(c);
+		}
+		trapsRevealed = false;
+		if (sprite != null) sprite.showStatus(0xE0283C, Messages.get(this, "traps"));
+	}
+
+	private void drawTrap( int cell ){
+		if (trapImages.containsKey(cell)) return;
+		Image i = new Image("sprites/maze_b7_flesh_fx.png");
+		i.frame(new TextureFilm(i.texture, 24, 24).get(6 * 12 + 9));
+		i.hardlight(0.8f, 0.1f, 0.2f);
+		PointF p = DungeonTilemap.tileToWorld(cell);
+		i.x = p.x - 4; i.y = p.y - 4;
+		GameScene.effect(i);
+		trapImages.put(cell, i);
+		updateTrapAlpha(cell);
+	}
+
+	private void updateTrapAlpha( int cell ){
+		Image i = trapImages.get(cell);
+		if (i == null) return;
+		int age = traps.containsKey(cell) ? traps.get(cell) : 0;
+		float a = trapsRevealed ? 0.9f : Math.max(0f, 1f - age / (float)MazeTower.MH_TRAP_FADE);
+		i.alpha(a);
+	}
+
+	private void updateTraps(){
+		if (Dungeon.hero != null && Dungeon.hero.buff(MindVision.class) != null) revealTraps();
+		Blob fire = Dungeon.level.blobs.get(Fire.class);
+		for (Integer c : new ArrayList<>(traps.keySet())){
+			traps.put(c, traps.get(c) + 1);
+			if (fire != null && fire.volume > 0 && fire.cur[c] > 0){
+				burnTrap(c);
+				continue;
+			}
+			updateTrapAlpha(c);
+		}
+	}
+
+	//불꽃이 핥고 덫이 시들어 재로 흩어짐
+	private void burnTrap( int cell ){
+		traps.remove(cell);
+		Image i = trapImages.remove(cell);
+		if (i != null) i.killAndErase();
+		CellEmitter.get(cell).burst(FlameParticle.FACTORY, 6);
+		CellEmitter.get(cell).burst(Speck.factory(Speck.SMOKE), 3);
+	}
+
+	//촉수가 허공을 움켜쥐고 시듦 (밟거나 던진 물건)
+	private void snapTrap( int cell, boolean grabbed ){
+		traps.remove(cell);
+		Image i = trapImages.remove(cell);
+		if (i != null){
+			final Image im = i;
+			im.alpha(1f);
+			im.parent.add(new Gizmo(){
+				float t = 0.4f;
+				@Override public void update(){
+					t -= Game.elapsed;
+					im.scale.set(1f, 1f + (0.4f - t));
+					im.alpha(Math.max(0, t / 0.4f));
+					if (t <= 0){ im.killAndErase(); killAndErase(); }
+				}
+			});
+		}
+		CellEmitter.center(cell).burst(BloodParticle.BURST, grabbed ? 6 : 3);
+	}
+
+	public void revealTraps(){
+		if (traps.isEmpty() || trapsRevealed) return;
+		trapsRevealed = true;
+		for (int c : traps.keySet()){
+			updateTrapAlpha(c);
+			CellEmitter.center(c).burst(Speck.factory(Speck.LIGHT), 2);
+		}
+	}
+
+	public void revealTrapsOn( ArrayList<Integer> cells ){
+		boolean any = false;
+		for (int c : cells) if (traps.containsKey(c)){ any = true; Image i = trapImages.get(c); if (i != null) i.alpha(0.9f); }
+		if (any) for (int c : cells) if (traps.containsKey(c)) CellEmitter.center(c).burst(Speck.factory(Speck.LIGHT), 2);
+	}
+
+	// ---------------- 바깥에서 부르는 것 ----------------
+
+	//영웅이 칸에 들어섬 (HeartBossLevel.occupyCell)
+	public static void onOccupy( Char ch ){
+		MimicHero m = find();
+		if (m == null || ch != Dungeon.hero || !m.traps.containsKey(ch.pos)) return;
+		Buff.prolong(ch, Roots.class, MazeTower.MH_TRAP_ROOT);
+		m.snapTrap(ch.pos, true);
+		Sample.INSTANCE.play(Assets.Sounds.TRAP);
+	}
+
+	//던진 물건이 떨어짐 (Item.onThrow): 덫이 미리 터진다
+	public static void onItemLand( int cell ){
+		MimicHero m = find();
+		if (m != null && m.traps.containsKey(cell)) m.snapTrap(cell, false);
+	}
+
+	//탐색·마법 지도
+	public static void onSearch(){
+		MimicHero m = find();
+		if (m != null) m.revealTraps();
+	}
+
+	//굴절광: 빛에 닿은 은신을 해제하고, 은신한 덫을 드러낸다
+	public static void onPrismatic( ArrayList<Integer> cells ){
+		MimicHero m = find();
+		if (m == null) return;
+		if (cells.contains(m.pos)) m.reveal();
+		m.revealTrapsOn(cells);
+	}
+
+	//이식: 1턴 매혹 + 모으던 기술 취소
+	public void onTransfusion(){
+		cancelCharge();
+	}
+
+	//정화의 물약: 칼날의 독이 지워짐
+	public void purify(){
+		if (coatLeft > 0){
+			coatLeft = 0;
+			if (sprite != null) sprite.showStatus(CharSprite.NEUTRAL, Messages.get(this, "uncoat"));
+		}
+	}
+
+	//차지형 기술 취소 (가시밭·관통 혈시 조준)
+	public void cancelCharge(){
+		if (thornCenter != -1){
+			ArrayList<Integer> area = area3(thornCenter);
+			thornCenter = -1;
+			//경고 칸이 조각나 흩어짐 → 지팡이 구슬이 터지고 피가 흘러내림 → 1px 움찔
+			for (int c : area) CellEmitter.get(c).burst(Speck.factory(Speck.ROCK), 2);
+			if (warn != null){ warn.fadeOut(); warn = null; }
+			if (sprite != null){
+				sprite.centerEmitter().burst(BloodParticle.BURST, 8);
+				Heart25Fx.nudge(sprite, sprite.flipHorizontal ? 1 : -1, 0);
+				sprite.showStatus(CharSprite.NEUTRAL, Messages.get(this, "interrupted"));
+			}
+		}
+		if (aimPath.length > 0){
+			aimPath = new int[0];
+			clearAim(true);
+			if (sprite != null){
+				Heart25Fx.nudge(sprite, sprite.flipHorizontal ? 1 : -1, 0);
+				sprite.showStatus(CharSprite.NEUTRAL, Messages.get(this, "interrupted"));
+			}
+		}
+	}
+
+	// ---------------- 공격 ----------------
+	@Override
+	protected boolean doAttack( Char enemy ) {
+		if ((cls == MAGE || cls == HUNTRESS) && !Dungeon.level.adjacent(pos, enemy.pos)){
+			if (sprite != null && sprite.visible){
+				sprite.turnTo(pos, enemy.pos);
+				final Char e = enemy;
+				fireArrow(enemy.pos, cls == HUNTRESS, new Callback() {
+					@Override
+					public void call() {
+						attack(e);
+						spend(attackDelay());
+						next();
+					}
+				});
+				return false;
+			}
+			attack(enemy);
+			spend(attackDelay());
+			return true;
+		}
+		return super.doAttack(enemy);
+	}
+
+	@Override
+	public void onAttackComplete() {
+		if (cls == ROGUE && enemy != null){
+			if (invisible > 0){
+				//기습: 반드시 적중, 방어 30%, 은신이 풀림
+				strike(enemy, MazeTower.MR_AMBUSH_MIN, MazeTower.MR_AMBUSH_MAX, MazeTower.B25_AMBUSH_ARMOR, 1f);
+				reveal();
+				MazeFx.toward(MazeFx.Fx.VITAL_SURPRISE, this, enemy);
+				spend(attackDelay());
+				next();
+				return;
+			}
+			//이중 발톱: 1타 앞손(위→아래), 2타 뒷손(아래→위)
+			for (int i = 0; i < MazeTower.MR_HITS && enemy.isAlive(); i++){
+				attack(enemy);
+				MazeFx.toward(MazeFx.Fx.FLURRY, this, enemy, i == 0 ? 0 : 2, i == 0 ? 1 : 3);
+			}
+			spend(attackDelay());
+			next();
+			return;
+		}
+		super.onAttackComplete();
+	}
+
+	@Override
+	public int attackProc( Char enemy, int damage ) {
+		damage = super.attackProc(enemy, damage);
+		if (cls == ROGUE && coatLeft > 0 && enemy == Dungeon.hero){
+			//독바르기: 방어력을 40% 더 무시 (그만큼 피해를 돌려 줌) + 독 1중첩
+			damage += Math.round(enemy.drRoll() * MazeTower.MR_POISON_ARMOR);
+			Buff.affect(enemy, Poison.class).extend(MazeTower.MR_POISON_STACK);
+		}
+		if (enemy == Dungeon.hero && damage > 0) Heart25Fx.heroHit(enemy, pos);
+		return damage;
+	}
+
+	//예고 공격·기습: 반드시 맞고, 방어력의 armor 비율만 적용
+	private void strike( Char target, int min, int max, float armor, float multi ){
+		if (!target.isAlive()) return;
+		int dmg = Math.round(Random.NormalIntRange(min, max) * multi) - Math.round(target.drRoll() * armor);
+		target.damage(Math.max(0, dmg), this);
+		Heart25Fx.heroHit(target, pos);
+		if (target == Dungeon.hero && !target.isAlive()) Dungeon.fail(this);
+	}
+
+	//핏빛 탄환(직선) / 화살(촉·대·깃)
+	private void fireArrow( int target, boolean arrow, final Callback done ){
+		if (sprite == null || sprite.parent == null){ if (done != null) done.call(); return; }
+		MissileSprite m = (MissileSprite) sprite.parent.recycle(MissileSprite.class);
+		m.reset(sprite, target, new Arrow.Shot(arrow ? 0 : 1), new Callback() {
+			@Override
+			public void call() {
+				if (done != null) done.call();
+			}
+		});
+		if (!arrow) m.hardlight(1f, 0.15f, 0.2f);
+		else m.hardlight(1f, 0.6f, 0.6f);
+	}
+
+	private void showWarn( ArrayList<Integer> cells ){
+		if (warn != null) warn.fadeOut();
+		warn = Heart25Fx.CellWarn.show(cells, null, Heart25Fx.BLOOD, 0);
+		warn.pulse = 9f;
+	}
+
+	private ArrayList<Integer> area3( int c ){
+		ArrayList<Integer> a = new ArrayList<>();
+		a.add(c);
+		for (int n : PathFinder.NEIGHBOURS8){
+			int x = c + n;
+			if (x >= 0 && x < Dungeon.level.length() && !Dungeon.level.solid[x]) a.add(x);
+		}
+		return a;
+	}
+
+	private void clearFx(){
+		if (warn != null){ warn.fadeOut(); warn = null; }
+		clearAim(false);
+		for (Image i : trapImages.values()) i.killAndErase();
+		trapImages.clear();
+		for (Image i : trailImages.values()) i.killAndErase();
+		trailImages.clear();
+	}
+
+	// ===== 글 =====
+	@Override
+	public String name() {
+		return Messages.get(this, "name_" + cls);
+	}
+
+	@Override
+	public String description() {
+		return Messages.get(this, "desc");
+	}
+
+	// ===== 저장 =====
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+		super.storeInBundle(bundle);
+		bundle.put("cls", cls);
+		bundle.put("deer_hp", deerHP);
+		bundle.put("kills", kills);
+		bundle.put("used", used);
+		bundle.put("summoned", summoned);
+		bundle.put("leap_cd", leapCd);
+		bundle.put("leap_target", leapTarget);
+		bundle.put("raged", raged);
+		bundle.put("thorn_cd", thornCd);
+		bundle.put("blink_cd", blinkCd);
+		bundle.put("stealth_cd", stealthCd);
+		bundle.put("poison_cd", poisonCd);
+		bundle.put("coat", coatLeft);
+		bundle.put("pierce_cd", pierceCd);
+		bundle.put("trap_cd", trapCd);
+		int[] tc = new int[traps.size()], ta = new int[traps.size()];
+		int i = 0;
+		for (int c : traps.keySet()){ tc[i] = c; ta[i] = traps.get(c); i++; }
+		bundle.put("trap_cells", tc);
+		bundle.put("trap_ages", ta);
+		bundle.put("traps_revealed", trapsRevealed);
+		int[] tr = new int[trail.size()];
+		i = 0;
+		for (int c : trail) tr[i++] = c;
+		bundle.put("trail", tr);
+	}
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+		super.restoreFromBundle(bundle);
+		cls = bundle.getInt("cls");
+		deerHP = bundle.getInt("deer_hp");
+		kills = bundle.getInt("kills");
+		used = bundle.getInt("used");
+		summoned = bundle.getBoolean("summoned");
+		leapCd = bundle.getInt("leap_cd");
+		leapTarget = bundle.getInt("leap_target");
+		raged = bundle.getBoolean("raged");
+		thornCd = bundle.getInt("thorn_cd");
+		blinkCd = bundle.getInt("blink_cd");
+		stealthCd = bundle.getInt("stealth_cd");
+		poisonCd = bundle.getInt("poison_cd");
+		coatLeft = bundle.getInt("coat");
+		pierceCd = bundle.getInt("pierce_cd");
+		trapCd = bundle.getInt("trap_cd");
+		int[] tc = bundle.getIntArray("trap_cells"), ta = bundle.getIntArray("trap_ages");
+		traps.clear();
+		if (tc != null) for (int i = 0; i < tc.length; i++) traps.put(tc[i], ta[i]);
+		trapsRevealed = bundle.getBoolean("traps_revealed");
+		trail.clear();
+		int[] tr = bundle.getIntArray("trail");
+		if (tr != null) for (int c : tr) trail.add(c);
+		leapTarget = -1; //경고 상태는 저장하지 않는다 (불러오면 다시 시전)
+	}
+
+	@Override
+	public CharSprite sprite() {
+		CharSprite s = super.sprite();
+		if (s instanceof MimicSprite) ((MimicSprite) s).setClass(cls);
+		return s;
+	}
+
+	//불러온 뒤 덫·흔적 그림을 다시 그린다
+	public void redrawAfterLoad(){
+		for (int c : traps.keySet()) drawTrap(c);
+		for (int c : trail) drawTrail(c);
+	}
+
+	// =====================================================================
+	// 그림: 무기 든 의태 영웅 (maze_b7_mimic_<직업>.png, 36×24 한 장). 맨손 시체는 원작 영웅 그림(warrior.png 등)에 핏빛.
+	// 소환: 살점 창이 공중에 누운 시체를 4번 꿰뚫고(누움 → 60° → 30° → 섬) 착지, 0.9초 맨손 → 무기 생성(손목 꿈틀 → 혈관이 자람 → 굳음 → 반짝).
+	// 처치: 머리부터 발끝까지 살점이 되어 무너진다.
+	// 무기 혈관은 심장 박동(48 bpm)에 맞춰 밝아진다.
+	// =====================================================================
+	public static class MimicSprite extends MobSprite {
+
+		private static final String[] HERO = {Assets.Sprites.WARRIOR, Assets.Sprites.MAGE, Assets.Sprites.ROGUE, Assets.Sprites.HUNTRESS};
+		private static final String[] ARMED = {"warrior", "mage", "rogue", "huntress"};
+		private int cls = 0;
+		private float beat = 0;
+		private float cut = -1; //무너지는 중 (0 → 1, 위에서 아래로)
+		private boolean cinematic = false;
+
+		public MimicSprite(){
+			super();
+			setClass(0);
+		}
+
+		public void setClass( int c ){
+			cls = c;
+			texture("sprites/maze_b7_mimic_" + ARMED[c] + ".png");
+			TextureFilm film = new TextureFilm(texture, 36, 24);
+			idle = new MovieClip.Animation(1, true);
+			idle.frames(film, 0);
+			run = new MovieClip.Animation(10, true);
+			run.frames(film, 0, 0);
+			attack = new MovieClip.Animation(12, false);
+			attack.frames(film, 0, 0, 0);
+			zap = attack.clone();
+			die = new MovieClip.Animation(1, false);
+			die.frames(film, 0);
+			play(idle);
+		}
+
+		@Override
+		public void link( Char ch ) {
+			super.link(ch);
+			if (ch instanceof MimicHero){ setClass(((MimicHero) ch).cls); ((MimicHero) ch).redrawAfterLoad(); }
+		}
+
+		@Override
+		public void attack( int cell ) {
+			super.attack(cell);
+			PointF a = DungeonTilemap.tileCenterToWorld(ch.pos), b = DungeonTilemap.tileCenterToWorld(cell);
+			Heart25Fx.nudge(this, Math.signum(b.x - a.x), Math.signum(b.y - a.y));
+		}
+
+		@Override
+		public void update() {
+			super.update();
+			beat += Game.elapsed;
+			if (ch != null && ch.invisible > 0 && !cinematic) alpha(0f);
+			else if (!cinematic && cut < 0 && am < 1f && ch != null && ch.invisible <= 0) alpha(1f);
+			//혈관이 박동에 맞춰 밝아짐
+			float period = 60f / MazeTower.B25_BPM;
+			boolean on = (beat % period) < period * 3 / 16f;
+			if (!cinematic && cut < 0 && ch != null && ch.invisible <= 0) brightness(on ? 1.15f : 1f);
+			if (cut >= 0){
+				cut = Math.min(1f, cut + Game.elapsed / 0.8f);
+				RectF f = new TextureFilm(texture, 36, 24).get(0);
+				float h = f.bottom - f.top;
+				int px = (int)(cut * 24);
+				frame(new RectF(f.left, f.top + h * cut, f.right, f.bottom));
+				y = baseY + px;
+				if (cut >= 1){ killAndErase(); }
+			}
+		}
+
+		private float baseY;
+
+		public void collapse(){
+			if (parent == null) return;
+			baseY = y;
+			cut = 0;
+			com.watabou.noosa.particles.Emitter e = new com.watabou.noosa.particles.Emitter();
+			e.pos(x + 12, y, 12, 24);
+			parent.add(e);
+			e.burst(BloodParticle.BURST, 24);
+		}
+
+		@Override
+		public void die() {
+			//처치 연출은 collapse
+		}
+
+		@Override
+		public void onComplete( MovieClip.Animation anim ) {
+			if (anim == die) return;
+			super.onComplete(anim);
+		}
+
+		//소환 연출 (약 3.9초). 끝나면 done
+		public void summon( final Callback done ){
+			cinematic = true;
+			alpha(0f);
+			final Image corpse = new Image(HERO[cls]);
+			corpse.frame(new TextureFilm(corpse.texture, 12, 15).get(0));
+			corpse.origin.set(6, 7.5f);
+			corpse.hardlight(0.95f, 0.75f, 0.75f);
+			final float cx = x + width / 2f - 6, cy = y + height - 15;
+			corpse.x = cx; corpse.y = cy - 6;
+			corpse.angle = 90;
+			parent.add(corpse);
+			final MimicSprite self = this;
+			parent.add(new Gizmo(){
+				float t = 0;
+				int hits = 0;
+				final float[] angles = {90, 60, 30, 0};
+				@Override
+				public void update() {
+					t += Game.elapsed;
+					//살점 창 4번
+					if (hits < 4 && t >= 0.35f * (hits + 1)){
+						hits++;
+						boolean last = hits == 4;
+						float dir = last ? 90 : Random.Float(0, 360);
+						spear(corpse, dir, last);
+						corpse.angle = angles[Math.min(3, hits)];
+						float red = 0.75f - 0.15f * hits;
+						corpse.hardlight(1f, Math.max(0.2f, red), Math.max(0.2f, red));
+						if (last){
+							corpse.y = cy;
+							corpse.scale.set(1f, 0.87f);
+							Heart25Fx.shake();
+							com.watabou.noosa.particles.Emitter e = new com.watabou.noosa.particles.Emitter();
+							e.pos(cx, cy + 13, 12, 2);
+							parent.add(e);
+							e.burst(BloodParticle.BURST, 10);
+						}
+					}
+					if (hits == 4 && t > 1.55f) corpse.scale.set(1f, 0.93f);
+					if (hits == 4 && t > 1.65f) corpse.scale.set(1f, 1f);
+					//0.9초 맨손 대기 → 무기 생성 (손목 꿈틀 0.3 → 혈관이 자람 0.7 → 굳음 0.3)
+					float wStart = 1.4f + 0.9f;
+					if (t >= wStart){
+						float k = Math.min(1f, (t - wStart) / 1.3f);
+						if (t < wStart + 0.3f) corpse.x = cx + (Random.Int(3) - 1) * 0.5f;
+						self.alpha(k);
+						corpse.alpha(1f - k);
+						if (k >= 1f){
+							corpse.killAndErase();
+							self.brightness(1.6f);
+							Heart25Fx.shake();
+							cinematic = false;
+							killAndErase();
+							done.call();
+						}
+					}
+				}
+			});
+		}
+
+		private void spear( final Image corpse, float dirDeg, boolean fromAbove ){
+			final ColorBlock s = new ColorBlock(10, 1, 0xFFC0182A);
+			s.origin.set(10, 0.5f);
+			final PointF target = new PointF(corpse.x + 6, corpse.y + 7);
+			final float rad = (float)Math.toRadians(fromAbove ? -90 : dirDeg);
+			final PointF start = new PointF(target.x - (float)Math.cos(rad) * 30, target.y - (float)Math.sin(rad) * 30);
+			if (fromAbove){ start.set(target.x, target.y - 30); }
+			s.angle = (float)Math.toDegrees(Math.atan2(target.y - start.y, target.x - start.x));
+			s.x = start.x; s.y = start.y;
+			parent.add(s);
+			parent.add(new Gizmo(){
+				float t = 0;
+				@Override public void update(){
+					t += Game.elapsed;
+					float k = Math.min(1f, t / 0.12f);
+					s.x = start.x + (target.x - start.x) * k;
+					s.y = start.y + (target.y - start.y) * k;
+					if (k >= 1f){
+						s.killAndErase();
+						killAndErase();
+						float dx = Math.signum(target.x - start.x), dy = Math.signum(target.y - start.y);
+						Heart25Fx.nudge(corpse, dx, dy);
+						com.watabou.noosa.particles.Emitter e = new com.watabou.noosa.particles.Emitter();
+						e.pos(target.x - 2, target.y - 2, 4, 4);
+						corpse.parent.add(e);
+						e.burst(BloodParticle.BURST, 6);
+					}
+				}
+			});
+		}
+	}
+}

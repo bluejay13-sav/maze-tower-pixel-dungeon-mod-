@@ -32,6 +32,7 @@ public class MazeTower {
 	//보스전 체험판에서 바로 시작하는 보스층 (레벨은 그 앞 층 건너뛰기와 같다: 5층 레벨 6, 20층 레벨 19)
 	public static final int TRIAL_SAP_DEPTH = 5;
 	public static final int TRIAL_CITY_DEPTH = 20;
+	public static final int TRIAL_HEART_DEPTH = 25; //(2026-11-22) 25층 심장을 진 짐승 (레벨은 24층 건너뛰기와 같음, 결실의 핵 지급)
 	//보스전 체험판 20층 보스로 건너뛸 때 주는 물약·주문서 수 (종류마다), 강화의 주문서 수 (MazeTrial.kit)
 	public static final int TRIAL_POTIONS = 5;
 	public static final int TRIAL_SCROLLS = 5;
@@ -712,6 +713,86 @@ public class MazeTower {
 	public static final int   EM_STORM_MIN      = 6;     //폭풍 구역 안 주인공 피해 (턴마다)
 	public static final int   EM_STORM_MAX      = 10;
 
+	// ===== 25층 최종보스: 심장을 진 짐승 (지시서 claude_code_tasks_1122_boss25.md + 1122b_boss25_update.md) =====
+	//사슴(짐승) 기본 수치 (사용자 결정: 원작 요그와 같은 체력)
+	public static final int   B25_HP            = 1000;
+	public static final int   B25_EXP           = 50;
+	public static final int   B25_DEF           = 20;    //회피
+	public static final int   B25_ACC           = 30;    //명중
+	public static final int   B25_DR            = 10;    //방어 0~10
+	public static final int   B25_ROOM_W        = 17;    //보스방 안쪽 크기
+	public static final int   B25_ROOM_H        = 13;
+	//1페이즈: 살점과 오염
+	public static final float B25_PHASE2_HP     = 0.70f; //이 아래면 2페이즈
+	public static final int   B25_FLESH_START   = 2;     //처음 살점 수
+	public static final int   B25_FLESH_INTERVAL = 6;    //이 턴마다 1개
+	public static final int   B25_FLESH_MAX     = 4;
+	public static final int   B25_FLESH_GAP     = 3;     //영웅·사슴에게서 이 칸 이내에는 생기지 않음
+	public static final int   B25_EAT_TURNS     = 3;     //살점 하나를 먹는 턴
+	public static final float B25_EAT_HEAL      = 0.05f; //먹으면 최대 체력의 이만큼 회복
+	public static final float B25_CONTAM_TIME   = 0.6f;  //오염 번짐 연출 (초)
+	//2페이즈: 사슴 상태
+	public static final float B25_P2_TAKEN      = 0.10f; //받는 피해 90% 감소
+	public static final float B25_BAND          = 0.25f; //의태 처치마다 깎이는 체력·피해로 못 내려가는 구간
+	public static final float B25_PHASE3_HP     = 0.10f; //4번째 의태 처치 후 3페이즈 (체력바 눈금)
+	public static final int   B25_MIMIC_FIRST   = 5;     //2페이즈 시작 뒤 첫 의태까지
+	public static final int   B25_MIMIC_NEXT    = 7;     //사슴으로 돌아온 뒤 다음 의태까지
+	public static final int   B25_MIMIC_KILLS   = 4;     //이만큼 처치하면 3페이즈
+	public static final int   B25_CHARGE_INTERVAL = 4;   //사슴 돌진 주기 (턴)
+	public static final int   B25_CHARGE_MIN    = 42;    //돌진 피해
+	public static final int   B25_CHARGE_MAX    = 66;
+	public static final float B25_CHARGE_ARMOR  = 0.30f; //방어력의 이만큼만 적용
+	public static final int   B25_CHARGE_KNOCK  = 3;     //영웅 넉백 칸
+	public static final float B25_CHARGE_STUN   = 1f;    //영웅 기절 턴
+	public static final float B25_WALL_STUN     = 1f;    //벽에 부딪힌 사슴 기절 턴
+	//의태 영웅 공통
+	public static final float B25_TELEGRAPH_ARMOR = 0.50f; //예고 공격은 방어력의 이만큼만
+	public static final float B25_AMBUSH_ARMOR  = 0.30f;   //도적 기습
+	//전사
+	public static final int   MW_HP = 200, MW_ACC = 36, MW_DEF = 16, MW_MIN = 14, MW_MAX = 22, MW_DR = 12;
+	public static final int   MW_LEAP_CD = 8, MW_LEAP_FIRST = 2, MW_LEAP_RANGE = 4, MW_LEAP_MIN = 20, MW_LEAP_MAX = 30;
+	public static final float MW_RAGE_HP = 0.50f, MW_RAGE_DMG = 0.30f;
+	//마법사
+	public static final int   MM_HP = 150, MM_ACC = 40, MM_DEF = 12, MM_MIN = 20, MM_MAX = 28, MM_DR = 4;
+	public static final int   MM_KEEP_MIN = 3, MM_KEEP_MAX = 4;
+	public static final int   MM_THORN_CD = 6, MM_THORN_FIRST = 2, MM_THORN_MIN = 38, MM_THORN_MAX = 52;
+	public static final int   MM_BLINK_CD = 10, MM_BLINK_DIST = 4;
+	//도적
+	public static final int   MR_HP = 120, MR_ACC = 40, MR_DEF = 22, MR_MIN = 8, MR_MAX = 12, MR_DR = 6, MR_HITS = 2;
+	public static final float MR_MOVE_SPEED = 2f;   //빠름(이동만)
+	public static final int   MR_STEALTH_CD = 10, MR_STEALTH_FIRST = 3, MR_STEALTH_TURNS = 30, MR_STEALTH_SHIFT = 2;
+	public static final float MR_STEALTH_SPEED = 2f; //은신 중 이동속도 증가 (배)
+	public static final int   MR_AMBUSH_MIN = 24, MR_AMBUSH_MAX = 34;
+	public static final int   MR_POISON_CD = 8, MR_POISON_FIRST = 1, MR_POISON_TURNS = 8;
+	public static final float MR_POISON_ARMOR = 0.40f; //독바르기: 방어력을 이만큼 더 무시
+	public static final int   MR_POISON_STACK = 1;     //맞을 때마다 독 중첩
+	//사냥꾼
+	public static final int   MH_HP = 170, MH_ACC = 42, MH_DEF = 22, MH_MIN = 20, MH_MAX = 27, MH_DR = 6;
+	public static final int   MH_KEEP = 4;
+	public static final float MH_CLAW_MULTI = 0.60f; //구석에 몰려 발톱으로 싸울 때 (피해 -40%)
+	public static final int   MH_PIERCE_CD = 4, MH_PIERCE_MIN = 33, MH_PIERCE_MAX = 45, MH_PIERCE_BACK = 2;
+	public static final int   MH_TRAP_CD = 6, MH_TRAP_RANGE = 4, MH_TRAP_COUNT = 17, MH_TRAP_FADE = 3;
+	public static final float MH_TRAP_ROOT = 2f;
+	//3페이즈 광폭화
+	public static final int   B25_P3_TURNS      = 20;    //버티면 쓰러지는 턴
+	public static final int   B25_P3_STAGE2     = 16;    //남은 턴이 이 이하면 2단계 (파동·핏줄 바닥)
+	public static final int   B25_P3_STAGE3     = 12;    //이 이하면 3단계 (살점 비)
+	public static final int   B25_BOUNCE_CD     = 5,  B25_BOUNCE_MIN = 55, B25_BOUNCE_MAX = 75, B25_BOUNCE_KNOCK = 2;
+	public static final float B25_BOUNCE_AIM_MIN = 20f, B25_BOUNCE_AIM_MAX = 35f; //첫 돌진 조준 오차 (도)
+	public static final float B25_BOUNCE_WALL_MIN = 25f, B25_BOUNCE_WALL_MAX = 65f; //튕김 방향과 벽면 사이 각도
+	public static final int   B25_BOUNCE_WARN_AFTER = 5; //튕긴 뒤 경로 경고 칸 수
+	public static final float[] B25_BOUNCE_WARN_ALPHA = {1f, 0.78f, 0.58f, 0.40f, 0.25f};
+	public static final int   B25_WAVE_CD       = 3,  B25_WAVE_MIN = 40, B25_WAVE_MAX = 55;
+	public static final int   B25_VEIN_DMG      = 4;     //핏줄 바닥
+	public static final float B25_VEIN_SLOW     = 1f;
+	public static final int   B25_RAIN_COUNT    = 3,  B25_RAIN_MIN = 45, B25_RAIN_MAX = 60;
+	public static final float B25_P3_ARMOR      = 0.30f; //3페이즈 공격은 방어력의 이만큼만
+	//연출
+	public static final float B25_BPM           = 48f;   //심장 박동 (실제 시간)
+	public static final float B25_BPM_RAGE      = 70f;   //3페이즈
+	//마법봉 변경 (25층 지시서 7절): 이식은 맞은 적을 이만큼 매혹 (원작 Charm.DURATION/2 = 5)
+	public static final float TRANSFUSION_CHARM = 1f;
+
 	//10층 그림자 간수
 	public static final float TALISMAN_ROOT_TURNS   = 2f;  //봉인 부적: 맞은 대상 속박
 	public static final int   WARDEN_SOULS          = 4;   //영혼 해방: 불러내는 죄수의 영혼 수
@@ -762,8 +843,9 @@ public class MazeTower {
 	public static final float DOOR_DECO_PCT              = 0.33f; //모든 구역: 닫힌 문 중 장식(뿌리·사슬·마석·휘장·가지)이 붙은 문의 비율 (effects/MazeDoorDecor)
 	public static final float BOSS20_WALL_DECO_PCT       = 0.30f; //20층 보스방(망령 왕·여제): 아래가 바닥인 벽 앞면 중 새 장식을 그리는 비율 (effects/BossRoomDecor20)
 	//베타 테스트용 층 건너뛰기 치트 (명세 8번): 목표 층(각 보스층 바로 앞)과 도착할 때의 레벨
-	public static final int[] SKIP_DEPTHS = {4, 9, 14, 19};
-	public static final int[] SKIP_LEVELS = {6, 11, 15, 19};
+	public static final int[] SKIP_DEPTHS = {4, 9, 14, 19, 24}; //(2026-11-22) 24층(25층 짐승 앞) 추가
+	public static final int[] SKIP_LEVELS = {6, 11, 15, 19, 24};
+	public static final int   SKIP_FRUIT_DEPTH     = 24; //이 층부터는 결실의 핵도 준다 (25층 짐승 시험용)
 	public static final int   SKIP_BLOOM_DEPTH     = 9;  //이 층부터는 건너뛸 때 개화의 핵을 준다
 	public static final int   SKIP_FULLBLOOM_DEPTH = 14; //이 층부터는 만개의 핵도 준다 (주문서·물약 가방은 언제나)
 	public static final int   CHEAT_STR = 20;            //치트 "힘 20으로" (명세 8번)

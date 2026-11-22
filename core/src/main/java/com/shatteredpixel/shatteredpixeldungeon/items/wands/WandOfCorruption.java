@@ -128,7 +128,14 @@ public class WandOfCorruption extends Wand {
 		Char ch = Actor.findChar(bolt.collisionPos);
 
 		if (ch != null){
-			
+
+			//Maze Tower: 25층 살점은 타락 마법봉 오염 (짐승이 먹으면 보스에게 거는 디버프)
+			if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.HeartFlesh){
+				((com.shatteredpixel.shatteredpixeldungeon.actors.mobs.HeartFlesh) ch).contaminateCorrupt(buffedLvl());
+				Sample.INSTANCE.play( Assets.Sounds.HIT_MAGIC, 1, 0.8f );
+				return;
+			}
+
 			if (!(ch instanceof Mob)){
 				return;
 			}
@@ -192,6 +199,23 @@ public class WandOfCorruption extends Wand {
 		}
 	}
 	
+	//Maze Tower: 25층 짐승이 타락 살점을 먹을 때. 원작 타락 마법봉이 타락시킬 수 없는 보스에게 거는 디버프를 그대로 고른다
+	//(저항 계산 → 큰/작은 디버프, 지속 6 + 레벨 × 3)
+	public static void mazeDebuffBoss( Mob enemy, int wandLvl ){
+		WandOfCorruption w = new WandOfCorruption();
+		w.level(Math.max(0, wandLvl));
+		float corruptingPower = 3 + wandLvl/3f;
+		float enemyResist = 1 + AscensionChallenge.AscensionCorruptResist(enemy);
+		enemyResist *= 1 + 4*Math.pow(enemy.HP/(float)enemy.HT, 2);
+		for (Buff buff : enemy.buffs()){
+			if (MAJOR_DEBUFFS.containsKey(buff.getClass()))         enemyResist *= (1f-MAJOR_DEBUFF_WEAKEN);
+			else if (MINOR_DEBUFFS.containsKey(buff.getClass()))    enemyResist *= (1f-MINOR_DEBUFF_WEAKEN);
+			else if (buff.type == Buff.buffType.NEGATIVE)           enemyResist *= (1f-MINOR_DEBUFF_WEAKEN);
+		}
+		float debuffChance = Math.min(1f, corruptingPower / enemyResist);
+		w.debuffEnemy(enemy, Random.Float() < debuffChance ? MAJOR_DEBUFFS : MINOR_DEBUFFS);
+	}
+
 	private void debuffEnemy( Mob enemy, HashMap<Class<? extends Buff>, Float> category ){
 		
 		//do not consider buffs which are already assigned, or that the enemy is immune to.

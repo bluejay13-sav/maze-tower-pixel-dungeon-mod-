@@ -55,6 +55,9 @@ public class PotionOfPurity extends Potion {
 	public void shatter( int cell ) {
 		
 		PathFinder.buildDistanceMap( cell, BArray.not( Dungeon.level.solid, null ), DISTANCE );
+		//Maze Tower: 25층 도적 의태가 범위 안에 있으면 칼날의 독이 지워진다
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero mz = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero.find();
+		if (mz != null && PathFinder.distance[mz.pos] < Integer.MAX_VALUE) mz.purify();
 		
 		ArrayList<Blob> blobs = new ArrayList<>();
 		for (Class c : affectedBlobs){

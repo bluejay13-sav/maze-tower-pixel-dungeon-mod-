@@ -2619,6 +2619,7 @@ public class Hero extends Char {
 	}
 
 	public boolean search( boolean intentional ) {
+		if (intentional) com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero.onSearch(); //Maze Tower: 25층 은신한 혈관 덫이 전부 보인다
 		
 		if (!isAlive()) return false;
 		

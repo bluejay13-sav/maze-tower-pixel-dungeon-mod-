@@ -55,7 +55,11 @@ import java.util.ArrayList;
 //  1단계(100~85%): 꽃잎의 보호(받는 피해 -50%), 강화 마탄(3턴), 전기비(7턴).
 //  2단계(85~30%): + 서리창/화염창(15턴마다 번갈아, 머리 위 5턴 → 날아감, 벽에 막힘), 원소 감응(원소 타일).
 //  3단계(30~0%): 받는 피해 +50%, 원소 폭풍(가로·세로 3등분을 번갈아, 5턴 경고 → 5턴 폭풍, 5턴 주기).
-public class MazeEmpress extends Mob {
+public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar.PhaseMarks {
+
+	//Maze Tower (2026-11-22): 체력바 페이즈 눈금
+	@Override public float[] phaseMarks(){ return new float[]{ MazeTower.EM_PHASE2_HP, MazeTower.EM_PHASE3_HP }; }
+	@Override public int turnsLeft(){ return -1; }
 
 	{
 		spriteClass = EmpressSprite.class;

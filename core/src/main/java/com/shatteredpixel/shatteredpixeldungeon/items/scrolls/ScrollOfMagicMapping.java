@@ -41,6 +41,7 @@ public class ScrollOfMagicMapping extends Scroll {
 
 	@Override
 	public void doRead() {
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero.onSearch(); //Maze Tower: 25층 은신한 혈관 덫이 전부 보인다
 
 		detach(curUser.belongings.backpack);
 		int length = Dungeon.level.length();

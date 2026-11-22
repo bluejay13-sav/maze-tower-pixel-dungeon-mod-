@@ -347,7 +347,7 @@ public class Dungeon {
 					level = new HallsLevel();
 					break;
 				case 25:
-					level = new HallsBossLevel();
+					level = MazeBosses.ENABLED ? new com.shatteredpixel.shatteredpixeldungeon.levels.HeartBossLevel() : new HallsBossLevel(); //Maze Tower: 25층 심장을 진 짐승
 					break;
 				case 26:
 					level = new LastLevel();

@@ -1302,6 +1302,11 @@ public class GameScene extends PixelScene {
 		if (scene != null) scene.overFogEffects.add( effect );
 	}
 
+	//Maze Tower (2026-11-22): 여러 그림을 묶은 Group을 효과 층에 (25층 경고 칸·가시)
+	public static void groupEffect( Group group ) {
+		if (scene != null) scene.effects.add( group );
+	}
+
 	//Maze Tower: 여러 그림을 묶은 Group을 안개 위에 (망령 왕 마법 범위 경고)
 	public static void groupOverFog( Group group ) {
 		if (scene != null) scene.overFogEffects.add( group );

@@ -281,6 +281,7 @@ abstract public class MissileWeapon extends Weapon {
 	@Override
 	protected void onThrow( int cell ) {
 		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing.noise(cell, com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithGuard.NOISE_THROW); //Maze Tower: 20층 망령 근위병은 던진 물건이 떨어진 쪽으로 간다
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero.onItemLand(cell); //Maze Tower: 25층 사냥꾼 의태의 혈관 덫은 던진 물건에 미리 터진다
 		Char enemy = Actor.findChar( cell );
 		if (enemy == null || enemy == curUser) {
 			parent = null;

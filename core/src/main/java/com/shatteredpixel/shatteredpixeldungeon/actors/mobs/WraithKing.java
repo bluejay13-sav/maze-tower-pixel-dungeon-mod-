@@ -49,7 +49,11 @@ import java.util.ArrayList;
 //  3단계(25~0%) 깨진 왕관: 기어다니고, 어둠·졸트라크·새 근위병 없음. 받는 평타·스킬 피해 +50%.
 //  공통: 한 턴에 기술 하나. 기를 모으는 동안 다른 기술 없음. 왕의 기술은 주인공에게 적대적인 몹을 다치게 하지 않는다.
 //  주인공이 투명(은신)인 동안 주인공을 노리는 기술(졸트라크·기습)은 쓰지 않는다(쿨타임은 흐른다).
-public class WraithKing extends Mob {
+public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar.PhaseMarks {
+
+	//Maze Tower (2026-11-22): 체력바 페이즈 눈금 (실제로 단계가 바뀌는 지점)
+	@Override public float[] phaseMarks(){ return new float[]{ MazeTower.WK_PHASE2_HP, MazeTower.WK_PHASE3_HP }; }
+	@Override public int turnsLeft(){ return -1; }
 
 	{
 		spriteClass = WraithKingSprite.class;

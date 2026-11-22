@@ -60,6 +60,42 @@ public class BossHealthBar extends Component {
 
 	private boolean large;
 
+	//Maze Tower (2026-11-22): 페이즈 눈금. 페이즈가 바뀌는 지점마다 금색 세로 눈금(위아래로 1px씩 삐져나옴, 맨 위 1px만 밝게),
+	//이미 지난 눈금은 회색. turnsLeft() >= 0이면 체력바 대신 남은 턴 숫자 (25층 3페이즈)
+	public interface PhaseMarks {
+		float[] phaseMarks();
+		int turnsLeft();
+	}
+	private final java.util.ArrayList<com.watabou.noosa.ColorBlock[]> marks = new java.util.ArrayList<>();
+
+	private void updateMarks(){
+		float[] fr = boss instanceof PhaseMarks ? ((PhaseMarks) boss).phaseMarks() : new float[0];
+		if (fr == null) fr = new float[0];
+		while (marks.size() < fr.length){
+			com.watabou.noosa.ColorBlock body = new com.watabou.noosa.ColorBlock(1, 1, 0xFFD4A537);
+			com.watabou.noosa.ColorBlock top = new com.watabou.noosa.ColorBlock(1, 1, 0xFFFFE58A);
+			add(body); add(top);
+			marks.add(new com.watabou.noosa.ColorBlock[]{body, top});
+		}
+		float fullW = large ? 96 : 47;
+		float frac = boss.HP / (float)boss.HT;
+		for (int i = 0; i < marks.size(); i++){
+			com.watabou.noosa.ColorBlock[] m = marks.get(i);
+			boolean show = i < fr.length && hp.visible;
+			m[0].visible = m[1].visible = show;
+			if (!show) continue;
+			boolean passed = frac <= fr[i];
+			float x = hp.x + Math.round(fullW * fr[i]);
+			m[0].size(1, hp.height + 1);
+			m[0].x = x; m[0].y = hp.y;
+			m[1].size(1, 1);
+			m[1].x = x; m[1].y = hp.y - 1;
+			m[0].hardlight(passed ? 0x6E6E6E : 0xD4A537);
+			m[1].hardlight(passed ? 0x9A9A9A : 0xFFE58A);
+			bringToFront(m[0]); bringToFront(m[1]);
+		}
+	}
+
 	public BossHealthBar() {
 		super();
 		visible = active = (boss != null);
@@ -223,8 +259,15 @@ public class BossHealthBar extends Component {
 				} else {
 					hpText.text(health + "+" + shield +  "/" + max);
 				}
+				//Maze Tower: 25층 3페이즈는 체력바 대신 남은 턴 (그림은 나중에, 지금은 숫자)
+				int turns = boss instanceof PhaseMarks ? ((PhaseMarks) boss).turnsLeft() : -1;
+				hp.visible = shieldHP.visible = Dot.visible = turns < 0;
+				if (turns >= 0){
+					hpText.text(turns + " / " + com.shatteredpixel.shatteredpixeldungeon.MazeTower.B25_P3_TURNS);
+				}
 				hpText.measure();
 				hpText.x = hp.x + (large ? (96-hpText.width())/2f : 1);
+				updateMarks();
 
 			}
 		}

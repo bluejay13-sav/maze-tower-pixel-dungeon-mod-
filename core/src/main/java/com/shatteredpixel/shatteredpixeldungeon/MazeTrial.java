@@ -26,7 +26,7 @@ import com.watabou.utils.Bundle;
 //보스를 쓰러뜨리면 체험 완료 창이 뜬다.
 public class MazeTrial {
 
-	public static final int NONE = 0, SAP = 1, WRAITH = 2, EMPRESS = 3;
+	public static final int NONE = 0, SAP = 1, WRAITH = 2, EMPRESS = 3, HEART = 4; //(2026-11-22) 25층 심장을 진 짐승 추가
 
 	//이번 판의 체험 보스 (저장된다: Hero 번들). 20층 보스를 고정하는 데 쓴다
 	public static int boss = NONE;
@@ -81,10 +81,10 @@ public class MazeTrial {
 		ShatteredPixelDungeon.scene().addToFront(new WndOptions(
 				Messages.get(MazeTrial.class, "title"),
 				Messages.get(MazeTrial.class, "desc"),
-				Messages.get(MazeTrial.class, "sap"), Messages.get(MazeTrial.class, "wraith"), Messages.get(MazeTrial.class, "empress")){
+				Messages.get(MazeTrial.class, "sap"), Messages.get(MazeTrial.class, "wraith"), Messages.get(MazeTrial.class, "empress"), Messages.get(MazeTrial.class, "heart")){
 			@Override
 			protected void onSelect(int index) {
-				start(index == 0 ? SAP : index == 1 ? WRAITH : EMPRESS);
+				start(index == 0 ? SAP : index == 1 ? WRAITH : index == 2 ? EMPRESS : HEART);
 			}
 		});
 	}
@@ -93,7 +93,7 @@ public class MazeTrial {
 	public static void start( int which ){
 		boss = which;
 		applyBossChoice();
-		pendingSkip = which == SAP ? MazeTower.TRIAL_SAP_DEPTH : MazeTower.TRIAL_CITY_DEPTH;
+		pendingSkip = which == SAP ? MazeTower.TRIAL_SAP_DEPTH : which == HEART ? MazeTower.TRIAL_HEART_DEPTH : MazeTower.TRIAL_CITY_DEPTH;
 		int slot = GamesInProgress.firstEmpty();
 		if (slot == -1){
 			slot = 1;
@@ -171,7 +171,7 @@ public class MazeTrial {
 	//모든 물약 감정된 채 5개씩, 모든 주문서 감정된 채 5개씩(강화의 주문서만 12개), 전사 계열 검 7종(감정됨), 힘 16 갑옷(비늘 갑옷, 감정됨)
 	public static java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> kit( int target ){
 		java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> items = new java.util.ArrayList<>();
-		if (!on() || (target != MazeTower.TRIAL_CITY_DEPTH && target != MazeTower.TRIAL_SAP_DEPTH)) return items;
+		if (!on() || (target != MazeTower.TRIAL_CITY_DEPTH && target != MazeTower.TRIAL_SAP_DEPTH && target != MazeTower.TRIAL_HEART_DEPTH)) return items; //(2026-11-22) 25층 짐승도 20층과 같은 지급품
 		//(결정) 모든 반지 감정된 채 +2 (마법봉·유물·장신구는 게임 메뉴의 체험판 아이템 창에서 골라 받는다, WndTrialItems)
 		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING.classes){
 			com.shatteredpixel.shatteredpixeldungeon.items.Item r = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
@@ -181,9 +181,9 @@ public class MazeTrial {
 		}
 		boolean huntress = Dungeon.hero != null && Dungeon.hero.heroClass == HeroClass.HUNTRESS;
 		//(결정, 2026-11-21) 사냥꾼은 화살을 넉넉히 (5층·20층 모두)
-		if (huntress) items.add(new com.shatteredpixel.shatteredpixeldungeon.items.Arrow().quantity(target == MazeTower.TRIAL_CITY_DEPTH ? MazeTower.TRIAL_ARROWS_CITY : MazeTower.TRIAL_ARROWS_SAP));
+		if (huntress) items.add(new com.shatteredpixel.shatteredpixeldungeon.items.Arrow().quantity(target != MazeTower.TRIAL_SAP_DEPTH ? MazeTower.TRIAL_ARROWS_CITY : MazeTower.TRIAL_ARROWS_SAP));
 		//(결정) 반지는 5층·20층 둘 다, 아래 물약·주문서·검·갑옷은 20층만
-		if (target != MazeTower.TRIAL_CITY_DEPTH) return items;
+		if (target != MazeTower.TRIAL_CITY_DEPTH && target != MazeTower.TRIAL_HEART_DEPTH) return items;
 		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION.classes){
 			com.shatteredpixel.shatteredpixeldungeon.items.Item p = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
 			if (p == null) continue;

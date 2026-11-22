@@ -68,7 +68,8 @@ public class WandOfPrismaticLight extends DamageWand {
 	@Override
 	public void onZap(Ballistica beam) {
 		affectMap(beam);
-		
+		mazeRevealInvisible(beam);
+
 		if (Dungeon.level.viewDistance < 6 ){
 			if (Dungeon.isChallenged(Challenges.DARKNESS)){
 				Buff.prolong( curUser, Light.class, 2f + buffedLvl());
@@ -104,6 +105,28 @@ public class WandOfPrismaticLight extends DamageWand {
 			ch.damage(dmg, this);
 		}
 
+	}
+
+	//Maze Tower (2026-11-22): 빛에 닿은 은신한 적의 은신을 해제한다(도적 의태의 잠복, 사냥꾼 의태의 은신한 덫 등).
+	//예외: 20층 망령 왕의 은신(어둠에 몸을 숨김)은 해제하지 못한다.
+	private void mazeRevealInvisible(Ballistica beam){
+		java.util.ArrayList<Integer> cells = new java.util.ArrayList<>();
+		for (int c : beam.subPath(0, beam.dist)){
+			if (!Dungeon.level.insideMap(c)) continue;
+			cells.add(c);
+			Char ch = Actor.findChar(c);
+			if (ch == null || ch == curUser || ch.invisible <= 0) continue;
+			if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing
+					|| ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithEyes) continue;
+			if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero){
+				((com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero) ch).reveal();
+			} else {
+				Buff.detach(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility.class);
+				ch.invisible = 0;
+				if (ch.sprite != null) ch.sprite.alpha(1f);
+			}
+		}
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero.onPrismatic(cells);
 	}
 
 	private void affectMap(Ballistica beam){

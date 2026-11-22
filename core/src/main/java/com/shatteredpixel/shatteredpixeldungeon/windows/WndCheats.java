@@ -170,6 +170,7 @@ public class WndCheats extends Window {
 		//베타 테스트용 층 건너뛰기 (명세 8번): 4·9·14·19층까지
 		addPair(skipButton(0), skipButton(1));
 		addPair(skipButton(2), skipButton(3));
+		addButton(skipButton(4)); //24층 (25층 짐승 앞)
 
 		addPair(new RedButton(Messages.get(this, "level_up"), 7){
 			@Override
