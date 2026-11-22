@@ -887,7 +887,7 @@ public class MimicHero extends Mob {
 	public int attackProc( Char enemy, int damage ) {
 		damage = super.attackProc(enemy, damage);
 		if (cls == ROGUE && coatLeft > 0 && enemy == Dungeon.hero){
-			//독바르기: 방어력을 40% 더 무시 (그만큼 피해를 돌려 줌) + 독 1중첩
+			//독바르기: 방어력을 40% 더 무시 (그만큼 피해를 돌려 줌) + 독 10씩 쌓임
 			damage += Math.round(enemy.drRoll() * MazeTower.MR_POISON_ARMOR);
 			Buff.affect(enemy, Poison.class).extend(MazeTower.MR_POISON_STACK);
 		}

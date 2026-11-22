@@ -781,7 +781,7 @@ public class MazeTower {
 	public static final int   MR_AMBUSH_MIN = 24, MR_AMBUSH_MAX = 34;
 	public static final int   MR_POISON_CD = 8, MR_POISON_FIRST = 1, MR_POISON_TURNS = 8;
 	public static final float MR_POISON_ARMOR = 0.40f; //독바르기: 방어력을 이만큼 더 무시
-	public static final int   MR_POISON_STACK = 1;     //맞을 때마다 독 중첩
+	public static final int   MR_POISON_STACK = 10;    //(결정, 2026-11-22 사용자) 맞을 때마다 원작 독이 이만큼 쌓인다 (예전 1)
 	//사냥꾼
 	public static final int   MH_HP = 170, MH_ACC = 42, MH_DEF = 22, MH_MIN = 20, MH_MAX = 27, MH_DR = 6;
 	public static final int   MH_KEEP = 4;
