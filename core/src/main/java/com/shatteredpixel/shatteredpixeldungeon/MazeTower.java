@@ -33,6 +33,9 @@ public class MazeTower {
 	public static final int TRIAL_SAP_DEPTH = 5;
 	public static final int TRIAL_CITY_DEPTH = 20;
 	public static final int TRIAL_HEART_DEPTH = 25; //(2026-11-22) 25층 심장을 진 짐승 (레벨은 24층 건너뛰기와 같음, 결실의 핵 지급)
+	//체험판 "아이템 꺼내기" 치트 창(WndTrialItems)의 강화·수량 최대
+	public static final int TRIAL_CHEAT_MAX_UPGRADE = 20;
+	public static final int TRIAL_CHEAT_MAX_QTY = 99;
 	//보스전 체험판 20층 보스로 건너뛸 때 주는 물약·주문서 수 (종류마다), 강화의 주문서 수 (MazeTrial.kit)
 	public static final int TRIAL_POTIONS = 5;
 	public static final int TRIAL_SCROLLS = 5;
