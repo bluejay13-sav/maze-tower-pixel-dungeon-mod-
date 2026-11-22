@@ -142,7 +142,7 @@ public class BloomAttack {
 		int s = lvl(hero, SURE_STRIKE);
 		if (sureActive && s >= 0){
 			bonus += B2_SURE_BONUS[s];
-			if (BloomRules.trigger(SURE_STRIKE)) com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.target(enemy); //조준 과녁
+			BloomRules.trigger(SURE_STRIKE); //(2026-11-21 밤) 조준 과녁 그림은 삭제
 		}
 
 		//강타: 같은 적에게 3번째 평타마다

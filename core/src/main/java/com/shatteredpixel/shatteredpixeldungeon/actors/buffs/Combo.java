@@ -568,7 +568,7 @@ public class Combo extends Buff implements ActionIndicator.Action {
 	private void finisherFx( Hero hero, Char enemy ){
 		switch (moveBeingUsed){
 			case CLOBBER: com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.toward(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.CLOBBER, hero, enemy); break;
-			case SLAM:    com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.SLAM, enemy.sprite); break;
+			case SLAM:    break; //(2026-11-21 밤) 메치기 그림(fx3_22) 삭제
 			case PARRY:   com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.toward(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.PARRY, hero, enemy); break;
 			case CRUSH:   com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.atCell(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.CRUSH, enemy.pos); break;
 			case FURY:    com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.toward(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.FURY, hero, enemy); break;

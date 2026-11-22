@@ -245,7 +245,6 @@ public class HunterEffects {
 		// ----- 고리지기 (맨손 공격) -----
 		boolean unarmed = ringsOpen(hero) && hero.belongings.attackingWeapon() == null;
 		if (unarmed){
-			if (!skill && enemy.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_BARE, enemy.sprite); //(2026-11-21) 맨손 타격 (아주 작고 짧게)
 			float p = pulse(hero);
 			mult += MazeTower.T3_BARE_HUNT[pts(hero, Talent.BARE_HUNT)];
 			if (wears(hero, RingOfHaste.class)){
@@ -263,7 +262,6 @@ public class HunterEffects {
 				ArrayList<Wand> wands = hero.belongings.getAllItems(Wand.class);
 				if (!wands.isEmpty()){
 					Random.element(wands).gainCharge(MazeTower.RK_FLOW_CHARGE * p);
-					if (hero.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.at(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_FLOW, hero.sprite.center().x, hero.sprite.center().y, 0, com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.DELAY, 0, 1, 2, 0, 1, 2); //(2026-11-21) 흐르는 충전 불꽃
 					Item.updateQuickslot();
 				}
 			}
@@ -618,19 +616,15 @@ public class HunterEffects {
 			type = buffType.NEGATIVE;
 			announced = true;
 		}
+		//(결정, 2026-11-21 밤) 적의 "혈점" 상태 아이콘: 진홍 마름모 (살펴보기 창의 상태 목록). 몸에 남는 그림은 없다.
 		@Override
-		public int icon() { return BuffIndicator.VULNERABLE; }
-		@Override
-		public void tintIcon(Image icon) { icon.hardlight(1f, 0.3f, 0.3f); }
+		public int icon() { return BuffIndicator.BLOODPOINT; }
 		@Override
 		public float iconFadePercent() { return Math.max(0, 1f - visualcooldown() / MazeTower.RK_PRESSURE_TURNS); }
-		//(2026-11-21) 혈점 표시: 움직이지 않는 그림 한 장 (fx_hunter_09), 3턴 동안
-		private com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop mark;
 		@Override
-		public void fx(boolean on) {
-			if (on && mark == null && target.sprite != null) mark = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_PRESSURE, target.sprite);
-			else if (!on && mark != null){ mark.stop(); mark = null; }
-		}
+		public String iconTextDisplay() { return Integer.toString((int)visualcooldown()); }
+		@Override
+		public String desc() { return Messages.get(this, "desc", dispTurns()); }
 	}
 
 	static void pressure(Hero hero, Char enemy, int cost){
@@ -639,7 +633,8 @@ public class HunterEffects {
 		SproutEffects.onSkillUsed(hero);
 		Buff.prolong(enemy, PressurePoint.class, MazeTower.RK_PRESSURE_TURNS);
 		if (enemy.sprite != null){
-			com.shatteredpixel.shatteredpixeldungeon.effects.SkillEffects.hit("thrust", hero, enemy, 0);
+			//(결정, 2026-11-21 밤) 맞히는 순간 몸통 가운데에 혈점 찌르기 적중 (fx_hunter_09, 6프레임 한 번)
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_PRESSURE, enemy.sprite);
 			enemy.sprite.flash();
 		}
 		Sample.INSTANCE.play(Assets.Sounds.HIT_STAB, 1f, 1.3f);
@@ -662,13 +657,7 @@ public class HunterEffects {
 		public void tintIcon(Image icon) { icon.hardlight(0.6f, 1f, 0.8f); }
 		@Override
 		public float iconFadePercent() { return Math.max(0, 1f - visualcooldown() / MazeTower.RK_PURIFY_TURNS); }
-		//(2026-11-21) 상태이상 면역 보호막 (fx_hunter_14 반복)
-		private com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop shield;
-		@Override
-		public void fx(boolean on) {
-			if (on && shield == null && target.sprite != null) shield = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_IMMUNE, target.sprite);
-			else if (!on && shield != null){ shield.stop(); shield = null; }
-		}
+		//(2026-11-21 밤) 면역 보호막 그림(fx_hunter_14)은 삭제. 정화할 때 반짝임(fx_hunter_13)만.
 	}
 
 	static void purify(Hero hero, int cost){
@@ -723,7 +712,6 @@ public class HunterEffects {
 				if (other.isAlive()) Buff.prolong(other, Paralysis.class, MazeTower.RK_THROW_STUN);
 			}
 			if (enemy.isAlive()) enemy.damage(dmg, hero);
-			if (enemy.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_TOSS, enemy.sprite); //(2026-11-21) 던지기 부딪힘
 			Sample.INSTANCE.play(Assets.Sounds.HIT_CRUSH);
 		}
 	}
@@ -957,6 +945,13 @@ public class HunterEffects {
 		public int icon() { return BuffIndicator.MARK; }
 		@Override
 		public void tintIcon(Image icon) { icon.hardlight(0.4f, 0.3f, 0.5f); }
+		//(결정, 2026-11-21 밤) 머리 위 푸른 깃털. 다음 기본공격으로 신호가 소모되면(detach) 사라진다.
+		private com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.SignalOverhead feather;
+		@Override
+		public void fx(boolean on) {
+			if (on && feather == null) feather = com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.signalOverhead(target);
+			else if (!on && feather != null){ feather.killAndErase(); feather = null; }
+		}
 		@Override
 		public void storeInBundle(Bundle bundle) { super.storeInBundle(bundle); bundle.put("bonus", bonus); }
 		@Override

@@ -58,6 +58,8 @@ public class BloomBuffs {
 			if (overhead != null) overhead.stacks(stacks);
 		}
 
+		public com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.MarkOverhead overhead(){ return overhead; }
+
 		@Override
 		public void fx(boolean on) {
 			if (on){

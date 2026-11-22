@@ -60,6 +60,11 @@ public class BuffIcon extends Image {
 		//Maze Tower (2026-11-21): 정전기·젖음 새 아이콘
 		if (icon >= BuffIndicator.MAZE_ELEM){
 			int i = icon - BuffIndicator.MAZE_ELEM;
+			if (icon == BuffIndicator.BLOODPOINT){ //(2026-11-21 밤) 적의 혈점 상태
+				texture(large ? "sprites/maze_buff_bloodpoint_big.png" : "sprites/maze_buff_bloodpoint_small.png");
+				if (large) frame(0, 0, 16, 16); else frame(0, 0, 7, 7);
+				return;
+			}
 			if (large){
 				texture("sprites/maze_fx4_11.png");
 				frame(i * 16, 0, 16, 16);

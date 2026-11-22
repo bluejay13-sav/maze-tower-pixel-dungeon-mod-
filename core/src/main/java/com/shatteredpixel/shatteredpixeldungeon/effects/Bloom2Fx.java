@@ -41,9 +41,7 @@ public class Bloom2Fx {
 		SWEEP     (32, 32, new int[][]{{0,0},{34,0},{68,0}}),
 		SHOCKWAVE (48, 48, new int[][]{{0,34},{50,34},{100,34}}),
 		MARK_POP  (16, 16, new int[][]{{0,84},{18,84},{36,84}}),
-		PIERCE    (16, 16, new int[][]{{0,102},{18,102}}),
-		TARGET    (16, 16, new int[][]{{0,120}}),
-		VEIL      (16, 16, new int[][]{{0,138}}),
+		//(2026-11-21 밤) 방어 무시 파편(0,102)·조준 과녁(0,120)·마나 장막(0,138)은 삭제 (효과는 그대로, 그림만 없앰)
 		SHARD     ( 5,  5, new int[][]{{0,156}});
 
 		public final int w, h;
@@ -147,24 +145,13 @@ public class Bloom2Fx {
 		Sample.INSTANCE.play(Assets.Sounds.BLAST, 0.6f, 1.3f);
 	}
 
-	//표식 폭발: 표식이 터짐
-	public static void markPop(Char enemy){
-		playOn(Sheet.MARK_POP, enemy, 18);
-	}
-
-	//방어 무시: 갑옷 파편 (돌진·마나 흡수·집중 각성)
-	public static void pierce(Char enemy){
-		playOn(Sheet.PIERCE, enemy, 12);
-	}
-
-	//확정타: 조준 과녁
-	public static void target(Char enemy){
-		playOn(Sheet.TARGET, enemy, 1);
-	}
-
-	//마나 장막
-	public static void veil(Char hero){
-		playOn(Sheet.VEIL, hero, 1);
+	//표식 폭발: 표식이 터짐. (2026-11-21 밤) 몸 가운데가 아니라 머리 위 표식이 있던 자리(그 그림의 가운데)에서.
+	//stacks = 터지기 전 표식 수 (머리 위 그림 높이가 표식 수에 따라 다름)
+	public static void markPop(Char enemy, int stacks){
+		if (!seen(enemy)) return;
+		int[] r = MARKS[Math.max(1, Math.min(4, stacks)) - 1];
+		CharSprite s = enemy.sprite;
+		play(Sheet.MARK_POP, s.x + s.width() / 2f, s.y - 1 - r[3] / 2f, 18);
 	}
 
 	//넘치는 힘 각성: 주인공에게서 대상까지 날아가는 마력 파편
@@ -227,6 +214,60 @@ public class Bloom2Fx {
 		MarkOverhead m = new MarkOverhead(s);
 		s.parent.add(m);
 		return m;
+	}
+
+	// =====================================================================
+	// (결정, 2026-11-21 밤) 사냥 신호: 매가 쪼은 적 머리 위 푸른 깃털 (sprites/maze_mark_hunt_signal.png, 7×7 × 2프레임,
+	// 0.6초씩 번갈아). 2차 표식이 있으면 같은 자리(머리 위 가운데)에 겹쳐서, 깃털이 뒤·표식이 앞.
+	// =====================================================================
+
+	public static final float SIGNAL_FRAME_TIME = 0.6f;
+
+	public static class SignalOverhead extends Image {
+		private final Char ch;
+		private float t = 0;
+		private int shown = -1;
+
+		public SignalOverhead(Char ch){
+			super("sprites/maze_mark_hunt_signal.png");
+			this.ch = ch;
+			show(0);
+		}
+
+		private void show(int f){
+			if (f == shown) return;
+			shown = f;
+			frame(f * 7, 0, 7, 7);
+		}
+
+		@Override
+		public void update() {
+			super.update();
+			CharSprite sprite = ch.sprite;
+			if (sprite == null || sprite.parent == null || !ch.isAlive()){
+				killAndErase();
+				return;
+			}
+			t += Game.elapsed;
+			show(((int)(t / SIGNAL_FRAME_TIME)) % 2);
+			visible = sprite.visible;
+			x = sprite.x + (sprite.width() - width()) / 2f;
+			y = sprite.y - height() - 1;
+			PixelScene.align(this);
+			//표식이 앞에 오도록 (표식 그림이 깃털보다 먼저 들어와 있으면 앞으로 보낸다)
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomBuffs.Mark m = ch.buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomBuffs.Mark.class);
+			MarkOverhead mo = m != null ? m.overhead() : null;
+			if (mo != null && mo.parent == parent && parent.indexOf(mo) < parent.indexOf(this)){
+				parent.bringToFront(mo);
+			}
+		}
+	}
+
+	public static SignalOverhead signalOverhead(Char ch){
+		if (ch == null || ch.sprite == null || ch.sprite.parent == null) return null;
+		SignalOverhead s = new SignalOverhead(ch);
+		ch.sprite.parent.add(s);
+		return s;
 	}
 
 	// =====================================================================

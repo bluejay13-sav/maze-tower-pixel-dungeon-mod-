@@ -303,7 +303,7 @@ public class ElementalReactions {
 
 	//증기: 큰 김 (Speck.STEAM을 그 칸과 주변 칸에)
 	private static void steam( Char ch, int dmg ){
-		announce(ch, "steam", 0xE4E0EC);
+		announce(ch, "steam", 0xDDDDDD);
 		if (seen(ch)){
 			//(2026-11-21) 다시 그린 증기 그림 (fx3_08)
 			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.STEAM, ch.sprite);
@@ -340,7 +340,7 @@ public class ElementalReactions {
 				Dungeon.hero.sprite.parent.addToFront(new Lightning(arcs, null));
 			}
 			Char at = Actor.findChar(cell);
-			if (at != null) announce(at, "explosion", 0xFF9C55);
+			if (at != null) announce(at, "explosion", 0xFF8800);
 			PixelScene.shake(1, 0.1f); //(2026-11-21) 흔들림은 1픽셀, 아주 짧게
 		}
 		Sample.INSTANCE.play(Assets.Sounds.BLAST);
@@ -361,7 +361,7 @@ public class ElementalReactions {
 		if (exploding) return;
 		exploding = true;
 		int dmg = Math.round(baseDamage() * MazeTower.REACTION_EXPLOSION_MULTI);
-		announce(ch, "explosion", 0xFF9C55);
+		announce(ch, "explosion", 0xFF8800);
 
 		ArrayList<Char> hit = new ArrayList<>();
 		for (Char c : Actor.chars()){
@@ -397,7 +397,7 @@ public class ElementalReactions {
 
 	//해빙: 얼음이 깨지며(원작 IceBlock이 녹고 얼음 조각) 불꽃이 튄다
 	private static void thaw( Char ch, int dmg ){
-		announce(ch, "thaw", 0x89D5FF);
+		announce(ch, "thaw", 0x88CCFF);
 		if (seen(ch)){
 			//(2026-11-21) 해빙 fx4_00 (빠르게, 옛 fx3_12는 쓰지 않음)
 			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.THAW, ch.sprite, com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.FAST);
@@ -418,7 +418,7 @@ public class ElementalReactions {
 	}
 
 	private static void applyFreeze( Char ch ){
-		announce(ch, "freeze", 0x9EEEFF);
+		announce(ch, "freeze", 0x66AAFF);
 		if (seen(ch)){
 			//(2026-11-21) 빙결 fx3_11 (빠르게)
 			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.FREEZE, ch.sprite, com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.FAST);
@@ -430,10 +430,8 @@ public class ElementalReactions {
 	private static void announce( Char ch, String key, int color ){
 		BloomEffects.onReaction(ch); //Maze Tower: 2차 특성 원소 순환·원소 증폭 각성
 		if (ch.sprite != null && validPos(ch) && Dungeon.level.heroFOV[ch.pos]){
-			//(2026-11-21) 반응 글자: 한국어는 다시 그린 글자 그림(fx4_10, 위→아래 그러데이션·어두운 테두리), 다른 언어는 그 색으로
-			if (!com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.reactionLabel(ch.sprite, key)){
-				ch.sprite.showStatus(color, Messages.get(ElementalReactions.class, key));
-			}
+			//(결정, 2026-11-21 밤) 반응 글자는 예전처럼 코드 글자 (글자 그림 fx4_10은 쓰지 않음)
+			ch.sprite.showStatus(color, Messages.get(ElementalReactions.class, key));
 		}
 	}
 }

@@ -126,7 +126,6 @@ public class BloomEffects {
 	public static int armorAfterIgnore(Hero hero, Char enemy, int dr){
 		float ignore = BloomAttack.armorIgnore(hero, isSkill());
 		if (isSkill()) ignore = Math.max(ignore, BloomSkill.armorIgnore(hero)); //집중 각성
-		if (ignore > 0 && dr > 0) com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.pierce(enemy); //방어 무시 파편
 		return ignore > 0 ? Math.round(dr * (1f - ignore)) : dr;
 	}
 
@@ -295,7 +294,6 @@ public class BloomEffects {
 			dmg *= 1f - B2_VEIL_REDUCE[mv];
 			hero.sprite.showStatus(0x4488FF, "-" + B2_VEIL_COST);
 			TalentEffects.manaVeil(hero);
-			com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.veil(hero);
 			BloomCommon.veilPush(hero); //마나 장막 각성
 		}
 

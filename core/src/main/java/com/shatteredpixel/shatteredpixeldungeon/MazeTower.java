@@ -371,8 +371,6 @@ public class MazeTower {
 
 	//정전기: 전격 피해를 받으면 걸리는 턴 수
 	public static final float STATIC_TURNS = 2f;
-	//(결정, 2026-11-21) 젖음 물방울 그림(fx3_14)의 진하기 (은은하게)
-	public static final float WET_FX_ALPHA = 0.45f;
 	//젖음: 물에서 나온 뒤 유지되는 턴 수
 	public static final int WET_AFTER_TURNS = 2;
 	//빙결: 젖은 적에게 냉기가 닿으면 걸리는 원작 Frost의 턴 수

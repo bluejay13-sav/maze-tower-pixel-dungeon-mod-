@@ -72,7 +72,6 @@ public class Wet extends Buff {
 		if (on){
 			if (drops == null && target.sprite != null){
 				drops = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.WET, target.sprite);
-				if (drops != null) drops.alphaMax(com.shatteredpixel.shatteredpixeldungeon.MazeTower.WET_FX_ALPHA); //(결정, 2026-11-21) 더 은은하게
 			}
 		} else if (drops != null){
 			drops.stop();

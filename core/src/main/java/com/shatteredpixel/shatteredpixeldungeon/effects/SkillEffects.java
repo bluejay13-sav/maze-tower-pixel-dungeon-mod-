@@ -36,7 +36,7 @@ public class SkillEffects {
 			case "crescent": crescent(hero, enemy, index); break;
 			case "phantom":  phantom(hero, enemy); break;
 			case "vital":    vital(hero, enemy, surprise); break;
-			case "aimed":    MazeFx.onChar(MazeFx.Fx.AIMED_HIT, enemy.sprite); break;
+			case "aimed":    break; //(2026-11-21 밤) 조준 사격 적중 그림(fx3_07) 삭제
 			//Maze Tower: 고리지기 반지 스킬 (맨손)
 			case "frenzy":   flurry(hero, enemy, index % 3); break;
 			case "toss":     MazeFx.toward(MazeFx.Fx.SLASH, hero, enemy); break;

@@ -23,34 +23,35 @@ public class MazeFx {
 
 	public static final float DELAY = 0.075f;
 	public static final float FAST  = 0.06f; //빙결·해빙
+	public static final float BURST = 0.045f; //충전 터뜨리기 13종
 
+	//(2026-11-21 밤, 피드백 반영) 그림마다 한 프레임 시간을 README대로. 프레임 수는 그림 너비로 센다.
+	//삭제: 조준 사격 적중(fx3_07)·메치기(fx3_22)·맨손 타격(fx_hunter_07)·면역 보호막(14)·던지기 부딪힘(15)·흐르는 충전 불꽃(16)
 	public enum Fx {
-		SLASH      ("fx3_00", 32, 32, 4),
-		THRUST     ("fx3_01", 32, 32, 5),
+		SLASH      ("fx3_00", 32, 32, 4, 0.06f),
+		THRUST     ("fx3_01", 32, 32, 5, 0.05f),
 		FLURRY     ("fx3_02", 32, 32, 6), //연격 3타: 타격마다 두 프레임씩
 		CRESCENT   ("fx3_03", 32, 32, 5), //반월베기 2타
-		PHANTOM    ("fx3_04", 32, 32, 4),
-		VITAL      ("fx3_05", 32, 32, 4),
-		VITAL_SURPRISE ("fx3_06", 32, 32, 4),
-		AIMED_HIT  ("fx3_07", 32, 32, 3),
+		PHANTOM    ("fx3_04", 32, 32, 4, 0.05f),
+		VITAL      ("fx3_05", 32, 32, 4, 0.05f),
+		VITAL_SURPRISE ("fx3_06", 32, 32, 4, 0.05f),
 		STEAM      ("fx3_08", 32, 32, 6),
 		HISS       ("fx3_09", 32, 32, 6),
-		EXPLOSION  ("fx3_10", 32, 32, 6),
-		FREEZE     ("fx3_11", 32, 32, 4),
+		EXPLOSION  ("fx3_10", 32, 32, 6, 0.06f),
+		FREEZE     ("fx3_11", 32, 32, 4, FAST),
 		STATIC     ("fx3_13", 32, 32, 4), //반복
-		WET        ("fx3_14", 32, 32, 4), //반복
+		WET        ("fx3_14", 32, 32, 4), //반복 (그림에 반투명이 들어 있어 코드에서 흐리게 하지 않는다)
 		LEAP       ("fx3_16", 32, 32, 6),
 		SLAM_WAVE  ("fx3_17", 32, 32, 4),
 		ENDURE     ("fx3_18", 32, 32, 4), //반복
 		RETRIBUTION("fx3_19", 32, 32, 4),
-		THORNS     ("fx3_20", 32, 32, 4),
+		THORNS     ("fx3_20", 32, 32, 4, 0.05f),
 		CLOBBER    ("fx3_21", 32, 32, 4), //밀쳐내기
-		SLAM       ("fx3_22", 32, 32, 5), //메치기
 		PARRY      ("fx3_23", 32, 32, 4), //받아치기
 		CRUSH      ("fx3_24", 80, 80, 5), //으깨기 5×5
 		FURY       ("fx3_25", 32, 32, 5), //분노 폭발
-		THAW       ("fx4_00", 32, 32, 6),
-		CLEAVE_RING("fx4_01", 32, 32, 4), //연속 베기 원 베기
+		THAW       ("fx4_00", 32, 32, 6, FAST),
+		CLEAVE_RING("fx4_01", 32, 32, 4, 0.065f), //연속 베기
 		HEAVY      ("fx4_02", 32, 32, 3), //강타
 		GALE       ("fx4_03", 32, 32, 4), //질풍 바람 줄기
 		CHAIN      ("fx4_04", 32, 32, 4), //연쇄
@@ -66,29 +67,25 @@ public class MazeFx {
 		H_FOCUS    ("fx_hunter_04", 16, 16, 7), //정량궁 집중
 		H_WALL     ("fx_hunter_05", 16, 16, 5), //정령 화살 벽 통과 잔광
 		H_SNARE    ("fx_hunter_06", 16, 16, 5), //덫 (발목 덩굴)
-		H_BARE     ("fx_hunter_07", 16, 16, 3), //맨손 타격
 		H_CRIT     ("fx_hunter_08", 16, 16, 3), //급소 번쩍임
-		H_PRESSURE ("fx_hunter_09", 16, 16, 1), //혈점 표시 (3턴 동안 정지)
+		H_PRESSURE ("fx_hunter_09", 16, 16, 6, 0.08f), //혈점 찌르기 적중 (한 번, 몸통 가운데)
 		H_RIPOSTE  ("fx_hunter_10", 16, 16, 4), //흘리기 반격
 		H_HEAT     ("fx_hunter_11", 16, 16, 5), //열기 중첩 1~5 (정지, 중첩 수 = 프레임)
 		H_ADVERSITY("fx_hunter_12", 16, 16, 6), //역경 달성
-		H_PURIFY   ("fx_hunter_13", 16, 16, 6), //정화
-		H_IMMUNE   ("fx_hunter_14", 16, 16, 4), //상태이상 면역 보호막 (반복)
-		H_TOSS     ("fx_hunter_15", 16, 16, 5), //던지기 부딪힘
-		H_FLOW     ("fx_hunter_16",  8,  8, 3), //흐르는 충전 불꽃
-		H_B_FIRE   ("fx_hunter_17", 16, 16, 5), //충전 터뜨리기: 화염
-		H_B_FROST  ("fx_hunter_18", 16, 16, 5),
-		H_B_SHOCK  ("fx_hunter_19", 16, 16, 5),
-		H_B_MAGIC  ("fx_hunter_20", 16, 16, 5),
-		H_B_DISINT ("fx_hunter_21", 16, 16, 5),
-		H_B_CORROS ("fx_hunter_22", 16, 16, 5),
-		H_B_BLAST  ("fx_hunter_23", 16, 16, 5),
-		H_B_EARTH  ("fx_hunter_24", 16, 16, 5),
-		H_B_PRISM  ("fx_hunter_25", 16, 16, 5),
-		H_B_WARD   ("fx_hunter_26", 16, 16, 5),
-		H_B_TRANSF ("fx_hunter_27", 16, 16, 5),
-		H_B_REGROW ("fx_hunter_28", 16, 16, 5),
-		H_B_CORRUPT("fx_hunter_29", 16, 16, 5),
+		H_PURIFY   ("fx_hunter_13", 16, 16, 4), //정화 (반짝임만)
+		H_B_FIRE   ("fx_hunter_17", 16, 16, 4, BURST), //충전 터뜨리기: 화염
+		H_B_FROST  ("fx_hunter_18", 16, 16, 4, BURST),
+		H_B_SHOCK  ("fx_hunter_19", 16, 16, 4, BURST),
+		H_B_MAGIC  ("fx_hunter_20", 16, 16, 4, BURST),
+		H_B_DISINT ("fx_hunter_21", 16, 16, 4, BURST),
+		H_B_CORROS ("fx_hunter_22", 16, 16, 4, BURST),
+		H_B_BLAST  ("fx_hunter_23", 16, 16, 4, BURST),
+		H_B_EARTH  ("fx_hunter_24", 16, 16, 4, BURST),
+		H_B_PRISM  ("fx_hunter_25", 16, 16, 4, BURST),
+		H_B_WARD   ("fx_hunter_26", 16, 16, 4, BURST),
+		H_B_TRANSF ("fx_hunter_27", 16, 16, 4, BURST),
+		H_B_REGROW ("fx_hunter_28", 16, 16, 4, BURST),
+		H_B_CORRUPT("fx_hunter_29", 16, 16, 4, BURST),
 		H_GOLD     ("fx_hunter_30", 16, 16, 6), //금화 튀김
 		H_HAWK     ("fx_hunter_31", 16, 16, 4), //정령 매 날기 (반복)
 		H_HAWK_IN  ("fx_hunter_32", 16, 16, 6), //정령 매 소환
@@ -97,12 +94,24 @@ public class MazeFx {
 
 		public final String file;
 		public final int w, h, frames;
+		public final float delay; //한 프레임 시간
 
 		Fx( String name, int w, int h, int frames ){
+			this(name, w, h, frames, DELAY);
+		}
+
+		Fx( String name, int w, int h, int frames, float delay ){
 			this.file = "sprites/maze_" + name + ".png";
 			this.w = w;
 			this.h = h;
 			this.frames = frames;
+			this.delay = delay;
+		}
+
+		//그림을 고쳐 프레임 수가 바뀌어도 맞게: 그림 너비로 센다
+		public int count( com.watabou.gltextures.SmartTexture tex ){
+			int n = tex.width / w;
+			return n > 0 ? n : frames;
 		}
 	}
 
@@ -112,8 +121,9 @@ public class MazeFx {
 		TextureFilm film = new TextureFilm(c.texture, fx.w, fx.h);
 		Object[] idx;
 		if (frames.length == 0){
-			idx = new Object[fx.frames];
-			for (int i = 0; i < fx.frames; i++) idx[i] = i;
+			int n = fx.count(c.texture);
+			idx = new Object[n];
+			for (int i = 0; i < n; i++) idx[i] = i;
 		} else {
 			idx = new Object[frames.length];
 			for (int i = 0; i < frames.length; i++) idx[i] = frames[i];
@@ -144,7 +154,7 @@ public class MazeFx {
 	}
 
 	public static MovieClip at( Fx fx, float cx, float cy ){
-		return at(fx, cx, cy, 0, DELAY);
+		return at(fx, cx, cy, 0, fx.delay);
 	}
 
 	public static MovieClip onChar( Fx fx, CharSprite s ){
@@ -169,7 +179,7 @@ public class MazeFx {
 		if (from.sprite == null || to.sprite == null || to.sprite.parent == null) return null;
 		PointF a = from.sprite.center(), b = to.sprite.center();
 		float ang = (float)(Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI);
-		return at(fx, b.x, b.y, ang, DELAY, frames);
+		return at(fx, b.x, b.y, ang, fx.delay, frames);
 	}
 
 	public static float angle( PointF a, PointF b ){
@@ -194,51 +204,7 @@ public class MazeFx {
 		return c;
 	}
 
-	//반응 이름 글자 그림 (fx4_10, 48×16: 0 증기 1 폭발 2 해빙 3 빙결). 한국어일 때만 그림을 띄우고 true
-	public static boolean reactionLabel( CharSprite s, String key ){
-		if (com.shatteredpixel.shatteredpixeldungeon.messages.Messages.lang()
-				!= com.shatteredpixel.shatteredpixeldungeon.messages.Languages.KOREAN) return false;
-		int idx;
-		switch (key){
-			case "steam":     idx = 0; break;
-			case "explosion": idx = 1; break;
-			case "thaw":      idx = 2; break;
-			case "freeze":    idx = 3; break;
-			default: return false;
-		}
-		if (s == null || s.parent == null) return false;
-		s.parent.add(new FloatLabel(s, idx));
-		return true;
-	}
-
-	//원작 FloatingText처럼 머리 위에서 떠오르며 사라진다
-	private static class FloatLabel extends com.watabou.noosa.Image {
-		private static final float LIFE = 1.0f, RISE = 14f;
-		private float left = LIFE;
-		private final float baseY;
-
-		FloatLabel( CharSprite s, int idx ){
-			super("sprites/maze_fx4_10.png");
-			frame(new TextureFilm(texture, 48, 16).get(idx));
-			PointF c = s.center();
-			x = c.x - 24;
-			baseY = s.y - 14;
-			y = baseY;
-		}
-
-		@Override
-		public void update() {
-			super.update();
-			left -= com.watabou.noosa.Game.elapsed;
-			if (left <= 0){
-				killAndErase();
-				return;
-			}
-			float p = 1f - left / LIFE;
-			y = baseY - RISE * p;
-			alpha(p < 0.6f ? 1f : (1f - p) / 0.4f);
-		}
-	}
+	//(결정, 2026-11-21 밤) 반응 이름 글자 그림(fx4_10)은 쓰지 않는다. 예전처럼 코드 글자(ElementalReactions.announce).
 
 	//캐릭터 몸을 따라다니며 반복하는 그림 (상태이상·버프 동안). stop()으로 끝낸다.
 	//대상이 죽거나 그림이 사라지면 스스로 멈추고, 대상이 안 보이면 숨는다.
@@ -255,8 +221,9 @@ public class MazeFx {
 			this.fx = fx;
 			this.target = target;
 			TextureFilm film = new TextureFilm(texture, fx.w, fx.h);
-			Object[] idx = new Object[fx.frames];
-			for (int i = 0; i < fx.frames; i++) idx[i] = i;
+			int n = fx.count(texture);
+			Object[] idx = new Object[n];
+			for (int i = 0; i < n; i++) idx[i] = i;
 			Animation a = new Animation(Math.round(1f / DELAY), true).frames(film, idx);
 			a.delay = DELAY * 1.6f; //상태 동안 반복하는 그림은 조금 느리게
 			play(a);

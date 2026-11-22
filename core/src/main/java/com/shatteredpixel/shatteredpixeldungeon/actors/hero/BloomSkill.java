@@ -162,7 +162,7 @@ public class BloomSkill {
 			s.burstTransferred = mark.transferred;
 			mark.stacks--;
 			mark.refreshOverhead();
-			com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.markPop(enemy); //표식 터짐
+			com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.markPop(enemy, mark.stacks + 1); //표식 터짐 (머리 위 표식 자리에서)
 			if (mark.stacks <= 0) mark.detach();
 		}
 

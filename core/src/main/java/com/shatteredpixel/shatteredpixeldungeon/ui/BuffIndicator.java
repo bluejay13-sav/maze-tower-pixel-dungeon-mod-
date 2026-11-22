@@ -161,6 +161,7 @@ public class BuffIndicator extends Component {
 	public static final int MAZE_ELEM       = 2000;
 	public static final int STATIC_CHARGE   = MAZE_ELEM + 0;
 	public static final int WET             = MAZE_ELEM + 1;
+	public static final int BLOODPOINT      = MAZE_ELEM + 2; //(2026-11-21 밤) 적의 혈점 상태 (진홍 마름모)
 
 	public static final int SIZE_SMALL  = 7;
 	public static final int SIZE_LARGE  = 16;
