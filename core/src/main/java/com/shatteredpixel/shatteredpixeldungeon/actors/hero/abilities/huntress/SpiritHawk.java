@@ -110,6 +110,8 @@ public class SpiritHawk extends ArmorAbility {
 				GameScene.add(ally);
 
 				ScrollOfTeleportation.appear(ally, ally.pos);
+				//Maze Tower (2026-11-21): 꽃잎이 모여 매가 된다 (fx_hunter_32)
+				if (!MAZE_ORIGINAL() && ally.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_HAWK_IN, ally.sprite);
 				Dungeon.observe();
 
 				Invisibility.dispel();
@@ -327,8 +329,23 @@ public class SpiritHawk extends ArmorAbility {
 		public HawkSprite() {
 			super();
 
+			//Maze Tower (2026-11-21): 새 정령 매 그림 (푸른빛, fx_hunter_31 날기 4프레임 반복).
+			//(결정) 쪼기 동작 없이 날기 프레임 그대로 부딪히고 피해 숫자만. 사라질 때 꽃잎으로 흩어진다(fx_hunter_33), 몸 뒤에 은은한 빛(fx_hunter_34)
+			if (!MAZE_ORIGINAL()){
+				texture( "sprites/maze_fx_hunter_31.png" );
+				TextureFilm f = new TextureFilm( texture, 16, 16 );
+				idle = new Animation( 10, true );
+				idle.frames( f, 0, 1, 2, 3 );
+				run = idle.clone();
+				attack = new Animation( 12, false );
+				attack.frames( f, 0, 1, 2, 3 );
+				die = new Animation( 20, false );
+				die.frames( f, 0 );
+				play( idle );
+				return;
+			}
+
 			texture( Assets.Sprites.SPIRIT_HAWK );
-			if (!MAZE_ORIGINAL()) tint(0x1A1022, 0.75f); //Maze Tower: 검은 꽃잎으로 된 매
 
 			TextureFilm frames = new TextureFilm( texture, 15, 15 );
 
@@ -354,8 +371,38 @@ public class SpiritHawk extends ArmorAbility {
 			return 0xFF00FFFF;
 		}
 
+		private com.watabou.noosa.Image glow; //Maze Tower: 매 몸 뒤의 빛
+
+		@Override
+		public void update() {
+			super.update();
+			if (MAZE_ORIGINAL() || parent == null) return;
+			if (glow == null){
+				glow = new com.watabou.noosa.Image("sprites/maze_fx_hunter_34.png");
+				parent.addToBack(glow);
+			}
+			com.watabou.utils.PointF c = center();
+			glow.x = c.x - 16;
+			glow.y = c.y - 16;
+			glow.visible = visible && (ch == null || ch.isAlive());
+		}
+
+		@Override
+		public void kill() {
+			if (glow != null){ glow.killAndErase(); glow = null; }
+			super.kill();
+		}
+
 		@Override
 		public void die() {
+			if (!MAZE_ORIGINAL()){
+				//꽃잎으로 흩어진다
+				com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_HAWK_OUT, this);
+				if (glow != null){ glow.killAndErase(); glow = null; }
+				super.die();
+				alpha(0);
+				return;
+			}
 			super.die();
 			emitter().start( ShaftParticle.FACTORY, 0.3f, 4 );
 			emitter().start( Speck.factory( Speck.LIGHT ), 0.2f, 3 );

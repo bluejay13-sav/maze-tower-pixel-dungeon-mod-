@@ -19,11 +19,11 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
 //Maze Tower: 화살. 활 계열 무기의 원거리 평타와 조준 사격이 1발씩 쓴다.
-//그림은 임시로 원작 정령의 화살.
+//(2026-11-21) 그림: 아이템 docs/sprites/hunter_fx/arrow_item.png, 날아가는 화살 fx_hunter_00~02 (Arrow.Shot)
 public class Arrow extends Item {
 
 	{
-		image = ItemSpriteSheet.SPIRIT_ARROW;
+		image = com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.ARROW;
 		stackable = true;
 	}
 
@@ -126,5 +126,16 @@ public class Arrow extends Item {
 		hero.sprite.operate(hero.pos);
 		hero.spendAndNext(1f);
 		updateQuickslot();
+	}
+
+	//날아가는 화살 그림 (MissileSprite가 이 그림을 날린다). 기본 화살에는 입자가 없고,
+	//강화 화살(석궁 장전)·정령 화살의 빛은 그림 가장자리에 들어 있다. 석궁 볼트는 따로 없다.
+	public static class Shot extends Arrow {
+		public Shot(){ this(0); }
+		public Shot(int kind){
+			image = kind == 1 ? com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.ARROW_LOADED
+					: kind == 2 ? com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.ARROW_SPIRIT
+					: com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.ARROW_SHOT;
+		}
 	}
 }

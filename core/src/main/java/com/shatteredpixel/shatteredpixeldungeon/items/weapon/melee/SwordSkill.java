@@ -287,6 +287,15 @@ public class SwordSkill {
 			@Override
 			public void call() {
 				AttackIndicator.target(enemy);
+				//(2026-11-21) 꿰뚫기: 정령 화살이 지나간 벽 칸에 잔광 (fx_hunter_05)
+				if (skill.pierce){
+					com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica b = new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(hero.pos, enemy.pos, com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.STOP_TARGET);
+					for (int c : b.subPath(1, b.dist)){
+						if (Dungeon.level.solid[c] && Dungeon.level.heroFOV[c] || Dungeon.level.solid[c] && Dungeon.level.visited[c]){
+							com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.atCell(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_WALL, c);
+						}
+					}
+				}
 				doHit(hero, wep, skill, enemy, 0, surprise);
 			}
 		};

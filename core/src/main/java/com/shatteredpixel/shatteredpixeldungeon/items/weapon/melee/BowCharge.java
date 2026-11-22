@@ -59,14 +59,11 @@ public class BowCharge extends Buff {
 			if (kind == LOAD){
 				//장전: 쇠붙이 걸리는 소리 + 회색 먼지
 				Sample.INSTANCE.play(Assets.Sounds.UNLOCK, 1f, 1.3f);
-				hero.sprite.emitter().burst(Speck.factory(Speck.DUST), 5);
+				com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_LOAD, hero.sprite); //(2026-11-21) fx_hunter_03
 			} else {
 				//집중: 은은한 흰 빛이 모였다 사라짐
 				Sample.INSTANCE.play(Assets.Sounds.CHARGEUP, 0.6f, 1.2f);
-				Flare f = new Flare(6, 24);
-				f.color(0xFFFFFF, true);
-				f.angularSpeed = 90;
-				f.show(hero.sprite, 1.2f);
+				com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_FOCUS, hero.sprite); //(2026-11-21) fx_hunter_04
 			}
 		}
 		GLog.i(Messages.get(BowCharge.class, kind == LOAD ? "loaded" : "focused"));

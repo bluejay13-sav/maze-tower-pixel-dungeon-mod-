@@ -953,6 +953,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 4차 정령 매: 원작 `SpiritHawk`을 마탑 규칙으로(`ORIGINAL_ARMOR_ABILITY`가 false일 때): 20턴 + 오래 머무는 매, 쪼면 실명 2턴 + 사냥 신호(`HunterEffects.HawkSignal`), 매의 눈 시야·4레벨 비밀 발견, 검게 칠한 매. 특성 `HAWK_LINGER`·`HAWK_EYE`·`HUNT_SIGNAL` + `HEROIC_ENERGY`. 수치 `HAWK_*`·`T4_HAWK_*`·`T4_HUNT_SIGNAL`.
 - 확인한 것: 빌드, 게임 실행(1분, 오류 없음). 사냥꾼으로 실제 플레이·보스전 확인은 아직 안 함.
 - 치트 "단검·활 7종·화살 50·투창 얻기".
+- (구현, 2026-11-21) 사냥꾼 이펙트(원본 `docs/sprites/hunter_fx/`, README에 파일별 크기·재생, 게임 사본 `sprites/maze_fx_hunter_*.png`, 재생 `MazeFx.Fx.H_*`): 화살 아이템 `arrow_item.png` → `maze_arrow_item.png`(`MazeItemSprites.ARROW`), 날아가는 화살 기본·강화(석궁 장전)·정령 = fx_hunter_00~02(`Arrow.Shot`, 석궁도 같은 화살, (결정) 날아가는 입자 없음), 석궁 장전 03·정량궁 집중 04(`BowCharge`), 꿰뚫기가 지나간 벽 칸 잔광 05, 덫 06, 맨손 평타 07, 급소 08, 혈점 09(3턴 동안 정지 그림), 흘리기 반격 10, 열기 중첩 11(주인공 발치, 중첩 수 = 프레임), 역경 12, 정화 13·면역 보호막 14(반복), 던지기 부딪힘 15, 흐르는 충전 16, 충전 터뜨리기 17~29(마법봉 13종, 그 밖은 마탄 20), 금화 30(금화 주먹·소매치기), 정령 매 31(날기 반복, (결정) 푸른빛, 쪼기 동작 없음)·소환 32·사라짐 33·몸 뒤 빛 34. `fx_hunter_35`는 README에 없어 쓰지 않음.
 
 ## 구현 순서 (단계마다 사용자 확인) — 모두 완료
 

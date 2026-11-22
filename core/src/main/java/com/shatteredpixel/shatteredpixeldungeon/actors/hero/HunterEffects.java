@@ -245,6 +245,7 @@ public class HunterEffects {
 		// ----- 고리지기 (맨손 공격) -----
 		boolean unarmed = ringsOpen(hero) && hero.belongings.attackingWeapon() == null;
 		if (unarmed){
+			if (!skill && enemy.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_BARE, enemy.sprite); //(2026-11-21) 맨손 타격 (아주 작고 짧게)
 			float p = pulse(hero);
 			mult += MazeTower.T3_BARE_HUNT[pts(hero, Talent.BARE_HUNT)];
 			if (wears(hero, RingOfHaste.class)){
@@ -262,6 +263,7 @@ public class HunterEffects {
 				ArrayList<Wand> wands = hero.belongings.getAllItems(Wand.class);
 				if (!wands.isEmpty()){
 					Random.element(wands).gainCharge(MazeTower.RK_FLOW_CHARGE * p);
+					if (hero.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.at(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_FLOW, hero.sprite.center().x, hero.sprite.center().y, 0, com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.DELAY, 0, 1, 2, 0, 1, 2); //(2026-11-21) 흐르는 충전 불꽃
 					Item.updateQuickslot();
 				}
 			}
@@ -280,7 +282,7 @@ public class HunterEffects {
 				damage = Math.round(damage * MazeTower.RK_CRIT_DMG);
 				if (enemy.sprite != null){
 					enemy.sprite.showStatus(CharSprite.WARNING, Messages.get(HunterEffects.class, "crit"));
-					enemy.sprite.centerEmitter().burst(SparkParticle.FACTORY, 4);
+					com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_CRIT, enemy.sprite); //(2026-11-21) 급소 번쩍임
 				}
 			}
 		}
@@ -307,7 +309,7 @@ public class HunterEffects {
 		lastCounter = Actor.now();
 		BloomEffects.beginNormal(hero); //반격은 일반 공격 판정 (새 행동)
 		if (hero.sprite != null && attacker.sprite != null){
-			com.shatteredpixel.shatteredpixeldungeon.effects.SkillEffects.hit("slash", hero, attacker, 0);
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.toward(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_RIPOSTE, hero, attacker); //(2026-11-21) 흘리기 반격
 		}
 		hero.attack(attacker, MazeTower.RK_COUNTER_DMG * pulse(hero), 0, 1f);
 	}
@@ -320,6 +322,20 @@ public class HunterEffects {
 		void stack(){
 			stacks = Math.min(MazeTower.RK_HEAT_MAX, stacks + 1);
 			spend(MazeTower.RK_HEAT_TURNS - cooldown()); //지속시간 갱신
+			fx(true);
+		}
+
+		//(2026-11-21) 열기 중첩 1~5: 주인공 발치의 작은 불꽃 (fx_hunter_11, 중첩 수 = 프레임)
+		private com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop flames;
+		@Override
+		public void fx(boolean on) {
+			if (on && stacks > 0 && target.sprite != null){
+				if (flames == null || flames.parent == null) flames = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_HEAT, target.sprite);
+				if (flames != null) flames.still(stacks - 1);
+			} else if (!on && flames != null){
+				flames.stop();
+				flames = null;
+			}
 		}
 
 		@Override
@@ -368,7 +384,7 @@ public class HunterEffects {
 		a.countUp(reduced);
 		if (!before && a.count() >= MazeTower.RK_ADVERSITY_NEED && hero.sprite != null){
 			hero.sprite.showStatus(CharSprite.POSITIVE, Messages.get(HunterEffects.class, "adversity"));
-			hero.sprite.emitter().burst(Speck.factory(Speck.UP), 5);
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_ADVERSITY, hero.sprite); //(2026-11-21) 역경 달성
 			GLog.p(Messages.get(HunterEffects.class, "adversity_log", MazeTower.RK_ADVERSITY_ARMOR));
 		}
 	}
@@ -401,6 +417,7 @@ public class HunterEffects {
 		}
 		if (hero.sprite != null){
 			hero.sprite.showStatus(CharSprite.NEUTRAL, Messages.get(HunterEffects.class, "stole"));
+			if (mob.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_GOLD, mob.sprite); //(2026-11-21) 금화 튀김
 			RingOfWealth.showFlareForBonusDrop(hero.sprite);
 		}
 		GLog.i(Messages.get(HunterEffects.class, "stole_log", loot.name()));
@@ -427,7 +444,7 @@ public class HunterEffects {
 					&& Random.Float() < MazeTower.T3_SNARE_CHANCE[lvl]){
 				Buff.prolong(ch, Cripple.class, MazeTower.T3_SNARE_TURNS);
 				if (Dungeon.level.heroFOV[ch.pos]){
-					CellEmitter.bottom(ch.pos).burst(EarthParticle.FACTORY, 6);
+					if (ch.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_SNARE, ch.sprite); //(2026-11-21) 발목 덩굴
 					if (ch.sprite != null) ch.sprite.showStatus(CharSprite.WARNING, Messages.get(HunterEffects.class, "snared"));
 				}
 			}
@@ -595,6 +612,13 @@ public class HunterEffects {
 		public void tintIcon(Image icon) { icon.hardlight(1f, 0.3f, 0.3f); }
 		@Override
 		public float iconFadePercent() { return Math.max(0, 1f - visualcooldown() / MazeTower.RK_PRESSURE_TURNS); }
+		//(2026-11-21) 혈점 표시: 움직이지 않는 그림 한 장 (fx_hunter_09), 3턴 동안
+		private com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop mark;
+		@Override
+		public void fx(boolean on) {
+			if (on && mark == null && target.sprite != null) mark = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_PRESSURE, target.sprite);
+			else if (!on && mark != null){ mark.stop(); mark = null; }
+		}
 	}
 
 	static void pressure(Hero hero, Char enemy, int cost){
@@ -626,6 +650,13 @@ public class HunterEffects {
 		public void tintIcon(Image icon) { icon.hardlight(0.6f, 1f, 0.8f); }
 		@Override
 		public float iconFadePercent() { return Math.max(0, 1f - visualcooldown() / MazeTower.RK_PURIFY_TURNS); }
+		//(2026-11-21) 상태이상 면역 보호막 (fx_hunter_14 반복)
+		private com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop shield;
+		@Override
+		public void fx(boolean on) {
+			if (on && shield == null && target.sprite != null) shield = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_IMMUNE, target.sprite);
+			else if (!on && shield != null){ shield.stop(); shield = null; }
+		}
 	}
 
 	static void purify(Hero hero, int cost){
@@ -637,8 +668,7 @@ public class HunterEffects {
 		}
 		Buff.prolong(hero, Purity.class, MazeTower.RK_PURIFY_TURNS);
 		if (hero.sprite != null){
-			hero.sprite.emitter().start(ShaftParticle.FACTORY, 0.2f, 4);
-			hero.sprite.emitter().burst(Speck.factory(Speck.LIGHT), 4);
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_PURIFY, hero.sprite); //(2026-11-21) 정화
 		}
 		Sample.INSTANCE.play(Assets.Sounds.DRINK, 0.6f, 1.4f);
 		BloomEffects.endSkill(hero);
@@ -681,7 +711,7 @@ public class HunterEffects {
 				if (other.isAlive()) Buff.prolong(other, Paralysis.class, MazeTower.RK_THROW_STUN);
 			}
 			if (enemy.isAlive()) enemy.damage(dmg, hero);
-			if (enemy.sprite != null) enemy.sprite.centerEmitter().burst(Speck.factory(Speck.DUST), 5);
+			if (enemy.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_TOSS, enemy.sprite); //(2026-11-21) 던지기 부딪힘
 			Sample.INSTANCE.play(Assets.Sounds.HIT_CRUSH);
 		}
 	}
@@ -710,10 +740,30 @@ public class HunterEffects {
 				else if (w instanceof WandOfFrost)      BloomEffects.chill(h, e, 3f);
 				else if (w instanceof WandOfLightning)  Buff.prolong(e, StaticCharge.class, MazeTower.STATIC_TURNS);
 				else if (w instanceof WandOfCorrosion)  Buff.affect(e, Corrosion.class).set(3f, Dungeon.scalingDepth() / 2 + 1);
-				if (e.sprite != null) e.sprite.centerEmitter().burst(MagicMissile.MagicParticle.FACTORY, 6 + charges * 2);
+				if (e.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(burstFx(w), e.sprite); //(2026-11-21) 마법봉마다 충전 터뜨리기 그림
 			}
 		};
 		SwordSkill.launchRing(hero, s, enemy, cost);
+	}
+
+	//(2026-11-21) 충전 터뜨리기 그림: 마법봉 13종 (fx_hunter_17~29), 그 밖은 마탄
+	static com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx burstFx(Wand w){
+		String n = w.getClass().getSimpleName();
+		switch (n){
+			case "WandOfFireblast":     return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_FIRE;
+			case "WandOfFrost":         return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_FROST;
+			case "WandOfLightning":     return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_SHOCK;
+			case "WandOfDisintegration":return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_DISINT;
+			case "WandOfCorrosion":     return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_CORROS;
+			case "WandOfBlastWave":     return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_BLAST;
+			case "WandOfLivingEarth":   return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_EARTH;
+			case "WandOfPrismaticLight":return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_PRISM;
+			case "WandOfWarding":       return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_WARD;
+			case "WandOfTransfusion":   return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_TRANSF;
+			case "WandOfRegrowth":      return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_REGROW;
+			case "WandOfCorruption":    return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_CORRUPT;
+			default:                    return com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_B_MAGIC;
+		}
 	}
 
 	// ----- 부유함: 금화 주먹 -----
@@ -724,7 +774,7 @@ public class HunterEffects {
 		s.afterHit = new SwordSkill.HitHook() {
 			@Override
 			public void onHit(Hero h, Char e, boolean hit, int index) {
-				if (e.sprite != null) e.sprite.centerEmitter().burst(Speck.factory(Speck.COIN), 6);
+				if (e.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_GOLD, e.sprite); //(2026-11-21) 금화 튀김
 				if (hit && !e.isAlive()){
 					Dungeon.gold += gold; //처치하면 쓴 금화를 돌려받는다
 					if (h.sprite != null) h.sprite.showStatus(CharSprite.NEUTRAL, Messages.get(HunterEffects.class, "gold_back", gold));

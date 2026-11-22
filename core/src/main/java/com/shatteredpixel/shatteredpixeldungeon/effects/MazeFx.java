@@ -60,7 +60,40 @@ public class MazeFx {
 		SHIELD     ("fx4_08", 32, 32, 4), //마나 장막·흘리기 (반복)
 		ECHO       ("fx4_09", 32, 32, 3), //잔향 각성 잔상
 		OVERFLOW   ("fx4_14", 32, 32, 4), //넘치는 힘 (반복, 숨 쉬듯)
-		CHILL      ("fx4_15", 32, 32, 4); //냉기 눈송이 (반복)
+		CHILL      ("fx4_15", 32, 32, 4), //냉기 눈송이 (반복)
+		//사냥꾼 (docs/sprites/hunter_fx, 2026-11-21)
+		H_LOAD     ("fx_hunter_03", 16, 16, 6), //석궁 장전
+		H_FOCUS    ("fx_hunter_04", 16, 16, 7), //정량궁 집중
+		H_WALL     ("fx_hunter_05", 16, 16, 5), //정령 화살 벽 통과 잔광
+		H_SNARE    ("fx_hunter_06", 16, 16, 5), //덫 (발목 덩굴)
+		H_BARE     ("fx_hunter_07", 16, 16, 3), //맨손 타격
+		H_CRIT     ("fx_hunter_08", 16, 16, 3), //급소 번쩍임
+		H_PRESSURE ("fx_hunter_09", 16, 16, 1), //혈점 표시 (3턴 동안 정지)
+		H_RIPOSTE  ("fx_hunter_10", 16, 16, 4), //흘리기 반격
+		H_HEAT     ("fx_hunter_11", 16, 16, 5), //열기 중첩 1~5 (정지, 중첩 수 = 프레임)
+		H_ADVERSITY("fx_hunter_12", 16, 16, 6), //역경 달성
+		H_PURIFY   ("fx_hunter_13", 16, 16, 6), //정화
+		H_IMMUNE   ("fx_hunter_14", 16, 16, 4), //상태이상 면역 보호막 (반복)
+		H_TOSS     ("fx_hunter_15", 16, 16, 5), //던지기 부딪힘
+		H_FLOW     ("fx_hunter_16",  8,  8, 3), //흐르는 충전 불꽃
+		H_B_FIRE   ("fx_hunter_17", 16, 16, 5), //충전 터뜨리기: 화염
+		H_B_FROST  ("fx_hunter_18", 16, 16, 5),
+		H_B_SHOCK  ("fx_hunter_19", 16, 16, 5),
+		H_B_MAGIC  ("fx_hunter_20", 16, 16, 5),
+		H_B_DISINT ("fx_hunter_21", 16, 16, 5),
+		H_B_CORROS ("fx_hunter_22", 16, 16, 5),
+		H_B_BLAST  ("fx_hunter_23", 16, 16, 5),
+		H_B_EARTH  ("fx_hunter_24", 16, 16, 5),
+		H_B_PRISM  ("fx_hunter_25", 16, 16, 5),
+		H_B_WARD   ("fx_hunter_26", 16, 16, 5),
+		H_B_TRANSF ("fx_hunter_27", 16, 16, 5),
+		H_B_REGROW ("fx_hunter_28", 16, 16, 5),
+		H_B_CORRUPT("fx_hunter_29", 16, 16, 5),
+		H_GOLD     ("fx_hunter_30", 16, 16, 6), //금화 튀김
+		H_HAWK     ("fx_hunter_31", 16, 16, 4), //정령 매 날기 (반복)
+		H_HAWK_IN  ("fx_hunter_32", 16, 16, 6), //정령 매 소환
+		H_HAWK_OUT ("fx_hunter_33", 16, 16, 6), //정령 매 사라짐
+		H_HAWK_GLOW("fx_hunter_34", 32, 32, 1); //정령 매 주변 빛 (몸 뒤)
 
 		public final String file;
 		public final int w, h, frames;
@@ -228,6 +261,13 @@ public class MazeFx {
 			a.delay = DELAY * 1.6f; //상태 동안 반복하는 그림은 조금 느리게
 			play(a);
 			follow();
+		}
+
+		//움직이지 않는 한 프레임만 (열기 중첩 수 등)
+		public Loop still( int frame ){
+			TextureFilm film = new TextureFilm(texture, fx.w, fx.h);
+			play(new Animation(1, false).frames(film, Math.max(0, Math.min(fx.frames - 1, frame))));
+			return this;
 		}
 
 		//숨 쉬듯 진하기가 오르내린다 (넘치는 힘)

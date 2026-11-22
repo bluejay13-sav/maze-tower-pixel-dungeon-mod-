@@ -138,30 +138,9 @@ public class WornShortbow extends MeleeWeapon {
 	public static void launchArrow(final Hero hero, final Char target, final Callback then, int kind){
 		Sample.INSTANCE.play(kind == SHOT_LOADED ? Assets.Sounds.ATK_CROSSBOW : Assets.Sounds.ATK_SPIRITBOW, 1, 1, 0.95f);
 		final MissileSprite m = (MissileSprite)hero.sprite.parent.recycle(MissileSprite.class);
-		final com.watabou.noosa.particles.Emitter trail;
-		if (kind == SHOT_MAGIC){
-			trail = new com.watabou.noosa.particles.Emitter();
-			hero.sprite.parent.add(trail);
-		} else {
-			trail = null;
-		}
-		m.reset(hero.sprite, target.sprite, new Arrow(), new Callback() {
-			@Override
-			public void call() {
-				if (trail != null){
-					trail.on = false;
-					trail.autoKill = true;
-				}
-				then.call();
-			}
-		});
+		//(2026-11-21) 새 화살 그림: 기본 · 강화(석궁 장전, 회색 기운) · 정령 화살. 날아가는 입자는 없다
+		m.reset(hero.sprite, target.sprite, new Arrow.Shot(kind), then);
 		m.resetColor();
-		if (kind == SHOT_LOADED) m.tint(0x8C8C8C, 0.6f); //장전된 화살: 회색
-		if (trail != null){
-			m.tint(0x55AAFF, 0.35f);
-			trail.pos(m);
-			trail.pour(com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile.MagicParticle.FACTORY, 0.01f);
-		}
 	}
 
 	//타격 판정 직전: 원거리면 화살 1발을 쓰고 원거리 피해로 친다

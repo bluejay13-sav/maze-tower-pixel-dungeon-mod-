@@ -35,6 +35,11 @@ public class MazeItemSprites {
 	public static final int SWORD_LONG      = BASE + 17; //롱소드
 	public static final int SWORD_KATANA    = BASE + 18; //카타나
 	public static final int SWORD_RUNIC     = BASE + 19; //룬 블레이드
+	//화살 (2026-11-21, docs/sprites/hunter_fx): 아이템 아이콘, 날아가는 화살(기본·강화·정령). 석궁도 같은 화살
+	public static final int ARROW           = BASE + 20;
+	public static final int ARROW_SHOT      = BASE + 21;
+	public static final int ARROW_LOADED    = BASE + 22;
+	public static final int ARROW_SPIRIT    = BASE + 23;
 
 	private static final String[] FILES = {
 			"sprites/maze_bloom_core.png",
@@ -56,7 +61,11 @@ public class MazeItemSprites {
 			"sprites/maze_sword_scimitar.png",
 			"sprites/maze_sword_longsword.png",
 			"sprites/maze_sword_katana.png",
-			"sprites/maze_sword_runic_blade.png"
+			"sprites/maze_sword_runic_blade.png",
+			"sprites/maze_arrow_item.png",
+			"sprites/maze_arrow_shot.png",
+			"sprites/maze_arrow_loaded.png",
+			"sprites/maze_arrow_spirit.png"
 	};
 
 	public static boolean has( int image ){
