@@ -737,7 +737,7 @@ public class MazeTower {
 	public static final int   B25_ACC           = 30;    //명중
 	public static final int   B25_DR            = 10;    //방어 0~10
 	public static final int   B25_ROOM_W        = 17;    //보스방 안쪽 크기
-	public static final int   B25_ROOM_H        = 13;
+	public static final int   B25_ROOM_H        = 11;    //(결정, 2026-11-22 사용자) 17×13 → 17×11
 	//1페이즈: 살점과 오염
 	public static final float B25_PHASE2_HP     = 0.70f; //이 아래면 2페이즈
 	public static final int   B25_FLESH_START   = 2;     //처음 살점 수
