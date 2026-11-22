@@ -27,6 +27,15 @@ public class Arrow extends Item {
 		stackable = true;
 	}
 
+	//(2026-11-22) 1개일 때는 화살 한 대 그림 (아이템 그림은 2개 묶음이라 바닥에 1개만 있어도 묶음으로 보였음)
+	@Override
+	public int image() {
+		if (image == com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.ARROW && quantity() == 1){
+			return com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.ARROW_SHOT;
+		}
+		return super.image();
+	}
+
 	@Override
 	public boolean isUpgradable() { return false; }
 
