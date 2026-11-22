@@ -706,7 +706,7 @@ public class HunterEffects {
 		WandOfBlastWaveHelper.throwChar(enemy, traj, power, hero);
 		Buff.prolong(enemy, Paralysis.class, MazeTower.RK_THROW_STUN);
 		if (collided){
-			int dmg = hero.damageRoll(); //부딪힌 쪽도 맨손 평타 100%
+			int dmg = Math.round(hero.damageRoll() * MazeTower.RK_THROW_COLLIDE_DMG); //부딪힌 쪽도 맨손 평타의 80% ((결정, 밸런스 1d) 예전 100%)
 			if (other != null && other.isAlive()){
 				other.damage(dmg, hero);
 				if (other.isAlive()) Buff.prolong(other, Paralysis.class, MazeTower.RK_THROW_STUN);

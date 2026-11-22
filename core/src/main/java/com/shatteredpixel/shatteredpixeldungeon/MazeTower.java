@@ -455,7 +455,7 @@ public class MazeTower {
 	//공명: 두 반지 강화 수치 차이 중 낮은 쪽을 끌어올리는 비율 (내림)
 	public static final float[] T3_RESONANCE = {0f, 0.25f, 0.50f, 0.75f, 1.00f};
 	//맨손 사냥: 무기를 들지 않았을 때 근접 피해 +
-	public static final float[] T3_BARE_HUNT = {0f, 0.10f, 0.20f, 0.30f, 0.40f}; //(결정, 밸런스) 10/30/50/70% → 10/20/30/40%
+	public static final float[] T3_BARE_HUNT = {0f, 0.03f, 0.05f, 0.08f, 0.10f}; //(결정, 밸런스 1d) 실제 완력의 반지 공식으로 다시 계산: 10/30/50/70% → (1c) 10/20/30/40% → 3/5/8/10%
 	//반지 꽃: 처치 시 마나 +, 체력 +
 	public static final int[]   T3_RING_BLOOM_MANA = {0, 3, 6, 9, 12};
 	public static final int     T3_RING_BLOOM_HP   = 2;
@@ -476,15 +476,16 @@ public class MazeTower {
 	//반지 스킬 (마나 SKILL_MANA_COST)
 	public static final float RK_PRESSURE_TURNS = 3f;     //정확성 혈점 찌르기
 	public static final int   RK_FRENZY_HITS = 5;         //분노 광란 연타
-	public static final float RK_FRENZY_DMG  = 0.40f;
+	public static final float RK_FRENZY_DMG  = 0.32f;    //(결정, 밸런스 1d) 0.40 → 0.32
 	public static final float RK_PURIFY_TURNS = 3f;       //원소 정화 면역
-	public static final float RK_THROW_DMG = 2.0f;        //완력 던지기
+	public static final float RK_THROW_DMG = 1.6f;        //완력 던지기 ((결정, 밸런스 1d) 2.0 → 1.6)
+	public static final float RK_THROW_COLLIDE_DMG = 0.8f; //던지기: 벽·적에 부딪히면 부딪힌 쪽도 맨손 평타의 이만큼 ((결정, 밸런스 1d) 1.0 → 0.8)
 	public static final int   RK_THROW_DIST = 2;
 	public static final float RK_THROW_STUN = 1f;
-	public static final float RK_BURST_DMG = 1.0f;        //충전 터뜨리기 기본
-	public static final float RK_BURST_PER_CHARGE = 0.30f;
+	public static final float RK_BURST_DMG = 0.8f;        //충전 터뜨리기 기본 ((결정, 밸런스 1d) 1.0 → 0.8)
+	public static final float RK_BURST_PER_CHARGE = 0.24f; //(결정, 밸런스 1d) 0.30 → 0.24
 	public static final int   RK_GOLD_PER_DEPTH = 10;     //금화 주먹: 층 × 이만큼
-	public static final float RK_GOLD_DMG = 2.5f;
+	public static final float RK_GOLD_DMG = 2.0f;         //(결정, 밸런스 1d) 2.5 → 2.0
 	public static final int   RK_VOLLEY_COUNT = 2;        //저격 연속 투척
 
 	// ===== 4차 전직 (결실) =====
@@ -651,7 +652,7 @@ public class MazeTower {
 	public static final int   WK_HP             = 600;   //(결정, 밸런스) 체력 300 → 600
 	public static final int   WK_HP_STRONG      = 900;   //도전 "더 강한 보스" (450 → 900)
 	//(결정, 밸런스) 기본 공격 배율을 둘로 나눔 (예전 WK_BASIC_MULTI 0.4 공통)
-	public static final float WK_MELEE_MULTI    = 1.1f;  //바로 옆 근접 (방어 적용): 15~25 × 1.1 = 17~28
+	public static final float WK_MELEE_MULTI    = 1.33f; //바로 옆 근접 (방어 적용): 15~25 × 1.33 = 20~33 ((결정, 밸런스 1d) 1.1 → 1.33)
 	public static final float WK_ARROW_MULTI    = 0.56f; //떨어진 주인공에게 영혼 화살 (방어 무시): 8~14
 	public static final float WK_AMBUSH_MULTI   = 1.0f;  //기습 일격 (× WK_AMBUSH_DMG)
 	public static final int   WK_DEF            = 17;    //(결정, 바뀜 18→17) 망령 왕 회피
