@@ -157,6 +157,10 @@ public class BuffIndicator extends Component {
 	public static final int B2_MEDITATION   = MAZE2 + 14;
 	//작은 아이콘 번호 → 큰 아이콘(특성 아이콘) 번호
 	public static final int[] B2_LARGE = {3, 20, 2, 1, 4, 24, 8, 11, 18, 19, 16, 22, 21, 27, 30};
+	//Maze Tower (2026-11-21): 정전기·젖음 아이콘 (작은 것 sprites/maze_fx3_15.png 7×7, 큰 것 maze_fx4_11.png 16×16)
+	public static final int MAZE_ELEM       = 2000;
+	public static final int STATIC_CHARGE   = MAZE_ELEM + 0;
+	public static final int WET             = MAZE_ELEM + 1;
 
 	public static final int SIZE_SMALL  = 7;
 	public static final int SIZE_LARGE  = 16;

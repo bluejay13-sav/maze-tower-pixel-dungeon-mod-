@@ -75,19 +75,7 @@ public class FullBloomCore extends TengusMask {
 		curUser.sprite.operate( curUser.pos );
 		Sample.INSTANCE.play( Assets.Sounds.MASTERY );
 
-		//만개: 개화보다 크고 진한 꽃잎 빛 + 가운데 금빛 (별은 쓰지 않는다)
-		Flare petals = new Flare(12, 56);
-		petals.color(0xFF7FC8, true);
-		petals.angularSpeed = 30;
-		petals.show(curUser.sprite, 3.0f);
-		Flare inner = new Flare(8, 34);
-		inner.color(0xFFC2E6, true);
-		inner.angularSpeed = -50;
-		inner.show(curUser.sprite, 2.6f);
-		Flare core = new Flare(6, 20);
-		core.color(0xFFE38A, true);
-		core.angularSpeed = 80;
-		core.show(curUser.sprite, 2.2f);
+		//(결정, 2026-11-21) 꽃이 피는 연출은 삭제 (특성 창에 가려 보이지 않음)
 
 		GLog.p( Messages.get(this, "used", Messages.titleCase(way.title())) );
 		StatusPane.talentBlink = 10f;

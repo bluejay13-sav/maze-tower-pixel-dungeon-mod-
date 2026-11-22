@@ -236,16 +236,18 @@ public class Bloom2Fx {
 	//강타: 굵은 베기 + 약한 화면 흔들림
 	public static void heavyBlow(Char hero, Char enemy){
 		if (!seen(enemy)) return;
-		PointF e = enemy.sprite.destinationCenter();
-		float a = hero != null && hero.sprite != null
-				? (float)Math.atan2(e.y - hero.sprite.center().y, e.x - hero.sprite.center().x) : 0;
-		new SlashTrail(9f, 4.5f, a - 1.9f, 2.6f, 0f, 0.09f, 0.22f)
-				.trailColor(0xFFE2A8)
-				.show(enemy.sprite.parent, e);
-		PixelScene.shake(1, 0.15f);
+		//(2026-11-21) 다시 그린 굵은 베기 (fx4_02), 흔들림은 1픽셀 아주 짧게
+		if (hero != null) MazeFx.toward(MazeFx.Fx.HEAVY, hero, enemy); else MazeFx.onChar(MazeFx.Fx.HEAVY, enemy.sprite);
+		PixelScene.shake(1, 0.08f);
 	}
 
 	//베기 궤적 (흘리기 각성 반격, 잔향 각성 잔상)
+	//잔향 각성 잔상: 다시 그린 그림 (fx4_09, 2026-11-21)
+	public static void echo(Char hero, Char enemy){
+		if (!seen(enemy)) return;
+		if (hero != null) MazeFx.toward(MazeFx.Fx.ECHO, hero, enemy); else MazeFx.onChar(MazeFx.Fx.ECHO, enemy.sprite);
+	}
+
 	public static void slash(Char hero, Char enemy, int color){
 		if (!seen(enemy)) return;
 		PointF e = enemy.sprite.destinationCenter();
@@ -259,7 +261,7 @@ public class Bloom2Fx {
 	//연쇄: 맞은 적에서 번진 적에게 빛 조각이 빠르게 날아가 꽂힌다 (공격하는 느낌)
 	public static void chain(Char from, Char to){
 		if (!seen(from) || !seen(to)) return;
-		pathStrike(from.sprite.parent, from.sprite.center(), to.sprite.center());
+		MazeFx.toward(MazeFx.Fx.CHAIN, from, to); //(2026-11-21) 남빛 앞머리 → 7조각 (fx4_04)
 	}
 
 	//표식이 옮겨 붙는 길: 보라색이 섞인 입자가 차례로 지나간다
@@ -393,24 +395,23 @@ public class Bloom2Fx {
 	// =====================================================================
 
 	private static CharSprite lastSprite;
-	private static Emitter galeWind;   //질풍: 몸 주위 바람 줄기
+	private static boolean galeOn = false; //질풍: 생길 때 바람 줄기 한 번
 	private static Emitter cycleGlow;  //원소 순환 각성: 무기에 원소 3색 빛
 
 	public static void updateHero(Char hero, boolean gale, boolean cycle){
 		if (hero == null || hero.sprite == null || hero.sprite.parent == null) return;
 		if (hero.sprite != lastSprite){
 			lastSprite = hero.sprite;
-			galeWind = null;
 			cycleGlow = null;
 		}
 		boolean alive = hero.isAlive();
 
-		if (gale && alive && galeWind == null){
-			galeWind = hero.sprite.emitter();
-			galeWind.pour(WindParticle.FACTORY, 0.25f);
-		} else if ((!gale || !alive) && galeWind != null){
-			galeWind.on = false;
-			galeWind = null;
+		//(2026-11-21) 질풍: 다시 그린 바람 줄기 (fx4_03)를 질풍이 생길 때 한 번
+		if (gale && alive && !galeOn){
+			galeOn = true;
+			MazeFx.onChar(MazeFx.Fx.GALE, hero.sprite);
+		} else if (!gale || !alive){
+			galeOn = false;
 		}
 
 		if (cycle && alive && cycleGlow == null){

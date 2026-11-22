@@ -235,7 +235,7 @@ public class ElementalReactions {
 	//불이 꺼지는 효과 (반응 피해 없음)
 	private static void douse( Char ch ){
 		if (ch.sprite != null && validPos(ch) && Dungeon.level.heroFOV[ch.pos]){
-			CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 4);
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.HISS, ch.sprite); //(2026-11-21) 김 fx3_09
 			Sample.INSTANCE.play(Assets.Sounds.BURNING, 0.5f);
 		}
 	}
@@ -303,15 +303,10 @@ public class ElementalReactions {
 
 	//증기: 큰 김 (Speck.STEAM을 그 칸과 주변 칸에)
 	private static void steam( Char ch, int dmg ){
-		announce(ch, "steam", 0xDDDDDD);
+		announce(ch, "steam", 0xE4E0EC);
 		if (seen(ch)){
-			CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 25);
-			for (int n : PathFinder.NEIGHBOURS8){
-				int c = ch.pos + n;
-				if (c >= 0 && c < Dungeon.level.length() && !Dungeon.level.solid[c]){
-					CellEmitter.get(c).burst(Speck.factory(Speck.STEAM), 4);
-				}
-			}
+			//(2026-11-21) 다시 그린 증기 그림 (fx3_08)
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.STEAM, ch.sprite);
 		}
 		Sample.INSTANCE.play(Assets.Sounds.BURNING);
 		Sample.INSTANCE.play(Assets.Sounds.GAS, 0.6f);
@@ -332,8 +327,7 @@ public class ElementalReactions {
 			if (c.isAlive() && Dungeon.level.distance(cell, c.pos) <= 1) hit.add(c);
 		}
 		if (Dungeon.level.heroFOV[cell]){
-			CellEmitter.center(cell).burst(BlastParticle.FACTORY, 30);
-			CellEmitter.center(cell).burst(SparkParticle.FACTORY, 20);
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.atCell(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.EXPLOSION, cell); //(2026-11-21) 폭발 fx3_10
 			com.watabou.utils.PointF from = com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.tileCenterToWorld(cell);
 			ArrayList<Lightning.Arc> arcs = new ArrayList<>();
 			for (Char c : hit){
@@ -346,8 +340,8 @@ public class ElementalReactions {
 				Dungeon.hero.sprite.parent.addToFront(new Lightning(arcs, null));
 			}
 			Char at = Actor.findChar(cell);
-			if (at != null) announce(at, "explosion", 0xFF8800);
-			PixelScene.shake(2, 0.3f);
+			if (at != null) announce(at, "explosion", 0xFF9C55);
+			PixelScene.shake(1, 0.1f); //(2026-11-21) 흔들림은 1픽셀, 아주 짧게
 		}
 		Sample.INSTANCE.play(Assets.Sounds.BLAST);
 		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
@@ -367,7 +361,7 @@ public class ElementalReactions {
 		if (exploding) return;
 		exploding = true;
 		int dmg = Math.round(baseDamage() * MazeTower.REACTION_EXPLOSION_MULTI);
-		announce(ch, "explosion", 0xFF8800);
+		announce(ch, "explosion", 0xFF9C55);
 
 		ArrayList<Char> hit = new ArrayList<>();
 		for (Char c : Actor.chars()){
@@ -379,8 +373,7 @@ public class ElementalReactions {
 		}
 
 		if (seen(ch)){
-			CellEmitter.center(ch.pos).burst(BlastParticle.FACTORY, 30);
-			CellEmitter.center(ch.pos).burst(SparkParticle.FACTORY, 20);
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.EXPLOSION, ch.sprite); //(2026-11-21) 폭발 fx3_10
 			ArrayList<Lightning.Arc> arcs = new ArrayList<>();
 			for (Char c : hit){
 				if (c != ch && c.sprite != null){
@@ -391,7 +384,7 @@ public class ElementalReactions {
 			if (!arcs.isEmpty() && ch.sprite.parent != null){
 				ch.sprite.parent.addToFront(new Lightning(arcs, null));
 			}
-			PixelScene.shake(2, 0.3f);
+			PixelScene.shake(1, 0.1f); //(2026-11-21) 흔들림은 1픽셀, 아주 짧게
 		}
 		Sample.INSTANCE.play(Assets.Sounds.BLAST);
 		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
@@ -404,11 +397,10 @@ public class ElementalReactions {
 
 	//해빙: 얼음이 깨지며(원작 IceBlock이 녹고 얼음 조각) 불꽃이 튄다
 	private static void thaw( Char ch, int dmg ){
-		announce(ch, "thaw", 0x88CCFF);
+		announce(ch, "thaw", 0x89D5FF);
 		if (seen(ch)){
-			Splash.at(ch.pos, 0xCCEEFF, 12);
-			ch.sprite.emitter().burst(FlameParticle.FACTORY, 12);
-			CellEmitter.get(ch.pos).burst(Speck.factory(Speck.STEAM), 8);
+			//(2026-11-21) 해빙 fx4_00 (빠르게, 옛 fx3_12는 쓰지 않음)
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.THAW, ch.sprite, com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.FAST);
 		}
 		Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 		Sample.INSTANCE.play(Assets.Sounds.BURNING, 0.6f);
@@ -426,10 +418,10 @@ public class ElementalReactions {
 	}
 
 	private static void applyFreeze( Char ch ){
-		announce(ch, "freeze", 0x66AAFF);
+		announce(ch, "freeze", 0x9EEEFF);
 		if (seen(ch)){
-			ch.sprite.emitter().burst(SnowParticle.FACTORY, 20);
-			Splash.at(ch.pos, 0x99CCFF, 6);
+			//(2026-11-21) 빙결 fx3_11 (빠르게)
+			com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.FREEZE, ch.sprite, com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.FAST);
 		}
 		Sample.INSTANCE.play(Assets.Sounds.SHATTER, 0.5f, 1.4f);
 		Buff.affect(ch, Frost.class, MazeTower.FREEZE_TURNS);
@@ -438,7 +430,10 @@ public class ElementalReactions {
 	private static void announce( Char ch, String key, int color ){
 		BloomEffects.onReaction(ch); //Maze Tower: 2차 특성 원소 순환·원소 증폭 각성
 		if (ch.sprite != null && validPos(ch) && Dungeon.level.heroFOV[ch.pos]){
-			ch.sprite.showStatus(color, Messages.get(ElementalReactions.class, key));
+			//(2026-11-21) 반응 글자: 한국어는 다시 그린 글자 그림(fx4_10, 위→아래 그러데이션·어두운 테두리), 다른 언어는 그 색으로
+			if (!com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.reactionLabel(ch.sprite, key)){
+				ch.sprite.showStatus(color, Messages.get(ElementalReactions.class, key));
+			}
 		}
 	}
 }

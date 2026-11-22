@@ -102,6 +102,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	
 	protected Emitter burning;
 	protected Emitter chilled;
+	protected com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop mazeChill; //Maze Tower
 	protected Emitter marked;
 	protected Emitter levitation;
 	protected Emitter healing;
@@ -426,8 +427,9 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 				break;
 			case CHILLED:
 				if (chilled != null) chilled.on = false;
-				chilled = emitter();
-				chilled.pour(SnowParticle.FACTORY, 0.1f);
+				//Maze Tower (2026-11-21): 냉기는 다시 그린 눈송이 그림(fx4_15)을 반복. 발밑 서리는 없다
+				if (mazeChill != null) mazeChill.stop();
+				mazeChill = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.CHILL, this);
 				break;
 			case DARKENED:
 				if (darkBlock != null) darkBlock.killAndErase();
@@ -531,6 +533,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 					chilled.on = false;
 					chilled = null;
 				}
+				if (mazeChill != null){ mazeChill.stop(); mazeChill = null; }
 				break;
 			case DARKENED:
 				if (darkBlock != null) {

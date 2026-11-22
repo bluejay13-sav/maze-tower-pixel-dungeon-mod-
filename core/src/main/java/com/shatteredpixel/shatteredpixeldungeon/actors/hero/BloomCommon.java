@@ -155,7 +155,7 @@ public class BloomCommon {
 				BloomEffects.EchoTracker et = hero.buff(BloomEffects.EchoTracker.class);
 				if (et.skillDamage > 0){
 					BloomRules.derivedDamage(ECHO, enemy, Math.max(1, Math.round(et.skillDamage * B2_ECHO_AWAKE_DMG)));
-					com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.slash(hero, enemy, 0x9FB8FF); //방금 쓴 스킬의 잔상 (푸른 베기 궤적)
+					com.shatteredpixel.shatteredpixeldungeon.effects.Bloom2Fx.echo(hero, enemy); //방금 쓴 스킬의 잔상 (fx4_09)
 				} else {
 					BloomRules.gainMana(hero, B2_ECHO_AWAKE_MANA);
 				}

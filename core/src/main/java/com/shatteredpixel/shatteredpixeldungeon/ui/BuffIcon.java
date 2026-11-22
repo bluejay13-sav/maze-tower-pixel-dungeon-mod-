@@ -57,6 +57,18 @@ public class BuffIcon extends Image {
 	private static TextureFilm mazeLargeFilm;
 
 	public void refresh(int icon){
+		//Maze Tower (2026-11-21): 정전기·젖음 새 아이콘
+		if (icon >= BuffIndicator.MAZE_ELEM){
+			int i = icon - BuffIndicator.MAZE_ELEM;
+			if (large){
+				texture("sprites/maze_fx4_11.png");
+				frame(i * 16, 0, 16, 16);
+			} else {
+				texture("sprites/maze_fx3_15.png");
+				frame(i * 7, 0, 7, 7);
+			}
+			return;
+		}
 		if (icon >= BuffIndicator.MAZE2){
 			int i = icon - BuffIndicator.MAZE2;
 			if (large){

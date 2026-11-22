@@ -41,7 +41,7 @@ public class TalentEffects {
 	//연쇄: 대상 사이 짧은 빛줄기
 	public static void chain( Char from, Char to ){
 		if (!visible(from) || !visible(to)) return;
-		from.sprite.parent.add(new Beam.LightRay(from.sprite.center(), to.sprite.center()));
+		MazeFx.toward(MazeFx.Fx.CHAIN, from, to); //(2026-11-21) fx4_04
 	}
 
 	//그림자검: 적 둘레를 한 바퀴 도는 동그라미 베기. 두 겹으로 그린다.
@@ -49,18 +49,8 @@ public class TalentEffects {
 	//  테두리: 바깥쪽 가는 보라 빛 (어두운 바닥에서도 모양이 보이게)
 	public static void shadowStrike( Char hero, Char enemy ){
 		if (!visible(hero) || !visible(enemy)) return;
-
-		//적 그림이 공격 동작 등으로 흔들려도 칸 한가운데를 기준으로 그린다
-		PointF h = hero.sprite.center(), e = enemy.sprite.destinationCenter();
-		//주인공 쪽에서 베기 시작해 원의 60%만 돈다
-		float start = (float)Math.atan2(h.y - e.y, h.x - e.x);
-		float full = (float)Math.PI * 2f * SHADOW_SWEEP;
-		new SlashTrail(SHADOW_RADIUS, 3.5f, start, full, 0f, 0.14f, 0.24f)
-				.ring().trailColor(SHADOW_BODY).solid()
-				.show(enemy.sprite.parent, e);
-		new SlashTrail(SHADOW_RADIUS + 1f, 1f, start, full, 0f, 0.14f, 0.24f)
-				.ring().trailColor(SHADOW_RIM)
-				.show(enemy.sprite.parent, e);
+		//(2026-11-21) 다시 그린 원 베기 그림 (fx4_01), 주인공 쪽에서 베기 시작
+		MazeFx.toward(MazeFx.Fx.CLEAVE_RING, hero, enemy);
 	}
 
 	//동그라미 베기 반지름 (적 그림보다 살짝 크게)
@@ -88,7 +78,7 @@ public class TalentEffects {
 	//처형: 붉은 섬광
 	public static void execute( Char enemy ){
 		if (!visible(enemy)) return;
-		new Flare(6, 20).color(0xFF2222, true).show(enemy.sprite, 0.5f);
+		MazeFx.onChar(MazeFx.Fx.EXECUTE, enemy.sprite); //(2026-11-21) 진홍 섬광 fx4_05
 	}
 
 	//섬광 보법: 떠난 칸에 빛 잔상 (임시, E단계에서 다듬는다)
@@ -108,17 +98,17 @@ public class TalentEffects {
 	public static void manaRefund( final Char hero, Char from, final int amount ){
 		if (!visible(hero)) return;
 		if (from != null && from.sprite != null && from.sprite.parent != null){
-			MagicMissile bolt = MagicMissile.boltFromChar(hero.sprite.parent, MagicMissile.MAGIC_MISSILE, from.sprite, hero.pos, new Callback() {
+			//(2026-11-21) 천천히 오는 남빛 구슬 (fx4_06). 속도는 예전 마탄과 같게 MANA_REFUND_BOLT_SPEED
+			PointF a = from.sprite.center(), b = hero.sprite.center();
+			float time = Math.max(0.25f, (float)Math.hypot(b.x - a.x, b.y - a.y) / MazeTower.MANA_REFUND_BOLT_SPEED);
+			MazeFx.fly(MazeFx.Fx.MANA_ORB, a, b, time, new Callback() {
 				@Override
 				public void call() {
 					if (hero.sprite != null){
 						hero.sprite.showStatus(0x4488FF, "+" + amount);
-						hero.sprite.centerEmitter().burst(MagicMissile.MagicParticle.FACTORY, 8);
 					}
 				}
 			});
-			//원작 마탄(초당 200)보다 훨씬 느리게 날아와 눈으로 따라갈 수 있게
-			bolt.setSpeed(MazeTower.MANA_REFUND_BOLT_SPEED);
 		} else {
 			hero.sprite.showStatus(0x4488FF, "+" + amount);
 		}
@@ -127,9 +117,7 @@ public class TalentEffects {
 	//마나 장막: 발동 순간 보호막이 번쩍이고 사라진다
 	public static void manaVeil( Char hero ){
 		if (!visible(hero)) return;
-		ShieldHalo halo = new ShieldHalo(hero.sprite);
-		GameScene.effect(halo);
-		halo.putOut();
+		MazeFx.onChar(MazeFx.Fx.SHIELD, hero.sprite); //(2026-11-21) 보호막 fx4_08 한 번
 		Sample.INSTANCE.play(Assets.Sounds.HIT_PARRY, 0.8f, 1.2f);
 	}
 
@@ -142,9 +130,10 @@ public class TalentEffects {
 	// ===== 계속 켜져 있는 연출 =====
 
 	private static CharSprite lastSprite;
-	private static ShieldHalo parryHalo;   //흘리기 대기 중 보호막
-	private static GlowBlock readyGlow;    //집중·흐름 준비 완료
-	private static Flare manaAura;         //가득 찬 마나
+	//(2026-11-21) 다시 그린 반복 그림: 흘리기 보호막 fx4_08, 집중·흐름 준비 fx4_07, 넘치는 힘 fx4_14 (돌지 않고 숨 쉬듯)
+	private static MazeFx.Loop parryHalo;
+	private static MazeFx.Loop readyGlow;
+	private static MazeFx.Loop manaAura;
 
 	//상태창이 매 프레임 호출. 원하는 상태에 맞춰 켜고 끈다.
 	public static void updateHero( Hero hero, boolean parry, boolean ready, boolean fullMana ){
@@ -160,34 +149,26 @@ public class TalentEffects {
 		boolean alive = hero.isAlive();
 
 		if (parry && alive && parryHalo == null){
-			parryHalo = new ShieldHalo(hero.sprite);
-			GameScene.effect(parryHalo);
+			parryHalo = MazeFx.Loop.on(MazeFx.Fx.SHIELD, hero.sprite);
 		} else if ((!parry || !alive) && parryHalo != null){
-			parryHalo.putOut();
+			parryHalo.stop();
 			parryHalo = null;
 		}
 
 		if (ready && alive && readyGlow == null){
-			readyGlow = GlowBlock.lighten(hero.sprite);
+			readyGlow = MazeFx.Loop.on(MazeFx.Fx.READY_GLOW, hero.sprite);
 		} else if ((!ready || !alive) && readyGlow != null){
-			readyGlow.darken();
+			readyGlow.stop();
 			readyGlow = null;
 		}
 
 		//가득 찬 마나: 주인공 뒤에서 천천히 도는 은은한 푸른 빛살 (젖음의 물방울과 구분되게 입자가 아닌 빛)
 		if (fullMana && alive && manaAura == null){
-			manaAura = new Flare(7, 20);
-			manaAura.color(0x2A5CFF, true);
-			manaAura.angularSpeed = 25;
-			manaAura.show(hero.sprite, 0);
-			manaAura.alpha(0.45f);
+			manaAura = MazeFx.Loop.on(MazeFx.Fx.OVERFLOW, hero.sprite);
+			if (manaAura != null) manaAura.breathe(0.9f);
 		} else if ((!fullMana || !alive) && manaAura != null){
-			manaAura.killAndErase();
+			manaAura.stop();
 			manaAura = null;
-		}
-		if (manaAura != null){
-			manaAura.point(hero.sprite.center());
-			manaAura.visible = hero.sprite.visible;
 		}
 	}
 

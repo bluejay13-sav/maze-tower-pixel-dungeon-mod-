@@ -31,28 +31,28 @@ public class StaticCharge extends FlavourBuff {
 	}
 
 	//걸려 있는 동안 몸 주변에 잔 스파크 (원작 SparkParticle)
-	private Emitter sparks;
+	private com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop sparks; //(2026-11-21) 다시 그린 반복 그림
 
 	@Override
 	public void fx(boolean on) {
 		if (on){
 			if (sparks == null && target.sprite != null){
-				sparks = ElementalReactions.statusEmitter(target, SparkParticle.STATIC, 0.3f);
+				sparks = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.STATIC, target.sprite);
 			}
 		} else if (sparks != null){
-			sparks.on = false;
+			sparks.stop();
 			sparks = null;
 		}
 	}
 
 	@Override
 	public int icon() {
-		return BuffIndicator.RECHARGING;
+		return BuffIndicator.STATIC_CHARGE; //(2026-11-21) 새 아이콘
 	}
 
 	@Override
 	public void tintIcon(Image icon) {
-		icon.hardlight(1f, 1f, 0.3f);
+		icon.resetColor();
 	}
 
 	@Override

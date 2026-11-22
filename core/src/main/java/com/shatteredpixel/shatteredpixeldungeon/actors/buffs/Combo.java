@@ -427,6 +427,8 @@ public class Combo extends Buff implements ActionIndicator.Action {
 		GladiatorEffects.beginFinisherHit(hero, moveBeingUsed, mazeStartCount); //Maze Tower
 		boolean landed = hero.attack(enemy, dmgMulti, dmgBonus, Char.INFINITE_ACCURACY);
 		GladiatorEffects.endFinisherHit(); //Maze Tower
+		//Maze Tower (2026-11-21): 다시 그린 필살기 그림 (fx3_21 밀쳐내기, fx3_22 메치기, fx3_23 받아치기, fx3_24 으깨기 5×5, fx3_25 분노 폭발)
+		if (landed && !MazeTower.ORIGINAL_TALENTS) finisherFx(hero, enemy);
 		if (landed){
 			//special on-hit effects
 			switch (moveBeingUsed) {
@@ -459,7 +461,7 @@ public class Combo extends Buff implements ActionIndicator.Action {
 					hit(enemy);
 					break;
 				case CRUSH:
-					WandOfBlastWave.BlastWave.blast(enemy.pos);
+					if (MazeTower.ORIGINAL_TALENTS) WandOfBlastWave.BlastWave.blast(enemy.pos);
 					//Maze Tower: 범위를 대상 중심 2칸(5×5)으로 (원작은 주인공 중심 3칸, 7×7)
 					if (MazeTower.ORIGINAL_TALENTS) {
 						PathFinder.buildDistanceMap(target.pos, BArray.not(Dungeon.level.solid, null), 3);
@@ -561,6 +563,16 @@ public class Combo extends Buff implements ActionIndicator.Action {
 			GladiatorEffects.onFinisherEnd(hero, enemy, mazeStartCount, resets, killed);
 		}
 
+	}
+
+	private void finisherFx( Hero hero, Char enemy ){
+		switch (moveBeingUsed){
+			case CLOBBER: com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.toward(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.CLOBBER, hero, enemy); break;
+			case SLAM:    com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.SLAM, enemy.sprite); break;
+			case PARRY:   com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.toward(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.PARRY, hero, enemy); break;
+			case CRUSH:   com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.atCell(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.CRUSH, enemy.pos); break;
+			case FURY:    com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.toward(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.FURY, hero, enemy); break;
+		}
 	}
 
 	private static int mazeStartCount = 0; //Maze Tower: 필살기를 쓰기 직전의 연속 타격

@@ -472,6 +472,8 @@ public abstract class Char extends Actor {
 
 			//friendly endure
 			Endure.EndureTracker endure = buff(Endure.EndureTracker.class);
+			//Maze Tower (2026-11-21): 인내 응징 그림 (fx3_19)
+			if (endure != null && !endure.enduring && !com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_TALENTS && enemy.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.RETRIBUTION, enemy.sprite);
 			if (endure != null) dmg = endure.damageFactor(dmg);
 
 			//enemy endure

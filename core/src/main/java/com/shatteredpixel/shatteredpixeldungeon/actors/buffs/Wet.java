@@ -65,28 +65,28 @@ public class Wet extends Buff {
 	}
 
 	//걸려 있는 동안 몸에서 물방울이 떨어진다
-	private Emitter drops;
+	private com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop drops; //(2026-11-21) 다시 그린 반복 그림
 
 	@Override
 	public void fx(boolean on) {
 		if (on){
 			if (drops == null && target.sprite != null){
-				drops = ElementalReactions.statusEmitter(target, WaterDropParticle.FACTORY, 0.2f);
+				drops = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.WET, target.sprite);
 			}
 		} else if (drops != null){
-			drops.on = false;
+			drops.stop();
 			drops = null;
 		}
 	}
 
 	@Override
 	public int icon() {
-		return BuffIndicator.OOZE;
+		return BuffIndicator.WET; //(2026-11-21) 새 아이콘
 	}
 
 	@Override
 	public void tintIcon(Image icon) {
-		icon.hardlight(0.3f, 0.6f, 1f);
+		icon.resetColor();
 	}
 
 	@Override

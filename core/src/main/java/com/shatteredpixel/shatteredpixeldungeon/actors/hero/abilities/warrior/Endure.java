@@ -79,6 +79,19 @@ public class Endure extends ArmorAbility {
 
 		public boolean enduring = true;
 
+		//Maze Tower (2026-11-21): 버티는 동안 몸 둘레 반복 그림 (fx3_18)
+		private com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop endureFx;
+
+		@Override
+		public void fx(boolean on) {
+			if (on && enduring && !MazeTower.ORIGINAL_TALENTS){
+				if (endureFx == null && target.sprite != null) endureFx = com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Loop.on(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.ENDURE, target.sprite);
+			} else if (endureFx != null){
+				endureFx.stop();
+				endureFx = null;
+			}
+		}
+
 		public int damageBonus = 0;
 		public int hitsLeft = 0;
 
@@ -161,6 +174,7 @@ public class Endure extends ArmorAbility {
 			}
 
 			enduring = false;
+			fx(false);
 
 			//Maze Tower: 지속적인 응징 - 추가 피해를 2~3회로 나눠 총 120/150/180/210%
 			if (!MazeTower.ORIGINAL_TALENTS){
@@ -210,6 +224,7 @@ public class Endure extends ArmorAbility {
 				if (ch != null && ch.alignment == Char.Alignment.ENEMY && ch.isAlive()){
 					ch.damage(amt, hero);
 					if (ch.sprite != null) ch.sprite.flash();
+					if (ch.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.THORNS, ch.sprite); //(2026-11-21) 가시갑옷 fx3_20
 				}
 			}
 		}

@@ -116,9 +116,11 @@ public class HeroicLeap extends ArmorAbility {
 								int damage = MazeTower.T4_BODY_SLAM_FLAT + Math.round(hero.drRoll() * MazeTower.T4_BODY_SLAM_ARMOR[slam]);
 								damage -= mob.drRoll();
 								mob.damage(Math.max(0, damage), hero);
+								if (mob.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.SLAM_WAVE, mob.sprite);
 							}
 							int wave = Math.min(4, hero.pointsInTalent(Talent.IMPACT_WAVE));
 							if (wave > 0 && mob.isAlive() && mob.pos == hero.pos + i){
+								if (slam <= 0 && mob.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.SLAM_WAVE, mob.sprite);
 								Ballistica trajectory = new Ballistica(mob.pos, mob.pos + i, Ballistica.MAGIC_BOLT);
 								WandOfBlastWave.throwChar(mob, trajectory, MazeTower.T4_IMPACT_PUSH, true, true, HeroicLeap.this);
 								if (Random.Float() < MazeTower.T4_IMPACT_VULN[wave]){
@@ -143,8 +145,14 @@ public class HeroicLeap extends ArmorAbility {
 						}
 					}
 
-					WandOfBlastWave.BlastWave.blast(dest);
-					PixelScene.shake(2, 0.5f);
+					if (MazeTower.ORIGINAL_TALENTS){
+						WandOfBlastWave.BlastWave.blast(dest);
+						PixelScene.shake(2, 0.5f);
+					} else {
+						//Maze Tower (2026-11-21): 다시 그린 착지 그림 (fx3_16), 몸통 박치기·충격파를 받은 적에게 fx3_17, 흔들림 1픽셀
+						com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.atCell(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.LEAP, dest);
+						PixelScene.shake(1, 0.1f);
+					}
 
 					Invisibility.dispel();
 					hero.spendAndNext(Actor.TICK);
