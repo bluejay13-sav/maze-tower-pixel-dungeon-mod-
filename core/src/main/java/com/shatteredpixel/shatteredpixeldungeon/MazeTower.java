@@ -78,6 +78,8 @@ public class MazeTower {
 
 	//여러 번 때리는 스킬(연격, 반월베기)의 타격 사이 텀 (초, 화면 연출용)
 	public static final float SKILL_HIT_INTERVAL = 0.24f;
+	//(결정, 2026-11-21) 활 속사(각궁)의 화살 사이 텀 (앞 화살이 닿은 뒤 다음 화살을 쏘기까지, 예전엔 위 0.24초)
+	public static final float SKILL_RAPID_INTERVAL = 0.05f;
 
 	// ===== 마법사와 마법봉 =====
 

@@ -16,7 +16,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 //불에 타서 다 쪼그라든(s4) 수액 덩어리가 주변에 흩뿌린다. 보스가 그 칸에 들어서면 흡수하고,
 //2개를 흡수하면 기본 모습으로 돌아온다(Goo). 방울은 스스로 사라지지 않는다.
 //(제안, 사용자 확인 필요: 주인공이 터뜨리기·불에 타기는 아직 넣지 않음)
-//그림: maze_fx5_sap_drop.png 16×16×3 (반복)
+//그림: (2026-11-21) 수액 웅덩이 그림 maze_fx5_sap_puddle (예전 maze_fx5_sap_drop 방울)
 public class SapDrop extends Blob {
 
 	@Override
@@ -54,7 +54,8 @@ public class SapDrop extends Blob {
 	@Override
 	public void use( BlobEmitter emitter ) {
 		super.use( emitter );
-		emitter.add(new TileFxLayer(this, BossEffects.Fx.SAP_DROP, 4, 1f));
+		//(결정, 2026-11-21) 방울 대신 수액 웅덩이 그림 (붙어 있으면 이어져 보임, 5층 보스의 수액 웅덩이와 같은 그림)
+		emitter.add(new TileFxLayer(this, BossEffects.Fx.SAP_PUDDLE, 4, 0.85f).connect(BossEffects.Fx.SAP_PUDDLE_CONN));
 	}
 
 	@Override

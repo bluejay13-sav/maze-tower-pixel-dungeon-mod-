@@ -726,6 +726,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
   - 시트 `b1_sap_s1~s4_sheet.png`는 기본 시트와 프레임 크기(26×18)·번호(대기 0–1, 이동 2–5, 공격 6, 7, 7, 0, 사망 9–12)가 같다. 단계가 바뀔 때 텍스처만 바꾼다. 수액 방울 그림: `fx5_sap_drop` 16×16×3(반복), `fx5_sap_fly` 8×8×2(반복), `fx5_sap_absorb` 16×16×4(한 번).
   - **힘 모으기 입자 색**: 원작 구가 힘을 모을 때 몸 주위에 나오는 검은 입자(원작 `GooSprite`의 힘 모으기 입자)를 **연분홍(비중 약 70%: `#FFB7D5`·`#FFC9DE`·`#FFA3C7`) + 수액색(약 30%: `#F5BF55`·`#E0952A`)** 입자로 바꾼다. `fx5_charge` 겹침 그림은 그대로.
   - (구현) `Goo`(`stage`·`burnTick`·`shrivel`·`tryAbsorb`), 수액 방울 `actors/blobs/SapDrop`(스스로 사라지지 않음, 그림은 바닥 층), 쪼그라든 그림 `GooSprite.mazeStage`(`maze_b1_sap_s1~s4_sheet.png`), 날아가는 그림 `BossEffects.fly`. 수치 `SAP_BURN_UNTIL` 0.4, `SAP_STAGE_HP` {0.80, 0.65, 0.50}, `SAP_STAGE_STEP_TURNS` 2, `SAP_DROPS` 3, `SAP_DROP_RADIUS` 2, `SAP_DROPS_TO_HEAL` 2. 예전 "체력 절반 아래 물리 피해 +30%"(`SAP_HALF_PHYS_BONUS`)는 쓰지 않는다. (결정) 수액은 불타는 동안만 만들지 못한다(다 쪼그라든 s4에서도 내려치면 수액 웅덩이가 생긴다). 내려칠 때 수액 웅덩이 3~4칸(`SAP_PUDDLE_MIN/MAX`). (결정) 기본 모습으로 돌아온 뒤 다시 불이 붙으면 처음처럼 s1부터 한 단계에 2턴씩 다시 쪼그라들고, s4가 되면 방울을 다시 흩뿌린다(몇 번이든). 보스는 방울을 찾아가지 않고, 지나가다 방울 칸에 들어서면 흡수한다. 힘 모으기 입자 색은 불탈 때뿐 아니라 언제나 분홍·수액색(`GooSprite.GooParticle`). 횃불 2개는 `BOSS_TORCHES`(`SewerBossLevel.createItems`, 비밀방·입구·출구·문 칸 제외).
+  - (결정, 2026-11-21) 흩뿌린 수액 방울은 **수액 웅덩이 그림**으로 보인다(방울 그림 `fx5_sap_drop` 대신 수액 웅덩이 `fx5_sap_puddle`, 붙어 있으면 이어짐). 날아가는 그림과 흡수 규칙(보스가 2칸 흡수하면 회복)은 그대로(`SapDrop.use`).
 
 **10층 그림자 간수 (원작 텐구)**
 - 원작 순간이동·사슬(원작 수리검) 유지. 2단계의 원작 화염·전격 대신 마탑 마법 3가지(`WardenAbilities`): 봉인 부적(폭발 + 속박), 영혼 해방, 만개 광선.
@@ -953,6 +954,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 4차 정령 매: 원작 `SpiritHawk`을 마탑 규칙으로(`ORIGINAL_ARMOR_ABILITY`가 false일 때): 20턴 + 오래 머무는 매, 쪼면 실명 2턴 + 사냥 신호(`HunterEffects.HawkSignal`), 매의 눈 시야·4레벨 비밀 발견, 검게 칠한 매. 특성 `HAWK_LINGER`·`HAWK_EYE`·`HUNT_SIGNAL` + `HEROIC_ENERGY`. 수치 `HAWK_*`·`T4_HAWK_*`·`T4_HUNT_SIGNAL`.
 - 확인한 것: 빌드, 게임 실행(1분, 오류 없음). 사냥꾼으로 실제 플레이·보스전 확인은 아직 안 함.
 - 치트 "단검·활 7종·화살 50·투창 얻기".
+- (결정, 2026-11-21) 각궁 속사의 화살 사이 텀을 짧게: 앞 화살이 닿은 뒤 0.05초(`SKILL_RAPID_INTERVAL`, 예전엔 검 연타와 같은 0.24초).
 - (구현, 2026-11-21) 사냥꾼 이펙트(원본 `docs/sprites/hunter_fx/`, README에 파일별 크기·재생, 게임 사본 `sprites/maze_fx_hunter_*.png`, 재생 `MazeFx.Fx.H_*`): 화살 아이템 `arrow_item.png` → `maze_arrow_item.png`(`MazeItemSprites.ARROW`), 날아가는 화살 기본·강화(석궁 장전)·정령 = fx_hunter_00~02(`Arrow.Shot`, 석궁도 같은 화살, (결정) 날아가는 입자 없음), 석궁 장전 03·정량궁 집중 04(`BowCharge`), 꿰뚫기가 지나간 벽 칸 잔광 05, 덫 06, 맨손 평타 07, 급소 08, 혈점 09(3턴 동안 정지 그림), 흘리기 반격 10, 열기 중첩 11(주인공 발치, 중첩 수 = 프레임), 역경 12, 정화 13·면역 보호막 14(반복), 던지기 부딪힘 15, 흐르는 충전 16, 충전 터뜨리기 17~29(마법봉 13종, 그 밖은 마탄 20), 금화 30(금화 주먹·소매치기), 정령 매 31(날기 반복, (결정) 푸른빛, 쪼기 동작 없음)·소환 32·사라짐 33·몸 뒤 빛 34. `fx_hunter_35`는 README에 없어 쓰지 않음.
 
 ### 24. 25층 최종보스 — 심장을 진 짐승 (2026-11-22 구현, 사용자 플레이 확인 전)

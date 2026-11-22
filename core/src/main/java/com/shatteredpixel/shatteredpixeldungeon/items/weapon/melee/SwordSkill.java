@@ -329,7 +329,7 @@ public class SwordSkill {
 		//Maze Tower: 화살을 여러 발 쏘는 스킬(속사)은 화살이 떨어지면 멈춘다
 		if (index + 1 < skill.hits && enemy.isAlive() && hero.isAlive() && stillThere(enemy) && hero.sprite != null && hero.sprite.parent != null
 				&& (!skill.ranged || Arrow.count(hero) > 0)){
-			Delayer wait = new Delayer(MazeTower.SKILL_HIT_INTERVAL){
+			Delayer wait = new Delayer(skill.ranged ? MazeTower.SKILL_RAPID_INTERVAL : MazeTower.SKILL_HIT_INTERVAL){ //(결정, 2026-11-21) 속사 화살 사이는 짧게
 				@Override
 				protected void onComplete() {
 					super.onComplete();
