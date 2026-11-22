@@ -19,6 +19,22 @@ public class MazeItemSprites {
 	public static final int BOSS_TORCH     = BASE + 3; //5층 보스방 횃불
 	public static final int TALISMAN       = BASE + 4; //10층 그림자 간수의 봉인 부적 (날아가는 그림 첫 프레임)
 	public static final int WARDEN_CHAIN   = BASE + 5; //10층 그림자 간수가 던지는 사슬 (날아가는 그림 첫 프레임)
+	//사냥꾼 활 7종
+	public static final int BOW_SHORT  = BASE + 6;  //단궁
+	public static final int BOW_PELLET = BASE + 7;  //탄궁
+	public static final int BOW_LONG   = BASE + 8;  //장궁
+	public static final int BOW_HORN   = BASE + 9;  //각궁
+	public static final int BOW_CROSS  = BASE + 10; //석궁
+	public static final int BOW_GREAT  = BASE + 11; //정량궁
+	public static final int BOW_SPIRIT = BASE + 12; //정령의 활
+	//검 7종 (2026-11-21 새 그림, 원본 docs/sprites/weapons2/weapon_00~06.png)
+	public static final int SWORD_WORN      = BASE + 13; //낡은 숏소드
+	public static final int SWORD_SHORT     = BASE + 14; //숏소드
+	public static final int SWORD_RAPIER    = BASE + 15; //레이피어
+	public static final int SWORD_SCIMITAR  = BASE + 16; //시미터
+	public static final int SWORD_LONG      = BASE + 17; //롱소드
+	public static final int SWORD_KATANA    = BASE + 18; //카타나
+	public static final int SWORD_RUNIC     = BASE + 19; //룬 블레이드
 
 	private static final String[] FILES = {
 			"sprites/maze_bloom_core.png",
@@ -26,7 +42,21 @@ public class MazeItemSprites {
 			"sprites/maze_fruit_core.png",
 			"sprites/maze_p13_torch.png",
 			"sprites/maze_fx10_talisman_fly.png",
-			"sprites/maze_fx10_chain_fly.png"
+			"sprites/maze_fx10_chain_fly.png",
+			"sprites/maze_bow_short.png",
+			"sprites/maze_bow_pellet.png",
+			"sprites/maze_bow_long.png",
+			"sprites/maze_bow_horn.png",
+			"sprites/maze_bow_cross.png",
+			"sprites/maze_bow_great.png",
+			"sprites/maze_bow_spirit.png",
+			"sprites/maze_sword_worn_shortsword.png",
+			"sprites/maze_sword_shortsword.png",
+			"sprites/maze_sword_rapier.png",
+			"sprites/maze_sword_scimitar.png",
+			"sprites/maze_sword_longsword.png",
+			"sprites/maze_sword_katana.png",
+			"sprites/maze_sword_runic_blade.png"
 	};
 
 	public static boolean has( int image ){

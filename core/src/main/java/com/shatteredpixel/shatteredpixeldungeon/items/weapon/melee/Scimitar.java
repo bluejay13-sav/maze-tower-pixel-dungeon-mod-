@@ -32,7 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 public class Scimitar extends MeleeWeapon {
 
 	{
-		image = ItemSpriteSheet.SCIMITAR;
+		image = com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.SWORD_SCIMITAR; //Maze Tower: 새 검 그림
 		hitSound = Assets.Sounds.HIT_SLASH;
 		hitSoundPitch = 1.2f;
 

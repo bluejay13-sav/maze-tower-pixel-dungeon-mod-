@@ -89,6 +89,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - (구현) 단검·활 스킬(급소 찌르기·조준 사격)도 같은 `SwordSkill` 표에 들어 있다. 마법사 지팡이 스킬은 `WandMana`.
 - (구현) 장착한 검이 있으면 화면 오른쪽 아래 행동 버튼(검 그림 + 마나 비용)으로 쓴다. 장착한 검을 퀵슬롯에 넣어도 스킬이 나간다.
 - (참고) 원작에서 레이피어는 1티어다. 무기 티어는 원작 그대로 두었다.
+- (구현, 2026-11-21) 검 7종 아이템 그림을 새 그림으로 바꿨다(원본 `docs/sprites/weapons2/weapon_00~06.png`, 견본 `weapons_sheet.png`). 게임 그림 `sprites/maze_sword_*.png`, 번호 `MazeItemSprites.SWORD_*`(무기 클래스의 `image`, 전사 직업 정보 창 아이콘도). 활 7종 그림(`weapon_07~13` → `maze_bow_*.png`)도 함께 넣어 두었다(체험판에는 아직 사냥꾼이 없어 쓰지 않음).
 - 원작 Sword, Greatsword 등 위 7종 외 검은 테스트 빌드에서는 그대로 둔다(정리는 나중에).
 
 ### 4. 2차 전직

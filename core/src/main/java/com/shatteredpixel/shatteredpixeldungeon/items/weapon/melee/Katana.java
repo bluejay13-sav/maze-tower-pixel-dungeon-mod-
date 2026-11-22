@@ -30,7 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 public class Katana extends MeleeWeapon {
 
 	{
-		image = ItemSpriteSheet.KATANA;
+		image = com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.SWORD_KATANA; //Maze Tower: 새 검 그림
 		hitSound = Assets.Sounds.HIT_SLASH;
 		hitSoundPitch = 1.1f;
 

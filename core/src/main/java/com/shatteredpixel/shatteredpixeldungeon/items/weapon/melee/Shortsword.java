@@ -30,7 +30,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 public class Shortsword extends MeleeWeapon {
 
 	{
-		image = ItemSpriteSheet.SHORTSWORD;
+		image = com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.SWORD_SHORT; //Maze Tower: 새 검 그림
 		hitSound = Assets.Sounds.HIT_SLASH;
 		hitSoundPitch = 1.1f;
 

@@ -42,7 +42,7 @@ import com.watabou.utils.PathFinder;
 public class Rapier extends MeleeWeapon {
 
 	{
-		image = ItemSpriteSheet.RAPIER;
+		image = com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.SWORD_RAPIER; //Maze Tower: 새 검 그림
 		hitSound = Assets.Sounds.HIT_SLASH;
 		hitSoundPitch = 1.3f;
 

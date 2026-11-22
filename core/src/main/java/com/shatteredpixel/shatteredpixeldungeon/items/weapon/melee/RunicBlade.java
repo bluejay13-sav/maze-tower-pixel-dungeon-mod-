@@ -39,7 +39,7 @@ import com.watabou.utils.Callback;
 public class RunicBlade extends MeleeWeapon {
 
 	{
-		image = ItemSpriteSheet.RUNIC_BLADE;
+		image = com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.SWORD_RUNIC; //Maze Tower: 새 검 그림
 		hitSound = Assets.Sounds.HIT_SLASH;
 		hitSoundPitch = 1f;
 
