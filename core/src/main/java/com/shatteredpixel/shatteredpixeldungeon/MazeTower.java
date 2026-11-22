@@ -572,6 +572,10 @@ public class MazeTower {
 	public static final float WK_AMBUSH_DMG     = 1.3f;  //(결정) 기습 일격 피해 배율 (+30%)
 	public static final float WK_ZOLT_ARMOR_IGNORE = 0.7f; //(결정) 인간을 죽이는 마법은 주인공 방어력의 이만큼을 무시한다
 	public static final float WK_EYES_ALPHA     = 0.25f; //(결정, 바뀜 35%→25%) 어둠 속 푸른 눈의 진하기 (원작 미믹처럼 알아채기 어렵게)
+	//(결정, 2026-11-21) 1→2단계 "어둠이 찾아옴" 연출: 밝은 원이 왕 쪽으로 좁혀지는 시간, 완전히 깜깜한 시간, 마지막 원 반지름(픽셀)
+	public static final float WK_DARK_SHRINK_TIME = 2.0f;
+	public static final float WK_DARK_BLACK_TIME  = 0.7f;
+	public static final float WK_DARK_LAST_R      = 20f;
 	public static final int   WK_TP_ORB_MIN     = 2;     //(결정) 1단계에 맞아서 순간이동할 때: 영혼 구슬에서 이 칸 이상
 	public static final int   WK_TP_ORB_MAX     = 4;     //... 이 칸 이내
 	public static final float WK_PHASE3_TAKEN   = 1.5f;  //3단계: 받는 평타·스킬 피해

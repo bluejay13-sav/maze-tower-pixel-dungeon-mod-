@@ -215,6 +215,7 @@ public class WraithKing extends Mob {
 			fieldOfView = new boolean[Dungeon.level.length()];
 		}
 		Dungeon.level.updateFieldOfView(this, fieldOfView);
+		if (darkIntro) return playDarkIntro();
 		//주인공을 알아챈 상태 (원작 AI를 쓰지 않는 턴에도 기습 판정이 되지 않게)
 		if (Dungeon.hero.isAlive() && Dungeon.hero.invisible <= 0){ enemy = Dungeon.hero; enemySeen = true; }
 
@@ -370,6 +371,17 @@ public class WraithKing extends Mob {
 		SoulOrb.removeAll(SoulOrb.class);
 		SoulOrb.removeAll(SoulOrb.Warn.class);
 		yell(Messages.get(this, "phase2"));
+		//(결정, 2026-11-21) 바로 깜깜해지지 않고 왕의 다음 차례에 "어둠이 찾아옴" 연출을 보여 준 뒤 어두워진다
+		//(연출 중에는 왕의 차례가 끝나지 않으므로 주인공이 행동하지 않는다, act → playDarkIntro)
+		darkIntro = true;
+	}
+
+	//(결정) 1→2단계 연출 중인지. 저장되므로 연출 중에 껐다 켜도 다시 보여 준다
+	private boolean darkIntro = false;
+
+	private void finishDarkIntro(){
+		darkIntro = false;
+		if (phase != 2) return;
 		if (!lampsPlaced){
 			lampsPlaced = true;
 			placeLamps();
@@ -377,6 +389,26 @@ public class WraithKing extends Mob {
 		dark = true;
 		onDarkStart();
 		applyDarkness();
+	}
+
+	//화면 가장자리부터 어두워져 왕이 마지막으로 남고, 깜깜해진 뒤 푸른 눈이 한 번 빛난다 (effects/WraithDarkIntro)
+	private boolean playDarkIntro(){
+		if (!com.shatteredpixel.shatteredpixeldungeon.effects.WraithDarkIntro.canShow(sprite)){
+			finishDarkIntro();
+			spend(TICK);
+			return true;
+		}
+		sprite.idle();
+		GameScene.groupOverFog(new com.shatteredpixel.shatteredpixeldungeon.effects.WraithDarkIntro(sprite, new com.watabou.utils.Callback() {
+			@Override
+			public void call() {
+				finishDarkIntro();
+				spend(TICK);
+				next();
+			}
+		}));
+		Sample.INSTANCE.play(Assets.Sounds.CHARGEUP, 0.6f, 0.5f);
+		return false;
 	}
 
 	private void placeLamps(){
@@ -796,6 +828,7 @@ public class WraithKing extends Mob {
 
 	private void enterPhase3(){
 		if (phase == 1) enterPhase2();
+		darkIntro = false; //어둠 연출 전에 3단계가 되면 연출 없이
 		phase = 3;
 		dark = false;
 		zoltCharge = 0;
@@ -884,7 +917,7 @@ public class WraithKing extends Mob {
 			enterPhase3();
 		}
 		//(결정) 한 대 맞을 때마다 순간이동 (화상·독 같은 지속 피해는 제외). 기어다니는 3단계는 순간이동하지 못한다
-		if (phase != 3 && isAlive() && pre != HP && !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff)
+		if (phase != 3 && !darkIntro && isAlive() && pre != HP && !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff)
 				&& !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob)){
 			hitTeleport();
 		}
@@ -977,6 +1010,7 @@ public class WraithKing extends Mob {
 		bundle.put("zolt_dir", zoltDir);
 		bundle.put("ambush_cell", ambushCell);
 		bundle.put("countered", countered);
+		bundle.put("dark_intro", darkIntro);
 	}
 
 	@Override
@@ -996,6 +1030,7 @@ public class WraithKing extends Mob {
 		zoltDir = bundle.getInt("zolt_dir");
 		ambushCell = bundle.getInt("ambush_cell");
 		countered = bundle.getBoolean("countered");
+		darkIntro = bundle.getBoolean("dark_intro");
 		BossHealthBar.assignBoss(this);
 		if (phase == 3) BossHealthBar.bleed(true);
 	}
@@ -1050,8 +1085,7 @@ public class WraithKing extends Mob {
 			flash();
 			emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle.UP, 18);
 			emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.factory(com.shatteredpixel.shatteredpixeldungeon.effects.Speck.LIGHT), 6);
-			showStatus(0x66AAFF, Messages.get(WraithKing.class, "phase3_status"));
-			PixelScene.shake(3f, 0.6f);
+			PixelScene.shake(1f, 0.15f); //(결정, 2026-11-21) 흔들림은 언제나 1픽셀, 아주 짧게. "왕관이 깨졌다!" 글자는 띄우지 않는다
 			GameScene.flash(0x223366);
 		}
 

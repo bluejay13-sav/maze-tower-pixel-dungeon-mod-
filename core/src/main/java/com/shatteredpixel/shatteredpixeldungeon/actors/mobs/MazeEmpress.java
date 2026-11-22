@@ -426,7 +426,21 @@ public class MazeEmpress extends Mob {
 		if (spearType == 0 || sprite == null || !Dungeon.level.heroFOV[pos]) return;
 		int left = Math.max(0, spearTimer);
 		int color = spearType == ElementTile.FROST ? 0x88CCFF : 0xFF8844;
+		if (spearArmed()){
+			//(결정, 2026-11-21) 날아오기 1턴 전에는 남은 턴 숫자를 여제 머리 위가 아니라 창 옆에
+			PointF c = sprite.center();
+			boolean heroLeft = Dungeon.hero.sprite != null && Dungeon.hero.sprite.center().x < c.x;
+			com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText.show(c.x + (heroLeft ? 12 : -12), sprite.y - 8,
+					left > 0 ? Integer.toString(left) : "!", color);
+			return;
+		}
 		sprite.showStatus(color, left > 0 ? Integer.toString(left) : "!");
+	}
+
+	//창이 다음 여제 턴에 날아가는 상태 (주인공이 숨어 있으면 창이 주인공을 알아채지 못하므로 아님)
+	boolean spearArmed(){
+		return spearType != 0 && spearTimer <= 1 && isAlive()
+				&& Dungeon.hero != null && Dungeon.hero.isAlive() && Dungeon.hero.invisible <= 0 && Dungeon.hero.sprite != null;
 	}
 
 	//보스 체력 바 밑에 보이는 창 아이콘: 남은 턴을 숫자로 보여 준다
@@ -717,12 +731,14 @@ public class MazeEmpress extends Mob {
 		sensingPending = true;
 		spearCd = 0;
 		yell(Messages.get(this, "phase2"));
+		com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.shake(1f, 0.15f); //(결정, 2026-11-21) 단계 전환 때 아주 살짝 (1픽셀)
 	}
 
 	private void enterPhase3(){
 		phase = 3;
 		BossHealthBar.bleed(true);
 		yell(Messages.get(this, "phase3"));
+		com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.shake(1f, 0.15f);
 	}
 
 	@Override
@@ -868,22 +884,76 @@ public class MazeEmpress extends Mob {
 					parent.add(spear);
 				}
 			}
+			boolean armed = spear != null && e.spearArmed() && visible;
 			if (spear != null){
 				PointF c = center();
 				spear.origin.set(10, 3.5f);
-				//창끝(오른쪽)이 주인공 쪽을 향하게
-				boolean heroLeft = Dungeon.hero != null && Dungeon.hero.sprite != null && Dungeon.hero.sprite.center().x < c.x;
-				spear.scale.x = heroLeft ? -1 : 1;
 				spear.x = c.x - 10;
 				spear.y = y - 9;
 				spear.visible = visible;
+				if (armed){
+					//(결정) 날아오기 1턴 전: 창이 주인공 쪽을 겨눈다
+					PointF h = Dungeon.hero.sprite.center();
+					spear.scale.x = 1;
+					spear.angle = (float)(Math.atan2(h.y - (y - 5.5f), h.x - c.x) * 180 / Math.PI);
+				} else {
+					//창끝(오른쪽)이 주인공 쪽을 향하게
+					boolean heroLeft = Dungeon.hero != null && Dungeon.hero.sprite != null && Dungeon.hero.sprite.center().x < c.x;
+					spear.scale.x = heroLeft ? -1 : 1;
+					spear.angle = 0;
+				}
 			}
+			updateAim(e, armed);
+		}
+
+		//(결정, 2026-11-21) 창이 날아오기 1턴 전에만 조준선·창 겨누기·발밑 표식 (effects/SpearAimFx)
+		private com.shatteredpixel.shatteredpixeldungeon.effects.SpearAimFx aim;
+		private boolean wasArmed = false;
+
+		private void updateAim( MazeEmpress e, boolean armed ){
+			if (!armed){
+				if (aim != null) aim.hide();
+				wasArmed = false;
+				return;
+			}
+			if (aim == null || aim.parent == null){
+				aim = new com.shatteredpixel.shatteredpixeldungeon.effects.SpearAimFx();
+				GameScene.groupOverFog(aim);
+			}
+			int color = e.spearType == ElementTile.FROST ? 0xA8DCFF : 0xFF9A3C;
+			PointF c = center();
+			PointF mid = new PointF(c.x, y - 5.5f);
+			float rad = (float)(spear.angle * Math.PI / 180);
+			PointF tip = new PointF(mid.x + (float)Math.cos(rad) * 9, mid.y + (float)Math.sin(rad) * 9);
+			if (!wasArmed){
+				wasArmed = true;
+				//창끝이 한 번 반짝
+				new com.shatteredpixel.shatteredpixeldungeon.effects.Flare(4, 8).color(color, true).show(parent, tip, 0.45f);
+			}
+			//실제 창과 같은 경로 계산(Ballistica). 매 프레임 다시 그리므로 주인공이 움직이면 바로 따라간다
+			Ballistica b = new Ballistica(e.pos, Dungeon.hero.pos, Ballistica.STOP_SOLID | Ballistica.STOP_TARGET);
+			int end = b.collisionPos;
+			boolean blocked = Dungeon.level.solid[end];
+			PointF to;
+			PointF foot = null;
+			if (blocked){
+				int before = b.dist >= 1 ? b.path.get(b.dist - 1) : e.pos;
+				PointF p1 = DungeonTilemap.tileCenterToWorld(before), p2 = DungeonTilemap.tileCenterToWorld(end);
+				to = new PointF((p1.x + p2.x) / 2f, (p1.y + p2.y) / 2f); //막힌 칸과의 경계
+			} else {
+				to = Dungeon.hero.sprite.center();
+				PointF hc = DungeonTilemap.tileCenterToWorld(Dungeon.hero.pos);
+				foot = new PointF(hc.x, hc.y + 6);
+				if (end != Dungeon.hero.pos) blocked = true;
+			}
+			aim.set(tip, to, blocked, foot, color);
 		}
 
 		@Override
 		public void kill() {
 			if (petalBack != null){ petalBack.killAndErase(); petalFront.killAndErase(); }
 			if (spear != null) spear.killAndErase();
+			if (aim != null) aim.killAndErase();
 			super.kill();
 		}
 	}
