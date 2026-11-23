@@ -67,6 +67,12 @@ public class HeartFlesh extends NPC {
 	@Override
 	public boolean isInvulnerable( Class effect ) { return true; }
 
+	//(2026-11-22) 어떤 효과에도 면역이 아니다: 원작 INORGANIC 속성은 유독 가스·독에 면역이라
+	//  유독 가스 물약을 뿌려도 오염되지 않고 짐승이 그대로 회복하던 것을 고침.
+	//  붙으려는 상태이상은 add()에서 오염으로 바뀌고 실제로는 붙지 않는다.
+	@Override
+	public boolean isImmune( Class effect ) { return false; }
+
 	@Override
 	public void damage( int dmg, Object src ) {
 		//유독 가스: 원작 가스는 상태이상이 아니라 피해를 주므로 여기서 오염으로 받는다
@@ -118,11 +124,12 @@ public class HeartFlesh extends NPC {
 	public void contaminate( int t ){
 		if (eaten && type == t) return;
 		boolean changed = type != t;
+		boolean first = !dirty && t != CLEAN;
 		type = t;
 		if (t != CLEAN) dirty = true;
 		if (changed && sprite instanceof FleshSprite) ((FleshSprite) sprite).contaminate(t);
-		//(2026-11-22) 오염되는 순간 살점 위에 "오염됨!" 글자
-		if (changed && t != CLEAN && sprite != null && sprite.parent != null){
+		//(2026-11-22) 처음 오염되는 순간에만 살점 위에 "오염됨!" 글자 (다른 종류로 바뀔 때는 없음)
+		if (first && sprite != null && sprite.parent != null){
 			sprite.showStatus(CharSprite.NEGATIVE, Messages.get(this, "contaminated"));
 		}
 	}
