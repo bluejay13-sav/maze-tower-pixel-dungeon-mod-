@@ -212,7 +212,7 @@ public class Bloom2Fx {
 	public static MarkOverhead markOverhead(CharSprite s){
 		if (s == null || s.parent == null) return null;
 		MarkOverhead m = new MarkOverhead(s);
-		s.parent.add(m);
+		GameScene.effect(m); //(2026-11-22) 벽·기둥에 가리지 않게 벽 층보다 위(효과 층)에
 		return m;
 	}
 
@@ -266,7 +266,7 @@ public class Bloom2Fx {
 	public static SignalOverhead signalOverhead(Char ch){
 		if (ch == null || ch.sprite == null || ch.sprite.parent == null) return null;
 		SignalOverhead s = new SignalOverhead(ch);
-		ch.sprite.parent.add(s);
+		GameScene.effect(s); //(2026-11-22) 벽·기둥에 가리지 않게 벽 층보다 위(효과 층)에
 		return s;
 	}
 
