@@ -396,6 +396,13 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 		final BossEffects.Fx hit = type == ElementTile.FROST ? BossEffects.Fx.EM_FROST_HIT : BossEffects.Fx.EM_FIRE_HIT;
 		PointF a = sprite != null ? new PointF(sprite.center().x, sprite.y - 4) : DungeonTilemap.tileCenterToWorld(pos);
 		PointF z = DungeonTilemap.tileCenterToWorld(hitCell);
+		if (blocked){
+			//(2026-11-22) 벽에 막히면 벽 앞 칸 가운데가 아니라 벽면(두 칸의 경계)까지 날아가 거기서 터진다
+			//  (예전엔 바닥 칸 가운데에서 터져 땅에 떨어지는 것처럼 보였다)
+			PointF w = DungeonTilemap.tileCenterToWorld(b.collisionPos);
+			z = new PointF((z.x + w.x) / 2f, (z.y + w.y) / 2f);
+		}
+		final PointF hitAt = z;
 		final MovieClip m = BossEffects.clip(fly, 12, true);
 		m.origin.set(fly.w - 3, fly.h / 2f); //창끝 기준으로 돌린다
 		m.x = a.x - (fly.w - 3);
@@ -406,7 +413,7 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 			@Override
 			protected void onComplete() {
 				m.killAndErase();
-				BossEffects.atCell(hit, hitCell, 12, false);
+				BossEffects.at(hit, hitAt.x, hitAt.y, 12, false);
 				//(2026-11-22) 피해·상태이상은 창이 주인공에게 닿는 순간에 (예전엔 던지는 순간이라 창이 닿기 전에 걸렸다)
 				if (hitHero) spearHit(type);
 			}
