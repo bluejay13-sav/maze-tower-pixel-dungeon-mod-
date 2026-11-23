@@ -74,12 +74,20 @@ public class MazeTrial {
 		ShatteredPixelDungeon.scene().addToFront(new WndOptions(
 				Messages.get(MazeTrial.class, "title"),
 				Messages.get(MazeTrial.class, "desc"),
-				Messages.get(MazeTrial.class, "sap"), Messages.get(MazeTrial.class, "wraith"), Messages.get(MazeTrial.class, "empress"), Messages.get(MazeTrial.class, "heart")){
+				bossOptions()){
 			@Override
 			protected void onSelect(int index) {
 				start(index == 0 ? SAP : index == 1 ? WRAITH : index == 2 ? EMPRESS : HEART);
 			}
 		});
+	}
+
+	//(2026-11-22) 25층 짐승은 꺼 둔 동안(MazeTower.HEART_BOSS) 고를 수 없다
+	private static String[] bossOptions(){
+		if (MazeTower.HEART_BOSS){
+			return new String[]{ Messages.get(MazeTrial.class, "sap"), Messages.get(MazeTrial.class, "wraith"), Messages.get(MazeTrial.class, "empress"), Messages.get(MazeTrial.class, "heart") };
+		}
+		return new String[]{ Messages.get(MazeTrial.class, "sap"), Messages.get(MazeTrial.class, "wraith"), Messages.get(MazeTrial.class, "empress") };
 	}
 
 	//영웅 선택 화면에서 고른 직업(전사·사냥꾼)으로 새 게임을 시작한다 (빈 저장 칸, 없으면 1번 칸을 덮어씀)
@@ -165,17 +173,11 @@ public class MazeTrial {
 	public static java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> kit( int target ){
 		java.util.ArrayList<com.shatteredpixel.shatteredpixeldungeon.items.Item> items = new java.util.ArrayList<>();
 		if (!on() || (target != MazeTower.TRIAL_CITY_DEPTH && target != MazeTower.TRIAL_SAP_DEPTH && target != MazeTower.TRIAL_HEART_DEPTH)) return items; //(2026-11-22) 25층 짐승도 20층과 같은 지급품
-		//(결정) 모든 반지 감정된 채 +2 (마법봉·유물·장신구는 게임 메뉴의 체험판 아이템 창에서 골라 받는다, WndTrialItems)
-		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING.classes){
-			com.shatteredpixel.shatteredpixeldungeon.items.Item r = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
-			if (r == null) continue;
-			r.upgrade(MazeTower.TRIAL_RING_UPGRADE);
-			items.add(r.identify());
-		}
+		//(결정, 2026-11-22 사용자) 반지는 더 주지 않는다. 반지·마법봉·유물·장신구는 게임 메뉴의 아이템 꺼내기 창에서 골라 받는다(WndTrialItems)
 		boolean huntress = Dungeon.hero != null && Dungeon.hero.heroClass == HeroClass.HUNTRESS;
 		//(결정, 2026-11-21) 사냥꾼은 화살을 넉넉히 (5층·20층 모두)
 		if (huntress) items.add(new com.shatteredpixel.shatteredpixeldungeon.items.Arrow().quantity(target != MazeTower.TRIAL_SAP_DEPTH ? MazeTower.TRIAL_ARROWS_CITY : MazeTower.TRIAL_ARROWS_SAP));
-		//(결정) 반지는 5층·20층 둘 다, 아래 물약·주문서·검·갑옷은 20층만
+		//(결정) 아래 물약·주문서·검·갑옷은 20층만
 		if (target != MazeTower.TRIAL_CITY_DEPTH && target != MazeTower.TRIAL_HEART_DEPTH) return items;
 		for (Class<?> c : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION.classes){
 			com.shatteredpixel.shatteredpixeldungeon.items.Item p = (com.shatteredpixel.shatteredpixeldungeon.items.Item) com.watabou.utils.Reflection.newInstance(c);
