@@ -772,6 +772,7 @@ public class Hero extends Char {
 		}
 
 		speed = AscensionChallenge.modifyHeroSpeed(speed);
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.bossFight()) speed = Math.min(speed, 1f); //Maze Tower: 보스전에서는 이동 속도를 빠르게 하는 효과가 듣지 않는다
 		
 		return speed;
 		
@@ -849,6 +850,7 @@ public class Hero extends Char {
 		}
 	}
 
+
 	//Maze Tower: 직업 고유 공격 속도 (도적 1.3배)
 	public float classAttackSpeed(){
 		return heroClass == HeroClass.ROGUE ? MazeTower.ROGUE_ATTACK_SPEED : 1f;
@@ -882,6 +884,7 @@ public class Hero extends Char {
 		//calls to dungeon.observe will also update hero's local FOV.
 		fieldOfView = Dungeon.level.heroFOV;
 		com.shatteredpixel.shatteredpixeldungeon.effects.RegionAmbience.onHeroTurn(); //Maze Tower: 구역 분위기 이펙트
+		com.shatteredpixel.shatteredpixeldungeon.MazeBosses.checkSpeedLock(this); //Maze Tower: 보스전 동안 속도 봉인 아이콘
 
 		if (buff(Endure.EndureTracker.class) != null){
 			buff(Endure.EndureTracker.class).endEnduring();

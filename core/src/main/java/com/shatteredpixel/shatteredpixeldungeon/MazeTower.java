@@ -734,6 +734,9 @@ public class MazeTower {
 	//사슴(짐승) 기본 수치 (사용자 결정: 원작 요그와 같은 체력)
 	//(결정, 2026-11-22 사용자) 25층 짐승은 버그가 많고 완성도가 낮아 꺼 둔다(나중에 다시 개발). false면 원작 25층 보스(탑의 주인 외형)와 원작 굴절광·이식 마법봉, 24층 건너뛰기 숨김
 	public static final boolean HEART_BOSS = false;
+	//(결정, 2026-11-22 사용자) 보스전(보스층이 잠겨 싸우는 동안)에는 이동 속도를 빠르게 하는 효과가 듣지 않는다
+	//  (신속의 물약·반지, 마법 부여, 기세 등). 주인공 이동 속도는 최대 1배. 느려지는 효과는 그대로. 공격 속도(분노의 반지 등)는 그대로
+	public static final boolean BOSS_NO_SPEEDUP = true;
 	public static final int   B25_HP            = 1000;
 	public static final int   B25_EXP           = 50;
 	public static final int   B25_DEF           = 20;    //회피

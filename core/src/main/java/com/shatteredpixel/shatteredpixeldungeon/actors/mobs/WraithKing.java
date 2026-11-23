@@ -457,10 +457,33 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 	}
 
 	public void onLampBroken(){
+		removeBrokenLamps();
 		if (phase != 2) return;
 		dark = true;
 		onDarkStart();
 		applyDarkness();
+	}
+
+	//(결정, 2026-11-22 사용자) 다시 어두워질 때 이미 꺼진(부서진) 등불은 맵에서 사라진다 (서서히 흐려짐)
+	private static void removeBrokenLamps(){
+		if (Dungeon.level == null) return;
+		for (Mob m : Dungeon.level.mobs.toArray(new Mob[0])){
+			if (!(m instanceof MemoryLamp) || !((MemoryLamp) m).broken) continue;
+			m.HP = 0; //영웅이 겨눴던 체력 막대가 남지 않게
+			Dungeon.level.mobs.remove(m);
+			Actor.remove(m);
+			final com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite s = m.sprite;
+			if (s != null && s.parent != null){
+				s.parent.add(new com.watabou.noosa.tweeners.AlphaTweener(s, 0f, MazeTower.PROP_FADE_TIME){
+					@Override
+					protected void onComplete() {
+						s.killAndErase();
+					}
+				});
+			} else if (s != null){
+				s.killAndErase();
+			}
+		}
 	}
 
 	private int lastView = -1;

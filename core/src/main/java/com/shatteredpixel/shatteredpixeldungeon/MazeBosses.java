@@ -64,4 +64,53 @@ public class MazeBosses {
 		if (!ENABLED) return Assets.Environment.CITY_BOSS;
 		return empress() ? Assets.Environment.MAZE_CITY_BOSS_EMPRESS : Assets.Environment.MAZE_CITY_BOSS_WRAITH;
 	}
+
+	//(결정, 2026-11-22 사용자) 보스전 중인지: 보스층이 잠겨 보스와 싸우는 동안. 이때는 이동 속도를 빠르게 하는 효과가 듣지 않는다(Hero.speed)
+	public static boolean bossFight(){
+		return ENABLED && MazeTower.BOSS_NO_SPEEDUP && Dungeon.level != null && Dungeon.bossLevel() && Dungeon.level.locked;
+	}
+
+	//(결정, 2026-11-22 사용자) 보스전 동안 주인공 상태 칸에 "속도 봉인" 아이콘 (원작 신속 아이콘을 회색으로). 보스전이 끝나면 사라진다
+	public static void checkSpeedLock( com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero h ){
+		if (h == null) return;
+		if (bossFight()){
+			if (h.buff(SpeedLock.class) == null) com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(h, SpeedLock.class);
+		} else {
+			com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.detach(h, SpeedLock.class);
+		}
+	}
+
+	public static class SpeedLock extends com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff {
+		{
+			type = buffType.NEUTRAL;
+			announced = false;
+		}
+
+		@Override
+		public boolean act() {
+			if (!bossFight()) detach();
+			spend(TICK);
+			return true;
+		}
+
+		@Override
+		public int icon() {
+			return com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.HASTE;
+		}
+
+		@Override
+		public void tintIcon( com.watabou.noosa.Image icon ) {
+			icon.hardlight(0.45f, 0.45f, 0.5f);
+		}
+
+		@Override
+		public String name() {
+			return com.shatteredpixel.shatteredpixeldungeon.messages.Messages.get(this, "name");
+		}
+
+		@Override
+		public String desc() {
+			return com.shatteredpixel.shatteredpixeldungeon.messages.Messages.get(this, "desc");
+		}
+	}
 }
