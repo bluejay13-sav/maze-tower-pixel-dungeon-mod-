@@ -169,6 +169,7 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 			speed *= 3f;
 			
 		} else if (item instanceof SpiritBow.SpiritArrow
+				|| item instanceof Arrow //Maze Tower (2026-11-22): 화살도 원작 정령의 화살처럼 1.5배 빠르게
 				|| item instanceof ScorpioSprite.ScorpioShot
 				|| item instanceof TenguSprite.TenguShuriken){
 			speed *= 1.5f;

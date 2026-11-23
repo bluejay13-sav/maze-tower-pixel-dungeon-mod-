@@ -125,13 +125,10 @@ public class WornShortbow extends MeleeWeapon {
 	public static final int SHOT_PLAIN = 0, SHOT_LOADED = 1, SHOT_MAGIC = 2;
 
 	public static void fireAnimation(final Hero hero, final Char target, final Callback then, final int kind){
-		hero.sprite.attack(target.pos, new Callback() {
-			@Override
-			public void call() {
-				hero.sprite.idle();
-				launchArrow(hero, target, then, kind);
-			}
-		});
+		//(2026-11-22) 원작 정령의 활처럼: 짧은 던지기 동작(zap)과 동시에 화살이 날아간다.
+		//  예전엔 근접 휘두르기 동작을 다 한 뒤에 화살이 나가서 어색했다
+		hero.sprite.zap(target.pos, new Callback() { @Override public void call() { hero.sprite.idle(); } });
+		launchArrow(hero, target, then, kind);
 	}
 
 	//시위 동작 없이 화살만 날린다 (속사의 두 번째 화살 등)
