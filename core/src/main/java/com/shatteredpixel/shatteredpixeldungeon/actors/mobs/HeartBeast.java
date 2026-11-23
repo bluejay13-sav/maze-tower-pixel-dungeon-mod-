@@ -712,6 +712,7 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 		p3Intro = true;
 		GLog.n(Messages.get(this, "phase3"));
 		BossHealthBar.bleed(true);
+		Buff.affect(this, InvulnCountdown.class); //(2026-11-22) 보스 체력바 밑에 무적 남은 턴
 	}
 
 	//(2026-11-22, 참고 움짤 25F_9) 3페이즈 진입: 다시 만들어진 뒤 포효(점 고리가 퍼짐) → 강한 글리치·70 bpm. 흔들림 없음. 그동안 턴이 멈춘다
@@ -1109,5 +1110,52 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 			((HeartBeastSprite) s).strongGlitch = true;
 		}
 		return s;
+	}
+
+	//(2026-11-22) 3페이즈 무적 남은 턴: 보스 체력바 밑 아이콘(원작 면역 아이콘) + 숫자, 누르면 설명
+	public static class InvulnCountdown extends Buff {
+
+		{
+			type = buffType.NEUTRAL;
+			announced = false;
+		}
+
+		private HeartBeast beast(){
+			return target instanceof HeartBeast ? (HeartBeast) target : null;
+		}
+
+		@Override
+		public boolean act() {
+			HeartBeast b = beast();
+			if (b == null || b.phase != 3 || !b.isAlive()) detach();
+			spend(TICK);
+			return true;
+		}
+
+		@Override
+		public int icon() {
+			HeartBeast b = beast();
+			if (b == null || b.phase != 3) return com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.NONE;
+			return com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.IMMUNITY;
+		}
+
+		@Override
+		public float iconFadePercent() {
+			HeartBeast b = beast();
+			if (b == null) return 0;
+			return Math.max(0, Math.min(1, 1f - Math.max(0, b.p3Left) / (float) MazeTower.B25_P3_TURNS));
+		}
+
+		@Override
+		public String iconTextDisplay() {
+			HeartBeast b = beast();
+			return b == null ? "" : Integer.toString(Math.max(0, b.p3Left));
+		}
+
+		@Override
+		public String desc() {
+			HeartBeast b = beast();
+			return Messages.get(this, "desc", b == null ? 0 : Math.max(0, b.p3Left));
+		}
 	}
 }
