@@ -358,6 +358,7 @@ public class WndTrialItems extends Window {
 			Item it = make(lastGiven);
 			String n = Messages.titleCase(it.name());
 			if (it.isUpgradable() && upgrade > 0 && !(it instanceof Artifact)) n += " +" + upgrade;
+			else if (it instanceof Artifact && upgrade > 0) n += " +" + Math.min(upgrade, 10);
 			RenderedTextBlock name = PixelScene.renderTextBlock(n, 6);
 			Component holder = new Component();
 			ColorBlock bub = new ColorBlock(name.width() + 6, name.height() + 3, 0xC8000000);
@@ -450,13 +451,15 @@ public class WndTrialItems extends Window {
 	}
 
 	// ---------------- 아이템 만들기·받기 ----------------
-	//설정대로: 강화(강화되는 것만, 유물 제외), 수량(쌓이는 것만), 감정, 저주(장비·마법봉만)
+	//설정대로: 강화(강화되는 것만, 유물은 +10까지), 수량(쌓이는 것만), 감정, 저주(장비·마법봉만)
 	private static Item make( Class<?> c ){
 		Object o = Reflection.newInstance(c);
 		if (!(o instanceof Item)) return null;
 		Item item = (Item) o;
 		if (item.stackable) item.quantity(quantity);
 		if (upgrade > 0 && item.isUpgradable() && !(item instanceof Artifact)) item.upgrade(upgrade);
+		//(2026-11-22) 유물: 원작처럼 보이는 단계 +0~+10 기준. 유물마다 최대 레벨이 달라(3·5·10) 원작 강화 이전과 같은 계산으로 실제 레벨을 정한다
+		if (upgrade > 0 && item instanceof Artifact) ((Artifact) item).transferUpgrade(Math.min(upgrade, 10));
 		if (identified) item.identify();
 		if (cursed && (item instanceof EquipableItem || item instanceof Wand)){
 			item.cursed = true;
