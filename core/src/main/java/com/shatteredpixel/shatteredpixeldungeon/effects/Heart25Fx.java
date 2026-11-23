@@ -44,6 +44,9 @@ public class Heart25Fx {
 		if (target == null || target.sprite == null || target.sprite.parent == null) return;
 		target.sprite.flash();
 		PointF a = DungeonTilemap.tileCenterToWorld(fromCell), b = DungeonTilemap.tileCenterToWorld(target.pos);
+		//(2026-11-22) 원작 근접 피격처럼 맞은 쪽 반대로 피가 튐 (기술 피해는 Char.attack을 거치지 않아 피가 안 나왔음)
+		if (fromCell != target.pos) target.sprite.bloodBurstA(a, Math.max(1, target.HT / 3));
+		else target.sprite.bloodBurstA(new PointF(b.x, b.y - 8), Math.max(1, target.HT / 3));
 		float dx = Math.signum(b.x - a.x), dy = Math.signum(b.y - a.y);
 		nudge(target.sprite, dx, dy);
 	}

@@ -459,24 +459,65 @@ public class MimicHero extends Mob {
 	}
 
 	//끝으로 갈수록 가늘어지는 혈관 가시 (코드 그림)
+	//(2026-11-22, 미리보기 25F_5에 맞춤) 칸마다 혈관 가시: 굵은 큰 가시 하나(아래 넓고 끝으로 갈수록 가늘어짐,
+	//  왼쪽 어둡고 오른쪽 밝은 명암, 끝은 옅은 흰빛) + 왼쪽에 휘어진 작은 가시 하나.
+	//  낮게 솟음 → 다 솟음(잠시) → 반쯤 가라앉음 → 바닥에 작은 혹만 남음 → 사라짐
+	private static final float[] THORN_STAGE_SCALE = { 0.35f, 1f, 0.55f, 0.18f };
+	private static final float[] THORN_STAGE_TIME  = { 0.06f, 0.18f, 0.09f, 0.09f };
+
 	private void thornFx( int cell ){
 		final PointF p = DungeonTilemap.tileToWorld(cell);
 		final Group g = new Group();
-		for (int k = 0; k < 3; k++){
-			float bx = p.x + 3 + k * 4 + Random.Int(2);
-			int h = 6 + Random.Int(4);
-			for (int i = 0; i < h; i++){
-				int w = i < h / 3 ? 2 : 1;
-				ColorBlock b = new ColorBlock(w, 1, i < h / 2 ? 0xFF8A1020 : 0xFFE05060);
-				b.x = bx; b.y = p.y + 14 - i;
+		GameScene.groupEffect(g);
+		final int mainX = 8 + Random.Int(2);          //큰 가시 가운데 (칸 안 x)
+		final int mainH = 11 + Random.Int(2);         //큰 가시 높이
+		final int sideX = 3 + Random.Int(2);          //작은 가시 밑동
+		final int sideH = 5 + Random.Int(2);
+		buildThorn(g, p, mainX, mainH, sideX, sideH, THORN_STAGE_SCALE[0]);
+		g.parent.add(new Gizmo(){
+			float t = 0;
+			int stage = 0;
+			@Override public void update(){
+				t += Game.elapsed;
+				if (t < THORN_STAGE_TIME[stage]) return;
+				t = 0;
+				stage++;
+				if (stage >= THORN_STAGE_SCALE.length){ g.killAndErase(); killAndErase(); return; }
+				buildThorn(g, p, mainX, mainH, sideX, sideH, THORN_STAGE_SCALE[stage]);
+			}
+		});
+	}
+
+	private static void buildThorn( Group g, PointF p, int mainX, int mainH, int sideX, int sideH, float scale ){
+		g.clear();
+		float base = p.y + 15;
+		//큰 가시: 아래 폭 4 → 끝 1
+		int h = Math.max(1, Math.round(mainH * scale));
+		for (int i = 0; i < h; i++){
+			float k = (float) i / mainH;
+			int w = Math.max(1, Math.round(4 * (1f - k)));
+			int left = mainX - w / 2;
+			boolean tip = i >= h - 2 && scale > 0.5f;
+			for (int x = 0; x < w; x++){
+				int col;
+				if (tip) col = x == w - 1 ? 0xFFF2E6EA : 0xFFC8B8BE;          //끝: 옅은 흰빛
+				else if (x == 0) col = 0xFF6A1024;                                //왼쪽 그림자
+				else if (x == w - 1) col = 0xFFF08CA0;                            //오른쪽 빛
+				else col = 0xFFC0304A;
+				ColorBlock b = new ColorBlock(1, 1, col);
+				b.x = p.x + left + x; b.y = base - i;
 				g.add(b);
 			}
 		}
-		GameScene.groupEffect(g);
-		g.parent.add(new Gizmo(){
-			float t = 0.45f;
-			@Override public void update(){ t -= Game.elapsed; if (t <= 0){ g.killAndErase(); killAndErase(); } }
-		});
+		//작은 가시: 1px 굵기, 위로 갈수록 왼쪽으로 휘어짐
+		int sh = Math.max(1, Math.round(sideH * scale));
+		for (int i = 0; i < sh; i++){
+			int x = sideX - (i * i) / 8;
+			boolean tip = i >= sh - 1 && scale > 0.5f;
+			ColorBlock b = new ColorBlock(i == 0 ? 2 : 1, 1, tip ? 0xFFE8DCE0 : (i < sh / 2 ? 0xFF8A1A30 : 0xFFD05068));
+			b.x = p.x + x; b.y = base - i;
+			g.add(b);
+		}
 	}
 
 	// ---------------- 도적 ----------------
