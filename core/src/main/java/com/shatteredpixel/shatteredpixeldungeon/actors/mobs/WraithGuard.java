@@ -15,8 +15,8 @@ import com.watabou.noosa.TextureFilm;
 import com.watabou.utils.Random;
 
 //Maze Tower: 망령 근위병 (20층 망령 왕 2단계, 명세 22번). 그림 maze_m20_wraith_guard_sheet.png 16×20, 13프레임.
-//한 턴에 2칸 움직인다. 어둠 속에서는 눈이 멀어(시야 1칸) 소리를 따라간다:
-//주인공이 움직이면 그쪽으로, 주인공이 무언가를 던지면 떨어진 쪽으로 (CityBossLevel.occupyCell, Item.onThrow → WraithKing.noise).
+//한 턴에 2칸 움직인다. 어둠 속에서는 주인공 위치를 모르고 돌아다니다가 2칸 안에서만 알아챈다(WG_DARK_SENSE).
+//주인공이 무언가를 던지면 떨어진 쪽으로 모인다 (Item.onThrow → WraithKing.noise). 발소리(CityBossLevel.occupyCell)는 무시한다.
 //어둠 속에서 은은한 푸른빛을 띠어 멀리서도 보인다.
 public class WraithGuard extends Mob {
 
@@ -66,17 +66,29 @@ public class WraithGuard extends Mob {
 	protected boolean act() {
 		WraithKing k = WraithKing.find();
 		boolean dark = k != null && k.isDark();
-		viewDistance = dark ? MazeTower.WK_DARK_VIEW : 8;
+		//(결정, 2026-11-22 사용자) 어둠 속에서는 주인공 위치를 모른다: 무작위로 돌아다니다가
+		//  주인공이 2칸 안(WG_DARK_SENSE)에 들어오면 그때만 알아채고 쫓아가 공격한다
+		viewDistance = dark ? MazeTower.WG_DARK_SENSE : 8;
+		Char h = Dungeon.hero;
+		if (dark && h != null && h.isAlive() && h.invisible <= 0
+				&& Dungeon.level.distance(pos, h.pos) <= MazeTower.WG_DARK_SENSE){
+			if (state != HUNTING && sprite != null) sprite.showAlert();
+			state = HUNTING;
+			enemy = h;
+			target = h.pos;
+			noisePriority = 0;
+		}
 		//쫓던 소리가 난 곳에 닿으면 다음 소리를 받는다
 		if (noisePriority > 0 && (pos == target || Dungeon.level.adjacent(pos, target))) noisePriority = 0;
 		return super.act();
 	}
 
-	//(결정) 어둠 속에서는 소리를 따라간다: 던진 물건이 떨어진 칸이 먼저, 그다음이 주인공 발소리.
-	//던진 물건 쪽으로 가는 동안에는 발소리를 무시한다
+	//(결정, 2026-11-22 사용자 바뀜) 어둠 속 근위병은 던진 물건이 떨어진 소리에만 모인다.
+	//주인공 발소리로는 위치를 알지 못한다(예전엔 발소리를 따라가 늘 주인공 쪽으로 왔다)
 	public void hear( int cell, int priority ){
 		WraithKing k = WraithKing.find();
 		if (k == null || !k.isDark()) return;
+		if (priority != NOISE_THROW) return;
 		if (priority < noisePriority) return;
 		noisePriority = priority;
 		if (state == SLEEPING || state == PASSIVE || state == HUNTING) state = WANDERING;

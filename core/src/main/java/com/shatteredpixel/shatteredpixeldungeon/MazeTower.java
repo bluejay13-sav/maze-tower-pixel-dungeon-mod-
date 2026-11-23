@@ -689,6 +689,7 @@ public class MazeTower {
 	public static final int   WG_DEF            = 8;     //(결정, 바뀜 15→8) 회피
 	public static final int   WG_DR             = 4;
 	public static final float WG_SPEED          = 2f;    //한 턴에 2칸
+	public static final int   WG_DARK_SENSE     = 2;     //(2026-11-22 사용자) 어둠 속에서 주인공을 알아채는 거리(칸). 발소리는 듣지 못하고 던진 물건 소리에만 모인다
 
 	//마도시의 여제
 	public static final int   EM_HP             = 540;   //(결정, 2026-11-21 밸런스) 체력 300 → 540
