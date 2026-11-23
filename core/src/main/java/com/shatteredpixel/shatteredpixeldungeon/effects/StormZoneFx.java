@@ -47,8 +47,10 @@ public class StormZoneFx {
 
 	//층의 캐릭터 무리 그룹에 붙인다: 테두리는 맨 뒤(바닥 쪽), 폭풍 입자는 맨 앞
 	public void attach( Group mobs ){
-		mobs.addToBack(floor);
-		if (storm) mobs.add(sky);
+		//(2026-11-22) 벽 층보다 위(효과 층)에 그린다. 캐릭터 층에 두면 방 아래쪽 벽의 윗부분이
+		//  맨 아래 줄을 덮어서 아래쪽 폭풍 띠만 한 칸 좁아 보였다
+		com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.groupEffect(floor);
+		if (storm) com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.groupEffect(sky);
 		sky.add(new Spawner());
 	}
 
