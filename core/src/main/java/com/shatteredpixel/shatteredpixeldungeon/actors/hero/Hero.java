@@ -772,7 +772,16 @@ public class Hero extends Char {
 		}
 
 		speed = AscensionChallenge.modifyHeroSpeed(speed);
-		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.bossFight()) speed = Math.min(speed, 1f); //Maze Tower: 보스전에서는 이동 속도를 빠르게 하는 효과가 듣지 않는다
+		//Maze Tower: 보스전에서는 이동 속도를 빠르게 하는 효과로 보통 속도보다 빨라질 수 없다.
+		//(2026-11-22 사용자) 대신 느려지는 효과(느려짐·감속·냉기·혹한)는 신속 등으로 상쇄할 수 있다:
+		//감속·냉기·혹한은 Char.spend에서 이동 시간을 늘리므로, 그만큼 상한을 높여 이동 한 칸이 1턴보다 빨라지지만 않게 한다
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.bossFight()){
+			float slow = 1f;
+			if (buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Slow.class) != null)            slow = 0.5f;
+			else if (buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill.class) != null)      slow = buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill.class).speedFactor();
+			else if (buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frostbite.class) != null)  slow = buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frostbite.class).speedFactor();
+			speed = Math.min(speed, 1f / Math.max(0.1f, slow));
+		}
 		
 		return speed;
 		
