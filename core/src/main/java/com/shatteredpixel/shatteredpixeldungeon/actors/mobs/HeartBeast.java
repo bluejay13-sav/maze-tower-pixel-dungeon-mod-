@@ -312,7 +312,7 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 
 	private void finishEat( HeartFlesh f ){
 		eatLeft = 0;
-		if (f.type == HeartFlesh.CLEAN){
+		if (!f.contaminated()){ //(2026-11-22) 오염된 살점은 절대 회복하지 않음
 			int heal = Math.round(HT * MazeTower.B25_EAT_HEAL);
 			HP = Math.min(HT, HP + heal);
 			if (sprite != null) sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(heal), com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText.HEALING);

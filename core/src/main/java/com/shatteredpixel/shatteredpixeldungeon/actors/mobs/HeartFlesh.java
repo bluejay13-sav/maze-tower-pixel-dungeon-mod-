@@ -46,6 +46,9 @@ public class HeartFlesh extends NPC {
 	public float corrodeDmg = 1f;
 	public int corruptLvl = 0;        //타락: 쏜 마법봉의 레벨 (원작 디버프 지속 6 + 레벨 × 3)
 	public boolean eaten = false;     //짐승이 먹는 중
+	public boolean dirty = false;     //(2026-11-22) 한 번이라도 오염됐으면 true. 먹어도 회복하지 않는다
+
+	public boolean contaminated(){ return dirty || type != CLEAN; }
 
 	public static HeartFlesh at( int cell ){
 		Char c = Actor.findChar(cell);
@@ -116,7 +119,12 @@ public class HeartFlesh extends NPC {
 		if (eaten && type == t) return;
 		boolean changed = type != t;
 		type = t;
+		if (t != CLEAN) dirty = true;
 		if (changed && sprite instanceof FleshSprite) ((FleshSprite) sprite).contaminate(t);
+		//(2026-11-22) 오염되는 순간 살점 위에 "오염됨!" 글자
+		if (changed && t != CLEAN && sprite != null && sprite.parent != null){
+			sprite.showStatus(CharSprite.NEGATIVE, Messages.get(this, "contaminated"));
+		}
 	}
 
 	//짐승이 다 먹었다 / 2페이즈 시작 때 터진다
@@ -163,6 +171,7 @@ public class HeartFlesh extends NPC {
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle(bundle);
 		bundle.put("type", type);
+		bundle.put("dirty", dirty);
 		bundle.put("corrode_left", corrodeLeft);
 		bundle.put("corrode_dmg", corrodeDmg);
 		bundle.put("corrupt_lvl", corruptLvl);
@@ -172,6 +181,7 @@ public class HeartFlesh extends NPC {
 	public void restoreFromBundle( Bundle bundle ) {
 		super.restoreFromBundle(bundle);
 		type = bundle.getInt("type");
+		dirty = bundle.getBoolean("dirty") || type != CLEAN;
 		corrodeLeft = bundle.getFloat("corrode_left");
 		corrodeDmg = bundle.getFloat("corrode_dmg");
 		corruptLvl = bundle.getInt("corrupt_lvl");
