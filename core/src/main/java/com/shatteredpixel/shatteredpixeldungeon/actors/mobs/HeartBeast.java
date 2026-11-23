@@ -388,7 +388,7 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 				t += Game.elapsed;
 				if (step == 0 && t >= 1.4f){ step++; s.faceSide(); s.idle(); }
 				if (step == 1 && t >= 2.0f){ step++; s.face(pos, pos + Dungeon.level.width()); s.idle(); }
-				if (step == 2 && t >= 2.4f){ step++; s.parent.add(new Heart25Fx.DarkEdges(2.2f)); Sample.INSTANCE.play(Assets.Sounds.CHALLENGE, 0.6f, 0.5f); }
+				if (step == 2 && t >= 2.4f){ step++; GameScene.groupOverFog(new Heart25Fx.DarkEdges(s, 2.2f)); Sample.INSTANCE.play(Assets.Sounds.CHALLENGE, 0.6f, 0.5f); }
 				if (step == 3 && t >= 3.4f){ step++; s.strongGlitch = true; }
 				if (step == 4 && t >= 4.2f){
 					step++;
@@ -827,7 +827,7 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 				waveCd = MazeTower.B25_WAVE_CD;
 				waves.add(0);
 				if (hsprite() != null) hsprite().stomp();
-				if (sprite != null && sprite.parent != null) sprite.parent.add(new Heart25Fx.Vignette(1.6f));
+				if (sprite != null && sprite.parent != null) GameScene.groupOverFog(new Heart25Fx.Vignette(1.6f));
 				Sample.INSTANCE.play(Assets.Sounds.BLAST, 0.6f, 0.6f);
 			}
 		}

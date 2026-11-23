@@ -6,6 +6,11 @@
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.glwrap.Texture;
+import com.watabou.noosa.Camera;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -158,28 +163,63 @@ public class Heart25Fx {
 		}
 	}
 
-	//화면 가장자리 어둡게 조였다 풀리기 (비네트). 영웅 둘레 큰 원 바깥이 어두워진다
-	public static class Vignette extends Image {
-		private float t = 0;
+	//(2026-11-22) 화면 전체를 덮는 어둠: 부드러운 구멍(maze_fx20w_dark_hole.png) + 그 바깥을 덮는 검은 판 4장.
+	//  예전에는 구멍 그림 하나만 키워 써서 그림 밖(화면 가장자리)은 어두워지지 않았다. 안개 위에 그린다.
+	public static abstract class ScreenDark extends Group {
+		private static final float HOLE_TEX = 128f;  //그림 크기
+		private static final float HOLE_MID = 42f;   //그림 안 부드러운 가장자리의 가운데 반지름
+		private static final float BIG = 4000f;
+		private final Image hole;
+		private final ColorBlock[] sides = new ColorBlock[4];
+		protected final float screenR; //화면 전체를 덮을 만큼 큰 반지름
+		protected float t = 0;
+
+		public ScreenDark(){
+			SmartTexture tx = TextureCache.get("sprites/maze_fx20w_dark_hole.png");
+			tx.filter(Texture.LINEAR, Texture.LINEAR);
+			hole = new Image(tx);
+			add(hole);
+			for (int i = 0; i < 4; i++){ sides[i] = new ColorBlock(1, 1, 0xFF000000); add(sides[i]); }
+			Camera c = Camera.main;
+			float w = c == null ? 400 : c.width / c.zoom, h = c == null ? 300 : c.height / c.zoom;
+			screenR = (float)Math.sqrt(w * w + h * h) + 40f;
+			set(new PointF(0, 0), screenR, 0);
+		}
+
+		//center 둘레 반지름 r 바깥을 alpha만큼 어둡게
+		protected void set( PointF center, float r, float alpha ){
+			float s = Math.max(r, 0.01f) / HOLE_MID;
+			hole.scale.set(s);
+			float size = HOLE_TEX * s;
+			hole.x = center.x - size / 2f;
+			hole.y = center.y - size / 2f;
+			sides[0].size(BIG * 2, BIG); sides[0].x = hole.x - BIG;  sides[0].y = hole.y - BIG;
+			sides[1].size(BIG * 2, BIG); sides[1].x = hole.x - BIG;  sides[1].y = hole.y + size;
+			sides[2].size(BIG, size);    sides[2].x = hole.x - BIG;  sides[2].y = hole.y;
+			sides[3].size(BIG, size);    sides[3].x = hole.x + size; sides[3].y = hole.y;
+			hole.alpha(alpha);
+			for (ColorBlock b : sides) b.alpha(alpha);
+		}
+
+		protected static float smooth( float p ){
+			p = Math.max(0, Math.min(1, p));
+			return p * p * (3 - 2 * p);
+		}
+	}
+
+	//심장 박동 파동(3페이즈): 박동에 맞춰 영웅 둘레 바깥이 살짝 어두워졌다 풀림 (화면 전체)
+	public static class Vignette extends ScreenDark {
 		private final float life;
 		public Vignette( float life ){
-			super("sprites/maze_fx20w_dark_hole.png");
 			this.life = life;
-			alpha(0);
 		}
 		@Override
 		public void update() {
 			super.update();
 			t += Game.elapsed;
 			if (t >= life || Dungeon.hero == null || Dungeon.hero.sprite == null){ killAndErase(); return; }
-			PointF c = Dungeon.hero.sprite.center();
-			float r = 150f;
-			scale.set(r * 2 / width);
-			x = c.x - width / 2f;
-			y = c.y - height / 2f;
-			origin.set(width / 2f, height / 2f);
 			float beat = (float)Math.abs(Math.sin(t * Math.PI * 70f / 60f));
-			alpha(0.35f * beat * Math.min(1f, (life - t) / 0.3f));
+			set(Dungeon.hero.sprite.center(), 70f, MazeTower.B25_VIGNETTE_ALPHA * beat * Math.min(1f, (life - t) / 0.3f));
 		}
 	}
 
@@ -251,28 +291,35 @@ public class Heart25Fx {
 		}
 	}
 
-	//화면 가장자리를 서서히 어둡게 조였다가 풀기 (2페이즈 진입)
-	public static class DarkEdges extends Image {
-		private float t = 0;
+	//2페이즈 진입: 화면 가장자리부터 어둠이 짐승 쪽으로 조여들어 짐승 둘레만 밝게 남았다가(잠시 유지), 다시 풀린다
+	public static class DarkEdges extends ScreenDark {
 		private final float life;
-		public DarkEdges( float life ){
-			super("sprites/maze_fx20w_dark_hole.png");
+		private final com.watabou.noosa.Visual focus;
+		public DarkEdges( com.watabou.noosa.Visual focus, float life ){
+			this.focus = focus;
 			this.life = life;
-			alpha(0);
 		}
 		@Override
 		public void update() {
 			super.update();
 			t += Game.elapsed;
-			if (t >= life || Dungeon.hero == null || Dungeon.hero.sprite == null){ killAndErase(); return; }
-			PointF c = Dungeon.hero.sprite.center();
-			float r = 120f;
-			origin.set(width / 2f, height / 2f);
-			scale.set(r * 2 / width);
-			x = c.x - width / 2f;
-			y = c.y - height / 2f;
+			if (t >= life || focus == null || focus.parent == null){ killAndErase(); return; }
 			float k = t / life;
-			alpha(0.7f * (float)Math.sin(Math.PI * k));
+			float in = MazeTower.B25_DARK_IN, hold = MazeTower.B25_DARK_HOLD;
+			float minR = MazeTower.B25_DARK_R;
+			float r, a = MazeTower.B25_DARK_ALPHA;
+			if (k < in){
+				float p = smooth(k / in);
+				r = screenR + (minR - screenR) * p;
+				a *= Math.min(1f, k / in * 2f);
+			} else if (k < in + hold){
+				r = minR;
+			} else {
+				float p = smooth((k - in - hold) / (1f - in - hold));
+				r = minR + (screenR - minR) * p;
+				a *= 1f - p;
+			}
+			set(focus.center(), r, a);
 		}
 	}
 

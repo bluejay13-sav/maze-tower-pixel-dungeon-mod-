@@ -736,6 +736,12 @@ public class MazeTower {
 	public static final int   B25_DEF           = 20;    //회피
 	public static final int   B25_ACC           = 30;    //명중
 	public static final int   B25_DR            = 10;    //방어 0~10
+	//(2026-11-22) 2페이즈 진입 어둠: 화면 전체가 짐승 쪽으로 조여든다 (조여드는 시간·유지 시간은 연출 길이에 대한 비율)
+	public static final float B25_DARK_ALPHA    = 0.92f;
+	public static final float B25_DARK_R        = 26f;   //가장 좁을 때 짐승 둘레 밝은 원 반지름(픽셀)
+	public static final float B25_DARK_IN       = 0.35f;
+	public static final float B25_DARK_HOLD     = 0.35f;
+	public static final float B25_VIGNETTE_ALPHA = 0.45f; //3페이즈 심장 박동 파동 때 화면 어둡기
 	public static final int   B25_ROOM_W        = 17;    //보스방 안쪽 크기
 	public static final int   B25_ROOM_H        = 11;    //(결정, 2026-11-22 사용자) 17×13 → 17×11
 	//1페이즈: 살점과 오염

@@ -192,6 +192,28 @@ public class MimicHero extends Mob {
 		return super.canAttack(enemy);
 	}
 
+	//(2026-11-22) 차지형 기술을 끊는 상태: 마비·빙결·화상, 또는 자기 칸에 마비 가스·불·냉기·전기
+	private boolean interruptedHere(){
+		if (paralysed > 0 || buff(Paralysis.class) != null || buff(Burning.class) != null
+				|| buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost.class) != null) return true;
+		for (Blob b : Dungeon.level.blobs.values()){
+			if (!(b instanceof ParalyticGas || b instanceof Fire || b instanceof Freezing || b instanceof Electricity)) continue;
+			if (b.volume > 0 && b.cur[pos] > 0) return true;
+		}
+		return false;
+	}
+
+	//마비·빙결·화상이 붙는 순간 바로 끊김 (가시밭 경고 중)
+	@Override
+	public synchronized boolean add( Buff buff ) {
+		boolean ok = super.add(buff);
+		if (ok && cls == MAGE && thornCenter != -1 && (buff instanceof Paralysis || buff instanceof Burning
+				|| buff instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost)){
+			cancelCharge();
+		}
+		return ok;
+	}
+
 	// ===== 피해 =====
 	@Override
 	public void damage( int dmg, Object src ) {
@@ -361,13 +383,18 @@ public class MimicHero extends Mob {
 	// ---------------- 마법사 ----------------
 	private Boolean actMage( final Hero hero ){
 		//가시밭: 지난 턴에 경고한 3×3
+		//(2026-11-22) 경고 중 밀려났거나(충격파 등), 마비·빙결·불·전기를 맞았으면 끊김.
+		//  물약 가스·불은 가스가 자기 차례에 상태이상을 걸어서, 그보다 먼저 가시가 나가던 것을 고침: 자기 칸의 가스·불도 본다
+		if (thornCenter != -1 && (castPos != pos || interruptedHere())){
+			cancelCharge();
+			spend(TICK);
+			return true;
+		}
 		if (thornCenter != -1){
 			int c = thornCenter;
 			thornCenter = -1;
 			ArrayList<Integer> area = area3(c);
-			if (castPos != pos){ //충격파 등으로 밀려나면 끊김
-				cancelCharge();
-			} else {
+			{
 				for (int cell : area){
 					CellEmitter.get(cell).burst(BloodParticle.BURST, 3);
 					thornFx(cell);
