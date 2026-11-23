@@ -397,10 +397,19 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 		PointF a = sprite != null ? new PointF(sprite.center().x, sprite.y - 4) : DungeonTilemap.tileCenterToWorld(pos);
 		PointF z = DungeonTilemap.tileCenterToWorld(hitCell);
 		if (blocked){
-			//(2026-11-22) 벽에 막히면 벽 앞 칸 가운데가 아니라 벽면(두 칸의 경계)까지 날아가 거기서 터진다
-			//  (예전엔 바닥 칸 가운데에서 터져 땅에 떨어지는 것처럼 보였다)
-			PointF w = DungeonTilemap.tileCenterToWorld(b.collisionPos);
-			z = new PointF((z.x + w.x) / 2f, (z.y + w.y) / 2f);
+			//(2026-11-22) 벽에 막히면 벽 앞 칸 가운데가 아니라 벽면까지 날아가 거기서 터진다
+			//  (예전엔 바닥 칸 가운데에서 터져 땅에 떨어지는 것처럼 보였다).
+			//  여제 칸에서 주인공 쪽으로 곧게 뻗은 선이 벽 칸 네모에 처음 닿는 점 (대각선으로 날아와도 벽면 위)
+			PointF o = DungeonTilemap.tileCenterToWorld(pos);
+			PointF t = DungeonTilemap.tileCenterToWorld(Dungeon.hero.pos);
+			PointF wl = DungeonTilemap.tileToWorld(b.collisionPos);
+			PointF e = rayEnter(o, new PointF(t.x - o.x, t.y - o.y), wl.x, wl.y, wl.x + DungeonTilemap.SIZE, wl.y + DungeonTilemap.SIZE);
+			if (e != null){
+				z = e;
+			} else {
+				PointF w = DungeonTilemap.tileCenterToWorld(b.collisionPos);
+				z = new PointF((z.x + w.x) / 2f, (z.y + w.y) / 2f);
+			}
 		}
 		final PointF hitAt = z;
 		final MovieClip m = BossEffects.clip(fly, 12, true);
@@ -419,6 +428,23 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 			}
 		});
 		Sample.INSTANCE.play(Assets.Sounds.MISS, 1f, 0.8f);
+	}
+
+	//o에서 d 방향으로 뻗은 선이 네모(minX~maxX, minY~maxY)에 처음 들어가는 점. 닿지 않으면 null
+	private static PointF rayEnter( PointF o, PointF d, float minX, float minY, float maxX, float maxY ){
+		float tmin = 0, tmax = Float.MAX_VALUE;
+		float[] os = {o.x, o.y}, ds = {d.x, d.y}, mins = {minX, minY}, maxs = {maxX, maxY};
+		for (int i = 0; i < 2; i++){
+			if (Math.abs(ds[i]) < 1e-6f){
+				if (os[i] < mins[i] || os[i] > maxs[i]) return null;
+			} else {
+				float t1 = (mins[i] - os[i]) / ds[i], t2 = (maxs[i] - os[i]) / ds[i];
+				tmin = Math.max(tmin, Math.min(t1, t2));
+				tmax = Math.min(tmax, Math.max(t1, t2));
+			}
+		}
+		if (tmax < tmin) return null;
+		return new PointF(o.x + d.x * tmin, o.y + d.y * tmin);
 	}
 
 	private void spearHit( int type ){
