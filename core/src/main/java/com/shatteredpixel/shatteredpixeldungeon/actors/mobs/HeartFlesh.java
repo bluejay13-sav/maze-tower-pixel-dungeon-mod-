@@ -273,6 +273,8 @@ public class HeartFlesh extends NPC {
 				@Override
 				public void onComplete( MovieClip.Animation anim ) {
 					c.killAndErase();
+					//then[4] == 1: 부푼 뒤 터짐 (살점 조각·피가 사방으로)
+					if (then != null && then.length > 4 && then[4] == 1) chunks(g, px + 12, py + 13);
 					if (then != null) clip(g, px, py, then[0], then[1], then[2], then[3] / 1000f, null);
 				}
 			};
@@ -294,8 +296,43 @@ public class HeartFlesh extends NPC {
 		}
 
 		public void eatenAway(){ playFx(1, 7, 11, 0.04f, null); }
-		public void explode(){ playFx(6, 0, 11, 0.06f, null); }
-		public void swellExplode(){ playFx(6, 0, 5, 0.23f, new int[]{6, 6, 11, 60}); }
+		//(2026-11-22) 터짐: 7줄의 6·7칸(가운데 점이 있는 고리)이 눈이 떠지는 것처럼 보여서 쓰지 않는다.
+		//  부풀기(0~5칸) → 코드로 살점 조각·피가 사방으로 튐 → 흩어진 핏방울(8~11칸)
+		public void explode(){ playFx(6, 3, 5, 0.06f, new int[]{6, 8, 11, 60, 1}); }
+		public void swellExplode(){ playFx(6, 0, 5, 0.23f, new int[]{6, 8, 11, 60, 1}); }
+
+		private static final int[] CHUNK_COLORS = { 0xFFC0304A, 0xFFE0607A, 0xFF8A1A30, 0xFFF08CA0, 0xFF6A1024 };
+
+		//살점 조각이 사방으로 튀어 포물선을 그리며 떨어지고 흐려진다 + 피 입자
+		private static void chunks( final com.watabou.noosa.Group g, final float cx, final float cy ){
+			int n = 9;
+			for (int i = 0; i < n; i++){
+				int sz = com.watabou.utils.Random.Int(3) == 0 ? 3 : 2;
+				final com.watabou.noosa.ColorBlock b = new com.watabou.noosa.ColorBlock(sz, sz, CHUNK_COLORS[com.watabou.utils.Random.Int(CHUNK_COLORS.length)]);
+				b.x = cx - sz / 2f; b.y = cy - sz / 2f;
+				g.add(b);
+				double a = Math.PI * 2 * (i + com.watabou.utils.Random.Float(0.6f)) / n;
+				final float sp = com.watabou.utils.Random.Float(38f, 62f);
+				final float vx0 = (float)Math.cos(a) * sp;
+				final float vy0 = (float)Math.sin(a) * sp * 0.7f - com.watabou.utils.Random.Float(20f, 40f);
+				final float life = com.watabou.utils.Random.Float(0.35f, 0.5f);
+				g.add(new com.watabou.noosa.Gizmo(){
+					float t = 0, vx = vx0, vy = vy0;
+					@Override public void update(){
+						float dt = Game.elapsed;
+						t += dt;
+						vy += 220f * dt;
+						b.x += vx * dt; b.y += vy * dt;
+						b.alpha(Math.max(0f, 1f - t / life));
+						if (t >= life){ b.killAndErase(); killAndErase(); }
+					}
+				});
+			}
+			com.watabou.noosa.particles.Emitter e = new com.watabou.noosa.particles.Emitter();
+			e.pos(cx - 4, cy - 4, 8, 8);
+			g.add(e);
+			e.burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle.BURST, 12);
+		}
 		//불에 탐: 4줄(타오름) → 6줄(재로 흩어짐)
 		public void burn(){ playFx(3, 0, 11, 0.05f, new int[]{5, 0, 11, 60}); }
 	}

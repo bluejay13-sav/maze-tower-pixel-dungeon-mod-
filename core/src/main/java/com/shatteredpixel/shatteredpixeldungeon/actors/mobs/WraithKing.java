@@ -89,6 +89,8 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 	//Maze Tower: 기습 중(푸른 눈)과 어둠 속 왕에게는 체력바를 띄우지 않는다
 	public static boolean hideHealth( Char c ){
 		if (c instanceof WraithEyes) return true;
+		//(2026-11-22) 25층 도적 의태가 은신한 동안도 체력바를 띄우지 않는다
+		if (c instanceof MimicHero && c.invisible > 0) return true;
 		return c instanceof WraithKing && ((WraithKing) c).isDark();
 	}
 
