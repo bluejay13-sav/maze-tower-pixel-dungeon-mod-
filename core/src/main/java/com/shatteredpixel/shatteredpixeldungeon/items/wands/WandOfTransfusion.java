@@ -128,7 +128,7 @@ public class WandOfTransfusion extends DamageWand {
 				//charms living enemies
 				if (!ch.properties().contains(Char.Property.UNDEAD)) {
 					//Maze Tower (2026-11-22): 1턴 매혹 + 모으던 차지형 기술 취소 (예: 마법사 의태의 가시밭, 사냥꾼 의태의 관통 혈시 조준)
-					Charm charm = Buff.affect(ch, Charm.class, com.shatteredpixel.shatteredpixeldungeon.MazeTower.TRANSFUSION_CHARM);
+					Charm charm = Buff.affect(ch, Charm.class, com.shatteredpixel.shatteredpixeldungeon.MazeTower.HEART_BOSS ? com.shatteredpixel.shatteredpixeldungeon.MazeTower.TRANSFUSION_CHARM : Charm.DURATION/2f); //25층 짐승을 끈 동안은 원작 그대로
 					charm.object = curUser.id();
 					charm.ignoreHeroAllies = true;
 					if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MimicHero){

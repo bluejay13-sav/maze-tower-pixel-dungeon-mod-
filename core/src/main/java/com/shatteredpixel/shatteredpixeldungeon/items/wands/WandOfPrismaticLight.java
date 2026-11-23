@@ -68,7 +68,7 @@ public class WandOfPrismaticLight extends DamageWand {
 	@Override
 	public void onZap(Ballistica beam) {
 		affectMap(beam);
-		mazeRevealInvisible(beam);
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.HEART_BOSS) mazeRevealInvisible(beam); //Maze Tower: 25층 짐승을 끈 동안은 원작 그대로
 
 		if (Dungeon.level.viewDistance < 6 ){
 			if (Dungeon.isChallenged(Challenges.DARKNESS)){

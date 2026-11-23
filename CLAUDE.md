@@ -751,7 +751,7 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - 불에 타면 수정이 녹아 방어력 0 + 받는 피해 +30%, 다시 자라기까지 50턴(`CRYSTAL_MELT_*`).
 - 보스가 쓰러지면 남은 수정 기둥도 무너진다.
 
-**25층**: (결정, 2026-11-22, 사용자) 탑의 주인·원작 요그-드제와 대신 **심장을 진 짐승**이 25층 최종보스다. 명세 24번. 탑의 주인 그림(`maze_b7_master*`)·`MazeBossSprites.setMasterPhase`는 지우지 않고 남겨 둠(지금은 쓰이지 않음).
+**25층**: (결정, 2026-11-22, 사용자) (2026-11-22 꺼 둠, 명세 24번 맨 위 참고) 탑의 주인·원작 요그-드제와 대신 **심장을 진 짐승**이 25층 최종보스다. 명세 24번. 탑의 주인 그림(`maze_b7_master*`)·`MazeBossSprites.setMasterPhase`는 지우지 않고 남겨 둠(지금은 쓰이지 않음).
 
 **20층 (결정, 구현)**: 두 보스 모두 원작 드워프 왕 패턴을 쓰지 않고 새로 만든다. 원본 기획은 Claude 문서 "20·25층 보스 패턴 초안". 수치는 모두 임시값으로 `MazeTower`에 모은다. 그림은 명세 19번(`docs/sprites/boss_fx/README_b20.md`)에 준비됨.
 - (구현) 공통 수치(원작 드워프 왕 기준, `MazeTower`의 `B20_*`): (결정, 2026-11-21 밸런스) 체력은 보스마다 따로: 망령 왕 600(도전 "더 강한 보스" 900, `WK_HP`), 여제 540(810, `EM_HP`) — 예전 공통 300(450), 경험치 40, 회피 20(여제, 망령 왕은 17), 명중 26, 방어 0~10, 망령 왕 근접 15~25. 쓰러지면 원작 드워프 왕처럼 결실의 핵·배지·점수 4000·방 열기(`MazeBoss20.afterDeath`), 보스가 쓰러진 자리 기록(역행 흔적).
@@ -963,7 +963,8 @@ Shattered Pixel Dungeon(SPD) 원작 소스를 기반으로 만드는 아종이�
 - (결정, 밤) **혈점 찌르기**: 맞히는 순간 적 몸통 가운데에 fx_hunter_09(6프레임 한 번, 0.08초). 몸에 남는 그림은 없다. 맞은 적에게 "혈점" 상태(3턴, 회피 0·반드시 적중, `HunterEffects.PressurePoint`)가 걸리고, 살펴보기 창의 상태 목록에 진홍 마름모 아이콘(`BuffIndicator.BLOODPOINT`, `sprites/maze_buff_bloodpoint_small.png` 7×7·`_big.png` 16×16, 원본 `hunter_fx/buff_bloodpoint_*.png`)과 남은 턴이 보인다. 적에게만 걸리므로 주인공 버프 칸에는 뜨지 않는다.
 - (결정, 밤) **사냥 신호**: 매가 쪼은 적 머리 위에 푸른 깃털(`sprites/maze_mark_hunt_signal.png` 7×7 × 2프레임, 0.6초씩 번갈아, `Bloom2Fx.SignalOverhead` ← `HunterEffects.HawkSignal.fx`). 다음 기본공격으로 신호가 소모되면 사라진다. 2차 표식이 있으면 같은 자리(머리 위 가운데)에 겹치고 깃털이 뒤·표식이 앞(견본 `hunter_fx/signal_overlap.gif`).
 
-### 24. 25층 최종보스 — 심장을 진 짐승 (2026-11-22 구현, 사용자 플레이 확인 전)
+### 24. 25층 최종보스 — 심장을 진 짐승 (2026-11-22 구현, **꺼 둠**)
+- **(결정, 2026-11-22 사용자) 버그가 많고 완성도가 낮아 본판·체험판 모두 꺼 두고 나중에 다시 개발한다.** `MazeTower.HEART_BOSS = false`면 25층은 예전처럼 원작 보스(탑의 주인 외형, `HallsBossLevel`)이고, 굴절광·이식 마법봉은 원작 그대로, 치트 "24층까지 건너뛰기"는 숨김, 체험판 보스 고르기에서도 빠진다. 코드·그림은 지우지 않았다(true로 바꾸면 다시 켜짐). 아래는 꺼 두기 전까지의 구현 기록이다.
 - 지시서: `docs/specs/claude_code_tasks_1122_boss25.md`(오전) + `claude_code_tasks_1122b_boss25_update.md`(오후, 겹치면 이쪽). 지시서는 고치지 않는다. 그림: `docs/sprites/bosses/boss25/`(사슴 시트·README, 무기 든 의태 영웅 4장, 오전 움짤), `boss25_update/`(오염 살점 시트, 오후 움짤). 게임 사본 `sprites/maze_b7_heartbeast_*.png`·`maze_b7_mimic_<직업>.png`·`maze_b7_flesh_contaminated.png`·`maze_b7_flesh_fx.png`, 오염 번짐 프레임 `maze_b7_flesh_contam_anim.png`(오염 살점 시트에서 만든 16×16 × 6단계 × 5줄: 바깥 테두리부터 안쪽으로 한 겹씩, 경계 1px 중간색).
 - (사용자 결정) 체력 1000·회피 20·명중 30·방어 0~10·이동 보통(원작 요그 기준), 1페이즈는 피해 감소 없음, 보스방 안쪽 17×13 → (2026-11-22 사용자) 17×11 (`B25_ROOM_W/H`), 의태 시체는 의태 때 생기는 연출, 처치 보상은 원작 요그와 같음(점수 5000 + 1250 × 남은 악마 소환진, 배지, 26층 길 열림), **3페이즈 "심장 때리기"(남은 턴 -1)는 없앰 — 3페이즈는 무적, 무조건 20턴 버티기**.
 - 코드: 보스방 `levels/HeartBossLevel`(25층, `MazeBosses.ENABLED`일 때 `Dungeon`이 원작 `HallsBossLevel` 대신 씀. 아래 문 → 통로 → 입구, 윗벽 가운데가 출구. 방에 들어서면 문이 닫히고 짐승이 방 가운데에), 짐승 `actors/mobs/HeartBeast`(+ 그림 `sprites/HeartBeastSprite`), 살점 `actors/mobs/HeartFlesh`(+ `FleshSprite`), 의태 영웅 `actors/mobs/MimicHero`(+ `MimicSprite`), 연출 도우미 `effects/Heart25Fx`(경고 칸·1px 흔들림·영웅 피격·비네트). 수치는 `MazeTower`의 `B25_*`·`MW_*`(전사)·`MM_*`(마법사)·`MR_*`(도적)·`MH_*`(사냥꾼)·`TRANSFUSION_CHARM`.
