@@ -407,22 +407,25 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 			protected void onComplete() {
 				m.killAndErase();
 				BossEffects.atCell(hit, hitCell, 12, false);
+				//(2026-11-22) 피해·상태이상은 창이 주인공에게 닿는 순간에 (예전엔 던지는 순간이라 창이 닿기 전에 걸렸다)
+				if (hitHero) spearHit(type);
 			}
 		});
 		Sample.INSTANCE.play(Assets.Sounds.MISS, 1f, 0.8f);
+	}
 
-		if (hitHero){
-			Char ch = Dungeon.hero;
-			int st = ElementTile.reactingStatus(ch, type);
-			ch.damage(Random.NormalIntRange(MazeTower.EM_SPEAR_MIN, MazeTower.EM_SPEAR_MAX), this);
-			if (!ch.isAlive()){
-				Dungeon.fail(this);
-				return;
-			}
-			if (type == ElementTile.FROST) Buff.affect(ch, Frostbite.class, MazeTower.EM_SPEAR_FROSTBITE);
-			else                           Buff.affect(ch, Burning.class).reignite(ch);
-			elementHit(ch, type, st);
+	private void spearHit( int type ){
+		Char ch = Dungeon.hero;
+		if (ch == null || !ch.isAlive()) return;
+		int st = ElementTile.reactingStatus(ch, type);
+		ch.damage(Random.NormalIntRange(MazeTower.EM_SPEAR_MIN, MazeTower.EM_SPEAR_MAX), this);
+		if (!ch.isAlive()){
+			Dungeon.fail(this);
+			return;
 		}
+		if (type == ElementTile.FROST) Buff.affect(ch, Frostbite.class, MazeTower.EM_SPEAR_FROSTBITE);
+		else                           Buff.affect(ch, Burning.class).reignite(ch);
+		elementHit(ch, type, st);
 	}
 
 	//창이 날아오기까지 남은 턴을 여제 머리 위에 숫자로 (보스 체력 바 밑 아이콘에도 같은 숫자)
