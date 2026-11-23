@@ -600,7 +600,7 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 	private void stormTick(){
 		if (warnZone == null && stormZone == null){
 			warnZone = newZone(0);
-			warnZone[3] = MazeTower.EM_STORM_FIRST_WARN; //(결정) 처음 폭풍은 경고 3턴
+			warnZone[3] = MazeTower.EM_STORM_FIRST_WARN; //(결정) 처음 폭풍은 경고를 짧게 (EM_STORM_FIRST_WARN)
 			showZoneFx();
 			return;
 		}

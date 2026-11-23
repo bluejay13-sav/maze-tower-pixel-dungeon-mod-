@@ -723,9 +723,9 @@ public class MazeTower {
 	public static final float EM_SENSING_TIME   = 0.5f;  //원소 감응에 드는 시간 (턴)
 	public static final int   EM_TILE_STEAM_MIN = 14;    //원소 타일 위 주인공 증기 반응 피해 (폭발은 기존 폭발 반응 피해)
 	public static final int   EM_TILE_STEAM_MAX = 22;    //(결정, 밸런스) 10~16 → 14~22
-	public static final int   EM_STORM_WARN     = 5;     //원소 폭풍 경고 턴
-	public static final int   EM_STORM_FIRST_WARN = 3;   //처음 원소 폭풍만 경고 3턴
-	public static final int   EM_STORM_TURNS    = 5;     //원소 폭풍 턴
+	public static final int   EM_STORM_WARN     = 3;     //원소 폭풍 경고 턴 (2026-11-22 사용자: 5 → 3)
+	public static final int   EM_STORM_FIRST_WARN = 2;   //처음 원소 폭풍만 경고 2턴 (2026-11-22 사용자: 3 → 2)
+	public static final int   EM_STORM_TURNS    = 3;     //원소 폭풍 턴 (2026-11-22 사용자: 5 → 3)
 	public static final int   EM_STORM_MIN      = 8;     //폭풍 구역 안 주인공 피해 (턴마다)
 	public static final int   EM_STORM_MAX      = 14;    //(결정, 밸런스) 6~10 → 8~14
 
