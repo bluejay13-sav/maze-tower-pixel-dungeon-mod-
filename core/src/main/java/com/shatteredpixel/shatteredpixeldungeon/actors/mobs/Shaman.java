@@ -24,6 +24,8 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.watabou.utils.Bundle;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -88,15 +90,79 @@ public abstract class Shaman extends Mob {
 		return super.createLoot();
 	}
 
+	//Maze Tower (J5): 마석 주술사. 마법을 쏘기 전 한 박자(1턴) 지팡이를 빛내며 모은다(저장됨).
+	//모으는 동안 맞으면(평타·스킬·던지기·마법 모두, 지속 피해·장판 제외) 주문이 끊긴다. 붙어 있거나 시선이 끊기면 모으기를 그만둔다
+	public boolean mazeCharging = false;
+
+	private boolean canZapNow(){
+		Char e = this.enemy;
+		return e != null && e.isAlive() && paralysed <= 0 && fieldOfView != null && fieldOfView[e.pos]
+				&& !Dungeon.level.adjacent( pos, e.pos )
+				&& new Ballistica( pos, e.pos, Ballistica.MAGIC_BOLT).collisionPos == e.pos;
+	}
+
+	private void setCharging( boolean on ){
+		mazeCharging = on;
+		if (sprite instanceof ShamanSprite) ((ShamanSprite) sprite).charge( on );
+	}
+
+	@Override
+	protected boolean act() {
+		if (mazeCharging && !canZapNow()) setCharging( false );
+		return super.act();
+	}
+
+	@Override
+	public void damage( int dmg, Object src ) {
+		boolean wasCharging = mazeCharging;
+		super.damage( dmg, src );
+		if (wasCharging && isAlive() && !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff)
+				&& !(src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob)){
+			setCharging( false );
+			if (sprite != null && sprite.visible){
+				sprite.showStatus( CharSprite.NEUTRAL, Messages.get(Shaman.class, "interrupted") );
+				Sample.INSTANCE.play( Assets.Sounds.HIT_PARRY, 0.8f, 1.3f );
+			}
+		}
+	}
+
+	@Override
+	public void die( Object cause ) {
+		setCharging( false );
+		super.die( cause );
+	}
+
+	private static final String CHARGING = "maze_charging";
+
+	@Override
+	public void storeInBundle( Bundle bundle ) {
+		super.storeInBundle( bundle );
+		bundle.put( CHARGING, mazeCharging );
+	}
+
+	@Override
+	public void restoreFromBundle( Bundle bundle ) {
+		super.restoreFromBundle( bundle );
+		mazeCharging = bundle.getBoolean( CHARGING );
+	}
+
 	protected boolean doAttack(Char enemy ) {
 
 		if (Dungeon.level.adjacent( pos, enemy.pos )
 				|| new Ballistica( pos, enemy.pos, Ballistica.MAGIC_BOLT).collisionPos != enemy.pos) {
-			
+
 			return super.doAttack( enemy );
-			
+
 		} else {
-			
+
+			//Maze Tower (J5): 처음 겨눈 턴에는 모으기만 한다
+			if (MazeTower.J5_CHARGE && !mazeCharging){
+				setCharging( true );
+				spend( TICK );
+				return true;
+			}
+			setCharging( false );
+
 			if (sprite != null && (sprite.visible || enemy.sprite.visible)) {
 				sprite.zap( enemy.pos );
 				return false;

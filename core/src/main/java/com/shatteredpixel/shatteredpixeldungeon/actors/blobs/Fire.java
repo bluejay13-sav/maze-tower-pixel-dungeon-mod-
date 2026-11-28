@@ -71,7 +71,7 @@ public class Fire extends Blob {
 
 				} else if (freeze == null || freeze.volume <= 0 || freeze.cur[cell] <= 0) {
 
-					if (flamable[cell]
+					if ((flamable[cell] || SapFloor.at(cell)) //Maze Tower (F3): 수액 웅덩이도 불이 번진다
 							&& (cur[cell-1] > 0
 							|| cur[cell+1] > 0
 							|| cur[cell-Dungeon.level.width()] > 0

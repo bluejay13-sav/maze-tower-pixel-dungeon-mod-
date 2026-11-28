@@ -13,14 +13,13 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Random;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 //Maze Tower: 2차 전직 상태. 영웅에게 붙는 보이지 않는 버프로 저장·불러오기를 원작 방식 그대로 처리한다.
 //
 // - 개화의 핵을 쓰면 unlocked = true, 선택권 1개 + 포인트 BLOOM_CORE_POINTS.
 // - Lv7~10 레벨업마다 선택권 1 (총 5칸), Lv7~12 레벨업마다 포인트 1. (핵을 쓰기 전에 오른 레벨도 핵을 쓰는 순간 한꺼번에 들어온다)
 // - 선택권이 생기는 순간 그 칸의 선택지 3개를 던전 시드로 정해 저장한다.
-//   이미 가진 특성과, 아직 고르지 않은 다른 칸의 선택지는 제외하고, 3개는 첫 번째 계열이 서로 다르다.
+//   이미 가진 특성과, 아직 고르지 않은 다른 칸의 선택지는 제외하고, 3개는 갈래가 서로 다르다. 영웅 직업의 풀(BloomTalent.poolOf)에서만 뽑는다.
 // - 고른 특성은 0레벨(효과 없음)로 시작하고 포인트로 1~3레벨이 된다.
 // - 만개의 핵을 쓰면 분홍 꽃잎 BLOOM_PETALS개. 꽃잎 1개로 1레벨 이상인 특성 하나를 각성한다 (특성마다 1번, 되돌릴 수 없음).
 public class BloomTree extends Buff {
@@ -72,9 +71,10 @@ public class BloomTree extends Buff {
 		return t;
 	}
 
-	//영웅이 가진 특성 레벨 (0~3). 없으면 -1. 0레벨은 효과 없음.
+	//효과가 쓰는 특성 레벨 (0~3). 없으면 -1. 0레벨은 효과 없음.
+	//(B2) 전용 특성은 그 계열 무기를 들고 있지 않으면 -1 (꺼짐). 모든 특성 효과는 이것(또는 awakened)만 본다.
 	public static int level( Hero hero, BloomTalent talent ){
-		Slot s = slotOf(hero, talent);
+		Slot s = slotOf(hero, talent, true);
 		return s == null ? -1 : s.level;
 	}
 
@@ -82,16 +82,30 @@ public class BloomTree extends Buff {
 		return level(hero, talent) >= 0;
 	}
 
-	//각성했는지 (레벨과 상관없음)
+	//각성했는지 (레벨과 상관없음). (B2) 전용 특성은 무기가 맞지 않으면 각성도 꺼진다
 	public static boolean awakened( Hero hero, BloomTalent talent ){
-		Slot s = slotOf(hero, talent);
+		Slot s = slotOf(hero, talent, true);
 		return s != null && s.awakened;
 	}
 
-	private static Slot slotOf( Hero hero, BloomTalent talent ){
+	//(B2) 무기와 상관없이 가진 레벨 (특성 창·치트 표시용). 없으면 -1
+	public static int ownedLevel( Hero hero, BloomTalent talent ){
+		Slot s = slotOf(hero, talent, false);
+		return s == null ? -1 : s.level;
+	}
+
+	public static boolean ownedAwakened( Hero hero, BloomTalent talent ){
+		Slot s = slotOf(hero, talent, false);
+		return s != null && s.awakened;
+	}
+
+	private static Slot slotOf( Hero hero, BloomTalent talent, boolean mustBeActive ){
 		if (hero == null) return null;
 		BloomTree t = hero.buff(BloomTree.class);
 		if (t == null) return null;
+		//(B1) 영웅의 풀에 없는 특성은 (창을 열어 칸이 비워지기 전이라도) 가지지 않은 것으로 본다
+		if (!talent.inPool(BloomTalent.poolOf(hero))) return null;
+		if (mustBeActive && !talent.activeFor(hero)) return null;
 		for (Slot s : t.slots){
 			if (s.chosen == talent) return s;
 		}
@@ -215,25 +229,83 @@ public class BloomTree extends Buff {
 	//받을 선택권만큼 칸을 만든다. 레벨업, 핵 사용, 창 열 때 호출해도 안전하다.
 	public void sync( Hero hero ){
 		if (!unlocked) return;
+		BloomTalent.Pool pool = BloomTalent.poolOf(hero);
+		//2차 특성이 아직 없는 직업(마법사·도적)은 칸을 만들지 않는다 (예전 저장의 칸도 비운다)
+		if (pool == null){
+			slots.clear();
+			return;
+		}
+		//(B1) 영웅의 풀에 없는 특성(예: 새 풀로 바뀌기 전의 저장 파일)을 고른 칸은 비우고 다시 받는다.
+		//쓴 포인트와 꽃잎은 그 칸이 비면서 돌아온다.
+		for (Slot s : slots){
+			if (s.isChosen() && !s.chosen.inPool(pool)){
+				s.chosen = null;
+				s.level = 0;
+				s.awakened = false;
+				s.options = new BloomTalent[0];
+			}
+			if (!s.isChosen()){
+				for (BloomTalent t : s.options){
+					if (!t.inPool(pool)){
+						s.options = new BloomTalent[0];
+						break;
+					}
+				}
+			}
+		}
+		noteExistingForms(); //(B5) 이미 칸에 있는 형태 (예전 저장 파일)
 		int target = choicesFor(hero);
 		//저장 데이터에서 선택지가 사라진(특성 이름이 바뀐 등) 미선택 칸은 다시 정한다
 		for (int i = 0; i < slots.size(); i++){
 			Slot s = slots.get(i);
 			if (!s.isChosen() && s.options.length == 0){
-				s.options = rollOptions(i);
+				s.options = rollOptions(pool, i);
 			}
 		}
 		while (slots.size() < target){
 			Slot s = new Slot();
-			s.options = rollOptions(slots.size());
+			s.options = rollOptions(pool, slots.size());
 			slots.add(s);
 		}
 	}
 
-	//선택지 3개: 남은 특성 중 하나를 고르고, 그 계열(첫 번째 계열)을 빼고 다음을 고른다. 그 밖의 가중치는 없다.
-	//남은 계열이 모자라면 같은 계열도 허용한다.
-	private BloomTalent[] rollOptions( int slotIndex ){
-		ArrayList<BloomTalent> pool = new ArrayList<>(Arrays.asList(BloomTalent.values()));
+	//선택지 3개: 남은 특성 중 하나를 고르고, 그 갈래를 빼고 다음을 고른다.
+	//그 밖의 가중치는 없다. 남은 갈래가 모자라면 같은 갈래도 허용한다.
+	//영웅 직업의 풀에 있는 특성만 뽑는다. (결정, 2026-11-24) 전용 특성(검 전용·활 전용)도 들고 있는 무기와 상관없이
+	//다른 특성과 똑같이 나온다 (무기를 바꿀지 고르는 재미). 효과는 그 무기를 들었을 때만 작동한다(B2).
+	private BloomTalent[] rollOptions( BloomTalent.Pool which, int slotIndex ){
+		return fillOptions(which, new ArrayList<BloomTalent>(), Dungeon.seed + 0x4D41_5A45L + 7919L * (slotIndex + 1));
+	}
+
+	//(결정, B5) 한 판(던전 시드)에서 선택지에 나오는 형태 특성은 모두 합쳐 B5_FORM_MAX(2)종까지다.
+	//처음 나온 두 형태만 기록해 두고, 그 뒤에는 이 둘만 다시 나올 수 있다(고르지 않고 남긴 것이 다른 칸에 다시 나오는 것은 괜찮다).
+	//그래서 형태는 둘보다 많이 고를 수 없고, 이미 정해진 선택지를 바꿀 일도 없다.
+	public final ArrayList<BloomTalent> offeredForms = new ArrayList<>();
+
+	private boolean formAllowed( BloomTalent t ){
+		return t.branch != BloomTalent.Branch.FORM
+				|| offeredForms.contains(t)
+				|| offeredForms.size() < MazeTower.B5_FORM_MAX;
+	}
+
+	private void noteForm( BloomTalent t ){
+		if (t != null && t.branch == BloomTalent.Branch.FORM && !offeredForms.contains(t)) offeredForms.add(t);
+	}
+
+	//예전 저장 파일: 이미 칸에 있는 형태를 기록한다 (둘보다 많아도 그대로 둔다)
+	private void noteExistingForms(){
+		for (Slot s : slots){
+			noteForm(s.chosen);
+			for (BloomTalent t : s.options) noteForm(t);
+		}
+	}
+
+	//picked에 이미 든 것은 두고, 모자란 만큼 남은 특성에서 채운다 (seed: 던전 시드에서 만든 값)
+	private BloomTalent[] fillOptions( BloomTalent.Pool which, ArrayList<BloomTalent> picked, long seed ){
+		ArrayList<BloomTalent> pool = new ArrayList<>();
+		for (BloomTalent t : BloomTalent.values()){
+			if (t.inPool(which)) pool.add(t);
+		}
 		for (Slot s : slots){
 			if (s.isChosen()) {
 				pool.remove(s.chosen);
@@ -241,22 +313,27 @@ public class BloomTree extends Buff {
 				for (BloomTalent t : s.options) pool.remove(t);
 			}
 		}
+		pool.removeAll(picked);
 
-		ArrayList<BloomTalent> picked = new ArrayList<>();
 		//던전 시드 + 칸 번호로 정한다. 같은 시드, 같은 선택이면 같은 선택지.
-		Random.pushGenerator(Dungeon.seed + 0x4D41_5A45L + 7919L * (slotIndex + 1));
+		Random.pushGenerator(seed);
 		try {
-			while (picked.size() < MazeTower.BLOOM_CHOICES_PER_SLOT && !pool.isEmpty()){
+			while (picked.size() < MazeTower.BLOOM_CHOICES_PER_SLOT){
+				//(B5) 형태 두 종이 이미 나왔으면 다른 형태는 뺀다 (한 칸 안에서 형태를 뽑을 때마다 다시 본다)
+				ArrayList<BloomTalent> allowed = new ArrayList<>();
+				for (BloomTalent t : pool) if (formAllowed(t)) allowed.add(t);
+				if (allowed.isEmpty()) break;
 				ArrayList<BloomTalent> fresh = new ArrayList<>();
-				for (BloomTalent t : pool){
+				for (BloomTalent t : allowed){
 					boolean same = false;
-					for (BloomTalent p : picked) if (p.family() == t.family()) same = true;
+					for (BloomTalent p : picked) if (p.pickGroup() == t.pickGroup()) same = true;
 					if (!same) fresh.add(t);
 				}
-				ArrayList<BloomTalent> from = fresh.isEmpty() ? pool : fresh;
+				ArrayList<BloomTalent> from = fresh.isEmpty() ? allowed : fresh;
 				BloomTalent t = from.get(Random.Int(from.size()));
 				pool.remove(t);
 				picked.add(t);
+				noteForm(t);
 			}
 		} finally {
 			Random.popGenerator();
@@ -310,6 +387,7 @@ public class BloomTree extends Buff {
 			//치트 각성은 꽃잎을 따로 준다 (남은 꽃잎은 그대로)
 			petalsGranted++;
 		}
+		noteForm(talent); //(B5) 치트로 얻은 형태도 "나온 형태"로 센다
 		return true;
 	}
 
@@ -331,6 +409,7 @@ public class BloomTree extends Buff {
 	private static final String OPTIONS  = "slot_options_";
 	private static final String LEVEL    = "slot_level_";
 	private static final String AWAKENED = "slot_awakened_";
+	private static final String OFFERED_FORMS = "offered_forms";
 
 	@Override
 	public void storeInBundle( Bundle bundle ) {
@@ -344,6 +423,9 @@ public class BloomTree extends Buff {
 		bundle.put(PETALS, petalsGranted);
 		bundle.put(SEEN, seenSlots);
 		bundle.put(COUNT, slots.size());
+		String[] forms = new String[offeredForms.size()];
+		for (int i = 0; i < forms.length; i++) forms[i] = offeredForms.get(i).name();
+		bundle.put(OFFERED_FORMS, forms);
 		for (int i = 0; i < slots.size(); i++){
 			Slot s = slots.get(i);
 			if (s.chosen != null) bundle.put(CHOSEN + i, s.chosen.name());
@@ -365,6 +447,16 @@ public class BloomTree extends Buff {
 		fourthTierBonus = bundle.getInt(FOURTH_BONUS);
 		petalsGranted = bundle.getInt(PETALS);
 		slots.clear();
+		offeredForms.clear();
+		if (bundle.contains(OFFERED_FORMS)){
+			for (String n : bundle.getStringArray(OFFERED_FORMS)){
+				try {
+					offeredForms.add(BloomTalent.valueOf(n));
+				} catch (Exception e){
+					//없어진 특성은 건너뛴다
+				}
+			}
+		}
 
 		//예전 2차 특성(24개, 6칸) 저장: 칸을 비우고 새 규칙으로 다시 받는다 (물약 포인트는 그대로)
 		if (bundle.getInt(VERSION) < TREE_VERSION){

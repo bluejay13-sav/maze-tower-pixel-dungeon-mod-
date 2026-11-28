@@ -62,6 +62,7 @@ public class LastLevel extends Level {
 
 	@Override
 	public String tilesTex() {
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.HEART_NEW_FLOOR) return Assets.Environment.TILES_HALLS2; //Maze Tower (사용자): 26층도 21~24층과 같은 새 바닥·벽
 		return Assets.Environment.TILES_HALLS;
 	}
 

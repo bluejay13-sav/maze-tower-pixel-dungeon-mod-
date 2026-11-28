@@ -332,6 +332,7 @@ public class CellSelector extends ScrollArea {
 				lastCellMoved = -1;
 				if (heldAction1 == SPDAction.NONE){
 					heldAction1 = action;
+					slideHeld = 0f; //Maze Tower: 새로 누르기 시작하면 걸림도 처음부터
 					heldDelay = initialDelay();
 					delayingForRelease = false;
 				} else if (heldAction2 == SPDAction.NONE){
@@ -382,6 +383,14 @@ public class CellSelector extends ScrollArea {
 			heldDelay -= Game.elapsed;
 		}
 
+		//Maze Tower (사용자): 벽에 막힌 대각선을 누르고 있는 시간 (주인공이 움직이는 동안에는 그대로 두어, 계속 누르면 벽을 따라 이어서 간다)
+		if (heldAction1 == SPDAction.NONE && leftStickAction == SPDAction.NONE){
+			slideHeld = 0f;
+		} else if (Dungeon.hero.ready){
+			boolean blocked = leftStickAction != SPDAction.NONE ? blockedDiagonal(leftStickAction) : blockedDiagonal(heldAction1, heldAction2);
+			slideHeld = blocked ? slideHeld + Game.elapsed : 0f;
+		}
+
 		if ((heldAction1 == SPDAction.NONE && leftStickAction == SPDAction.NONE)){
 			lastCellMoved = -1;
 		} else if (Dungeon.hero.ready){
@@ -407,8 +416,24 @@ public class CellSelector extends ScrollArea {
 		}
 		int cell = Dungeon.hero.pos;
 		//clamp to adjacent values (-1 to +1)
-		cell += GameMath.gate(-1, direction.x, +1);
-		cell += GameMath.gate(-1, direction.y, +1) * Dungeon.level.width();
+		int dx = (int)GameMath.gate(-1, direction.x, +1);
+		int dy = (int)GameMath.gate(-1, direction.y, +1);
+		cell += dx;
+		cell += dy * Dungeon.level.width();
+
+		//Maze Tower (사용자): 대각선(방향키 두 개)으로 가려는 칸이 벽처럼 막혀 있으면, 두 방향 중 갈 수 있는 쪽으로 간다
+		//(벽에 붙은 채 대각선으로 누르고 있어도 벽을 따라 미끄러지듯 이동). 그 칸에 누가 있으면(공격 등) 원래대로.
+		if (com.shatteredpixel.shatteredpixeldungeon.SPDSettings.mazeKeySlide() && dx != 0 && dy != 0 && !walkableForKeys(cell) && Actor.findChar(cell) == null){
+			//(사용자) 약간의 걸림: 벽에 닿은 채 조금(KEY_SLIDE_DELAY) 더 누르고 있어야 움직인다 — 짧게 누르고 떼면 움직이지 않는다
+			if (slideHeld < com.shatteredpixel.shatteredpixeldungeon.MazeTower.KEY_SLIDE_DELAY) return false;
+			int horiz = Dungeon.hero.pos + dx;
+			int vert = Dungeon.hero.pos + dy * Dungeon.level.width();
+			boolean hOk = walkableForKeys(horiz) || Actor.findChar(horiz) != null;
+			boolean vOk = walkableForKeys(vert) || Actor.findChar(vert) != null;
+			if (hOk && !vOk) cell = horiz;
+			else if (vOk && !hOk) cell = vert;
+			else if (hOk) cell = Math.abs(directionFromAction(actions[0]).x) > 0 ? horiz : vert; //둘 다 되면 먼저 누른 쪽
+		}
 
 		if (cell != Dungeon.hero.pos && cell != lastCellMoved){
 			lastCellMoved = cell;
@@ -421,6 +446,27 @@ public class CellSelector extends ScrollArea {
 			return false;
 		}
 
+	}
+
+	//Maze Tower (사용자): 벽에 막힌 대각선을 누르고 있던 시간(초)
+	private float slideHeld = 0f;
+
+	//Maze Tower: 지금 누른 방향이 벽처럼 막힌 대각선인가 (벽 따라 이동이 켜져 있을 때만)
+	private boolean blockedDiagonal( GameAction... actions ){
+		if (Dungeon.hero == null || Dungeon.level == null || !com.shatteredpixel.shatteredpixeldungeon.SPDSettings.mazeKeySlide()) return false;
+		Point direction = new Point();
+		for (GameAction action : actions) direction.offset(directionFromAction(action));
+		int dx = (int)GameMath.gate(-1, direction.x, +1);
+		int dy = (int)GameMath.gate(-1, direction.y, +1);
+		if (dx == 0 || dy == 0) return false;
+		int cell = Dungeon.hero.pos + dx + dy * Dungeon.level.width();
+		return !walkableForKeys(cell) && Actor.findChar(cell) == null;
+	}
+
+	//Maze Tower: 방향키로 걸어 들어갈 수 있는 칸 (지나갈 수 있거나, 해로운 바닥처럼 피해 가는 칸)
+	private static boolean walkableForKeys( int cell ){
+		if (cell < 0 || cell >= Dungeon.level.length()) return false;
+		return Dungeon.level.passable[cell] || Dungeon.level.avoid[cell];
 	}
 
 	private Point directionFromAction(GameAction action){
@@ -481,6 +527,7 @@ public class CellSelector extends ScrollArea {
 	
 	public void resetKeyHold(){
 		heldAction1 = heldAction2 = heldAction3 = SPDAction.NONE;
+		slideHeld = 0f; //Maze Tower
 	}
 	
 	public void cancel() {

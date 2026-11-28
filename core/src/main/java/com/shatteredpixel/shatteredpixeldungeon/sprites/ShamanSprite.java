@@ -77,6 +77,52 @@ public abstract class ShamanSprite extends MobSprite {
 		Sample.INSTANCE.play( Assets.Sounds.ZAP );
 	}
 
+	//Maze Tower (J5): 주문을 모으는 한 박자 동안 지팡이(몸 뒤쪽 손)에서 푸른 빛이 샌다
+	private com.watabou.noosa.particles.Emitter chargeFx;
+
+	public void charge( boolean on ){
+		if (on){
+			if (chargeFx == null || !chargeFx.alive){
+				chargeFx = emitter();
+				if (chargeFx == null) return;
+				chargeFx.pour( com.shatteredpixel.shatteredpixeldungeon.effects.Speck.factory(
+						com.shatteredpixel.shatteredpixeldungeon.effects.Speck.BLUE_LIGHT ), 0.07f );
+			}
+			placeChargeFx();
+		} else if (chargeFx != null){
+			chargeFx.on = false;
+			chargeFx = null;
+		}
+	}
+
+	private void placeChargeFx(){
+		if (chargeFx == null) return;
+		//지팡이 끝의 벌레 이빨(오른쪽을 볼 때 왼쪽 위 x 0~3, y 0~3)
+		float sx = flipHorizontal ? width - 4 : 0;
+		chargeFx.pos( this, sx, 0, 4, 4 );
+	}
+
+	@Override
+	public void link( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch ) {
+		super.link( ch );
+		if (ch instanceof Shaman && ((Shaman) ch).mazeCharging) charge( true );
+	}
+
+	@Override
+	public void update() {
+		super.update();
+		if (chargeFx != null){
+			chargeFx.visible = visible;
+			placeChargeFx();
+		}
+	}
+
+	@Override
+	public void kill() {
+		charge( false );
+		super.kill();
+	}
+
 	@Override
 	public void onComplete( Animation anim ) {
 		if (anim == zap) {

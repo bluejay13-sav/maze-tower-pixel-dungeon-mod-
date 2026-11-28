@@ -134,7 +134,8 @@ public class Ballistica {
 					collide(cell);
 				}
 			}
-			if (collisionPos == null && cell != sourcePos && stopChars && Actor.findChar( cell ) != null) {
+			if (collisionPos == null && cell != sourcePos && stopChars && Actor.findChar( cell ) != null
+					&& !com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly.passThrough(sourcePos, cell, to)) { //Maze Tower: 주인공의 투사체는 펫을 지나친다
 				collide(cell);
 			}
 			if (collisionPos == null && cell == to && stopTarget){

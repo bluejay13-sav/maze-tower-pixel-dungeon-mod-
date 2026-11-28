@@ -100,43 +100,46 @@ public class WndChooseSubclass extends Window {
 
 		float pos = message.bottom() + 3*GAP;
 
+		//Maze Tower (S1): 3차가 넷까지 늘어 화면에 다 들어가지 않으면, 고르기 단추들을 스크롤 목록에 넣는다
+		final java.util.ArrayList<SubclassButton> btns = new java.util.ArrayList<>();
+		final java.util.ArrayList<InfoButton> infos = new java.util.ArrayList<>();
+		com.watabou.noosa.ui.Component list = new com.watabou.noosa.ui.Component();
+		float lp = 0;
 		for (HeroSubClass subCls : paths(hero)){ //Maze Tower
-			RedButton btnCls = new RedButton( subCls.shortDesc(), 6 ) {
-				@Override
-				protected void onClick() {
-					GameScene.show(new WndOptions(new HeroIcon(subCls),
-							Messages.titleCase(subCls.title()),
-							Messages.get(WndChooseSubclass.this, "are_you_sure"),
-							Messages.get(WndChooseSubclass.this, "yes"),
-							Messages.get(WndChooseSubclass.this, "no")){
-						@Override
-						protected void onSelect(int index) {
-							hide();
-							if (index == 0 && WndChooseSubclass.this.parent != null){
-								WndChooseSubclass.this.hide();
-								tome.choose( subCls );
-								Statistics.qualifiedForRandomVictoryBadge = false;
-							}
-						}
-					});
-				}
-			};
+			SubclassButton btnCls = new SubclassButton( tome, subCls );
 			btnCls.leftJustify = true;
 			btnCls.multiline = true;
 			btnCls.setSize(WIDTH-20, btnCls.reqHeight()+2);
-			btnCls.setRect( 0, pos, WIDTH-20, btnCls.reqHeight()+2);
-			add( btnCls );
+			btnCls.setRect( 0, lp, WIDTH-20, btnCls.reqHeight()+2);
+			list.add( btnCls );
+			btns.add( btnCls );
 
-			IconButton clsInfo = new IconButton(Icons.get(Icons.INFO)){
+			InfoButton clsInfo = new InfoButton( subCls );
+			clsInfo.setRect(WIDTH-20, btnCls.top() + (btnCls.height()-20)/2, 20, 20);
+			list.add(clsInfo);
+			infos.add( clsInfo );
+
+			lp = btnCls.bottom() + GAP;
+		}
+		float listH = lp;
+		float avail = PixelScene.uiCamera.height * 0.9f - pos - 18 - 2*GAP - 12;
+		if (listH <= avail){
+			//다 들어가면 원작처럼 창에 바로 놓는다
+			for (SubclassButton b : btns){ b.setPos( b.left(), b.top() + pos ); add( b ); }
+			for (InfoButton b : infos){ b.setPos( b.left(), b.top() + pos ); add( b ); }
+			pos += listH;
+		} else {
+			list.setSize( WIDTH, listH );
+			com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane pane = new com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane( list ){
 				@Override
-				protected void onClick() {
-					GameScene.show(new WndInfoSubclass(Dungeon.hero.heroClass, subCls));
+				public void onClick( float x, float y ) {
+					for (InfoButton b : infos) if (b.inside( x, y )) { b.click(); return; }
+					for (SubclassButton b : btns) if (b.inside( x, y )) { b.click(); return; }
 				}
 			};
-			clsInfo.setRect(WIDTH-20, btnCls.top() + (btnCls.height()-20)/2, 20, 20);
-			add(clsInfo);
-
-			pos = btnCls.bottom() + GAP;
+			add( pane );
+			pane.setRect( 0, pos, WIDTH, avail );
+			pos += avail + GAP;
 		}
 
 		RedButton btnCancel = new RedButton( Messages.get(this, "cancel") ) {
@@ -149,6 +152,49 @@ public class WndChooseSubclass extends Window {
 		add( btnCancel );
 		
 		resize( WIDTH, (int)btnCancel.bottom() );
+	}
+
+	//Maze Tower (S1): 3차 고르기 단추 (스크롤 목록 안에서도 누를 수 있게 click()을 열어 둔다)
+	private class SubclassButton extends RedButton {
+		private final TengusMask tome;
+		private final HeroSubClass subCls;
+		SubclassButton( TengusMask tome, HeroSubClass subCls ){
+			super( subCls.shortDesc(), 6 );
+			this.tome = tome;
+			this.subCls = subCls;
+		}
+		void click(){ onClick(); }
+		@Override
+		protected void onClick() {
+			GameScene.show(new WndOptions(new HeroIcon(subCls),
+					Messages.titleCase(subCls.title()),
+					Messages.get(WndChooseSubclass.this, "are_you_sure"),
+					Messages.get(WndChooseSubclass.this, "yes"),
+					Messages.get(WndChooseSubclass.this, "no")){
+				@Override
+				protected void onSelect(int index) {
+					hide();
+					if (index == 0 && WndChooseSubclass.this.parent != null){
+						WndChooseSubclass.this.hide();
+						tome.choose( subCls );
+						Statistics.qualifiedForRandomVictoryBadge = false;
+					}
+				}
+			});
+		}
+	}
+
+	private static class InfoButton extends IconButton {
+		private final HeroSubClass subCls;
+		InfoButton( HeroSubClass subCls ){
+			super( Icons.get(Icons.INFO) );
+			this.subCls = subCls;
+		}
+		void click(){ onClick(); }
+		@Override
+		protected void onClick() {
+			GameScene.show(new WndInfoSubclass(Dungeon.hero.heroClass, subCls));
+		}
 	}
 
 	//Maze Tower: 만개의 핵으로 고를 수 있는 3차 전직만 보인다

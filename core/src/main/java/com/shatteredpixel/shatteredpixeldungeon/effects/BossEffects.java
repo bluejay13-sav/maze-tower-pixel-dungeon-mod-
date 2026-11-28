@@ -23,6 +23,11 @@ public class BossEffects {
 		SAP_SLAM   ("sprites/maze_fx5_slam.png",         48, 48, 5),
 		SAP_PUDDLE ("sprites/maze_fx5_sap_puddle.png",   16, 16, 3),
 		ROOT_SAP   ("sprites/maze_sap_puddle.png",       16, 16, 2), //뿌리 지하 수액 웅덩이 바닥
+		BLACK_LEAVES  ("sprites/maze_black_leaves.png",  16, 16, 1), //Maze Tower (N1): 탑의 심장 바닥의 검은 낙엽
+		SPROUT_GROUND ("sprites/maze_sprout_ground.png", 16, 16, 1), //Maze Tower (N1): 새잎 땅
+		BLACK_LEAVES_CONN  ("sprites/maze_black_leaves_conn.png",  16, 16, 6), //Maze Tower (N1): 검은 낙엽의 이어지는 모양 256줄 × 잎 배치 6가지
+		SPROUT_GROUND_CONN ("sprites/maze_sprout_ground_conn.png", 16, 16, 3), //Maze Tower (N1): 새잎 땅의 이어지는 모양 256줄 × 새싹 자리 3가지
+		HOT_TRAIL_LINE     ("sprites/maze_hot_trail_line.png",    16, 16, 3), //Maze Tower (N3): 핏줄 눈 광선 자국 조각 (0 가운데, 1 시작 끝, 2 마지막 끝: 둥글게 맺는 검정 테두리)
 		ROOT_SAP_CONN   ("sprites/maze_sap_puddle_conn.png",     16, 16, 2), //위 그림의 이어지는 모양 256줄 (위1·오른쪽2·아래4·왼쪽8 + 대각선 16·32·64·128)
 		SAP_PUDDLE_CONN ("sprites/maze_fx5_sap_puddle_conn.png", 16, 16, 3), //5층 수액의 이어지는 모양 256줄
 		REGION_SOUL      ("sprites/maze_fx_region_soul.png",      16, 24, 6), //봉인의 회랑 분위기

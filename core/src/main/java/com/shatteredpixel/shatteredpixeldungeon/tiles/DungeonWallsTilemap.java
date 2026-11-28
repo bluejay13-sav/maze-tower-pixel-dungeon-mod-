@@ -74,7 +74,7 @@ public class DungeonWallsTilemap extends DungeonTilemap {
 		}
 
 		//Maze Tower: 망령 왕의 왕좌 윗부분은 effects/WraithThrone이 따로 그린다
-		if (pos + mapWidth < size && com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel.mazeThroneCell(pos + mapWidth)){
+		if (pos + mapWidth < size && (com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel.mazeThroneCell(pos + mapWidth) || com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel.saplingCell(pos + mapWidth))){ //Maze Tower (O1): 25층 세계수 어린 줄기도
 			return -1;
 		}
 

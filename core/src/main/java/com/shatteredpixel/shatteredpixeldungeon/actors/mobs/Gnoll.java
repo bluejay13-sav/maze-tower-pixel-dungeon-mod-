@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.items.Gold;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.GnollSprite;
@@ -54,5 +55,18 @@ public class Gnoll extends Mob {
 	@Override
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, 2);
+	}
+
+	//Maze Tower (F5): 수액 채집꾼 - 쓰러지면 그 칸에 수액 웅덩이를 남긴다 (느려짐, 불에 탐)
+	@Override
+	public void die( Object cause ) {
+		int cell = pos;
+		super.die( cause );
+		if (Dungeon.level != null && cell >= 0 && cell < Dungeon.level.length()
+				&& Dungeon.level.passable[cell] && !Dungeon.level.pit[cell] && !Dungeon.level.solid[cell]){
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.add(
+					com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob.seed(cell, 1,
+							com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.class));
+		}
 	}
 }

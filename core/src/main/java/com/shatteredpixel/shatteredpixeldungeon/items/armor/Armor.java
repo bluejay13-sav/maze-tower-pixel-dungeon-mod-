@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.armor;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -139,6 +140,9 @@ public class Armor extends EquipableItem {
 	private static final String SEAL            = "seal";
 	private static final String AUGMENT			= "augment";
 
+	//Maze Tower (K8): 대장장이가 미스릴로 한 번 보강한 갑옷 (방어 +2, 회피 ×1.2, 마법·저주는 그대로)
+	public boolean mazeMithril = false;
+
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle( bundle );
@@ -150,6 +154,7 @@ public class Armor extends EquipableItem {
 		bundle.put( MASTERY_POTION_BONUS, masteryPotionBonus );
 		bundle.put( SEAL, seal);
 		bundle.put( AUGMENT, augment);
+		bundle.put( "maze_mithril", mazeMithril ); //Maze Tower (K8)
 	}
 
 	@Override
@@ -164,6 +169,7 @@ public class Armor extends EquipableItem {
 		seal = (BrokenSeal)bundle.get(SEAL);
 		
 		augment = bundle.getEnum(AUGMENT, Augment.class);
+		mazeMithril = bundle.getBoolean( "maze_mithril" ); //Maze Tower (K8)
 	}
 
 	@Override
@@ -373,7 +379,7 @@ public class Armor extends EquipableItem {
 	}
 
 	public final int DRMax(){
-		return DRMax(buffedLvl());
+		return DRMax(buffedLvl()) + (mazeMithril ? MazeTower.MITHRIL_ARMOR_DR : 0); //Maze Tower (K8): 미스릴 보강 방어 +2
 	}
 
 	public int DRMax(int lvl){
@@ -390,7 +396,7 @@ public class Armor extends EquipableItem {
 	}
 
 	public final int DRMin(){
-		return DRMin(buffedLvl());
+		return DRMin(buffedLvl()) + (mazeMithril ? MazeTower.MITHRIL_ARMOR_DR : 0); //Maze Tower (K8): 미스릴 보강 방어 +2
 	}
 
 	public int DRMin(int lvl){
@@ -427,7 +433,8 @@ public class Armor extends EquipableItem {
 			}
 		}
 		
-		return evasion + augment.evasionFactor(buffedLvl());
+		//Maze Tower (K8): 미스릴 보강 갑옷은 회피 수치 ×1.2 (곱연산)
+		return (evasion + augment.evasionFactor(buffedLvl())) * (mazeMithril ? MazeTower.MITHRIL_ARMOR_EVASION : 1f);
 	}
 	
 	public float speedFactor( Char owner, float speed ){
@@ -456,6 +463,16 @@ public class Armor extends EquipableItem {
 	}
 	
 	public Item upgrade( boolean inscribe ) {
+
+		//Maze Tower (K8, 사용자): 미스릴로 보강한 갑옷은 강화해도 부여된 마법과 저주가 사라지지 않는다 (저주는 저주 해제 주문서로 푼다)
+		if (mazeMithril){
+			boolean keepCursed = cursed;
+			if (inscribe && glyph == null) inscribe( Glyph.random() );
+			if (seal != null && seal.level() == 0) seal.upgrade();
+			Item r = super.upgrade();
+			cursed = keepCursed;
+			return r;
+		}
 
 		if (inscribe){
 			if (glyph == null){
@@ -571,11 +588,13 @@ public class Armor extends EquipableItem {
 	
 	@Override
 	public String name() {
+		//Maze Tower (K8): 미스릴로 보강한 갑옷은 갑옷 이름 앞에 "미스릴 보강" (마법 부여 이름은 그 바깥에)
+		String base = mazeMithril ? Messages.get(Armor.class, "maze_mithril_name", super.name()) : super.name();
 		if (isEquipped(Dungeon.hero) && !hasCurseGlyph() && Dungeon.hero.buff(HolyWard.HolyArmBuff.class) != null
 			&& (Dungeon.hero.subClass != HeroSubClass.PALADIN || glyph == null)){
-				return Messages.get(HolyWard.class, "glyph_name", super.name());
+				return Messages.get(HolyWard.class, "glyph_name", base);
 			} else {
-				return glyph != null && (cursedKnown || !glyph.curse()) ? glyph.name( super.name() ) : super.name();
+				return glyph != null && (cursedKnown || !glyph.curse()) ? glyph.name( base ) : base;
 
 		}
 	}
@@ -583,7 +602,10 @@ public class Armor extends EquipableItem {
 	@Override
 	public String info() {
 		String info = super.info();
-		
+
+		//Maze Tower (K8): 미스릴 보강 안내 (방어 +2는 아래 방어 수치에 이미 들어 있음)
+		if (mazeMithril) info += "\n\n" + Messages.get(Armor.class, "maze_mithril_info", MazeTower.MITHRIL_ARMOR_DR, Math.round((MazeTower.MITHRIL_ARMOR_EVASION - 1) * 100));
+
 		if (levelKnown) {
 
 			info += "\n\n" + Messages.get(Armor.class, "curr_absorb", tier, DRMin(), DRMax(), STRReq());

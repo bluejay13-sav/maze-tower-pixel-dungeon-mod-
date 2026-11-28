@@ -120,10 +120,16 @@ public class Spinner extends Mob {
 	public int attackProc(Char enemy, int damage) {
 		damage = super.attackProc( enemy, damage );
 		if (Random.Int(2) == 0) {
-			int duration = Random.IntRange(7, 8);
-			//we only use half the ascension modifier here as total poison dmg doesn't scale linearly
-			duration = Math.round(duration * (AscensionChallenge.statModifier(this)/2f + 0.5f));
-			Buff.affect(enemy, Poison.class).set(duration);
+			if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.J6_VAPOR_BITE){
+				//Maze Tower (J6): 수정 거미는 독 대신 마력 증기의 지속 피해·스킬 막힘을 걸고 물러난다
+				int t = Random.IntRange(com.shatteredpixel.shatteredpixeldungeon.MazeTower.J6_BITE_TURNS_MIN, com.shatteredpixel.shatteredpixeldungeon.MazeTower.J6_BITE_TURNS_MAX);
+				com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.VaporBite.apply(enemy, t, t); //물린 마력독은 그 턴만큼 피해도 준다
+			} else {
+				int duration = Random.IntRange(7, 8);
+				//we only use half the ascension modifier here as total poison dmg doesn't scale linearly
+				duration = Math.round(duration * (AscensionChallenge.statModifier(this)/2f + 0.5f));
+				Buff.affect(enemy, Poison.class).set(duration);
+			}
 			webCoolDown = 0;
 			state = FLEEING;
 		}
@@ -250,7 +256,8 @@ public class Spinner extends Mob {
 		@Override
 		public boolean act(boolean enemyInFOV, boolean justAlerted) {
 			if (buff( Terror.class ) == null && buff( Dread.class ) == null &&
-					enemyInFOV && enemy.buff( Poison.class ) == null){
+					enemyInFOV && enemy.buff( Poison.class ) == null
+					&& enemy.buff( com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.VaporBite.class ) == null){ //Maze Tower (J6): 물린 기운이 남아 있는 동안 물러나 있는다
 				state = HUNTING;
 				return true;
 			}

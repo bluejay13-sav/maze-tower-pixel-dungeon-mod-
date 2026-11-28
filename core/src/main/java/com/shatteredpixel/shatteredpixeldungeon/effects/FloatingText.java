@@ -90,6 +90,7 @@ public class FloatingText extends RenderedTextBlock {
 	public static int WATER     = 9;
 	public static int BLEEDING  = 10;
 	public static int TOXIC     = 11;
+	public static int MANA_VAPOR = 990; //Maze Tower (J1): 마력 증기 (따로 된 그림 sprites/maze_text_icon_vapor.png)
 	public static int CORROSION = 12;
 	public static int POISON    = 13;
 	public static int OOZE      = 14;
@@ -225,8 +226,13 @@ public class FloatingText extends RenderedTextBlock {
 		hardlight( color );
 
 		if (iconIdx != NO_ICON){
-			icon = new Image( Assets.Effects.TEXT_ICONS);
-			icon.frame(iconFilm.get(iconIdx));
+			if (iconIdx == MANA_VAPOR){
+				//Maze Tower (J1): 마력 증기 - 원작 독가스 아이콘과 같은 모양, 색만 푸른빛 (따로 된 그림, 원작 그림은 그대로)
+				icon = new Image( "sprites/maze_text_icon_vapor.png" );
+			} else {
+				icon = new Image( Assets.Effects.TEXT_ICONS);
+				icon.frame(iconFilm.get(iconIdx));
+			}
 			add(icon);
 			iconLeft = left;
 			if (iconLeft){

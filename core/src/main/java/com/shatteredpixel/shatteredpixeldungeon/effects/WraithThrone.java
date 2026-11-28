@@ -69,8 +69,25 @@ public class WraithThrone extends MovieClip {
 		if (here()) GameScene.effectOverFog(new WraithThrone(OVER_FOG));
 	}
 
+	//(M3, 지시서) 망령 왕이 브로치를 알아보면 왕좌의 푸른 불꽃이 금빛으로 (sprites/maze_wraith_throne_gold.png, 같은 칸 배치·크기,
+	//밝은 푸른 불꽃만 금빛, 원본 docs/sprites/mobs/m_draft/make_throne_gold.ps1)
+	public static final String TEX_GOLD = "sprites/maze_wraith_throne_gold.png";
+	private boolean gold = false;
+
+	private static boolean recognized(){
+		if (Dungeon.hero == null) return false;
+		com.shatteredpixel.shatteredpixeldungeon.actors.buffs.SageQuest q = Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.SageQuest.class);
+		return q != null && q.recognized;
+	}
+
 	@Override
 	public void update() {
+		boolean g = recognized();
+		if (g != gold){
+			gold = g;
+			texture(g ? TEX_GOLD : TEX);
+			if (curAnim != null) frame(curAnim.frames[curFrame]); //그림만 바꾸고 지금 칸은 그대로
+		}
 		super.update();
 		if (part == OVER_FOG){
 			visible = Dungeon.level instanceof CityBossLevel && ((CityBossLevel) Dungeon.level).wraithDark();

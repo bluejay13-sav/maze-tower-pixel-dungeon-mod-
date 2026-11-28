@@ -454,13 +454,13 @@ public class Generator {
 					RoundShield.class,
 					Sai.class,
 					Whip.class,
-					HornBow.class, MazeCrossbow.class //Maze Tower: 활 7종
+					HornBow.class, MazeCrossbow.class, //Maze Tower: 활 7종
+					Longsword.class //Maze Tower: (사용자) 롱소드는 3티어
 			};
-			WEP_T3.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 2, 2 };
+			WEP_T3.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 2, 2, 2 };
 			WEP_T3.probs = WEP_T3.defaultProbs.clone();
 			
 			WEP_T4.classes = new Class<?>[]{
-					Longsword.class,
 					BattleAxe.class,
 					Flail.class,
 					RunicBlade.class,
@@ -469,7 +469,7 @@ public class Generator {
 					Katana.class,
 					GreatBow.class, MazeSpiritBow.class //Maze Tower: 활 7종
 			};
-			WEP_T4.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+			WEP_T4.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 2, 2 };
 			WEP_T4.probs = WEP_T4.defaultProbs.clone();
 			
 			WEP_T5.classes = new Class<?>[]{
@@ -479,9 +479,13 @@ public class Generator {
 					Greataxe.class,
 					Greatshield.class,
 					Gauntlet.class,
-					WarScythe.class
+					WarScythe.class,
+					//Maze Tower (W5): 5티어 공명검·강화 각궁·은 송곳니 (대검은 원작 특대검 Greatsword가 위에 이미 있다)
+					com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.ResonanceSword.class,
+					com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.ReinforcedHornBow.class,
+					com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SilverFang.class
 			};
-			WEP_T5.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 2 };
+			WEP_T5.defaultProbs = new float[]{ 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
 			WEP_T5.probs = WEP_T5.defaultProbs.clone();
 			
 			//see Generator.randomArmor

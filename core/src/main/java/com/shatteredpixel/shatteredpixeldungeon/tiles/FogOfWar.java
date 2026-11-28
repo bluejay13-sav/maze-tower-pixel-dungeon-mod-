@@ -297,6 +297,8 @@ public class FogOfWar extends Image {
 			//Maze Tower: 망령 왕 어둠 속 푸른 눈 칸은 시야에 넣되(칠 수 있게) 밝히지 않는다
 			if (Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel
 					&& ((com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel) Dungeon.level).mazeDarkCell == cell) return INVISIBLE;
+			if (Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel
+					&& ((com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel) Dungeon.level).darkEyeCell == cell) return INVISIBLE; //Maze Tower (O2): 25층 어둠 속 주인의 기습 눈
 			return VISIBLE;
 		} else if (visited[cell]) {
 			return VISITED;

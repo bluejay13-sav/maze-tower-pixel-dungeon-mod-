@@ -124,8 +124,13 @@ public class Swarm extends Mob {
 		return 10;
 	}
 	
+	//Maze Tower (H4): 갈라질 때 같은 종류로 (넋 나방 떼가 덮어쓴다)
+	protected Swarm newSwarm() {
+		return new Swarm();
+	}
+
 	private Swarm split() {
-		Swarm clone = new Swarm();
+		Swarm clone = newSwarm(); //Maze Tower (H4)
 		clone.generation = generation + 1;
 		clone.EXP = 0;
 		if (buff( Burning.class ) != null) {

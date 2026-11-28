@@ -58,6 +58,8 @@ public class HighGrass {
 		if (freezeTrample) return;
 		
 		Char ch = Actor.findChar(pos);
+		if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake) return; //Maze Tower (F5, 결정): 덩굴뱀은 미끄러지듯 다녀 키 큰 풀을 짓밟지 않는다
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.hero.ForestWarden.keepsGrass(ch)) return; //Maze Tower (S8): 숲지기가 밟은 풀은 눕지 않고 씨앗·이슬도 나오지 않는다
 		
 		if (level.map[pos] == Terrain.FURROWED_GRASS){
 			if (ch instanceof Hero && ((Hero) ch).heroClass == HeroClass.HUNTRESS){

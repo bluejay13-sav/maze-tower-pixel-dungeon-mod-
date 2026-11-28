@@ -222,10 +222,22 @@ public class SurfaceScene extends PixelScene {
 			window.add(allySprite);
 		}
 
+		//Maze Tower (M, 사용자): 역행으로 탈출할 때 현자가 함께 나왔으면(퀘스트를 받고 역행 중 5층 이하에 닿음) 주인공 오른쪽에 현자
+		float graveShift = 0;
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_ENDING && com.shatteredpixel.shatteredpixeldungeon.MazeSage.escapedTogether()){
+			CharSprite sage = new com.shatteredpixel.shatteredpixeldungeon.sprites.SageSprite();
+			sage.scale = new PointF(2, 2);
+			sage.x = a.x + a.width() + 2;
+			sage.y = SKY_HEIGHT - sage.height();
+			align(sage);
+			window.add(sage);
+			graveShift = sage.width() + 2;
+		}
+
 		if (Dungeon.hero.belongings.getItem(RemainsItem.class) != null){
 			Image grave = new Image(Assets.Interfaces.SURFACE, 88, 74, 16, 22);
 
-			grave.x = a.x + a.width() + 10;
+			grave.x = a.x + a.width() + 10 + graveShift;
 			grave.y = a.y + a.height() - grave.height();
 			window.add(grave);
 		}
@@ -275,6 +287,13 @@ public class SurfaceScene extends PixelScene {
 			escaped.maxWidth((int)(SKY_WIDTH - FRAME_MARGIN_X * 2));
 			escaped.setPos(frame.x + FRAME_MARGIN_X * 2 + (SKY_WIDTH - FRAME_MARGIN_X * 2 - escaped.width()) / 2f, gameOver.bottom() + 4);
 			add(escaped);
+			//Maze Tower (M, 사용자): 현자가 함께 탈출했으면 한 줄 더
+			if (com.shatteredpixel.shatteredpixeldungeon.MazeSage.escapedTogether()){
+				com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock sageLine = PixelScene.renderTextBlock(Messages.get(this, "maze_escaped_sage"), 6);
+				sageLine.maxWidth((int)(SKY_WIDTH - FRAME_MARGIN_X * 2));
+				sageLine.setPos(frame.x + FRAME_MARGIN_X * 2 + (SKY_WIDTH - FRAME_MARGIN_X * 2 - sageLine.width()) / 2f, escaped.bottom() + 3);
+				add(sageLine);
+			}
 		}
 		
 		fadeIn();

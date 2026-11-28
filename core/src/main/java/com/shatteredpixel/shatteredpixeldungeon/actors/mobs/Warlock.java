@@ -100,6 +100,54 @@ public class Warlock extends Mob {
 	}
 	
 	//used so resistances can differentiate between melee and magical attacks
+	// ===== Maze Tower (L4): 궁정 마도사는 가까운 풀려난 주문 하나를 증폭한다 (푸른 선) =====
+	//시선이 닿는 4칸(L4_RANGE) 안의, 아직 다른 마도사가 증폭하지 않은 가장 가까운 주문. 증폭된 주문은 치는 피해와 쓰러질 때 터지는 피해가 1.5배(L4_AMP_DMG).
+	//시선이 끊기거나 멀어지면 증폭도 끊긴다(매 차례 다시 확인, Elemental.mazeAmplified도 확인)
+	public int mazeAmpTarget = -1;
+
+	public static boolean mazeCanAmplify( Warlock w, Elemental e ){
+		return com.shatteredpixel.shatteredpixeldungeon.MazeTower.L4_AMPLIFY && w.isAlive() && e.isAlive() && w.alignment == e.alignment
+				&& e.mazeElement() != 0
+				&& Dungeon.level.distance( w.pos, e.pos ) <= com.shatteredpixel.shatteredpixeldungeon.MazeTower.L4_RANGE
+				&& new Ballistica( w.pos, e.pos, Ballistica.PROJECTILE ).collisionPos == e.pos;
+	}
+
+	public Elemental mazeAmpElemental(){
+		com.shatteredpixel.shatteredpixeldungeon.actors.Actor a = mazeAmpTarget == -1 ? null : com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findById( mazeAmpTarget );
+		return a instanceof Elemental ? (Elemental) a : null;
+	}
+
+	private void mazeAmplify(){
+		Elemental cur = mazeAmpElemental();
+		if (cur != null && cur.mazeAmpBy == id() && mazeCanAmplify( this, cur )) return;
+		if (cur != null && cur.mazeAmpBy == id()) cur.mazeAmpBy = -1;
+		mazeAmpTarget = -1;
+		Elemental best = null; int bestD = Integer.MAX_VALUE;
+		for (Mob m : Dungeon.level.mobs.toArray( new Mob[0] )){
+			if (!(m instanceof Elemental)) continue;
+			Elemental e = (Elemental) m;
+			if (e.mazeAmpBy != -1 && e.mazeAmplified()) continue;
+			if (!mazeCanAmplify( this, e )) continue;
+			int d = Dungeon.level.distance( pos, e.pos );
+			if (d < bestD){ bestD = d; best = e; }
+		}
+		if (best != null){ best.mazeAmpBy = id(); mazeAmpTarget = best.id(); }
+	}
+
+	@Override
+	protected boolean act() {
+		mazeAmplify();
+		return super.act();
+	}
+
+	@Override
+	public void die( Object cause ) {
+		Elemental cur = mazeAmpElemental();
+		if (cur != null && cur.mazeAmpBy == id()) cur.mazeAmpBy = -1;
+		mazeAmpTarget = -1;
+		super.die( cause );
+	}
+
 	public static class DarkBolt{}
 	
 	protected void zap() {

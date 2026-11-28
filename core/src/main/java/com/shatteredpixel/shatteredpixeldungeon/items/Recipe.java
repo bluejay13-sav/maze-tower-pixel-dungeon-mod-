@@ -210,6 +210,7 @@ public abstract class Recipe {
 		new CurseInfusion.Recipe(),
 		new ReclaimTrap.Recipe(),
 		new WildEnergy.Recipe(),
+		new com.shatteredpixel.shatteredpixeldungeon.items.quest.EnchantedMithrilShard.Recipe(), //Maze Tower (K8): 미스릴 파편 + 충전의 주문서
 		new StewedMeat.twoMeat()
 	};
 	

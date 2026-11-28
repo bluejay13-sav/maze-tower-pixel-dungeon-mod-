@@ -153,7 +153,9 @@ public class DungeonTileSheet {
 			Terrain.TRAP, Terrain.INACTIVE_TRAP, Terrain.EMPTY_DECO,
 			Terrain.CUSTOM_DECO, Terrain.WELL, Terrain.STATUE, Terrain.REGION_DECO, Terrain.ALCHEMY,
 			Terrain.CUSTOM_DECO_EMPTY, Terrain.MINE_CRYSTAL, Terrain.MINE_BOULDER,
-			Terrain.DOOR, Terrain.OPEN_DOOR, Terrain.LOCKED_DOOR, Terrain.HERO_LKD_DR, Terrain.CRYSTAL_DOOR
+			Terrain.DOOR, Terrain.OPEN_DOOR, Terrain.LOCKED_DOOR, Terrain.HERO_LKD_DR, Terrain.CRYSTAL_DOOR,
+			//Maze Tower (사용자): 특수 바닥·특수 석상·받침대 옆의 물도 둥근 물가를 그린다 (원작은 곧은 선으로 끊겨 어색했음)
+			Terrain.EMPTY_SP, Terrain.STATUE_SP, Terrain.PEDESTAL, Terrain.ENTRANCE_SP
 	));
 
 	public static boolean waterStitcheable(int tile){

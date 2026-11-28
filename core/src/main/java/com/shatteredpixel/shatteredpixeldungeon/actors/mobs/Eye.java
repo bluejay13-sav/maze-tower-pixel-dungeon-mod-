@@ -184,6 +184,9 @@ public class Eye extends Mob {
 
 			}
 
+			//Maze Tower (N3): 광선이 지나간 줄은 잠깐 달궈진다(HotTrail). (사용자) 검은 낙엽은 타지 않는다
+			com.shatteredpixel.shatteredpixeldungeon.actors.blobs.HotTrail.heat( Dungeon.level, pos );
+
 			Char ch = Actor.findChar( pos );
 			if (ch == null) {
 				continue;
@@ -197,7 +200,7 @@ public class Eye extends Mob {
 
 				if (Dungeon.level.heroFOV[pos]) {
 					ch.sprite.flash();
-					CellEmitter.center( pos ).burst( PurpleParticle.BURST, Random.IntRange( 1, 2 ) );
+					CellEmitter.center( pos ).burst( com.shatteredpixel.shatteredpixeldungeon.MazeTower.N3_EYE ? com.shatteredpixel.shatteredpixeldungeon.effects.particles.BloodParticle.BURST : PurpleParticle.BURST, Random.IntRange( 1, 2 ) ); //Maze Tower (N3): 핏빛
 				}
 
 				if (!ch.isAlive() && ch == Dungeon.hero) {
@@ -213,6 +216,13 @@ public class Eye extends Mob {
 		if (terrainAffected) {
 			Dungeon.observe();
 		}
+		//Maze Tower (N3): (사용자) 광선 방향 그대로 곧은 달궈진 줄: 벽이 아닌 첫 칸부터 마지막 칸까지
+		int trailFrom = -1, trailTo = -1;
+		for (int c : beam.subPath(1, beam.dist)){ if (!Dungeon.level.solid[c]){ if (trailFrom < 0) trailFrom = c; trailTo = c; } }
+		com.shatteredpixel.shatteredpixeldungeon.actors.blobs.HotTrail.addBeam( Dungeon.level, trailFrom, trailTo );
+		//Maze Tower (N3): 달궈진 줄을 화면에 붙인다
+		com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob hot = Dungeon.level.blobs.get( com.shatteredpixel.shatteredpixeldungeon.actors.blobs.HotTrail.class );
+		if (hot != null) GameScene.add( hot );
 
 		beam = null;
 		beamTarget = -1;

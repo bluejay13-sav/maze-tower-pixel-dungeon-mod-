@@ -72,6 +72,7 @@ public class Speck extends Image {
 	public static final int BLIZZARD    = 119;
 	public static final int YELLOW_LIGHT= 120;
 	public static final int BLUE_LIGHT  = 121;
+	public static final int MANA_VAPOR  = 160; //Maze Tower (J1): 마력 증기 (원작 맹독 구름과 같은 입자, 마나 푸른빛)
 	
 	private static final int SIZE = 7;
 	
@@ -132,6 +133,7 @@ public class Speck extends Image {
 			break;
 		case JET:
 		case TOXIC:
+		case MANA_VAPOR: //Maze Tower (J1)
 		case CORROSION:
 		case PARALYSIS:
 		case STENCH:
@@ -337,6 +339,14 @@ public class Speck extends Image {
 			lifespan = Random.Float( 1f, 3f );
 			break;
 
+		//Maze Tower (J1): 마력 증기 - 맹독 구름과 같고 색만 마나 푸른빛
+		case MANA_VAPOR:
+			hardlight( 0x5A8CFF );
+			angularSpeed = 30;
+			angle = Random.Float( 360 );
+			lifespan = Random.Float( 1f, 3f );
+			break;
+
 		case CORROSION:
 			hardlight( 0xAAAAAA );
 			angularSpeed = 30;
@@ -503,6 +513,7 @@ public class Speck extends Image {
 				
 			case STEAM:
 			case TOXIC:
+			case MANA_VAPOR: //Maze Tower (J1)
 			case PARALYSIS:
 			case CONFUSION:
 			case STORM:

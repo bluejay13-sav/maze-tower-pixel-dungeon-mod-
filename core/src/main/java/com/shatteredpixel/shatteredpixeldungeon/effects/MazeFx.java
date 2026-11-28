@@ -23,7 +23,6 @@ public class MazeFx {
 
 	public static final float DELAY = 0.075f;
 	public static final float FAST  = 0.06f; //빙결·해빙
-	public static final float BURST = 0.045f; //충전 터뜨리기 13종
 
 	//(2026-11-21 밤, 피드백 반영) 그림마다 한 프레임 시간을 README대로. 프레임 수는 그림 너비로 센다.
 	//삭제: 조준 사격 적중(fx3_07)·메치기(fx3_22)·맨손 타격(fx_hunter_07)·면역 보호막(14)·던지기 부딪힘(15)·흐르는 충전 불꽃(16)
@@ -33,11 +32,16 @@ public class MazeFx {
 		FLURRY     ("fx3_02", 32, 32, 6), //연격 3타: 타격마다 두 프레임씩
 		CRESCENT   ("fx3_03", 32, 32, 5), //반월베기 2타
 		PHANTOM    ("fx3_04", 32, 32, 4, 0.05f),
+		//(W1·W2·W4) 5티어 무기 스킬 (사용자 확인, 원본 docs/sprites/fx_redo/make_fx_tier5.ps1)
+		SMASH      ("fx5t_smash", 32, 32, 5, 0.06f),     //내려찍기: 돌리지 않고 대상 위에 (위에서 아래로 내리그음)
+		DISCHARGE  ("fx5t_discharge", 32, 32, 5, 0.06f), //방출: 대상 몸 가운데보다 3칸 아래에서 터지게 그려 둠
+		THROAT     ("fx5t_throat", 32, 32, 4, 0.06f),    //숨통 물기: 오른쪽을 향해 그림, 화살 방향으로 돌림
 		VITAL      ("fx3_05", 32, 32, 4, 0.05f),
 		VITAL_SURPRISE ("fx3_06", 32, 32, 4, 0.05f),
 		STEAM      ("fx3_08", 32, 32, 6),
 		HISS       ("fx3_09", 32, 32, 6),
 		EXPLOSION  ("fx3_10", 32, 32, 6, 0.06f),
+		MINE_BURST ("fx_mine_burst", 32, 32, 6, 0.06f), //Maze Tower (J4): 광폭한 광부의 마석 터짐 (폭발 fx3_10을 마석 푸른빛으로, 원본 docs/sprites/mobs/j_draft/make_mineburst.ps1)
 		FREEZE     ("fx3_11", 32, 32, 4, FAST),
 		STATIC     ("fx3_13", 32, 32, 4), //반복
 		WET        ("fx3_14", 32, 32, 4), //반복 (그림에 반투명이 들어 있어 코드에서 흐리게 하지 않는다)
@@ -46,47 +50,14 @@ public class MazeFx {
 		ENDURE     ("fx3_18", 32, 32, 4), //반복
 		RETRIBUTION("fx3_19", 32, 32, 4),
 		THORNS     ("fx3_20", 32, 32, 4, 0.05f),
-		CLOBBER    ("fx3_21", 32, 32, 4), //밀쳐내기
-		PARRY      ("fx3_23", 32, 32, 4), //받아치기
-		CRUSH      ("fx3_24", 80, 80, 5), //으깨기 5×5
-		FURY       ("fx3_25", 32, 32, 5), //분노 폭발
 		THAW       ("fx4_00", 32, 32, 6, FAST),
-		CLEAVE_RING("fx4_01", 32, 32, 4, 0.065f), //연속 베기
-		HEAVY      ("fx4_02", 32, 32, 3), //강타
-		GALE       ("fx4_03", 32, 32, 4), //질풍 바람 줄기
-		CHAIN      ("fx4_04", 32, 32, 4), //연쇄
-		EXECUTE    ("fx4_05", 32, 32, 3), //처형
 		MANA_ORB   ("fx4_06", 32, 32, 6), //마나 반환
-		READY_GLOW ("fx4_07", 32, 32, 4), //집중·흐름 준비 (반복)
-		SHIELD     ("fx4_08", 32, 32, 4), //마나 장막·흘리기 (반복)
-		ECHO       ("fx4_09", 32, 32, 3), //잔향 각성 잔상
-		OVERFLOW   ("fx4_14", 32, 32, 4), //넘치는 힘 (반복, 숨 쉬듯)
 		CHILL      ("fx4_15", 32, 32, 4), //냉기 눈송이 (반복)
 		//사냥꾼 (docs/sprites/hunter_fx, 2026-11-21)
 		H_LOAD     ("fx_hunter_03", 16, 16, 6), //석궁 장전
 		H_FOCUS    ("fx_hunter_04", 16, 16, 7), //정량궁 집중
 		H_WALL     ("fx_hunter_05", 16, 16, 5), //정령 화살 벽 통과 잔광
-		H_SNARE    ("fx_hunter_06", 16, 16, 5), //덫 (발목 덩굴)
 		H_CRIT     ("fx_hunter_08", 16, 16, 3), //급소 번쩍임
-		H_PRESSURE ("fx_hunter_09", 16, 16, 6, 0.08f), //혈점 찌르기 적중 (한 번, 몸통 가운데)
-		H_RIPOSTE  ("fx_hunter_10", 16, 16, 4), //흘리기 반격
-		H_HEAT     ("fx_hunter_11", 16, 16, 5), //열기 중첩 1~5 (정지, 중첩 수 = 프레임)
-		H_ADVERSITY("fx_hunter_12", 16, 16, 6), //역경 달성
-		H_PURIFY   ("fx_hunter_13", 16, 16, 4), //정화 (반짝임만)
-		H_B_FIRE   ("fx_hunter_17", 16, 16, 4, BURST), //충전 터뜨리기: 화염
-		H_B_FROST  ("fx_hunter_18", 16, 16, 4, BURST),
-		H_B_SHOCK  ("fx_hunter_19", 16, 16, 4, BURST),
-		H_B_MAGIC  ("fx_hunter_20", 16, 16, 4, BURST),
-		H_B_DISINT ("fx_hunter_21", 16, 16, 4, BURST),
-		H_B_CORROS ("fx_hunter_22", 16, 16, 4, BURST),
-		H_B_BLAST  ("fx_hunter_23", 16, 16, 4, BURST),
-		H_B_EARTH  ("fx_hunter_24", 16, 16, 4, BURST),
-		H_B_PRISM  ("fx_hunter_25", 16, 16, 4, BURST),
-		H_B_WARD   ("fx_hunter_26", 16, 16, 4, BURST),
-		H_B_TRANSF ("fx_hunter_27", 16, 16, 4, BURST),
-		H_B_REGROW ("fx_hunter_28", 16, 16, 4, BURST),
-		H_B_CORRUPT("fx_hunter_29", 16, 16, 4, BURST),
-		H_GOLD     ("fx_hunter_30", 16, 16, 6), //금화 튀김
 		H_HAWK     ("fx_hunter_31", 16, 16, 4), //정령 매 날기 (반복)
 		H_HAWK_IN  ("fx_hunter_32", 16, 16, 6), //정령 매 소환
 		H_HAWK_OUT ("fx_hunter_33", 16, 16, 6), //정령 매 사라짐
@@ -179,7 +150,21 @@ public class MazeFx {
 		if (from.sprite == null || to.sprite == null || to.sprite.parent == null) return null;
 		PointF a = from.sprite.center(), b = to.sprite.center();
 		float ang = (float)(Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI);
-		return at(fx, b.x, b.y, ang, fx.delay, frames);
+		MovieClip c = at(fx, b.x, b.y, ang, fx.delay, frames);
+		mirrorIfLeft( c, ang );
+		return c;
+	}
+
+	//Maze Tower (사용자): 왼쪽을 향해 쓰는 스킬은 그림을 거꾸로 뒤집지 않고 좌우로만 뒤집는다.
+	//오른쪽을 향해 그린 그림을 180° 가까이 돌리면 위아래까지 뒤집혀(베기 궤적이 아래에서 위로 등) 어색하므로, 돌린 뒤 위아래를 한 번 더 뒤집는다.
+	public static void mirrorIfLeft( MovieClip c, float ang ){
+		if (c != null && (ang > 90f || ang < -90f)) c.scale.y = -Math.abs(c.scale.y);
+	}
+
+	//Maze Tower (사용자): 돌리지 않는 그림(내려찍기 등)은 공격자가 대상보다 오른쪽이면 좌우로 뒤집는다
+	public static void faceFrom( MovieClip c, Char from, Char to ){
+		if (c == null || from == null || to == null || from.sprite == null || to.sprite == null) return;
+		if (from.sprite.center().x > to.sprite.center().x + 0.5f) c.scale.x = -Math.abs(c.scale.x);
 	}
 
 	public static float angle( PointF a, PointF b ){

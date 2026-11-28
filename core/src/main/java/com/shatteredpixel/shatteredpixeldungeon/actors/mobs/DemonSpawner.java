@@ -60,6 +60,22 @@ public class DemonSpawner extends Mob {
 		properties.add(Property.STATIC);
 	}
 
+	//Maze Tower (N5, 사용자): 검은 씨앗 혹은 바닥에 박혀 어떤 상태에서도 움직이지 않는다
+	@Override
+	protected boolean getCloser( int target ) {
+		return com.shatteredpixel.shatteredpixeldungeon.MazeTower.N5_SEED ? false : super.getCloser( target );
+	}
+
+	@Override
+	protected boolean getFurther( int target ) {
+		return com.shatteredpixel.shatteredpixeldungeon.MazeTower.N5_SEED ? false : super.getFurther( target );
+	}
+
+	@Override
+	protected boolean canAttack( com.shatteredpixel.shatteredpixeldungeon.actors.Char enemy ) {
+		return !com.shatteredpixel.shatteredpixeldungeon.MazeTower.N5_SEED && super.canAttack( enemy );
+	}
+
 	@Override
 	public int drRoll() {
 		return super.drRoll() + Random.NormalIntRange(0, 12);

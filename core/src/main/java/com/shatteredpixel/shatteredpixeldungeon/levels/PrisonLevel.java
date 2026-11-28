@@ -90,6 +90,7 @@ public class PrisonLevel extends RegularLevel {
 	protected void createMobs() {
 		Wandmaker.Quest.spawnWandmaker(this, roomEntrance);
 		super.createMobs();
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ChainedSoul.place(this); //Maze Tower (H6): 갇힌 영혼과 사슬 고리 (6~9층, 드묾)
 	}
 
 	@Override

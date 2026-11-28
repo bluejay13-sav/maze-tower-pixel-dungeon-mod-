@@ -70,6 +70,11 @@ public class WandOfLightning extends DamageWand {
 	@Override
 	public void onZap(Ballistica bolt) {
 
+		//Maze Tower: (사용자) 번개가 지나간 칸(막힌 칸 바로 다음 칸까지)에 화염 벽이 있으면 벽이 사라지며 폭발
+		for (int i = 1; i <= bolt.dist + 1 && i < bolt.path.size(); i++){
+			if (com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.MagicalFireRoom.EternalFire.shock(bolt.path.get(i))) break;
+		}
+
 		for (Char ch : affected.toArray(new Char[0])){
 			if (ch != curUser && ch.alignment == curUser.alignment && ch.pos != bolt.collisionPos){
 				affected.remove(ch);

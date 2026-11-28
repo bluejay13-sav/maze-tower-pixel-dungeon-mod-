@@ -105,13 +105,10 @@ public class SpiritHawk extends ArmorAbility {
 				armor.updateQuickslot();
 
 				ally = new HawkAlly();
-				if (!MAZE_ORIGINAL()) ally.timeRemaining = com.shatteredpixel.shatteredpixeldungeon.MazeTower.HAWK_TURNS + com.shatteredpixel.shatteredpixeldungeon.MazeTower.T4_HAWK_LINGER[Math.min(4, hero.pointsInTalent(Talent.HAWK_LINGER))]; //Maze Tower: 정령 매 지속
 				ally.pos = Random.element(spawnPoints);
 				GameScene.add(ally);
 
 				ScrollOfTeleportation.appear(ally, ally.pos);
-				//Maze Tower (2026-11-21): 꽃잎이 모여 매가 된다 (fx_hunter_32)
-				if (!MAZE_ORIGINAL() && ally.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_HAWK_IN, ally.sprite);
 				Dungeon.observe();
 
 				Invisibility.dispel();
@@ -131,19 +128,7 @@ public class SpiritHawk extends ArmorAbility {
 
 	@Override
 	public Talent[] talents() {
-		if (!MAZE_ORIGINAL()) return new Talent[]{Talent.HAWK_LINGER, Talent.HAWK_EYE, Talent.HUNT_SIGNAL, Talent.HEROIC_ENERGY}; //Maze Tower: 사냥꾼 4차 정령 매 특성
 		return new Talent[]{Talent.EAGLE_EYE, Talent.GO_FOR_THE_EYES, Talent.SWIFT_SPIRIT, Talent.HEROIC_ENERGY};
-	}
-
-	//Maze Tower: 원작 정령 매 그대로 쓸지 (false면 사냥꾼 4차 결실 규칙)
-	static boolean MAZE_ORIGINAL(){
-		return com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_ARMOR_ABILITY;
-	}
-
-	//Maze Tower: 매의 눈 (시야 +칸)
-	static int eyeBonus(){
-		if (MAZE_ORIGINAL()) return Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE);
-		return com.shatteredpixel.shatteredpixeldungeon.MazeTower.T4_HAWK_EYE[Math.min(4, Dungeon.hero.pointsInTalent(Talent.HAWK_EYE))];
 	}
 
 	private static HawkAlly getHawk(){
@@ -165,7 +150,7 @@ public class SpiritHawk extends ArmorAbility {
 
 			flying = true;
 			if (Dungeon.hero != null) {
-				viewDistance = MAZE_ORIGINAL() ? (int) GameMath.gate(6, 6 + Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE), 8) : 6 + eyeBonus(); //Maze Tower: 매의 눈
+				viewDistance = (int) GameMath.gate(6, 6 + Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE), 8);
 				baseSpeed = 2f + Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT) / 2f;
 			} else {
 				viewDistance = 6;
@@ -203,16 +188,6 @@ public class SpiritHawk extends ArmorAbility {
 		@Override
 		public int attackProc(Char enemy, int damage) {
 			damage = super.attackProc( enemy, damage );
-			//Maze Tower: 쪼으면 실명, 사냥 신호 (원작 특성 대신)
-			if (!MAZE_ORIGINAL()){
-				Buff.prolong( enemy, Blindness.class, com.shatteredpixel.shatteredpixeldungeon.MazeTower.HAWK_BLIND );
-				int sig = Math.min(4, Dungeon.hero.pointsInTalent(Talent.HUNT_SIGNAL));
-				if (sig > 0 && enemy.isAlive()){
-					com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.HawkSignal s = Buff.prolong(enemy, com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.HawkSignal.class, com.shatteredpixel.shatteredpixeldungeon.MazeTower.HAWK_SIGNAL_TURNS);
-					s.bonus = com.shatteredpixel.shatteredpixeldungeon.MazeTower.T4_HUNT_SIGNAL[sig];
-				}
-				return damage;
-			}
 			switch (Dungeon.hero.pointsInTalent(Talent.GO_FOR_THE_EYES)){
 				case 1:
 					Buff.prolong( enemy, Blindness.class, 2);
@@ -242,18 +217,11 @@ public class SpiritHawk extends ArmorAbility {
 				Dungeon.hero.interrupt();
 				return true;
 			}
-			viewDistance = 6 + eyeBonus(); //Maze Tower: 매의 눈
+			viewDistance = 6+Dungeon.hero.pointsInTalent(Talent.EAGLE_EYE);
 			baseSpeed = 2f + Dungeon.hero.pointsInTalent(Talent.SWIFT_SPIRIT)/2f;
 			boolean result = super.act();
 			Dungeon.level.updateFieldOfView( this, fieldOfView );
 			GameScene.updateFog(pos, viewDistance+(int)Math.ceil(speed()));
-			//Maze Tower: 매의 눈 4레벨 - 매가 지나간 곳의 함정·비밀문을 찾아낸다
-			if (!MAZE_ORIGINAL() && Dungeon.hero.pointsInTalent(Talent.HAWK_EYE) >= 4){
-				for (int n : PathFinder.NEIGHBOURS9){
-					int c = pos + n;
-					if (c >= 0 && c < Dungeon.level.length() && Dungeon.level.secret[c]) Dungeon.level.discover(c);
-				}
-			}
 			return result;
 		}
 
@@ -329,22 +297,6 @@ public class SpiritHawk extends ArmorAbility {
 		public HawkSprite() {
 			super();
 
-			//Maze Tower (2026-11-21): 새 정령 매 그림 (푸른빛, fx_hunter_31 날기 4프레임 반복).
-			//(결정) 쪼기 동작 없이 날기 프레임 그대로 부딪히고 피해 숫자만. 사라질 때 꽃잎으로 흩어진다(fx_hunter_33), 몸 뒤에 은은한 빛(fx_hunter_34)
-			if (!MAZE_ORIGINAL()){
-				texture( "sprites/maze_fx_hunter_31.png" );
-				TextureFilm f = new TextureFilm( texture, 16, 16 );
-				idle = new Animation( 10, true );
-				idle.frames( f, 0, 1, 2, 3 );
-				run = idle.clone();
-				attack = new Animation( 12, false );
-				attack.frames( f, 0, 1, 2, 3 );
-				die = new Animation( 20, false );
-				die.frames( f, 0 );
-				play( idle );
-				return;
-			}
-
 			texture( Assets.Sprites.SPIRIT_HAWK );
 
 			TextureFilm frames = new TextureFilm( texture, 15, 15 );
@@ -371,38 +323,8 @@ public class SpiritHawk extends ArmorAbility {
 			return 0xFF00FFFF;
 		}
 
-		private com.watabou.noosa.Image glow; //Maze Tower: 매 몸 뒤의 빛
-
-		@Override
-		public void update() {
-			super.update();
-			if (MAZE_ORIGINAL() || parent == null) return;
-			if (glow == null){
-				glow = new com.watabou.noosa.Image("sprites/maze_fx_hunter_34.png");
-				parent.addToBack(glow);
-			}
-			com.watabou.utils.PointF c = center();
-			glow.x = c.x - 16;
-			glow.y = c.y - 16;
-			glow.visible = visible && (ch == null || ch.isAlive());
-		}
-
-		@Override
-		public void kill() {
-			if (glow != null){ glow.killAndErase(); glow = null; }
-			super.kill();
-		}
-
 		@Override
 		public void die() {
-			if (!MAZE_ORIGINAL()){
-				//꽃잎으로 흩어진다
-				com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.H_HAWK_OUT, this);
-				if (glow != null){ glow.killAndErase(); glow = null; }
-				super.die();
-				alpha(0);
-				return;
-			}
 			super.die();
 			emitter().start( ShaftParticle.FACTORY, 0.3f, 4 );
 			emitter().start( Speck.factory( Speck.LIGHT ), 0.2f, 3 );

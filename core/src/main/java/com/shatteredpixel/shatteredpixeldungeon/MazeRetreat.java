@@ -92,6 +92,7 @@ public class MazeRetreat {
 
 	//역행 중 층에 들어설 때 적을 다시 깐다: 원래 그 층 적 수(mobLimit)의 RETREAT_MOB_FILL 비율까지 (원작 승천보다 적게)
 	private static void refillMobs( Level level ){
+		if (MazeSage.blocksRespawn(Dungeon.depth)) return; //(사용자) 강화된 브로치: 16~19층은 다시 깔지 않는다
 		int target = Math.round(level.mobLimit() * MazeTower.RETREAT_MOB_FILL);
 		int tries = 0;
 		while (level.mobCount() < target && tries++ < 30){
@@ -168,6 +169,8 @@ public class MazeRetreat {
 	//역행 중(또는 막 시작하려는 중)에는 탑의 심장 그림을 역행 버전으로 (명세 20번)
 	public static String tiles( String tex ){
 		if ((active() || pendingBegin) && Assets.Environment.TILES_HALLS.equals(tex)) return Assets.Environment.TILES_HALLS_RETURN;
+		if ((active() || pendingBegin) && Assets.Environment.TILES_HALLS2.equals(tex)) return Assets.Environment.TILES_HALLS2_RETURN; //21~24층 새 바닥·벽
+		if ((active() || pendingBegin) && Assets.Environment.HALLS_SP.equals(tex)) return Assets.Environment.HALLS_SP_RETURN; //(사용자) 26층·검은 씨앗 혹 방 그림
 		return tex;
 	}
 

@@ -69,7 +69,7 @@ public class DM200Sprite extends MobSprite {
 		super.zap( cell );
 
 		MagicMissile.boltFromChar( parent,
-				MagicMissile.SPECK + Speck.TOXIC,
+				MagicMissile.SPECK + (com.shatteredpixel.shatteredpixeldungeon.MazeTower.J7_VAPOR ? Speck.MANA_VAPOR : Speck.TOXIC), //Maze Tower (J7): 마력 증기를 뿜는다
 				this,
 				cell,
 				new Callback() {

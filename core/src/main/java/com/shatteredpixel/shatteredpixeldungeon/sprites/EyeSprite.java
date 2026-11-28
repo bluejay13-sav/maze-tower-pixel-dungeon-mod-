@@ -71,7 +71,7 @@ public class EyeSprite extends MobSprite {
 		
 		chargeParticles = centerEmitter();
 		chargeParticles.autoKill = false;
-		chargeParticles.pour(MagicMissile.MagicParticle.ATTRACTING, 0.05f);
+		chargeParticles.pour(com.shatteredpixel.shatteredpixeldungeon.MazeTower.N3_EYE ? BLOOD_ATTRACT : MagicMissile.MagicParticle.ATTRACTING, 0.05f); //Maze Tower (N3): 핏빛으로 모인다
 		chargeParticles.on = false;
 		
 		if (((Eye)ch).beamCharged) play(charging);
@@ -102,6 +102,23 @@ public class EyeSprite extends MobSprite {
 		}
 	}
 
+	//Maze Tower (N3, 사용자): 핏줄 눈의 광선과 기 모으는 입자는 핏빛
+	private static Beam mazeRay( Beam ray ){
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.N3_EYE) ray.tint( 0xC0182C, 0.8f );
+		return ray;
+	}
+
+	private static final Emitter.Factory BLOOD_ATTRACT = new Emitter.Factory() {
+		@Override
+		public void emit( Emitter emitter, int index, float x, float y ) {
+			MagicMissile.MagicParticle p = (MagicMissile.MagicParticle) emitter.recycle( MagicMissile.MagicParticle.class );
+			p.resetAttract( x, y );
+			p.color( com.watabou.utils.Random.oneOf( 0xC0283A, 0xE04858, 0x8A1020 ) );
+		}
+		@Override
+		public boolean lightMode() { return true; }
+	};
+
 	public void charge( int pos ){
 		turnTo(ch.pos, pos);
 		play(charging);
@@ -127,9 +144,9 @@ public class EyeSprite extends MobSprite {
 		if (anim == zap) {
 			idle();
 			if (Actor.findChar(zapPos) != null){
-				parent.add(new Beam.DeathRay(center(), Actor.findChar(zapPos).sprite.center()));
+				parent.add(mazeRay(new Beam.DeathRay(center(), Actor.findChar(zapPos).sprite.center())));
 			} else {
-				parent.add(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(zapPos)));
+				parent.add(mazeRay(new Beam.DeathRay(center(), DungeonTilemap.raisedTileCenterToWorld(zapPos))));
 			}
 			Sample.INSTANCE.play( Assets.Sounds.RAY );
 			((Eye)ch).deathGaze();

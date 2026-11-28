@@ -51,6 +51,7 @@ import java.util.ArrayList;
 abstract public class ClassArmor extends Armor {
 
 	private static final String AC_ABILITY = "ABILITY";
+	private static final String AC_PET_SHIFT = "PET_SHIFT"; //Maze Tower (T7)
 	private static final String AC_TRANSFER = "TRANSFER";
 	
 	{
@@ -130,6 +131,7 @@ abstract public class ClassArmor extends Armor {
 		classArmor.glyphHardened = armor.glyphHardened;
 		classArmor.cursed = armor.cursed;
 		classArmor.curseInfusionBonus = armor.curseInfusionBonus;
+		classArmor.mazeMithril = armor.mazeMithril; //Maze Tower (K8): 미스릴 보강도 옮겨 간다
 		classArmor.masteryPotionBonus = armor.masteryPotionBonus;
 		if (armor.levelKnown && armor.cursedKnown) {
 			classArmor.identify();
@@ -165,6 +167,7 @@ abstract public class ClassArmor extends Armor {
 		ArrayList<String> actions = super.actions( hero );
 		if (isEquipped( hero )) {
 			actions.add( AC_ABILITY );
+			if (hero.armorAbility instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell) actions.add( AC_PET_SHIFT ); //Maze Tower (T7): 길든 주문의 원소 바꾸기
 		}
 		actions.add( AC_TRANSFER );
 		return actions;
@@ -174,6 +177,8 @@ abstract public class ClassArmor extends Armor {
 	public String actionName(String action, Hero hero) {
 		if (hero.armorAbility != null && action.equals(AC_ABILITY)){
 			return Messages.upperCase(hero.armorAbility.name());
+		} else if (action.equals(AC_PET_SHIFT)){ //Maze Tower (T7)
+			return Messages.upperCase(com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.shiftActionName(hero));
 		} else {
 			return super.actionName(action, hero);
 		}
@@ -204,6 +209,10 @@ abstract public class ClassArmor extends Armor {
 				hero.armorAbility.use(this, hero);
 			}
 			
+		} else if (action.equals(AC_PET_SHIFT)){ //Maze Tower (T7): 길든 주문의 원소 바꾸기
+
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.shiftElement(hero);
+
 		} else if (action.equals(AC_TRANSFER)){
 
 			GameScene.show(new WndOptions(new ItemSprite(ItemSpriteSheet.CROWN),
@@ -242,6 +251,7 @@ abstract public class ClassArmor extends Armor {
 								augment = armor.augment;
 								cursed = armor.cursed;
 								curseInfusionBonus = armor.curseInfusionBonus;
+								mazeMithril = armor.mazeMithril; //Maze Tower (K8): 미스릴 보강도 옮겨 간다
 								masteryPotionBonus = armor.masteryPotionBonus;
 								if (armor.checkSeal() != null) {
 									inscribe(armor.glyph);

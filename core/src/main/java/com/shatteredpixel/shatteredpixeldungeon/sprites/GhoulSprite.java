@@ -53,6 +53,32 @@ public class GhoulSprite extends MobSprite {
 		play( idle );
 	}
 
+	//Maze Tower (L1): 짝 잃은 시민 둘 사이의 영혼 끈 (id가 작은 쪽이 하나만 그린다, 짝이 쓰러져 있으면 끊김)
+	private com.shatteredpixel.shatteredpixeldungeon.effects.SoulTether tether;
+
+	@Override
+	public void update() {
+		super.update();
+		if (!(ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul)) return;
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul me = (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul) ch;
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul p = me.mazePartner();
+		boolean want = p != null && p.sprite != null && p.sprite.parent != null && me.id() < p.id() && me.isActive() && p.isActive();
+		if (!want){
+			if (tether != null){ tether.killAndErase(); tether = null; }
+			return;
+		}
+		if (tether == null || tether.parent == null){
+			tether = new com.shatteredpixel.shatteredpixeldungeon.effects.SoulTether(this, p.sprite);
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.groupEffect(tether);
+		}
+	}
+
+	@Override
+	public void kill() {
+		if (tether != null){ tether.killAndErase(); tether = null; }
+		super.kill();
+	}
+
 	public void crumple(){
 		hideEmo();
 		processStateRemoval(State.PARALYSED);

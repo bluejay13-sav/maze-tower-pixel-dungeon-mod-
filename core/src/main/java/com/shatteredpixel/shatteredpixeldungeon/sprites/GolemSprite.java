@@ -77,11 +77,28 @@ public class GolemSprite extends MobSprite {
 			teleParticles.pos( this );
 			teleParticles.visible = visible;
 		}
+		//Maze Tower (L5): 수호하는 아군과 잇는 금빛 선 (공명 수정의 실과 같은 꼴: 아주 옅은 실 위로 빛 알갱이가 석상에서 아군 쪽으로 흐름)
+		if (ch instanceof Golem){
+			Char g = ((Golem) ch).mazeGuarded();
+			boolean ok = ch.isAlive() && g != null && g.sprite != null && g.sprite.parent != null && Golem.mazeCanGuard( (Golem) ch, g );
+			if (!ok || (guardLine != null && guardId != g.id())){
+				if (guardLine != null){ guardLine.killAndErase(); guardLine = null; guardId = -1; }
+			}
+			if (ok && (guardLine == null || guardLine.parent == null)){
+				guardLine = new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ResonanceCrystal.ThreadLine( this, g.sprite, 0xFFE8C25A, 0xFFFFEC9A, 8f );
+				com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.groupEffect( guardLine );
+				guardId = g.id();
+			}
+		}
 	}
+
+	private com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ResonanceCrystal.ThreadLine guardLine;
+	private int guardId = -1;
 
 	@Override
 	public void kill() {
 		super.kill();
+		if (guardLine != null){ guardLine.killAndErase(); guardLine = null; }
 
 		if (teleParticles != null) {
 			teleParticles.on = false;

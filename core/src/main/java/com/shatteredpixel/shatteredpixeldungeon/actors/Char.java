@@ -138,7 +138,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Vorpal
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.GladiatorEffects;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sickle;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.ShockingDart;
@@ -378,10 +377,49 @@ public abstract class Char extends Actor {
 		return attack(enemy, 1f, 0f, 1f);
 	}
 	
+	//Maze Tower: 적이 주인공을 원작 공격(attack)으로 치는 중인지
+	public static int mazeEnemyAttackDepth = 0;
+
 	public boolean attack( Char enemy, float dmgMulti, float dmgBonus, float accMulti ) {
+		//Maze Tower (T3): 주인공이 공격한 적을 펫 정령 매가 노린다
+		if (this == Dungeon.hero && enemy != null) com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetHawk.onHeroAttack(enemy);
+		//Maze Tower (B5): 적의 공격으로 주인공의 피가 줄지 않았는지 판정 (회피·방어막이 전부 막음·쳐냄)
+		if (enemy instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero && enemy != this && alignment != enemy.alignment){
+			int hpBefore = enemy.HP;
+			//Maze Tower (C20): 받아넘기기 - 근접 공격을 쳐내면 빗나간 것으로 (피가 줄지 않은 공격)
+			boolean result;
+			mazeEnemyAttackDepth++; //이 안에서 받는 피해는 원작 공격이 피격음을 낸다 (Hero.damage의 보스 기술 피격음과 겹치지 않게)
+			try {
+				result = !com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.tryDeflect(
+						(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero)enemy, this)
+						&& mazeAttack(enemy, dmgMulti, dmgBonus, accMulti);
+			} finally {
+				mazeEnemyAttackDepth--;
+			}
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomJudge.afterEnemyAttack(
+					(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero)enemy, this, enemy.isAlive() && enemy.HP >= hpBefore);
+			//Maze Tower (C11): 일대일 각성 - 그 적의 공격을 피하면 반격
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.onEnemyAttackDone(
+					(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero)enemy, this, result);
+			return result;
+		}
+		//Maze Tower (C4): 주인공의 공격이 진행 중 (그동안 일어난 원소 반응은 "내 공격이 일으킨 반응")
+		if (this instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero){
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.beginHeroAttack();
+			try {
+				return mazeAttack(enemy, dmgMulti, dmgBonus, accMulti);
+			} finally {
+				com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.endHeroAttack();
+			}
+		}
+		return mazeAttack(enemy, dmgMulti, dmgBonus, accMulti);
+	}
+
+	//Maze Tower: 원작 attack 본문 (위에서 판정을 감싸려고 이름만 옮겼다)
+	private boolean mazeAttack( Char enemy, float dmgMulti, float dmgBonus, float accMulti ) {
 
 		if (enemy == null) return false;
-		
+
 		boolean visibleFight = Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[enemy.pos];
 
 		if (enemy.isInvulnerable(getClass())) {
@@ -411,12 +449,10 @@ public abstract class Char extends Actor {
 				}
 
 				//Maze Tower: 방어 무시 스킬 (룬 블레이드 무형검)
-				dr = GladiatorEffects.reduceDefense(dr); //Maze Tower: 향상된 콤보 3레벨 (분노 폭발)
 				if (SwordSkill.ignoringDefense()){
 					dr = 0;
 				}
 				dr = BloomEffects.armorAfterIgnore(h, enemy, dr); //Maze Tower: 2차 특성 방어력 일부 무시 (돌진·마나 흡수·집중 각성)
-				dr = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.armorAfterIgnore(h, dr); //Maze Tower: 고리지기 완력의 반지 반지 너클
 			}
 
 			//we use a float here briefly so that we don't have to constantly round while
@@ -473,8 +509,6 @@ public abstract class Char extends Actor {
 
 			//friendly endure
 			Endure.EndureTracker endure = buff(Endure.EndureTracker.class);
-			//Maze Tower (2026-11-21): 인내 응징 그림 (fx3_19)
-			if (endure != null && !endure.enduring && !com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_TALENTS && enemy.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.RETRIBUTION, enemy.sprite);
 			if (endure != null) dmg = endure.damageFactor(dmg);
 
 			//enemy endure
@@ -496,6 +530,10 @@ public abstract class Char extends Actor {
 			if (enemy.buff(MonkEnergy.MonkAbility.Meditate.MeditateResistance.class) != null){
 				dmg *= 0.2f;
 			}
+
+			//Maze Tower (N1, 사용자): 검은 낙엽 위에 선 적은 주는 피해 +10% (세계수의 열매와 겹침)
+			if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.empowers(this)) dmg *= com.shatteredpixel.shatteredpixeldungeon.MazeTower.N1_LEAF_DMG;
+			dmg *= com.shatteredpixel.shatteredpixeldungeon.actors.mobs.FruitBranch.dealtMulti(this); //Maze Tower (N8): 열매를 먹은 적
 
 			if ( buff(Weakness.class) != null ){
 				dmg *= 0.67f;
@@ -624,7 +662,6 @@ public abstract class Char extends Actor {
 				//TODO enemy.defenseSound? currently miss plays for monks/crab even when they parry
 				Sample.INSTANCE.play(Assets.Sounds.MISS);
 			}
-			com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.onDodged(this, enemy); //Maze Tower: 고리지기 회피의 반지 흘리기 반격
 			
 			return false;
 			
@@ -659,8 +696,9 @@ public abstract class Char extends Actor {
 			defStat = INFINITE_EVASION;
 		}
 
-		//Maze Tower: 고리지기 혈점 찌르기를 맞은 대상은 회피 0, 반드시 맞는다
-		if (defender.buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.PressurePoint.class) != null){
+		//Maze Tower (C3): 2차 특성이 주는 필중 (가득 벼린 공격 등)
+		if (attacker instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero
+				&& com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.heroSureHit((com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero)attacker, defender)){
 			acuStat = INFINITE_ACCURACY;
 		}
 
@@ -684,6 +722,7 @@ public abstract class Char extends Actor {
 		if (attacker.buff(Bless.class) != null) acuRoll *= 1.25f;
 		if (attacker.buff(  Hex.class) != null) acuRoll *= 0.8f;
 		if (attacker.buff( Daze.class) != null) acuRoll *= 0.5f;
+		acuRoll *= com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetHawk.accuracyMulti(attacker); //Maze Tower (T3): 성가신 날갯짓
 		for (ChampionEnemy buff : attacker.buffs(ChampionEnemy.class)){
 			acuRoll *= buff.evasionAndAccuracyFactor();
 		}
@@ -875,6 +914,15 @@ public abstract class Char extends Actor {
 			return;
 		}
 
+		//Maze Tower (L5): 마도 석상이 수호하는 적이 받을 피해는 석상이 모두 대신 받는다 (석상 방어 무시)
+		if (dmg > 0 && this instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob){
+			com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Golem guard = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Golem.mazeGuardianOf(this);
+			if (guard != null){
+				guard.mazeTakeGuarded(dmg, src, this);
+				return;
+			}
+		}
+
 		//Maze Tower: 이 피해 처리 중에 생긴 빙결은 피해가 끝난 뒤에 건다
 		ElementalReactions.beginDefer(this);
 
@@ -884,6 +932,10 @@ public abstract class Char extends Actor {
 		dmg = BloomEffects.onStaffSkillDamage(this, dmg, src);
 		//Maze Tower: 2차 특성 - 주인공이 준 피해 배율 (표식, 불꽃 칼날 각성)
 		dmg = BloomEffects.incomingDamage(this, dmg, src);
+		//Maze Tower (N7): 메아리 매듭의 수액 메아리 (물리 피해 감소, 불타는 동안 화상 두 배)
+		dmg = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoKnot.modifyDamage(this, dmg, src);
+		//Maze Tower (N8): 열매 맺는 가지의 열매 (먹은 적은 덜 다치고, 주인공이 먹었으면 적이 더 다침)
+		dmg = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.FruitBranch.takenModify(this, dmg, src);
 
 		if (!(src instanceof LifeLink || src instanceof Hunger) && buff(LifeLink.class) != null){
 			HashSet<LifeLink> links = buffs(LifeLink.class);
@@ -1032,7 +1084,13 @@ public abstract class Char extends Actor {
 		}
 
 		int shielded = dmg;
+		int shieldBefore = shielding(); //Maze Tower (C10)
 		dmg = ShieldBuff.processDamage(this, dmg, src);
+		//Maze Tower (C10): 마지막 겹 - 방어막이 깨진 공격의 넘친 피해
+		if (this instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero){
+			dmg = com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.afterShield(
+					(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero)this, shieldBefore, shielding(), dmg);
+		}
 		shielded -= dmg;
 		HP -= dmg;
 
@@ -1098,7 +1156,9 @@ public abstract class Char extends Actor {
 			if (src instanceof Electricity)                             icon = FloatingText.SHOCKING;
 			if (src instanceof Bleeding)                                icon = FloatingText.BLEEDING;
 			if (src instanceof ToxicGas)                                icon = FloatingText.TOXIC;
-			if (src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor) icon = FloatingText.TOXIC; //Maze Tower: 마력 증기도 독가스처럼 표시
+			if (src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor
+					|| src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.Burst
+					|| src instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.VaporBite) icon = FloatingText.MANA_VAPOR; //Maze Tower (J1): 마력 증기 (독가스 모양, 푸른빛)
 			if (src instanceof Corrosion)                               icon = FloatingText.CORROSION;
 			if (src instanceof Poison)                                  icon = FloatingText.POISON;
 			if (src instanceof Ooze)                                    icon = FloatingText.OOZE;
@@ -1376,9 +1436,7 @@ public abstract class Char extends Actor {
 		} else {
 			previousPos = -1;
 		}
-		int mazeOldPos = pos;
 		pos = step;
-		com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.onCharMoved(this, mazeOldPos); //Maze Tower: 추적자 덫, 고리지기 추진력
 
 		//Maze Tower: 물에 들어가면 젖음
 		if (Wet.onWater(this)) Buff.affect(this, Wet.class);

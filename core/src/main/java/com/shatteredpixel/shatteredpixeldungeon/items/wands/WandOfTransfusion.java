@@ -83,7 +83,16 @@ public class WandOfTransfusion extends DamageWand {
 		if (ch instanceof Mob){
 			
 			wandProc(ch, chargesPerCast());
-			
+
+			//Maze Tower (K4): 15층 벌레의 갉기를 끊는다
+			if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RootGnawer){
+				((com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RootGnawer) ch).interruptGnaw();
+			}
+			//Maze Tower (I9): 10층 간수가 모으던 대봉인을 끊는다
+			if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ShadowWarden){
+				((com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ShadowWarden) ch).onTransfusion();
+			}
+
 			//this wand does different things depending on the target.
 			
 			//heals/shields an ally or a charmed enemy while damaging self

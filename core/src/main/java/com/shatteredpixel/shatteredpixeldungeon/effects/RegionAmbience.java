@@ -51,7 +51,8 @@ public class RegionAmbience {
 	private static BossEffects.Fx fxFor( int depth ){
 		if (depth >= 6 && depth <= 10)  return BossEffects.Fx.REGION_SOUL;
 		if (depth >= 16 && depth <= 20) return BossEffects.Fx.REGION_MAGIC;
-		if (depth >= 21 && depth <= 26 && !MazeRetreat.active()) return BossEffects.Fx.REGION_HEARTBEAT;
+		//(사용자) 탑의 심장의 박동 이펙트는 없앰 (바닥 핏줄의 두근 박동이 대신함). 다시 켜려면 MazeTower.HEART_REGION_BEAT
+		if (MazeTower.HEART_REGION_BEAT && depth >= 21 && depth <= 26 && !MazeRetreat.active()) return BossEffects.Fx.REGION_HEARTBEAT;
 		return null;
 	}
 }

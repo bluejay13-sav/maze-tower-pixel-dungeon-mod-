@@ -38,6 +38,9 @@ public class SpawnerSprite extends MobSprite {
 		shadowOffset = 1.25f;
 		shadowHeight = 0.4f;
 		shadowWidth = 1f;
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.N5_SEED){ //Maze Tower (N5): 바닥에 박힌 씨앗 혹 (보통 몹처럼 칸 바닥에 서고 그림자도 발밑에)
+			perspectiveRaise = 6 / 16f; shadowOffset = 0.25f; shadowHeight = 0.3f; shadowWidth = 1.1f;
+		}
 
 		TextureFilm frames = new TextureFilm( texture, 16, 16 );
 
@@ -66,6 +69,7 @@ public class SpawnerSprite extends MobSprite {
 		super.update();
 		if (!paused){
 			if (Float.isNaN(baseY)) baseY = y;
+			if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.N5_SEED) return; //Maze Tower (N5): 검은 씨앗 혹은 바닥에 박혀 있어 떠다니지 않는다
 			y = baseY + (float)(Math.sin(Game.timeTotal)/3f);
 			shadowOffset = 1.25f - 0.6f*(float)(Math.sin(Game.timeTotal)/3f);
 		}

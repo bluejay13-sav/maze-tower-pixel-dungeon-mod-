@@ -55,6 +55,23 @@ public class Snake extends Mob {
 		return 10;
 	}
 
+	//Maze Tower (F5): 덩굴뱀 - 키 큰 풀 속에 있으면 기습 판정을 받지 않는다 (잠들어 있어도, 특성의 기습도)
+	@Override
+	public boolean mazeNoSurprise() {
+		if (Dungeon.level == null || pos < 0 || pos >= Dungeon.level.length()) return false;
+		int t = Dungeon.level.map[pos];
+		return t == com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.HIGH_GRASS
+				|| t == com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.FURROWED_GRASS;
+	}
+
+	//Maze Tower (사용자): 덩굴뱀 - 키 큰 풀 속에 있으면 회피 수치 +50% (F_SNAKE_GRASS_EVASION)
+	@Override
+	public int defenseSkill( Char enemy ) {
+		int d = super.defenseSkill( enemy );
+		if (d > 0 && mazeNoSurprise()) d = Math.round( d * com.shatteredpixel.shatteredpixeldungeon.MazeTower.F_SNAKE_GRASS_EVASION );
+		return d;
+	}
+
 	private static int dodges = 0;
 
 	@Override

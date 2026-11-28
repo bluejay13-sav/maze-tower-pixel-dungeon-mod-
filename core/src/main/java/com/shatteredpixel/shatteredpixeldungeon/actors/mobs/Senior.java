@@ -44,7 +44,7 @@ public class Senior extends Monk {
 	
 	@Override
 	public int damageRoll() {
-		return Random.NormalIntRange( 16, 25 );
+		return mazeFocusDamage( Random.NormalIntRange( 16, 25 ) ); //Maze Tower (L2)
 	}
 	
 }

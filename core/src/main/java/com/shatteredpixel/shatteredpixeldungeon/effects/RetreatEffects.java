@@ -89,7 +89,7 @@ public class RetreatEffects {
 		switch (depth){
 			case 5:  return "sprites/maze_trace5_sap.png";
 			case 10: return "sprites/maze_trace10_chain.png";
-			case 15: return "sprites/maze_trace15_golem.png"; //15층 보스가 정해지면 maze_trace15_crystal.png와 나눈다
+			//15층(뿌리를 갉는 것) 흔적 그림은 아직 없다
 			default: return null;
 		}
 	}

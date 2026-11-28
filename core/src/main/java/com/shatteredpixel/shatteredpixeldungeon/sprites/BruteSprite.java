@@ -22,29 +22,56 @@
 package com.shatteredpixel.shatteredpixeldungeon.sprites;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Brute;
 import com.watabou.noosa.TextureFilm;
 
 public class BruteSprite extends MobSprite {
+
+	//Maze Tower (J4): 갱도에 갇힌 광부. 광폭 중에는 몸의 마석에서 빛이 새는 셋째 줄(42칸부터)로 그린다
+	private static final int RAGE_ROW = 42;
+	private TextureFilm frames;
+	private boolean raging = false;
 	
 	public BruteSprite() {
 		super();
 		
 		texture( Assets.Sprites.BRUTE );
 		
-		TextureFilm frames = new TextureFilm( texture, 12, 16 );
+		frames = new TextureFilm( texture, 12, 16 );
 		
-		idle = new Animation( 2, true );
-		idle.frames( frames, 0, 0, 0, 1, 0, 0, 1, 1 );
-		
-		run = new Animation( 12, true );
-		run.frames( frames, 4, 5, 6, 7 );
-		
-		attack = new Animation( 12, false );
-		attack.frames( frames, 2, 3, 0 );
-		
-		die = new Animation( 12, false );
-		die.frames( frames, 8, 9, 10 );
+		setRow( 0 );
 		
 		play( idle );
+	}
+
+	private void setRow( int o ){
+		Animation oldIdle = idle, oldRun = run;
+
+		idle = new Animation( 2, true );
+		idle.frames( frames, o, o, o, o+1, o, o, o+1, o+1 );
+		
+		run = new Animation( 12, true );
+		run.frames( frames, o+4, o+5, o+6, o+7 );
+		
+		attack = new Animation( 12, false );
+		attack.frames( frames, o+2, o+3, o );
+		
+		die = new Animation( 12, false );
+		die.frames( frames, o+8, o+9, o+10 );
+
+		if (curAnim != null){
+			if (curAnim == oldIdle) play( idle );
+			else if (curAnim == oldRun) play( run );
+		}
+	}
+
+	@Override
+	public void update() {
+		super.update();
+		boolean r = ch instanceof Brute && ((Brute) ch).mazeRaging();
+		if (r != raging){
+			raging = r;
+			setRow( r ? RAGE_ROW : 0 );
+		}
 	}
 }

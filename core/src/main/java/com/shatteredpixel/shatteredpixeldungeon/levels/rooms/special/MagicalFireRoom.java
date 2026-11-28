@@ -168,6 +168,8 @@ public class MagicalFireRoom extends SpecialRoom {
 			//if any part of the fire is cleared, cleanse the whole thing
 			//Note that this is a bit brittle atm, it assumes only one group of eternal fire per floor
 			boolean clearAll = false;
+			int shockCell = -1; //Maze Tower: 번개·정전기가 닿은 벽 칸
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.Spell frostSpell = null; //Maze Tower: 벽에 닿은 냉기 길든 주문
 
 			Level l = Dungeon.level;
 			for (int i = area.left - 1; i <= area.right; i++){
@@ -185,6 +187,22 @@ public class MagicalFireRoom extends SpecialRoom {
 						//overrides fire
 						if (fire != null && fire.volume > 0 && fire.cur[cell] > 0){
 							fire.clear(cell);
+						}
+
+						//Maze Tower: (사용자) 번개(전기 장판)나 정전기를 띤 캐릭터가 닿아도 냉기처럼 벽 전체가 사라지고, 그 자리에서 폭발 반응
+						if (!clearAll && shockedNear(l, cell)){
+							cur[cell] = 0;
+							clearAll = true;
+							shockCell = cell;
+						}
+
+						//Maze Tower: (사용자) 냉기 길든 주문(떠 있음)이 이 칸이나 옆 칸에 오면 냉기처럼 벽 전체가 사라지고, 주문은 증기 피해를 입는다
+						if (!clearAll){
+							frostSpell = com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.wallSpellNear(cell, com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.FROST);
+							if (frostSpell != null){
+								cur[cell] = 0;
+								clearAll = true;
+							}
 						}
 
 						//clears itself if there is frost/blizzard on or next to it
@@ -235,7 +253,41 @@ public class MagicalFireRoom extends SpecialRoom {
 			if (clearAll){
 				fullyClear();
 			}
+			if (shockCell >= 0){
+				com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ElementalReactions.explodeAt(shockCell); //Maze Tower
+			}
+			if (frostSpell != null && frostSpell.isAlive()){ //Maze Tower: 냉기 주문이 불의 벽에 닿아 증기
+				Buff.detach(frostSpell, Burning.class);
+				com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ElementalReactions.steamOn(frostSpell, Math.round(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ElementalReactions.baseDamage() * com.shatteredpixel.shatteredpixeldungeon.MazeTower.PET_SPELL_WALL_STEAM));
+			}
 
+		}
+
+		//Maze Tower: (사용자) 이 칸이나 옆 칸(대각선 포함)에 전기 장판이 있거나 정전기를 띤 캐릭터가 있는가
+		private static boolean shockedNear( Level l, int cell ){
+			com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob elec = l.blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Electricity.class);
+			for (int k : PathFinder.NEIGHBOURS9){
+				int c = cell + k;
+				if (c < 0 || c >= l.length()) continue;
+				if (elec != null && elec.volume > 0 && elec.cur != null && elec.cur[c] > 0) return true;
+				Char ch = Actor.findChar(c);
+				if (ch != null && ch.isAlive() && ch.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge.class) != null) return true;
+				//Maze Tower: (사용자) 전격 길든 주문(떠 있음)이 와도 같다
+				if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.Spell && ch.isAlive()
+						&& ((com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.Spell) ch).element == com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.SHOCK) return true;
+			}
+			return false;
+		}
+
+		//Maze Tower: (사용자) 번개 마법봉이 지나간 칸에 화염 벽이 있으면 벽 전체가 사라지고 그 칸에서 폭발 반응 (서리 마법봉이 지나간 칸과 같은 자리)
+		public static boolean shock( int cell ){
+			Level l = Dungeon.level;
+			if (l == null || cell < 0 || cell >= l.length()) return false;
+			EternalFire ef = (EternalFire) l.blobs.get(EternalFire.class);
+			if (ef == null || ef.volume <= 0 || ef.cur == null || ef.cur[cell] <= 0) return false;
+			ef.clear(cell);
+			com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ElementalReactions.explodeAt(cell);
+			return true;
 		}
 
 		@Override

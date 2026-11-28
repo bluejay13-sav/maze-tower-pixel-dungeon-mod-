@@ -39,34 +39,47 @@ public class SpectralNecromancerSprite extends MobSprite {
 	public SpectralNecromancerSprite(){
 		super();
 
-		texture( Assets.Sprites.NECRO );
-		TextureFilm film = new TextureFilm( texture, 16, 16 );
-
-		int c = 16;
+		//Maze Tower (H7): 부적 넋 - 검은 로브에 부적을 단 희미한 술사 (줄 0~4 = 부적 4~0장)
+		boolean maze = com.shatteredpixel.shatteredpixeldungeon.MazeTower.H5_SEAL_TALISMAN;
+		texture( maze ? Assets.Sprites.TALISMAN_SPIRIT : Assets.Sprites.NECRO );
+		film = new TextureFilm( texture, 16, 16 );
 
 		idle = new Animation( 1, true );
-		idle.frames( film, c+0, c+0, c+0, c+1, c+0, c+0, c+0, c+0, c+1 );
-
 		run = new Animation( 8, true );
-		run.frames( film, c+0, c+0, c+0, c+2, c+3, c+4 );
-
 		zap = new Animation( 10, false );
-		zap.frames( film, c+5, c+6, c+7, c+8 );
-
 		charging = new Animation( 5, true );
-		charging.frames( film, c+7, c+8 );
-
 		die = new Animation( 10, false );
-		die.frames( film, c+9, c+10, c+11, c+12 );
+		applyRow( maze ? 0 : 1 );
 
 		attack = zap.clone();
 
 		idle();
 	}
 
+	private TextureFilm film;
+
+	//재생 중인 동작이 끊기지 않게 동작은 그대로 두고 그림 칸만 바꾼다
+	private void applyRow( int row ){
+		int c = row * 16;
+		idle.frames( film, c+0, c+0, c+0, c+1, c+0, c+0, c+0, c+0, c+1 );
+		run.frames( film, c+0, c+0, c+0, c+2, c+3, c+4 );
+		zap.frames( film, c+5, c+6, c+7, c+8 );
+		charging.frames( film, c+7, c+8 );
+		die.frames( film, c+9, c+10, c+11, c+12 );
+		if (attack != null) attack.frames( film, c+5, c+6, c+7, c+8 );
+	}
+
+	//Maze Tower (H7): 남은 부적 수에 맞는 줄 (던질 때마다 로브의 부적이 한 장씩 사라진다)
+	public void updateTalismans(){
+		if (!(ch instanceof Necromancer) || !((Necromancer) ch).mazeBinder()) return;
+		int n = Math.max(0, Math.min(4, ((Necromancer) ch).talismans));
+		applyRow( 4 - n );
+	}
+
 	@Override
 	public void link(Char ch) {
 		super.link(ch);
+		updateTalismans(); //Maze Tower (H7)
 		if (ch instanceof Necromancer && ((Necromancer) ch).summoning){
 			zap(((Necromancer) ch).summoningPos);
 		}

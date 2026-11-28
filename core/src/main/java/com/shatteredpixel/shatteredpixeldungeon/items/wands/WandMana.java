@@ -48,6 +48,13 @@ public class WandMana {
 	//쏘기 전에: 마나가 모자라면 막는다
 	public static boolean canZap( Hero hero, Wand wand ){
 		int cost = manaCost(hero, wand);
+		//Maze Tower (J1): 마력 증기 안(과 나온 직후)에는 지팡이 스킬을 쓰지 못한다 (합성하지 않은 마법봉은 스킬이 아님)
+		if (isStaffWand(hero, wand) && SwordSkill.heroUsesSkills(hero)
+				&& com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.skillsBlocked(hero)){
+			GLog.w(Messages.get(SwordSkill.class, "vapor_blocked"));
+			ActionIndicator.shake();
+			return false;
+		}
 		if (cost <= 0 || Mana.get(hero).cur() >= cost) return true;
 		GLog.w(Messages.get(WandMana.class, "no_mana", cost));
 		if (isStaffWand(hero, wand)) ActionIndicator.shake();
@@ -61,7 +68,11 @@ public class WandMana {
 			BloomEffects.beginStaffSkill(hero, wand, Actor.findChar(targetCell), cost);
 			SproutEffects.onSkillUsed(hero); //1차 특성: 투지
 		}
-		if (cost > 0) Mana.get(hero).spend(cost);
+		if (cost > 0){
+			//(A1) 지팡이 스킬은 마나를 써서 공격한 턴이라 회복 없음. 합성하지 않은 마법봉은 그 턴에도 찬다
+			if (isStaffWand(hero, wand) && SwordSkill.heroUsesSkills(hero)) Mana.get(hero).spendForSkill(cost);
+			else Mana.get(hero).spend(cost);
+		}
 	}
 
 	//쏘기가 끝났을 때 (Wand.wandUsed)

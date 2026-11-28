@@ -260,7 +260,9 @@ public class WndTrialItems extends Window {
 			case 0:
 				//마탑 검 7종 · 활 7종 · 낡은 단검이 먼저, 그다음 원작 무기
 				addAll(s, WornShortsword.class, Shortsword.class, Rapier.class, Scimitar.class, Longsword.class, Katana.class, RunicBlade.class,
+						com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword.class, com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.ResonanceSword.class, //Maze Tower (W1·W2)
 						WornShortbow.class, PelletBow.class, Longbow.class, HornBow.class, MazeCrossbow.class, GreatBow.class, MazeSpiritBow.class,
+						com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.ReinforcedHornBow.class, com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SilverFang.class, //Maze Tower (W3·W4)
 						WornDagger.class);
 				for (Generator.Category c : new Generator.Category[]{Generator.Category.WEP_T1, Generator.Category.WEP_T2,
 						Generator.Category.WEP_T3, Generator.Category.WEP_T4, Generator.Category.WEP_T5}) addAll(s, c.classes);

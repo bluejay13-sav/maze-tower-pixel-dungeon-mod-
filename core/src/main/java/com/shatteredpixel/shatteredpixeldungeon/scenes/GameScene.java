@@ -219,7 +219,7 @@ public class GameScene extends PixelScene {
 	private AttackIndicator attack;
 	private LootIndicator loot;
 	private ActionIndicator action;
-	private FinisherIndicator finisher; //Maze Tower: 검투사 필살기 버튼
+	private FinisherIndicator finisher; //Maze Tower: 두 번째 행동 버튼 (결투 걸기·활대 타격)
 	private ResumeIndicator resume;
 
 	{
@@ -284,11 +284,43 @@ public class GameScene extends PixelScene {
 
 		DungeonTileSheet.setupVariance(Dungeon.level.map.length, Dungeon.seedCurDepth());
 		
+		//Maze Tower (사용자): 21~24층 지형지물 밑의 바닥 (원작 타일보다 아래)
+		if (com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap.active()){
+			com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap under = com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap.under();
+			terrain.add( under );
+			customTilemaps.add( under );
+		}
+
+		//Maze Tower (사용자): 16~19층 망령 왕 판의 우물 속 물빛 (물 그림 위, 우물 그림 아래)
+		if (com.shatteredpixel.shatteredpixeldungeon.tiles.WellWaterTilemap.active()){
+			com.shatteredpixel.shatteredpixeldungeon.tiles.WellWaterTilemap wellWater = new com.shatteredpixel.shatteredpixeldungeon.tiles.WellWaterTilemap();
+			terrain.add( wellWater );
+			customTilemaps.add( wellWater );
+		}
+
 		tiles = new DungeonTerrainTilemap();
 		terrain.add( tiles );
 
+		//Maze Tower (사용자): 21~24층 바닥·벽면을 큰 그림에서 칸 자리로 잘라 덮어 그리고, 핏줄 박동을 더한다
+		if (com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap.active()){
+			for (com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap hm : new com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap[]{
+					com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap.floor(),
+					com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap.wall(),
+					com.shatteredpixel.shatteredpixeldungeon.tiles.HeartFloorTilemap.pulse() }){
+				if (hm == null) continue;
+				terrain.add( hm );
+				customTilemaps.add( hm );
+			}
+		}
+
 		customTiles = new Group();
 		terrain.add(customTiles);
+
+		//Maze Tower (사용자): 구역이 바뀌는 보스층 출구 둘레에 다음 구역의 땅 그림을 은은히 섞음 (보스방 그림 위)
+		for (com.watabou.noosa.Tilemap t : com.shatteredpixel.shatteredpixeldungeon.MazeTransition.terrainLayers()){
+			terrain.add( t );
+			customTilemaps.add( t );
+		}
 
 		visualGrid = new GridTileMap();
 		terrain.add( visualGrid );
@@ -338,6 +370,12 @@ public class GameScene extends PixelScene {
 
 		walls = new DungeonWallsTilemap();
 		add(walls);
+
+		//Maze Tower (사용자): 출구 둘레 벽 윗부분도 다음 구역 그림으로 은은히 (MazeTransition)
+		for (com.watabou.noosa.Tilemap t : com.shatteredpixel.shatteredpixeldungeon.MazeTransition.wallLayers()){
+			add( t );
+			customTilemaps.add( t );
+		}
 
 		customWalls = new Group();
 		add(customWalls);
@@ -523,7 +561,7 @@ public class GameScene extends PixelScene {
 		action.camera = uiCamera;
 		add( action );
 
-		//Maze Tower: 검투사 필살기 버튼 (무기 스킬 버튼과 따로)
+		//Maze Tower: 두 번째 행동 버튼 (결투 걸기·활대 타격, 무기 스킬 버튼과 따로)
 		finisher = new FinisherIndicator();
 		finisher.camera = uiCamera;
 		add( finisher );
@@ -696,6 +734,9 @@ public class GameScene extends PixelScene {
 				Dungeon.mazeArrivalLog = -1;
 			}
 
+			//Maze Tower: 테스트용 허수아비 3개 (디버그 빌드, 1층 시작 지점)
+			com.shatteredpixel.shatteredpixeldungeon.actors.mobs.TrainingDummy.placeAtStart();
+
 			boolean unspentTalents = false;
 			for (int i = 1; i <= Dungeon.hero.talents.size(); i++){
 				//Maze Tower: 특성이 없는 빈 줄의 포인트는 알리지 않는다
@@ -809,6 +850,7 @@ public class GameScene extends PixelScene {
 		com.shatteredpixel.shatteredpixeldungeon.effects.WraithPillarTops.add(this); //Maze Tower: 망령 왕 어둠 속 기둥 윗부분
 		com.shatteredpixel.shatteredpixeldungeon.effects.WraithThrone.addOverFog(); //Maze Tower: 망령 왕의 왕좌 (어둠 속)
 		com.shatteredpixel.shatteredpixeldungeon.MazeTrial.afterSceneCreate(); //Maze Tower: 보스전 체험판 새 게임이면 보스층 앞으로 건너뛰기
+		com.shatteredpixel.shatteredpixeldungeon.MazeMapShot.onSceneCreated(); //Maze Tower (디버그): 층마다 맵 사진
 
 		if (!invVisible) toggleInvPane();
 		fadeIn();
@@ -903,6 +945,7 @@ public class GameScene extends PixelScene {
 	@Override
 	public synchronized void update() {
 		lastOffset = null;
+		com.shatteredpixel.shatteredpixeldungeon.MazeMapShot.onUpdate(this); //Maze Tower (디버그): 층마다 맵 사진
 
 		if (updateItemDisplays){
 			updateItemDisplays = false;
@@ -1144,10 +1187,12 @@ public class GameScene extends PixelScene {
 	
 	private void addBlobSprite( final Blob gas ) {
 		if (gas.emitter == null) {
-			//Maze Tower: 바닥에 깔리는 블롭(수액 웅덩이·냉기 결정)은 캐릭터·아이템 아래 층에 그린다
+			//Maze Tower: 바닥에 깔리는 블롭(수액 웅덩이 등)은 캐릭터·아이템 아래 층에 그린다
 			if (gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor
+					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves
+					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround
+					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.HotTrail
 					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapPuddle
-					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.FrostCrystals
 					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapDrop
 					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SoulOrb
 					|| gas instanceof com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SoulOrb.Warn
@@ -1305,6 +1350,11 @@ public class GameScene extends PixelScene {
 	//Maze Tower (2026-11-22): 여러 그림을 묶은 Group을 효과 층에 (25층 경고 칸·가시)
 	public static void groupEffect( Group group ) {
 		if (scene != null) scene.effects.add( group );
+	}
+
+	//Maze Tower (J9): 여러 그림을 묶은 Group을 바닥 층에 (캐릭터·아이템 아래, 땅울림 금)
+	public static void groupFloor( Group group ) {
+		if (scene != null) scene.floorEmitters.add( group );
 	}
 
 	//Maze Tower: 여러 그림을 묶은 Group을 안개 위에 (망령 왕 마법 범위 경고)
@@ -1586,6 +1636,18 @@ public class GameScene extends PixelScene {
 		if (scene != null){
 			lastOffset = ofs;
 		}
+	}
+
+	//Maze Tower (디버그, MazeMapShot): 맵 사진을 찍을 때 안개를 걷는다
+	public void mazeHideFog(){
+		if (fog != null) ((com.watabou.noosa.Gizmo) fog).visible = false;
+	}
+
+	//Maze Tower (디버그, MazeMapShot): 그린 화면을 맵 사진으로
+	@Override
+	public void draw() {
+		super.draw();
+		com.shatteredpixel.shatteredpixeldungeon.MazeMapShot.afterDraw();
 	}
 
 	public static void updateFog(){

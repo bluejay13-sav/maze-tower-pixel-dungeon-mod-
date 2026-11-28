@@ -157,6 +157,11 @@ public class Bones {
 			return null;
 		}
 
+		//Maze Tower (사용자): 보스층에는 이전 영웅의 유해(와 그 아이템)를 두지 않는다
+		if (MazeBosses.ENABLED && Dungeon.bossLevel()){
+			return null;
+		}
+
 		if (depth == -1) {
 
 			try {

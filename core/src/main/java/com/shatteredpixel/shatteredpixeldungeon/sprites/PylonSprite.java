@@ -55,19 +55,6 @@ public class PylonSprite extends MobSprite {
 		die = new Animation( 1, false );
 		die.frames( frames, 2 );
 
-		//Maze Tower: 수정 거인 보스방의 수정 기둥 (빛나는 상태는 밝게)
-		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal()){
-			texture("sprites/maze_p16_pillar.png");
-			TextureFilm f = new TextureFilm( texture, 12, 22 );
-			idle = new Animation( 1, false );
-			idle.frames( f, 0 );
-			activeIdle = idle.clone();
-			run = idle.clone();
-			attack = idle.clone();
-			die = new Animation( 20, false ); //부서지면 빠르게 사라진다
-			die.frames( f, 0 );
-		}
-
 		play( idle );
 	}
 
@@ -99,13 +86,6 @@ public class PylonSprite extends MobSprite {
 			Sample.INSTANCE.play(Assets.Sounds.BLAST);
 		}
 		super.play(anim);
-	}
-
-	//Maze Tower: 수정 기둥은 부서지면 빠르게 사라진다
-	@Override
-	protected float fadeTime() {
-		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal()) return com.shatteredpixel.shatteredpixeldungeon.MazeTower.PROP_FADE_TIME;
-		return super.fadeTime();
 	}
 
 	@Override

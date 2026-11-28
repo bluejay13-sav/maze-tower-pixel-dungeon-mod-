@@ -50,6 +50,6 @@ public class CrabSprite extends MobSprite {
 
 	@Override
 	public int blood() {
-		return 0xFFFFEA80;
+		return 0xFFC8A070; //Maze Tower (F): 껍질게 - 나무 부스러기
 	}
 }

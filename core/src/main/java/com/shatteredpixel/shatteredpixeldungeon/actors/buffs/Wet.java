@@ -8,7 +8,6 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.buffs;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
-import com.shatteredpixel.shatteredpixeldungeon.effects.particles.WaterDropParticle;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.utils.Bundle;
@@ -41,7 +40,7 @@ public class Wet extends Buff {
 	}
 
 	public static boolean onWater( com.shatteredpixel.shatteredpixeldungeon.actors.Char ch ){
-		return ElementalReactions.validPos(ch) && (Dungeon.level.water[ch.pos] || com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.at(ch.pos)) && !ch.flying; //Maze Tower: 수액 웅덩이 바닥도 젖는다
+		return ElementalReactions.validPos(ch) && Dungeon.level.water[ch.pos] && !ch.flying; //Maze Tower (결정): 수액 웅덩이는 젖지 않는다
 	}
 
 	@Override

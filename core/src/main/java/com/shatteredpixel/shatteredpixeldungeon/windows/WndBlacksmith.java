@@ -165,6 +165,15 @@ public class WndBlacksmith extends Window {
 		smith.enable(Blacksmith.Quest.favor >= 2000);
 		buttons.add(smith);
 
+		//Maze Tower (K8): 미스릴 제작 칸 (갑옷 보강·미스릴 무기 도안). 비용은 칸 창에서 의뢰할 때 낸다
+		RedButton mithril = new RedButton(Messages.get(this, "maze_mithril"), 6){
+			@Override
+			protected void onClick() {
+				GameScene.show(new WndMithrilForge(troll, WndBlacksmith.this));
+			}
+		};
+		buttons.add(mithril);
+
 		RedButton cashOut = new RedButton(Messages.get(this, "cashout"), 6){
 			@Override
 			protected void onClick() {

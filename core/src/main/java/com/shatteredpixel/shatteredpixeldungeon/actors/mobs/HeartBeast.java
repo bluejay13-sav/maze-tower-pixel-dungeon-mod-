@@ -143,7 +143,7 @@ public class HeartBeast extends Mob implements com.shatteredpixel.shatteredpixel
 				neg = b instanceof Buff && ((Buff) b).type == Buff.buffType.NEGATIVE;
 				//주인공 특성이 거는 표식류는 상태이상이 아니다
 				String n = effect.getName();
-				if (n.contains("BloomBuffs$Mark") || n.contains("HunterEffects$Prey") || n.contains("HunterEffects$HawkSignal")) neg = false;
+				if (n.contains("BloomBuffs$Mark")) neg = false;
 				NEG.put(effect, neg);
 			}
 			if (neg) return true;

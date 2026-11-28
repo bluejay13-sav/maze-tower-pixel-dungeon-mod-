@@ -45,6 +45,8 @@ public class ScrollOfRecharging extends Scroll {
 		detach(curUser.belongings.backpack);
 		Buff.affect(curUser, Recharging.class, Recharging.DURATION);
 		charge(curUser);
+		com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana m = com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana.get(curUser);
+		if (m != null) m.fill(); //Maze Tower (E1): 재충전 주문서는 마나도 가득 채운다
 
 		Sample.INSTANCE.play( Assets.Sounds.READ );
 		Sample.INSTANCE.play( Assets.Sounds.CHARGEUP );

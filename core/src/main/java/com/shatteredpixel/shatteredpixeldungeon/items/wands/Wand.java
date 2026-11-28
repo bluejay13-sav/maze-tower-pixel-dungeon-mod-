@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Blindness;
@@ -787,7 +788,13 @@ public abstract class Wand extends Item {
 					} else {
 						curWand.fx(shot, new Callback() {
 							public void call() {
-								curWand.onZap(shot);
+								com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomRules.beginOther(); //Maze Tower: 마법봉 발사 한 번도 새 "한 행동"
+								BloomEffects.beginHeroAttack(); //Maze Tower (C4): 마법봉 발사도 주인공의 공격
+								try {
+									curWand.onZap(shot);
+								} finally {
+									BloomEffects.endHeroAttack();
+								}
 								if (Random.Float() < WondrousResin.extraCurseEffectChance()){
 									WondrousResin.forcePositive = true;
 									CursedWand.cursedZap(curWand,

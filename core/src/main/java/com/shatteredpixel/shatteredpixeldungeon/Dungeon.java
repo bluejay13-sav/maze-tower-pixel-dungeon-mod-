@@ -320,7 +320,7 @@ public class Dungeon {
 					level = new PrisonLevel();
 					break;
 				case 10:
-					level = new PrisonBossLevel();
+					level = MazeBosses.ENABLED && MazeTower.I_NEW_WARDEN ? new com.shatteredpixel.shatteredpixeldungeon.levels.WardenBossLevel() : new PrisonBossLevel(); //Maze Tower (I): 10층 그림자 간수 (새로 짠 보스)
 					break;
 				case 11:
 				case 12:
@@ -329,7 +329,7 @@ public class Dungeon {
 					level = new CavesLevel();
 					break;
 				case 15:
-					level = new CavesBossLevel();
+					level = MazeBosses.ENABLED && MazeTower.K_NEW_GNAWER ? new com.shatteredpixel.shatteredpixeldungeon.levels.GnawerBossLevel() : new CavesBossLevel(); //Maze Tower (K): 15층 뿌리를 갉는 것 (새로 짠 보스)
 					break;
 				case 16:
 				case 17:
@@ -347,7 +347,8 @@ public class Dungeon {
 					level = new HallsLevel();
 					break;
 				case 25:
-					level = MazeBosses.ENABLED && MazeTower.HEART_BOSS ? new com.shatteredpixel.shatteredpixeldungeon.levels.HeartBossLevel() : new HallsBossLevel(); //Maze Tower: 25층 심장을 진 짐승 (2026-11-22 꺼 둠, 나중에 다시 개발)
+					level = MazeBosses.ENABLED && MazeTower.O_MASTER ? new com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel() //Maze Tower (O): 25층 탑의 주인 "탑의 심장"
+							: MazeBosses.ENABLED && MazeTower.HEART_BOSS ? new com.shatteredpixel.shatteredpixeldungeon.levels.HeartBossLevel() : new HallsBossLevel(); //Maze Tower: 25층 심장을 진 짐승 (2026-11-22 꺼 둠, 나중에 다시 개발)
 					break;
 				case 26:
 					level = new LastLevel();
@@ -486,6 +487,7 @@ public class Dungeon {
 		
 		Dungeon.level = level;
 		hero.pos = pos;
+		MazeSage.onArrive( depth ); //Maze Tower (M): 6층에 들어서면 20층 보스 고정, 역행 중 5층 이하면 현자 탈출 값
 
 		if (hero.buff(AscensionChallenge.class) != null){
 			hero.buff(AscensionChallenge.class).onLevelSwitch();
@@ -711,6 +713,7 @@ public class Dungeon {
 	}
 	
 	public static void saveAll() throws IOException {
+		if (MazeMapShot.discarding) return; //Maze Tower (디버그): 맵 사진용 판은 저장하지 않는다
 		if (hero != null && (hero.isAlive() || WndResurrect.instance != null)) {
 			
 			Actor.fixTime();
@@ -947,6 +950,7 @@ public class Dungeon {
 		GameScene.updateFog(l, t, width, height);
 		//Maze Tower: 망령 왕의 어둠 속에서는 지나온 칸·옆 칸이 탐색되지 않는다 (기둥만 보임)
 		if (level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel) ((com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel) level).mazeAfterObserve();
+		if (level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel) ((com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel) level).afterObserve(); //Maze Tower (O2): 25층 어둠 판막의 어둠도
 
 		if (hero.buff(MindVision.class) != null || hero.buff(DivineSense.DivineSenseTracker.class) != null){
 			for (Mob m : level.mobs.toArray(new Mob[0])){
@@ -1003,6 +1007,7 @@ public class Dungeon {
 			if (ch instanceof WandOfWarding.Ward
 					|| ch instanceof WandOfRegrowth.Lotus
 					|| ch instanceof SpiritHawk.HawkAlly
+					|| (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly && ((com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly) ch).sharesVision()) //Maze Tower (T1): 정령 매 펫
 					|| ch.buff(PowerOfMany.PowerBuff.class) != null){
 				x = ch.pos % level.width();
 				y = ch.pos / level.width();

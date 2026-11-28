@@ -9,7 +9,6 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.MazeRetreat;
 import com.shatteredpixel.shatteredpixeldungeon.MazeBosses;
-import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM300;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.TowerCollapse;
 import com.shatteredpixel.shatteredpixeldungeon.effects.RetreatEffects;
@@ -19,13 +18,11 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Chill;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frostbite;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Combo;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.StaticCharge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTree;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Mana;
 import com.shatteredpixel.shatteredpixeldungeon.items.BloomCore;
 import com.shatteredpixel.shatteredpixeldungeon.items.FullBloomCore;
@@ -98,14 +95,7 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addPair(new RedButton(Messages.get(this, "boss15"), 7){
-			@Override
-			protected void onClick() {
-				//15층 보스를 마도 골렘 / 수정 거인으로 바꾼다 (시험용, 15층에 가기 전에 누른다)
-				MazeBosses.force15 = !MazeBosses.crystalGiant();
-				GLog.p(Messages.get(WndCheats.class, "boss_now", Messages.get(DM300.class, MazeBosses.crystalGiant() ? "maze_crystal_name" : "maze_golem_name")));
-			}
-		}, new RedButton(Messages.get(this, "boss20"), 7){
+		addButton(new RedButton(Messages.get(this, "boss20"), 7){
 			@Override
 			protected void onClick() {
 				MazeBosses.force20 = !MazeBosses.empress();
@@ -170,7 +160,7 @@ public class WndCheats extends Window {
 		//베타 테스트용 층 건너뛰기 (명세 8번): 4·9·14·19층까지
 		addPair(skipButton(0), skipButton(1));
 		addPair(skipButton(2), skipButton(3));
-		if (MazeTower.HEART_BOSS) addButton(skipButton(4)); //24층 (25층 짐승 앞, 짐승을 끈 동안은 숨김)
+		if (MazeTower.HEART_BOSS || MazeTower.O_MASTER) addButton(skipButton(4)); //24층 (25층 보스 앞, 새 25층 보스가 모두 꺼져 있으면 숨김)
 
 		addPair(new RedButton(Messages.get(this, "level_up"), 7){
 			@Override
@@ -186,18 +176,6 @@ public class WndCheats extends Window {
 			}
 		});
 
-		addButton(new RedButton(Messages.get(this, "combo"), 7){
-			@Override
-			protected void onClick() {
-				Hero hero = Dungeon.hero;
-				if (hero.subClass != HeroSubClass.GLADIATOR){
-					GLog.w(Messages.get(WndCheats.class, "not_gladiator"));
-					return;
-				}
-				Combo c = Buff.affect(hero, Combo.class);
-				c.mazeRestore(c.getComboCount() + 5, 15f); //시험하기 편하게 15턴 유지
-			}
-		});
 
 		addPair(new RedButton(Messages.get(this, "fill_mana"), 7){
 			@Override
@@ -222,6 +200,8 @@ public class WndCheats extends Window {
 				give(new Longsword().identify());
 				give(new Katana().identify());
 				give(new RunicBlade().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword().identify()); //Maze Tower (W1)
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.ResonanceSword().identify()); //Maze Tower (W2)
 			}
 		}, new RedButton(Messages.get(this, "upgrade"), 7){
 			@Override
@@ -244,6 +224,9 @@ public class WndCheats extends Window {
 				//물을 만드는 아이템: 폭풍 구름의 물약, 아쿠아 블라스트 (감정됨)
 				give(new PotionOfStormClouds().quantity(2).identify());
 				give(new AquaBrew().quantity(2).identify());
+				//(E1·E2) 재충전 주문서·정화 물약 시험용
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging().quantity(2).identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity().quantity(2).identify());
 			}
 		});
 
@@ -259,6 +242,8 @@ public class WndCheats extends Window {
 				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MazeCrossbow().identify());
 				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.GreatBow().identify());
 				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MazeSpiritBow().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.ReinforcedHornBow().identify()); //Maze Tower (W3)
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SilverFang().identify()); //Maze Tower (W4)
 				give(new Arrow().quantity(50));
 				give(new ThrowingSpear().quantity(2).identify());
 			}
@@ -293,29 +278,40 @@ public class WndCheats extends Window {
 			}
 		});
 
+		//Maze Tower (K8) 시험용: 미스릴 재료를 주고 우호도를 채운 뒤 미스릴 제작 칸을 바로 연다 (확인이 끝나면 지움)
+		addButton(new RedButton(Messages.get(this, "mithril_test"), 7){
+			@Override
+			protected void onClick() {
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.quest.MithrilShard().quantity(3));
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.quest.EnchantedMithrilShard());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Shortsword().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Longsword().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.quest.EnchantedMithrilShard()); //활 도안용
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Longbow().identify());
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.HornBow().identify());
+				com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith.Quest.favor = Math.max(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith.Quest.favor, 5000);
+				hide();
+				GameScene.show(new WndMithrilForge(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith(), null));
+			}
+		});
+
+		//Maze Tower: 치유 물약 5개 (감정됨)
+		addButton(new RedButton(Messages.get(this, "healing"), 7){
+			@Override
+			protected void onClick() {
+				give(new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing().identify().quantity(5));
+			}
+		});
+
 		addButton(new RedButton(Messages.get(this, "depth"), 7){
 			@Override
 			protected void onClick() {
 				hide();
-				GameScene.show(new WndTextInput(Messages.get(WndCheats.class, "depth"),
-						Messages.get(WndCheats.class, "depth_body", MAX_DEPTH),
-						Integer.toString(Dungeon.depth), 2, false,
-						Messages.get(WndCheats.class, "go"), Messages.get(WndCheats.class, "cancel")){
-					@Override
-					public void onSelect(boolean positive, String text) {
-						if (!positive) return;
-						int depth;
-						try {
-							depth = Integer.parseInt(text.trim());
-						} catch (NumberFormatException e){
-							return;
-						}
-						if (depth < 1 || depth > MAX_DEPTH) return;
-						goToDepth(depth);
-					}
-				});
+				showDepthInput();
 			}
 		});
+
 
 		addButton(new RedButton(Messages.get(this, "status"), 7){
 			@Override
@@ -327,7 +323,10 @@ public class WndCheats extends Window {
 						Messages.get(WndCheats.class, "chill"),
 						Messages.get(WndCheats.class, "wet"),
 						Messages.get(WndCheats.class, "static"),
-						Messages.get(WndCheats.class, "frostbite")){
+						Messages.get(WndCheats.class, "frostbite"),
+						Messages.get(WndCheats.class, "paralysis"),
+						Messages.get(WndCheats.class, "roots"),
+						Messages.get(WndCheats.class, "slow")){
 					@Override
 					protected void onSelect(int index) {
 						pickTarget(index);
@@ -340,6 +339,24 @@ public class WndCheats extends Window {
 	}
 
 	//버튼 두 개를 한 줄에 반씩
+
+	//Maze Tower (J): 주인공에서 3칸(안 되면 2칸) 떨어진 빈 바닥에 몹 하나를 주인공을 쫓는 상태로 (확인이 끝난 몹의 부르기 버튼은 지운다)
+	private static boolean spawnHunting(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob m){
+		for (int d = 3; d >= 2; d--){
+			for (int c : com.watabou.utils.PathFinder.NEIGHBOURS8){
+				int cell = Dungeon.hero.pos + c * d;
+				if (cell < 0 || cell >= Dungeon.level.length() || !Dungeon.level.passable[cell] || Dungeon.level.solid[cell]
+						|| Dungeon.level.pit[cell] || com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(cell) != null) continue;
+				m.pos = cell;
+				m.state = m.HUNTING;
+				GameScene.add(m);
+				m.beckon(Dungeon.hero.pos);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void addPair(RedButton a, RedButton b){
 		add(a);
 		add(b);
@@ -363,14 +380,17 @@ public class WndCheats extends Window {
 		}
 	}
 
-	//2차 특성 직접 얻기: 분류 → 특성 → 레벨
+	//2차 특성 직접 얻기: 갈래(공격·형태·생존·유틸) → 특성 → 레벨. 2차 특성이 없는 직업(마법사·도적)은 안내만
 	private static void pickTalentCategory(){
+		if (BloomTalent.poolOf(Dungeon.hero) == null){
+			GLog.w(Messages.get(WndCheats.class, "no_bloom_pool"));
+			return;
+		}
+		BloomTalent.Branch[] b = BloomTalent.Branch.values();
+		String[] cats = new String[b.length];
+		for (int i = 0; i < b.length; i++) cats[i] = Messages.titleCase(b[i].title());
 		GameScene.show(new WndOptions(Messages.get(WndCheats.class, "grant_talent"),
-				Messages.get(WndCheats.class, "grant_category"),
-				Messages.get(WndCheats.class, "cat_attack"),
-				Messages.get(WndCheats.class, "cat_skill"),
-				Messages.get(WndCheats.class, "cat_common1"),
-				Messages.get(WndCheats.class, "cat_common2")){
+				Messages.get(WndCheats.class, "grant_category"), cats){
 			@Override
 			protected void onSelect(int index) {
 				pickTalent(index);
@@ -378,16 +398,13 @@ public class WndCheats extends Window {
 		});
 	}
 
-	//Maze Tower: 2차 특성 31개를 4묶음으로 (기본공격 9, 스킬 9, 공용 7 + 6)
+	//Maze Tower: 2차 특성 묶음 (영웅 직업의 풀, 갈래별)
 	private static java.util.ArrayList<BloomTalent> talentGroup(int group){
 		java.util.ArrayList<BloomTalent> all = new java.util.ArrayList<>();
+		BloomTalent.Pool pool = BloomTalent.poolOf(Dungeon.hero);
 		for (BloomTalent t : BloomTalent.values()){
-			if (group == 0 && t.kind == BloomTalent.Kind.ATTACK) all.add(t);
-			if (group == 1 && t.kind == BloomTalent.Kind.SKILL) all.add(t);
-			if (group >= 2 && t.kind == BloomTalent.Kind.COMMON) all.add(t);
+			if (t.inPool(pool) && t.branch.ordinal() == group) all.add(t);
 		}
-		if (group == 2) return new java.util.ArrayList<>(all.subList(0, 7));
-		if (group == 3) return new java.util.ArrayList<>(all.subList(7, all.size()));
 		return all;
 	}
 
@@ -396,8 +413,8 @@ public class WndCheats extends Window {
 		String[] names = new String[group.size()];
 		for (int i = 0; i < names.length; i++){
 			BloomTalent t = group.get(i);
-			int lvl = BloomTree.level(Dungeon.hero, t);
-			names[i] = Messages.titleCase(t.title()) + (lvl >= 0 ? " (" + lvl + (BloomTree.awakened(Dungeon.hero, t) ? "+" : "") + ")" : "");
+			int lvl = BloomTree.ownedLevel(Dungeon.hero, t);
+			names[i] = Messages.titleCase(t.title()) + (lvl >= 0 ? " (" + lvl + (BloomTree.ownedAwakened(Dungeon.hero, t) ? "+" : "") + ")" : "");
 		}
 		GameScene.show(new WndOptions(Messages.get(WndCheats.class, "grant_talent"),
 				Messages.get(WndCheats.class, "grant_pick"), names){
@@ -415,7 +432,9 @@ public class WndCheats extends Window {
 			@Override
 			protected void onSelect(int index) {
 				boolean awaken = index == 4;
-				int lvl = awaken ? Math.max(0, BloomTree.level(Dungeon.hero, talent)) : index;
+				//각성은 1레벨 이상인 특성만 작동한다: 아직 없거나 0레벨이면 3레벨로 같이 준다
+				int owned = BloomTree.ownedLevel(Dungeon.hero, talent);
+				int lvl = awaken ? (owned >= 1 ? owned : MazeTower.BLOOM_MAX_TALENT_LEVEL) : index;
 				if (!BloomTree.get(Dungeon.hero).cheatGrant(Dungeon.hero, talent, lvl, awaken)){
 					GLog.w(Messages.get(WndCheats.class, "slots_full"));
 					return;
@@ -449,6 +468,27 @@ public class WndCheats extends Window {
 		};
 	}
 
+	//Maze Tower: 층 번호를 넣어 그 층으로 옮긴다 (치트 창, 테스트 빌드의 게임 메뉴 WndGame)
+	public static void showDepthInput(){
+		GameScene.show(new WndTextInput(Messages.get(WndCheats.class, "depth"),
+				Messages.get(WndCheats.class, "depth_body", MAX_DEPTH),
+				Integer.toString(Dungeon.depth), 2, false,
+				Messages.get(WndCheats.class, "go"), Messages.get(WndCheats.class, "cancel")){
+			@Override
+			public void onSelect(boolean positive, String text) {
+				if (!positive) return;
+				int depth;
+				try {
+					depth = Integer.parseInt(text.trim());
+				} catch (NumberFormatException e){
+					return;
+				}
+				if (depth < 1 || depth > MAX_DEPTH) return;
+				goToDepth(depth);
+			}
+		});
+	}
+
 	private static void goToDepth(int depth){
 		Level.beforeTransition();
 		InterlevelScene.mode = InterlevelScene.Mode.RETURN;
@@ -464,7 +504,7 @@ public class WndCheats extends Window {
 			public void onSelect(Integer cell) {
 				if (cell == null) return;
 				Char ch = Actor.findChar(cell);
-				if (ch == null || ch == Dungeon.hero) return;
+				if (ch == null) return; //(C9 확인용) 주인공 자신에게도 걸 수 있다
 				switch (statusIndex){
 					case 0:
 						Buff.affect(ch, Burning.class).reignite(ch);
@@ -480,6 +520,15 @@ public class WndCheats extends Window {
 						break;
 					case 4:
 						Buff.affect(ch, Frostbite.class, MazeTower.FROSTBITE_TURNS);
+						break;
+					case 5: //(C2) 판정 확인용: 기절 10턴
+						Buff.prolong(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis.class, 10f);
+						break;
+					case 6: //속박 10턴
+						Buff.prolong(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots.class, 10f);
+						break;
+					case 7: //감속 10턴
+						Buff.prolong(ch, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Slow.class, 10f);
 						break;
 				}
 			}

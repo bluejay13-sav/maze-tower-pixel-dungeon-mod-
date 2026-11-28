@@ -31,7 +31,8 @@ public class SnakeSprite extends MobSprite {
 		
 		texture( Assets.Sprites.SNAKE );
 		
-		TextureFilm frames = new TextureFilm( texture, 12, 11 );
+		//Maze Tower (F 다시 그림): 덩굴뱀 머리 위 새싹 자리만큼 한 줄 높은 칸 (원작 12×11)
+		TextureFilm frames = new TextureFilm( texture, 12, 12 );
 		
 		//many frames here as we want the rising/falling to be slow but the tongue to be fast
 		idle = new Animation( 10, true );

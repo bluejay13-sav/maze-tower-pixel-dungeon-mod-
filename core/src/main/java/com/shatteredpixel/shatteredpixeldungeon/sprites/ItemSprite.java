@@ -248,18 +248,26 @@ public class ItemSprite extends MovieClip {
 
 	//Maze Tower: 새 아이템 그림은 따로 된 PNG 파일을 그린다 (MazeItemSprites)
 	private boolean mazeTexture = false;
+	//Maze Tower (K8): 차례로 보여 주는 그림(MazeItemSprites.animPeriod)이면 그 번호와 지금 프레임
+	private int mazeAnimImage = -1;
+	private int mazeAnimFrame = -1;
 
 	public void frame( int image ){
+		image = MazeItemSprites.remap(image); //Maze Tower: (사용자) 갑옷 5종은 새 그림
 		if (MazeItemSprites.has(image)){
 			texture( MazeItemSprites.file(image) ); //그림 전체가 한 칸
+			mazeAnimImage = -1;
 			if (MazeItemSprites.frameWidth(image) > 0){
 				frame( 0, 0, MazeItemSprites.frameWidth(image), (int)texture.height ); //여러 프레임 그림이면 첫 프레임만
+				mazeAnimImage = MazeItemSprites.animPeriod(image) > 0 ? image : -1;
+				mazeAnimFrame = 0;
 			}
 			mazeTexture = true;
 			perspectiveRaise = 5 / 16f;
 			return;
 		} else if (mazeTexture){
 			texture( Assets.Sprites.ITEMS ); //재사용된 스프라이트를 원작 아이템 그림으로 되돌린다
+			mazeAnimImage = -1;
 			mazeTexture = false;
 		}
 		frame( ItemSpriteSheet.film.get( image ));
@@ -377,6 +385,15 @@ public class ItemSprite extends MovieClip {
 			}
 		}
 
+		//Maze Tower (K8): 여러 프레임 그림은 한 바퀴(animPeriod)에 걸쳐 차례로 (미스릴 파편의 숨 쉬는 마력 빛)
+		if (mazeAnimImage >= 0 && texture != null){
+			int fw = MazeItemSprites.frameWidth(mazeAnimImage);
+			int count = Math.max(1, (int)(texture.width / fw));
+			float per = MazeItemSprites.animPeriod(mazeAnimImage);
+			int idx = (int)((Game.timeTotal % per) / per * count) % count;
+			if (idx != mazeAnimFrame){ mazeAnimFrame = idx; frame( idx * fw, 0, fw, (int)texture.height ); }
+		}
+
 		if (visible && glowing != null) {
 			if (glowUp && (phase += Game.elapsed) > glowing.period) {
 				
@@ -390,7 +407,7 @@ public class ItemSprite extends MovieClip {
 				
 			}
 			
-			float value = phase / glowing.period * 0.6f;
+			float value = phase / glowing.period * 0.6f * glowing.mazeStrength; //Maze Tower: 은은한 빛은 세기를 줄임
 			
 			rm = gm = bm = 1 - value;
 			ra = glowing.red * value;
@@ -414,6 +431,7 @@ public class ItemSprite extends MovieClip {
 		public float green;
 		public float blue;
 		public float period;
+		public float mazeStrength = 1f; //Maze Tower: 빛의 세기 (1 = 원작)
 		
 		public Glowing( int color ) {
 			this( color, 1f );

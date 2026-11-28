@@ -58,7 +58,8 @@ public class Slime extends Mob {
 	public void damage(int dmg, Object src) {
 		float scaleFactor = AscensionChallenge.statModifier(this);
 		float scaledDmg = dmg/scaleFactor;
-		if (scaledDmg >= 5){
+		//Maze Tower (F5): 수액 슬라임은 불타는 동안 큰 피해를 줄이지 못한다
+		if (scaledDmg >= 5 && buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning.class) == null){
 			//takes 5/6/7/8/9/10 dmg at 5/7/10/14/19/25 incoming dmg
 			scaledDmg = 4 + (float)(Math.sqrt(8*(scaledDmg - 4) + 1) - 1)/2;
 		}

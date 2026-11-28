@@ -345,6 +345,10 @@ public class Hero extends Char {
 		heroClass = bundle.getEnum( CLASS, HeroClass.class );
 		subClass = bundle.getEnum( SUBCLASS, HeroSubClass.class );
 		armorAbility = (ArmorAbility)bundle.get( ABILITY );
+		//Maze Tower (T1): 4차는 펫만. 예전 4차 능력(영웅의 도약·인내·정령 매 능력)이 남은 저장 파일은 펫을 아직 고르지 않은 것으로 본다
+		//(직업 갑옷의 능력 단추를 누르면 원작처럼 고르는 창이 뜬다. 그 능력의 4차 특성 포인트는 돌아온다)
+		if (!MazeTower.ORIGINAL_ARMOR_ABILITY && armorAbility != null
+				&& !(armorAbility instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAbility)) armorAbility = null;
 		Talent.restoreTalentsFromBundle( bundle, this );
 		
 		attackSkill = bundle.getInt( ATTACK );
@@ -501,6 +505,7 @@ public class Hero extends Char {
 	
 	public boolean shoot( Char enemy, MissileWeapon wep ) {
 
+		BloomRules.beginOther(); //Maze Tower: 던지기 한 번도 새 "한 행동" (특성의 한 행동에 한 번 규칙)
 		attackTarget = enemy;
 		boolean wasEnemy = enemy.alignment == Alignment.ENEMY
 				|| (enemy instanceof Mimic && enemy.alignment == Alignment.NEUTRAL);
@@ -627,7 +632,9 @@ public class Hero extends Char {
 		if (buff(Quarterstaff.DefensiveStance.class) != null){
 			evasion *= 3;
 		}
-		
+
+		evasion *= BloomEffects.heroEvasionMulti(this, enemy); //Maze Tower: 2차 특성 회피 (풀숲의 몸 등)
+
 		if (paralysed > 0) {
 			evasion /= 2;
 		}
@@ -649,9 +656,7 @@ public class Hero extends Char {
 		Combo.ParryTracker parry = buff(Combo.ParryTracker.class);
 		if (parry != null){
 			parry.parried = true;
-			if (MazeTower.ORIGINAL_TALENTS
-					? (buff(Combo.class) == null || buff(Combo.class).getComboCount() < 9 || pointsInTalent(Talent.ENHANCED_COMBO) < 2)
-					: (buff(Combo.class) == null || !GladiatorEffects.parryEmpowered(this, buff(Combo.class).getComboCount()))){ //Maze Tower: 향상된 콤보 2레벨
+			if (buff(Combo.class) == null || buff(Combo.class).getComboCount() < 9 || pointsInTalent(Talent.ENHANCED_COMBO) < 2){
 				parry.detach();
 			}
 			return Messages.get(Monk.class, "parried");
@@ -697,7 +702,6 @@ public class Hero extends Char {
 		if (buff(HoldFast.class) != null){
 			dr += buff(HoldFast.class).armorBonus();
 		}
-		dr += HunterEffects.adversityArmor(this); //Maze Tower: 고리지기 인내의 반지 역경 (방어력 +)
 		
 		return dr;
 	}
@@ -854,7 +858,6 @@ public class Hero extends Char {
 				delay = ((Weapon)belongings.weapon).augment.delayFactor(delay);
 			}
 
-			speed *= HunterEffects.heatSpeedMulti(this); //Maze Tower: 고리지기 분노의 반지 열기
 			return delay/(speed * classAttackSpeed()); //Maze Tower: 도적 공격 속도
 		}
 	}
@@ -867,6 +870,7 @@ public class Hero extends Char {
 
 	@Override
 	public void spend( float time ) {
+		time = BloomEffects.onHeroSpend(this, time); //Maze Tower: 2차 특성 (받아치기·벼림·숨 고르기·치고 빠지기 등)
 		super.spend(time);
 	}
 
@@ -946,7 +950,6 @@ public class Hero extends Char {
 		} else {
 			
 			resting = false;
-			Mana.get(this).focusReady = false; //Maze Tower: 대기·탐색 외 행동이면 집중 해제
 			Mana.get(this).cycleTurns = 0; //Maze Tower: 마나 순환도 끊긴다
 			
 			ready = false;
@@ -1307,6 +1310,12 @@ public class Hero extends Char {
 	
 	private boolean actUnlock( HeroAction.Unlock action ) {
 		int doorCell = action.dst;
+		//Maze Tower (H3): 탈옥수가 걸어 잠근 문은 곧 풀리므로 열쇠를 쓰지 않는다
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ThiefLock.at(doorCell)){
+			GLog.w( Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ThiefLock.class, "no_key") );
+			ready();
+			return false;
+		}
 		if (Dungeon.level.adjacent( pos, doorCell )) {
 			path = null;
 			
@@ -1567,6 +1576,7 @@ public class Hero extends Char {
 				return true;
 
 			} else {
+				WornShortbow.bashNext = false; //Maze Tower (S6): 공격이 취소되면 활대 타격 표시도 지운다
 				ready();
 				attackTarget = null;
 				return false;
@@ -1577,6 +1587,25 @@ public class Hero extends Char {
 
 	public Char attackTarget(){
 		return attackTarget;
+	}
+
+	//Maze Tower: (사용자) 활 "쏘기"(퀵슬롯)로 칸을 골라 쏜 원거리 평타. 화살길 위의 첫 적 t에게 actAttack의 활 갈래와 같은 처리
+	//  (장전·집중해 두었으면 강화된 평타 = 스킬 판정)
+	public void mazeBowShot( Char t ){
+		curAction = null;
+		com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.BowCharge charged = buff(com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.BowCharge.class);
+		if (charged != null){
+			com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.SwordSkill.fireCharged(this, WornShortbow.equipped(this), charged, t);
+			return;
+		}
+		busy();
+		attackTarget = t;
+		WornShortbow.fireAnimation(this, t, new Callback() {
+			@Override
+			public void call() {
+				onAttackComplete();
+			}
+		});
 	}
 	
 	public void rest( boolean fullRest ) {
@@ -1616,7 +1645,6 @@ public class Hero extends Char {
 		}
 
 		damage = BloomEffects.onHeroAttackProc( this, enemy, damage ); //Maze Tower: 2차 특성 피해·적중 효과
-		damage = HunterEffects.onHeroAttackProc( this, enemy, damage ); //Maze Tower: 사냥꾼 3차·4차 (사냥감·저격·반지 패시브·사냥 신호)
 		damage = Talent.onAttackProc( this, enemy, damage );
 
 		if (wep != null) {
@@ -1664,7 +1692,9 @@ public class Hero extends Char {
 			break;
 		default:
 		}
-		
+
+		BloomEffects.recordSkillHitDamage( damage ); //Maze Tower (B4): 스킬 타격이 끝났을 때 넘길 피해
+		BloomEffects.afterHeroAttackProc( this, enemy, damage ); //Maze Tower (C19): 피 묻은 날 등 최종 피해를 보는 적중 효과
 		return damage;
 	}
 	
@@ -1717,6 +1747,16 @@ public class Hero extends Char {
 				|| buff(TimeStasis.class) != null) {
 			return;
 		}
+		//Maze Tower (N8, 사용자): 열매 맺는 가지의 열매를 먹은 동안 받는 피해 감소
+		if (dmg > 0 && buff(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.FruitBranch.HeroFruit.class) != null){
+			dmg = Math.round(dmg * com.shatteredpixel.shatteredpixeldungeon.MazeTower.N8_TAKEN);
+		}
+		//Maze Tower (O6, 사용자): 25층 세계수의 열매를 먹은 동안 받는 피해 감소
+		if (dmg > 0 && buff(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.TowerMaster.FruitBlessing.class) != null){
+			dmg = Math.round(dmg * com.shatteredpixel.shatteredpixeldungeon.MazeTower.O_FRUIT_TAKEN);
+		}
+		//Maze Tower (T4): 이끼 곰이 2칸 안에 있으면 피해 일부를 대신 받는다 (지속 피해·즉사 피해 제외)
+		dmg = com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetBear.shareDamage(this, dmg, src);
 
 		//regular damage interrupt, triggers on any damage except specific mild DOT effects
 		// unless the player recently hit 'continue moving', in which case this is ignored
@@ -1731,7 +1771,7 @@ public class Hero extends Char {
 
 		//temporarily assign to a float to avoid rounding a bunch
 		float damage = dmg;
-		damage = BloomEffects.onHeroDamage(this, Math.round(damage)); //Maze Tower: 원소 친화
+		damage = BloomEffects.onHeroDamage(this, Math.round(damage), src); //Maze Tower: 2차 특성 받는 피해
 
 		Endure.EndureTracker endure = buff(Endure.EndureTracker.class);
 		if (!(src instanceof Char)){
@@ -1763,9 +1803,7 @@ public class Hero extends Char {
 		dmg = Math.round(damage);
 
 		//we ceil this one to avoid letting the player easily take 0 dmg from tenacity early
-		int mazeBeforeTenacity = dmg;
 		dmg = (int)Math.ceil(dmg * RingOfTenacity.damageMultiplier( this ));
-		HunterEffects.onTenacityReduced(this, mazeBeforeTenacity - dmg); //Maze Tower: 고리지기 인내의 반지 역경 (줄인 피해 누적)
 
 		int preHP = HP + shielding();
 		if (src instanceof Hunger) preHP -= shielding();
@@ -1775,6 +1813,11 @@ public class Hero extends Char {
 		int effectiveDamage = preHP - postHP;
 
 		if (effectiveDamage <= 0) return;
+
+		//Maze Tower (사용자): 보스전에서 보스의 공격형 기술에 맞으면 원작 공격처럼 피격음 (원작 공격은 이미 소리를 낸다)
+		if (Char.mazeEnemyAttackDepth == 0 && com.shatteredpixel.shatteredpixeldungeon.MazeBosses.bossSkillSource(src)){
+			hitSound(Random.Float(0.87f, 1.15f));
+		}
 
 		if (buff(Challenge.DuelParticipant.class) != null){
 			buff(Challenge.DuelParticipant.class).addDamage(effectiveDamage);
@@ -1912,7 +1955,7 @@ public class Hero extends Char {
 
 			path = null;
 
-			if (Actor.findChar( target ) == null) {
+			if (Actor.findChar( target ) == null || com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly.swappable( Actor.findChar( target ), this )) { //Maze Tower (사용자): 길을 막은 펫과는 자리를 바꾼다
 				if (Dungeon.level.passable[target] || Dungeon.level.avoid[target]) {
 					step = target;
 				}
@@ -1932,7 +1975,7 @@ public class Hero extends Char {
 			else if (path.getLast() != target)
 				newPath = true;
 			else {
-				if (!Dungeon.level.passable[path.get(0)] || Actor.findChar(path.get(0)) != null) {
+				if (!Dungeon.level.passable[path.get(0)] || (Actor.findChar(path.get(0)) != null && !com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly.swappable( Actor.findChar(path.get(0)), this ))) { //Maze Tower (사용자): 펫이 서 있으면 길을 다시 찾지 않고 자리를 바꾼다
 					newPath = true;
 				}
 			}
@@ -1991,8 +2034,22 @@ public class Hero extends Char {
 				Buff.affect(this, Momentum.class).gainStack();
 			}
 			
+			//Maze Tower (사용자): 가는 칸에 펫이 서 있으면 멈추지 않고 자리를 바꾼다 (원작 동료와 자리 바꾸기와 같은 처리)
+			Char occupant = Actor.findChar( step );
+			if (occupant != null && occupant != this){
+				if (com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly.swappable( occupant, this )){
+					occupant.sprite.move( step, pos );
+					occupant.move( pos );
+				} else {
+					return false;
+				}
+			}
+
+			int leftCell = pos; //Maze Tower (S8): 숲지기 - 떠난 칸에 풀이 자란다
 			sprite.move(pos, step);
 			move(step);
+			BloomEffects.onHeroWalked(); //Maze Tower (D4): 치고 빠지기 - 이번 행동은 걸은 것 (밀림·순간이동·돌진은 아님)
+			ForestWarden.onHeroLeft(this, leftCell); //Maze Tower (S8)
 
 			spend( delay / speed() );
 			
@@ -2448,11 +2505,9 @@ public class Hero extends Char {
 
 	@Override
 	public void move(int step, boolean travelling) {
-		int mazeFrom = pos;
 		boolean wasHighGrass = Dungeon.level.map[step] == Terrain.HIGH_GRASS;
 
 		super.move( step, travelling);
-		if (travelling && pos != mazeFrom) BloomAttack.onMove(this); //Maze Tower: 2차 특성 돌진
 		
 		if (!flying && travelling) {
 			if (Dungeon.level.water[pos]) {
@@ -2489,7 +2544,7 @@ public class Hero extends Char {
 
 		//Maze Tower: 활 - 원거리면 화살 1발을 쓰고 원거리 피해, 근접이면 맞힌 적을 밀쳐낸다
 		final boolean bow = WornShortbow.equipped(this) != null;
-		final boolean shot = WornShortbow.beginShot(this, attackTarget, bow && !Dungeon.level.adjacent(pos, attackTarget.pos));
+		final boolean shot = WornShortbow.beginShot(this, attackTarget, bow && (!Dungeon.level.adjacent(pos, attackTarget.pos) || WornShortbow.shootsAdjacent(this))); //Maze Tower (S6): 전투 사냥꾼은 옆 칸에도 쏜다
 		final boolean hit = attack(attackTarget);
 		final Char target = attackTarget;
 		if (bow) WornShortbow.endShot(this, target, hit, shot, !shot);
@@ -2509,7 +2564,7 @@ public class Hero extends Char {
 	//원작 onAttackComplete의 뒷부분 (Maze Tower: 그림자검 텀 때문에 따로 뺐다)
 	private void finishAttackComplete( Char target, boolean hit, boolean wasEnemy ){
 		Invisibility.dispel();
-		spend( attackDelay() * BloomAttack.attackDelayMulti(this) ); //Maze Tower: 질풍
+		spend( BloomEffects.normalAttackDelay(this, attackDelay()) ); //Maze Tower (C1): 받아치기 각성은 턴을 쓰지 않는다
 
 		if (hit && subClass == HeroSubClass.GLADIATOR && wasEnemy){
 			Buff.affect( this, Combo.class ).hit(target);
@@ -2527,7 +2582,27 @@ public class Hero extends Char {
 	
 	@Override
 	public void onMotionComplete() {
+		BloomHuntress.onHeroArrived(this); //Maze Tower (D19): 화살 줍기 - 그림이 칸에 닿은 뒤 줍는다
+		mazeAutoDew();
 		GameScene.checkKeyHold();
+	}
+
+	//Maze Tower (사용자): 걸으며 이슬 줍기 — 시야에 적이 없을 때, 걸어서 들어선 칸(발밑)에 이슬이 있으면 1턴 들여 저절로 줍는다.
+	//그 칸을 다시 눌러 줍지 않아도 된다. 설정 창(인터페이스 탭)에서 끄고 켠다(SPDSettings.mazeAutoDew).
+	//물병이 가득 차 있고 체력도 가득하면 쓸모가 없으니 줍지 않는다(원작처럼 "이미 가득" 글이 줄줄이 뜨지 않게).
+	private void mazeAutoDew(){
+		if (!com.shatteredpixel.shatteredpixeldungeon.SPDSettings.mazeAutoDew() || !isAlive()) return;
+		if (!(curAction instanceof HeroAction.Move)) return; //걸어가는 중에만 (줍기 행동은 원작대로)
+		if (visibleEnemies() > 0) return;
+		com.shatteredpixel.shatteredpixeldungeon.items.Heap heap = Dungeon.level.heaps.get( pos );
+		if (heap == null || heap.type != com.shatteredpixel.shatteredpixeldungeon.items.Heap.Type.HEAP) return;
+		Item dew = heap.peek();
+		if (!(dew instanceof com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop)) return;
+		com.shatteredpixel.shatteredpixeldungeon.items.Waterskin flask = belongings.getItem( com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class );
+		if (!((flask != null && !flask.isFull()) || HP < HT)) return;
+		if (dew.doPickUp( this, pos )) { //원작 이슬 줍기 (물병에 담거나 마셔 회복, 소리, 1턴)
+			heap.pickUp();
+		}
 	}
 	
 	@Override
@@ -2689,6 +2764,7 @@ public class Hero extends Char {
 						GameScene.checkedCell(curr, foresightScan ? pos : curr);
 					} else if (intentional) {
 						GameScene.checkedCell(curr, pos);
+						com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ParasiteSprout.revealAt(curr); //Maze Tower (F6): 일부러 탐색하면 기생 싹이 드러난다
 					}
 
 					if (foresight){

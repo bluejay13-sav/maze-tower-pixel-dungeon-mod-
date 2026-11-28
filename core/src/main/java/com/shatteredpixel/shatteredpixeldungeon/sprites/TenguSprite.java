@@ -50,14 +50,6 @@ public class TenguSprite extends MobSprite {
 		
 		die = new Animation( 8, false );
 		die.frames( frames, 8, 9, 10, 10, 10, 10, 10, 10 );
-		//Maze Tower: 그림자 간수 그림 (원작처럼 이동 동작은 반복하지 않는다: 순간이동이 동작 끝을 기다림)
-		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
-			TextureFilm f = MazeBossSprites.apply(this, MazeBossSprites.Look.WARDEN);
-			run = MazeBossSprites.anim(f, 15, false, 2, 3, 4, 5, 0);
-			//공격 마지막 칸(8번)은 하얗게 빛나는 그림이라 쓰지 않는다
-			attack = MazeBossSprites.anim(f, 15, false, 6, 7, 7, 0);
-			zap = attack.clone();
-		}
 		
 		play( run );
 		isMoving = true;
@@ -106,11 +98,6 @@ public class TenguSprite extends MobSprite {
 				reset( this, cell, new TenguShuriken(), new Callback() {
 					@Override
 					public void call() {
-						//Maze Tower: 사슬 맞음
-						if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
-							com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects.atCell(
-									com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects.Fx.CHAIN_HIT, cell, 15, false);
-						}
 						ch.onAttackComplete();
 					}
 				} );
@@ -141,7 +128,6 @@ public class TenguSprite extends MobSprite {
 	public static class TenguShuriken extends Item {
 		{
 			image = ItemSpriteSheet.SHURIKEN;
-			if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) image = MazeItemSprites.WARDEN_CHAIN; //Maze Tower: 사슬
 		}
 	}
 }

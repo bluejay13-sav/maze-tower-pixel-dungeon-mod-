@@ -63,6 +63,10 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 	private static final String ACTED	= "acted";
 	private static final String BURN	= "burnIncrement";
 	private static final String NEXT_DMG= "next_dmg";
+	private static final String MAZE_MULTI = "maze_dmg_multi";
+
+	//Maze Tower (C8): 화상 피해 배율 (달군 날이 묻힌 화상은 더 세다). 원작은 1
+	public float mazeDmgMulti = 1f;
 
 	{
 		type = buffType.NEGATIVE;
@@ -76,6 +80,7 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 		bundle.put( ACTED, acted );
 		bundle.put( BURN, burnIncrement );
 		bundle.put( NEXT_DMG, nextHit );
+		bundle.put( MAZE_MULTI, mazeDmgMulti );
 	}
 	
 	@Override
@@ -85,6 +90,7 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 		acted = bundle.getBoolean( ACTED );
 		burnIncrement = bundle.getInt( BURN );
 		nextHit = bundle.getInt( NEXT_DMG );
+		mazeDmgMulti = bundle.contains( MAZE_MULTI ) ? bundle.getFloat( MAZE_MULTI ) : 1f;
 	}
 
 	@Override
@@ -113,7 +119,7 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 			if (nextHit == 0){
 				nextHit = Random.NormalIntRange( 1, 3 + Dungeon.scalingDepth()/4 );
 			}
-			int damage = nextHit;
+			int damage = Math.round(nextHit * mazeDmgMulti); //Maze Tower (C8): 달군 날
 			nextHit = Random.NormalIntRange( 1, 3 + Dungeon.scalingDepth()/4 );
 			Buff.detach( target, Chill.class);
 
@@ -177,7 +183,8 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 			detach();
 		}
 		
-		if (Dungeon.level.flamable[target.pos] && Blob.volumeAt(target.pos, Fire.class) == 0) {
+		//Maze Tower (F3): 불붙은 캐릭터가 수액 웅덩이 위에 있으면 풀처럼 웅덩이에도 불이 붙는다
+		if ((Dungeon.level.flamable[target.pos] || com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.at(target.pos)) && Blob.volumeAt(target.pos, Fire.class) == 0) {
 			GameScene.add( Blob.seed( target.pos, 4, Fire.class ) );
 		}
 		
@@ -284,6 +291,6 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 			nextHit = Random.NormalIntRange( 1, 3 + Dungeon.scalingDepth()/4 );
 		}
 		float avgDmg = 2 + Dungeon.scalingDepth()/8f;
-		return (int)Math.round(nextHit + Math.ceil(left-1)*avgDmg);
+		return (int)Math.round((nextHit + Math.ceil(left-1)*avgDmg) * mazeDmgMulti); //Maze Tower (C8): 달군 날
 	}
 }

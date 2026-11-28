@@ -32,6 +32,14 @@ public class GridTileMap extends DungeonTilemap {
 		super( Assets.Environment.VISUAL_GRID );
 
 		map( Dungeon.level.map, Dungeon.level.width() );
+		//Maze Tower (사용자): 역행 중 21~26층의 밝은 바닥에서는 칸 격자(한 칸 건너 옅은 바둑판)가 네모난 명암으로 비쳐 보여 옅게
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.active() && HeartFloorTilemap.active()) alpha( com.shatteredpixel.shatteredpixeldungeon.MazeTower.RETREAT_GRID_ALPHA );
+	}
+
+	//진하기(alpha)가 먹도록 빛 계산이 있는 그리기 (원작 CustomTilemap과 같음)
+	@Override
+	protected com.watabou.noosa.NoosaScript script() {
+		return com.watabou.noosa.NoosaScript.get();
 	}
 
 	private int gridSetting = -1;

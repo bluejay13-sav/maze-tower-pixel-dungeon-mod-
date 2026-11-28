@@ -69,8 +69,10 @@ public class Buff extends Actor {
 		if (target.isImmune( getClass() )) {
 			return false;
 		}
-		//Maze Tower: 고리지기 정화 (원소의 반지 스킬): 잠깐 동안 나쁜 상태이상이 붙지 않는다
-		if (type == buffType.NEGATIVE && target.buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HunterEffects.Purity.class) != null) {
+		//Maze Tower (C9): 숨 고르기 각성 - 방어막이 가득 찬 동안 다음 나쁜 상태이상 하나를 막는다
+		if (type == buffType.NEGATIVE && target instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero
+				&& com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.blockHeroDebuff(
+						(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero)target, this)) {
 			return false;
 		}
 		

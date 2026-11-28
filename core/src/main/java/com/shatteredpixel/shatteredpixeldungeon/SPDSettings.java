@@ -127,6 +127,8 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_FLIPTAGS 	= "flip_tags";
 	public static final String KEY_BARMODE		= "toolbar_mode";
 	public static final String KEY_SLOTWATERSKIN= "quickslot_waterskin";
+	public static final String KEY_MAZE_AUTO_DEW = "maze_auto_dew"; //Maze Tower (사용자): 걸으며 이슬 줍기
+	public static final String KEY_MAZE_KEY_SLIDE = "maze_key_slide"; //Maze Tower (사용자): PC 대각선 방향키가 벽에 막히면 갈 수 있는 쪽으로
 	public static final String KEY_SYSTEMFONT	= "system_font";
 	public static final String KEY_VIBRATION    = "vibration";
 
@@ -184,6 +186,24 @@ public class SPDSettings extends GameSettings {
 
 	public static void quickslotWaterskin( boolean value ){
 		put( KEY_SLOTWATERSKIN, value);
+	}
+
+	//Maze Tower (사용자): 시야에 적이 없을 때, 걸어서 지나는 칸의 이슬을 1턴 들여 저절로 줍는다 (설정 창 인터페이스 탭)
+	public static void mazeAutoDew( boolean value ){
+		put( KEY_MAZE_AUTO_DEW, value );
+	}
+
+	//Maze Tower (사용자): PC에서 방향키 두 개로 대각선을 누를 때 막혀 있으면 갈 수 있는 쪽으로 (설정 창 인터페이스 탭, PC에만 보임)
+	public static void mazeKeySlide( boolean value ){
+		put( KEY_MAZE_KEY_SLIDE, value );
+	}
+
+	public static boolean mazeKeySlide(){
+		return getBoolean( KEY_MAZE_KEY_SLIDE, true );
+	}
+
+	public static boolean mazeAutoDew(){
+		return getBoolean( KEY_MAZE_AUTO_DEW, true );
 	}
 
 	public static boolean quickslotWaterskin(){

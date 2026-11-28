@@ -50,7 +50,7 @@ public class SlimeSprite extends MobSprite {
 
 	@Override
 	public int blood() {
-		return 0xFF88CC44;
+		return 0xFFE0952A; //Maze Tower (F): 수액 슬라임 - 수액빛
 	}
 	
 }

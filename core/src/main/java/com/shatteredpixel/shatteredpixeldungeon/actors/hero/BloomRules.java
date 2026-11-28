@@ -59,6 +59,11 @@ public class BloomRules {
 		begin(Kind.SKILL, cost);
 	}
 
+	//평타·스킬이 아닌 주인공의 공격 한 번 (마법봉 발사, 던지기): 새 "한 행동"이지만 평타도 스킬도 아니다
+	public static void beginOther(){
+		begin(Kind.NONE, 0);
+	}
+
 	private static void begin(Kind k, int cost){
 		kind = k;
 		actionId++;
@@ -101,7 +106,7 @@ public class BloomRules {
 		int n = fired.containsKey(t) ? fired.get(t) : 0;
 		if (n >= cap){
 			//규칙 3 예외: 연속 베기 각성의 추가 평타는 막힌 특성 효과를 한 번 발동시킬 수 있다
-			if (inExtra && extraAllowance > 0 && t != BloomTalent.DOUBLE_SLASH){
+			if (inExtra && extraAllowance > 0){
 				extraAllowance--;
 				debug("extra-attack allowance used by " + t);
 				return true;
@@ -157,11 +162,10 @@ public class BloomRules {
 		}
 	}
 
-	//주인공이 처치한 것으로 치는 원인 (평타·스킬·지팡이·파생 피해·튄 번개)
+	//주인공이 처치한 것으로 치는 원인 (평타·스킬·지팡이·파생 피해)
 	public static boolean isHeroKill(Object src){
 		return src == Dungeon.hero
 				|| src instanceof Derived
-				|| src instanceof BloomEffects.ShockDamage
 				|| src instanceof Wand; //마법봉은 주인공만 쏜다
 	}
 

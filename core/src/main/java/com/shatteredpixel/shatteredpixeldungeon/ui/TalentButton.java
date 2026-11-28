@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -128,6 +129,8 @@ public class TalentButton extends Button {
 				public void call() {
 					upgradeTalent();
 					Statistics.qualifiedForRandomVictoryBadge = false;
+					//Maze Tower (사용자): 한 레벨 올려도 창이 닫히지 않게, 새 레벨로 다시 연다 (포인트가 남아 있으면 올리기 단추도 그대로)
+					if (!MazeTower.ORIGINAL_TALENTS && parent != null) onClick();
 				}
 			});
 		} else if (mode == Mode.METAMORPH_CHOOSE && Dungeon.hero != null && Dungeon.hero.isAlive()) {

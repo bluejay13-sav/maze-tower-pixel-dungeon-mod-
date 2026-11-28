@@ -80,13 +80,6 @@ public class DM300Sprite extends MobSprite {
 			die.frames(frames, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10);
 		}
 
-		//Maze Tower: 마도 골렘 / 수정 거인 그림 (기 모으기·내려치기·쏘기 = 공격 프레임)
-		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED){
-			TextureFilm f = MazeBossSprites.apply(this, MazeBossSprites.look15());
-			charge = MazeBossSprites.anim(f, 4, true, 6, 7);
-			slam = attack.clone();
-		}
-
 		if (curAnim != charge) play(idle);
 	}
 
@@ -94,15 +87,8 @@ public class DM300Sprite extends MobSprite {
 
 		super.zap( cell );
 
-		//Maze Tower: 마도 골렘은 독가스를 쏘지 않고 그 자리에서 내려칠 준비, 수정 거인은 냉기 결정을 날린다
-		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.golem()){
-			((DM300)ch).onZapComplete();
-			return;
-		}
-		boolean crystal = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal();
-
 		MagicMissile.boltFromChar( parent,
-				crystal ? MagicMissile.FROST : MagicMissile.SPECK + Speck.TOXIC,
+				MagicMissile.SPECK + Speck.TOXIC,
 				this,
 				cell,
 				new Callback() {

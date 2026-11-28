@@ -73,8 +73,20 @@ public class WndGame extends Window {
 			curBtn.icon(Icons.get(Icons.MAGNIFY));
 		}
 
-		//Maze Tower: 보스전 체험판 아이템 고르기 (마법봉·유물·장신구, 배포한 체험판에서도 보임)
-		if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on() && Dungeon.hero != null && Dungeon.hero.isAlive()) {
+		//Maze Tower (사용자): 테스트 버전은 배포판에서도 층 이동 치트 (디버그 빌드는 치트 창 안에 있음)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.TEST_BUILD && !WndCheats.enabled() && Dungeon.hero != null && Dungeon.hero.isAlive()) {
+			addButton( curBtn = new RedButton( Messages.get(WndCheats.class, "depth") ) {
+				@Override
+				protected void onClick() {
+					hide();
+					WndCheats.showDepthInput();
+				}
+			});
+			curBtn.icon(Icons.get(Icons.STAIRS));
+		}
+
+		//Maze Tower: 아이템 꺼내기 치트 (본판은 디버그 빌드에서만, 체험판·테스트 버전은 배포판에서도)
+		if ((WndCheats.enabled() || com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on() || com.shatteredpixel.shatteredpixeldungeon.MazeTower.TEST_BUILD) && Dungeon.hero != null && Dungeon.hero.isAlive()) {
 			addButton( curBtn = new RedButton( Messages.get(WndTrialItems.class, "button") ) {
 				@Override
 				protected void onClick() {

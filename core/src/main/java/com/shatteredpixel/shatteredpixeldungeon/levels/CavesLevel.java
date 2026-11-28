@@ -90,6 +90,14 @@ public class CavesLevel extends RegularLevel {
 	protected ArrayList<Room> initRooms() {
 		return Blacksmith.Quest.spawn(super.initRooms());
 	}
+
+	//Maze Tower (J2): 살아 있는 광맥 (11~14층)
+	@Override
+	protected void createMobs() {
+		super.createMobs();
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.LivingVein.place(this);
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WormSpawn.place(this); //Maze Tower (J8): 13·14층 새끼 굴벌레·공명 수정
+	}
 	
 	@Override
 	protected int standardRooms(boolean forceMax) {

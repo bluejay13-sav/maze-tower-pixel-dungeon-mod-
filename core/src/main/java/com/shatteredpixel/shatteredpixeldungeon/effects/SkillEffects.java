@@ -35,19 +35,12 @@ public class SkillEffects {
 			case "flurry":   flurry(hero, enemy, index); break;
 			case "crescent": crescent(hero, enemy, index); break;
 			case "phantom":  phantom(hero, enemy); break;
+			case "smash":    smashImpact(hero, enemy); break; //Maze Tower (W1): 내려찍기 - 땅을 치는 장부터 (궤적 두 장은 SwordSkill에서 먼저)
+			case "discharge": MazeFx.onChar(MazeFx.Fx.DISCHARGE, enemy.sprite); break; //Maze Tower (W2): 방출
 			case "vital":    vital(hero, enemy, surprise); break;
 			case "aimed":    break; //(2026-11-21 밤) 조준 사격 적중 그림(fx3_07) 삭제
-			//Maze Tower: 고리지기 반지 스킬 (맨손)
-			case "frenzy":   flurry(hero, enemy, index % 3); break;
-			case "toss":     MazeFx.toward(MazeFx.Fx.SLASH, hero, enemy); break;
-			case "burst":    tinted(hero, enemy, 0x88BBFF); break;
-			case "goldfist": tinted(hero, enemy, 0xFFD040); break;
+			case "throat":   break; //Maze Tower (W4): 숨통 물기 - 화살이 맞았을 때만 afterHit에서
 		}
-	}
-
-	private static void tinted( Char hero, Char enemy, int color ){
-		MovieClip c = MazeFx.toward(MazeFx.Fx.SLASH, hero, enemy);
-		if (c != null) c.tint(color, 0.6f);
 	}
 
 	//연격: 타격마다 두 프레임 (사선 → 반대 사선 → 크게 가로지르는 마무리), 타격마다 번쩍
@@ -63,15 +56,31 @@ public class SkillEffects {
 		else                MazeFx.toward(MazeFx.Fx.CRESCENT, hero, enemy, 2, 3, 4);
 	}
 
-	//무형검: 푸른 마탄이 날아가 대상에서 칼날 그림
+	//무형검: 푸른 마탄이 날아가 대상에 닿는 순간 칼날 그림
+	//Maze Tower (W1): 내려찍기 (MazeFx.Fx.SMASH 5장: 0 위쪽 → 1 가운데까지 → 2 끝까지·땅을 침 → 3·4 먼지)
+	//(사용자) 궤적이 중간쯤 갔을 때 피해가 들어가게: 0장을 먼저 그리고(SwordSkill이 그만큼 기다림), 피해가 들어가는 순간 1장부터
+	public static final float SMASH_SWING_TIME = MazeFx.Fx.SMASH.delay; //0장 한 장의 시간
+	public static void smashSwing( Char hero, Char enemy ){
+		if (enemy.sprite == null || enemy.sprite.parent == null) return;
+		PointF c = enemy.sprite.center();
+		MazeFx.faceFrom( MazeFx.at(MazeFx.Fx.SMASH, c.x, c.y, 0, MazeFx.Fx.SMASH.delay, 0), hero, enemy ); //(사용자) 왼쪽으로 내려찍으면 좌우로 뒤집음
+	}
+	private static void smashImpact( Char hero, Char enemy ){
+		if (enemy.sprite == null || enemy.sprite.parent == null) return;
+		PointF c = enemy.sprite.center();
+		MazeFx.faceFrom( MazeFx.at(MazeFx.Fx.SMASH, c.x, c.y, 0, MazeFx.Fx.SMASH.delay, 1, 2, 3, 4), hero, enemy );
+	}
+
 	private static void phantom( final Char hero, final Char enemy ){
 		MagicMissile.boltFromChar(enemy.sprite.parent, MagicMissile.MAGIC_MISSILE, hero.sprite, enemy.pos, new Callback() {
 			@Override
 			public void call() {
-				//이펙트 전용. 피해는 SwordSkill에서 이미 처리한다.
+				//이펙트 전용. 피해는 SwordSkill에서 이미 처리한다. 칼날은 마탄이 닿은 뒤에 (그 사이 대상 그림이 사라졌으면 그리지 않음)
+				if (hero.sprite != null && enemy.sprite != null && enemy.sprite.parent != null){
+					MazeFx.toward(MazeFx.Fx.PHANTOM, hero, enemy);
+				}
 			}
 		});
-		MazeFx.toward(MazeFx.Fx.PHANTOM, hero, enemy);
 	}
 
 	//급소 찌르기: 짧고 빠른 찌르기. 기습이면 핏빛 그림 + 피 3방울 (기습이 아니면 피가 튀지 않는다)
@@ -90,6 +99,10 @@ public class SkillEffects {
 		float ang = PointF.angle(hero.sprite.center(), c);
 		switch (skillKey){
 			case "aimed": //피가 조금 튐
+				Splash.at(c, ang, 3.1415926f / 2, enemy.sprite.blood(), 3);
+				break;
+			case "throat": //Maze Tower (W4): 숨통 물기 - 송곳니가 맞물리고 피가 조금 튐
+				MazeFx.toward(MazeFx.Fx.THROAT, hero, enemy);
 				Splash.at(c, ang, 3.1415926f / 2, enemy.sprite.blood(), 3);
 				break;
 			case "rapid":

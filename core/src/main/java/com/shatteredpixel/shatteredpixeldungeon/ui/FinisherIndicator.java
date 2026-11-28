@@ -11,8 +11,8 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.Visual;
 
-//Maze Tower: 검투사 필살기 버튼. 원작은 행동 버튼(ActionIndicator)이 하나뿐이라
-//무기 스킬 버튼과 필살기 버튼이 겹친다. 그래서 원작 ActionIndicator를 본떠 버튼을 하나 더 둔다.
+//Maze Tower: 두 번째 행동 버튼 (결투가의 결투 걸기, 전투 사냥꾼의 활대 타격). 원작은 행동 버튼(ActionIndicator)이 하나뿐이라
+//무기 스킬 버튼과 겹친다. 그래서 원작 ActionIndicator를 본떠 버튼을 하나 더 둔다 (처음엔 예전 검투사 필살기용으로 만듦).
 //화면 오른쪽 아래, 무기 스킬 버튼 위에 놓인다 (GameScene.layoutTags).
 public class FinisherIndicator extends Tag {
 

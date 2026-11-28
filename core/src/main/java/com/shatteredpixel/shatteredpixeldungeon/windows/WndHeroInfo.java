@@ -294,7 +294,7 @@ public class WndHeroInfo extends WndTabbed {
 			message = PixelScene.renderTextBlock(Messages.get(WndHeroInfo.class, "subclasses_msg"), 6);
 			add(message);
 
-			HeroSubClass[] subClasses = cls.subClasses();
+			HeroSubClass[] subClasses = com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_SUBCLASS ? cls.subClasses() : com.shatteredpixel.shatteredpixeldungeon.MazeTower.fullBloomPaths(cls); //Maze Tower: 만개의 핵 선택지와 같게
 
 			subClsDescs = new RenderedTextBlock[subClasses.length];
 			subClsInfos = new IconButton[subClasses.length];
@@ -354,7 +354,7 @@ public class WndHeroInfo extends WndTabbed {
 			message = PixelScene.renderTextBlock(Messages.get(WndHeroInfo.class, "abilities_msg"), 6);
 			add(message);
 
-			ArmorAbility[] abilities = cls.armorAbilities();
+			ArmorAbility[] abilities = com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_ARMOR_ABILITY ? cls.armorAbilities() : com.shatteredpixel.shatteredpixeldungeon.MazeTower.fruitPaths(cls); //Maze Tower (T1): 4차 = 펫
 
 			abilityDescs = new RenderedTextBlock[abilities.length];
 			abilityInfos = new IconButton[abilities.length];

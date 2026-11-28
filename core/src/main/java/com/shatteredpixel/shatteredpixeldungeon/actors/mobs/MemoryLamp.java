@@ -23,7 +23,13 @@ import com.watabou.utils.PointF;
 //어떤 방식으로든 피해를 입으면(해로운 물약·상태이상 포함) 켜진다: 50턴 동안 어둠이 걷히고 왕이 드러나며 왕은 3턴 기절.
 //50턴이 지나면 부서지고 다시 어두워진다. 부서진 등불은 다시 켤 수 없다.
 //한 번에 하나만 켜진다: 켜진 등불이 있는 동안 다른 등불은 피해를 입지 않는다. 등불 자체는 체력이 줄지 않는다.
+//Maze Tower (O2): 25층 탑의 주인 방(망령 왕 판)에서는 어둠 속 무작위 자리에 하나. 켜지면 O_DARK_LIGHT_TURNS턴 어둠이 걷히고,
+//(사용자) 다시 꺼지면 그 등불은 사라지고 어둠 속 다른 자리에 새 등불이 생긴다 (MasterBossLevel.respawnLamp).
 public class MemoryLamp extends Mob {
+
+	private static boolean master(){
+		return com.shatteredpixel.shatteredpixeldungeon.Dungeon.level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel;
+	}
 
 	{
 		spriteClass = LampSprite.class;
@@ -55,8 +61,14 @@ public class MemoryLamp extends Mob {
 			timer--;
 			if (timer <= 0){
 				lit = false;
-				broken = true;
-				if (Dungeon.level.heroFOV[pos]){
+				broken = !master(); //Maze Tower (O2): 25층에서는 꺼지기만 하고 다시 켤 수 있다
+				if (master()){ //(사용자) 25층: 이 등불은 사라지고 어둠 속 다른 자리에 새 등불이 생긴다, 어둠이 다시 덮인다
+					((com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel) Dungeon.level).respawnLamp(this);
+					com.shatteredpixel.shatteredpixeldungeon.Dungeon.observe();
+					spend(TICK);
+					return true;
+				}
+				if (Dungeon.level.heroFOV[pos] && broken){
 					Sample.INSTANCE.play(Assets.Sounds.SHATTER, 0.6f);
 				}
 				WraithKing k = WraithKing.find();
@@ -78,10 +90,11 @@ public class MemoryLamp extends Mob {
 			if (m instanceof MemoryLamp && ((MemoryLamp) m).lit) return;
 		}
 		lit = true;
-		timer = MazeTower.WK_LAMP_TURNS;
+		timer = master() ? MazeTower.O_DARK_LIGHT_TURNS : MazeTower.WK_LAMP_TURNS; //Maze Tower (O2): 25층 어둠 판막 옆 등불
 		Sample.INSTANCE.play(Assets.Sounds.BURNING);
 		WraithKing k = WraithKing.find();
 		if (k != null) k.onLampLit(this);
+		if (master()) com.shatteredpixel.shatteredpixeldungeon.Dungeon.observe(); //Maze Tower (O2): 어둠이 걷힌다
 	}
 
 	@Override
@@ -112,6 +125,7 @@ public class MemoryLamp extends Mob {
 	public String description() {
 		if (broken) return Messages.get(this, "desc_broken");
 		if (lit)    return Messages.get(this, "desc_lit", timer);
+		if (master()) return Messages.get(this, "desc_master");
 		return Messages.get(this, "desc");
 	}
 
@@ -167,7 +181,7 @@ public class MemoryLamp extends Mob {
 			}
 			//켜진 등불 둘레 빛 (바닥에 반투명). (결정) 어둠 속에서 주인공 바로 옆에 있는 꺼진 등불은 희미하게 빛난다
 			WraithKing k = WraithKing.find();
-			boolean faint = !l.lit && !l.broken && k != null && k.isDark()
+			boolean faint = !l.lit && !l.broken && ((k != null && k.isDark()) || master()) //Maze Tower (O2): 25층에서도 꺼진 등불은 옆에서 희미하게
 					&& com.shatteredpixel.shatteredpixeldungeon.Dungeon.level.adjacent(l.pos, com.shatteredpixel.shatteredpixeldungeon.Dungeon.hero.pos);
 			boolean glowOn = l.lit || faint;
 			if (glowOn && glow == null && parent != null){

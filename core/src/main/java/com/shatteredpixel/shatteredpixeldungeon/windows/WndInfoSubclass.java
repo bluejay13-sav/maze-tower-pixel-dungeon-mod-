@@ -39,6 +39,7 @@ public class WndInfoSubclass extends WndTitledMessage {
 
 		ArrayList<LinkedHashMap<Talent, Integer>> talentList = new ArrayList<>();
 		Talent.initClassTalents(cls, talentList);
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeTower.ORIGINAL_TALENTS) talentList.get(2).clear(); //Maze Tower (사용자): 원작 직업 3단계 특성(2개)은 쓰지 않으니 3차 전직 특성만 보인다
 		Talent.initSubclassTalents(subCls, talentList);
 
 		TalentsPane.TalentTierPane talentPane = new TalentsPane.TalentTierPane(talentList.get(2), 3, TalentButton.Mode.INFO);

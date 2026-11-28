@@ -105,11 +105,16 @@ public class CityBossLevel extends Level {
 
 	@Override
 	public String tilesTex() {
+		//Maze Tower (사용자): 16~19층과 같게, 그 판의 20층 보스에 따라 다른 바닥·벽 (보스방 안은 따로 된 보스방 그림)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.CITY_BY_BOSS && com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED)
+			return com.shatteredpixel.shatteredpixeldungeon.MazeBosses.empress() ? Assets.Environment.TILES_CITY_EMPRESS : Assets.Environment.TILES_CITY_WRAITH;
 		return Assets.Environment.TILES_CITY;
 	}
 
 	@Override
 	public String waterTex() {
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.CITY_BY_BOSS && com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) //Maze Tower (사용자): 물도 그 판의 보스에 따라
+			return com.shatteredpixel.shatteredpixeldungeon.MazeBosses.empress() ? Assets.Environment.WATER_CITY_EMPRESS : Assets.Environment.WATER_CITY_WRAITH;
 		return Assets.Environment.WATER_CITY;
 	}
 
@@ -731,6 +736,9 @@ public class CityBossLevel extends Level {
 					stairsTop = i;
 				}
 
+				//Maze Tower (사용자): 위쪽 출구 복도는 원작 데몬 홀 그림 대신 지형 그림(새 타일)으로 그리고, 출구 쪽에 21~24층 바닥을 섞는다 (MazeTransition)
+				if (com.shatteredpixel.shatteredpixeldungeon.MazeTransition.cityUpper()){ data[i] = -1; continue; }
+
 				//pillars
 				if (map[i] == Terrain.WALL && map[i-tileW] == Terrain.CHASM){
 					data[i] = 13*8 + 6;
@@ -948,7 +956,7 @@ public class CityBossLevel extends Level {
 
 			//upper part of the level, skull statues
 			for (int i = tileW; i < tileW*22; i++){
-				if (map[i] == Terrain.STATUE) {
+				if (map[i] == Terrain.STATUE && !com.shatteredpixel.shatteredpixeldungeon.MazeTransition.cityUpper()) { //Maze Tower (사용자): 새 타일이면 지형 석상 그림
 					data[i] = 15*8 + 5;
 				} else {
 					data[i] = -1;
@@ -1030,6 +1038,8 @@ public class CityBossLevel extends Level {
 				if (map[i] == Terrain.EXIT && shadowTop == -1){
 					shadowTop = i - tileW*4;
 				}
+
+				if (com.shatteredpixel.shatteredpixeldungeon.MazeTransition.cityUpper()){ data[i] = -1; continue; } //Maze Tower (사용자)
 
 				//pillars
 				if (map[i] == Terrain.CHASM && map[i+tileW] == Terrain.WALL) {

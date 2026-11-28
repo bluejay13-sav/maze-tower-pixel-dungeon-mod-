@@ -59,6 +59,26 @@ public class InventorySlot extends ItemSlot {
 		bg.y = y;
 
 		super.layout();
+
+		//Maze Tower (사용자): 전직의 핵 세 개(개화·만개·결실)는 가방 칸에서 조금 크게 — 그림 한 픽셀이 화면 한 칸씩 더 커지는 배율(픽셀이 고르게 보이게)
+		float s = 1f;
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.CORE_BIG_IN_BAG
+				&& (item instanceof com.shatteredpixel.shatteredpixeldungeon.items.BloomCore
+					|| item instanceof com.shatteredpixel.shatteredpixeldungeon.items.FullBloomCore
+					|| item instanceof com.shatteredpixel.shatteredpixeldungeon.items.FruitCore)) {
+			float z = com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.uiCamera != null
+					? com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.uiCamera.zoom
+					: com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.defaultZoom;
+			if (z > 0) s = (z + 1f) / z;
+		}
+		if (s != 1f || sprite.scale.x != 1f) {
+			float cx = sprite.x + sprite.width / 2f;
+			float cy = sprite.y + sprite.height / 2f;
+			sprite.scale.set( s );
+			sprite.x = cx - sprite.width * s / 2f;
+			sprite.y = cy - sprite.height * s / 2f;
+			com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene.align( sprite );
+		}
 	}
 
 	@Override

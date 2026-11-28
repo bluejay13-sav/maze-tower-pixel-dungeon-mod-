@@ -60,16 +60,68 @@ public class Thief extends Mob {
 
 	private static final String ITEM = "item";
 
+	//Maze Tower (H3): 문을 한 번 잠갔는지 (탈옥수 한 마리는 문 하나를 한 번만 잠근다)
+	private boolean mazeLocked = false;
+	private static final String MAZE_LOCKED = "maze_locked";
+
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle( bundle );
 		bundle.put( ITEM, item );
+		bundle.put( MAZE_LOCKED, mazeLocked );
 	}
 
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		super.restoreFromBundle( bundle );
 		item = (Item)bundle.get( ITEM );
+		mazeLocked = bundle.getBoolean( MAZE_LOCKED );
+	}
+
+	//Maze Tower (H3): 잠근 문 때문에 주인공 쪽에서 길이 끊겨도 계속 멀어지게 한다.
+	//원작 도망은 주인공 자리에서 길을 따라 거리를 재므로 문이 잠기면 거리를 못 재고 멈춰 버린다 → 잠근 문을 지나갈 수 있는 칸으로 치고 다시 잰다.
+	@Override
+	protected boolean getFurther( int target ) {
+		if (super.getFurther( target )) return true;
+		if (rooted || target == pos) return false;
+		boolean[] pass = null;
+		for (int i = 0; i < Dungeon.level.length(); i++){
+			if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ThiefLock.at(i)){
+				if (pass == null) pass = Dungeon.level.passable.clone();
+				pass[i] = true;
+			}
+		}
+		if (pass == null) return false;
+		int step = Dungeon.flee( this, target, pass, fieldOfView, true );
+		if (step == -1 || !Dungeon.level.passable[step]) return false;
+		move( step );
+		return true;
+	}
+
+	//Maze Tower (H3): 도망치며 문을 지나면 뒤에서 문을 닫아 잠깐(H3_LOCK_TURNS턴) 걸어 잠근다.
+	//문에 물건이 놓여 있으면 원작대로 문이 닫히지 않아 잠기지 않는다. 문 칸에 누가 있어도 잠그지 않는다.
+	@Override
+	public void move( int step, boolean travelling ) {
+		int from = pos;
+		super.move( step, travelling );
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeTower.H3_THIEF_LOCK || mazeLocked
+				|| state != FLEEING || pos == from || !isAlive()) return;
+		if (Dungeon.level.map[from] != com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.DOOR) return; //물건이 놓이면 열린 채 남는다
+		if (Dungeon.level.heaps.get(from) != null || com.shatteredpixel.shatteredpixeldungeon.actors.Actor.findChar(from) != null) return;
+		mazeLocked = true;
+		com.shatteredpixel.shatteredpixeldungeon.levels.Level.set(from, com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.LOCKED_DOOR);
+		com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.updateMap(from);
+		//게임 시간에 등록해야 턴이 흐른다 (GameScene.add)
+		com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.add( com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob.seed(from,
+				com.shatteredpixel.shatteredpixeldungeon.MazeTower.H3_LOCK_TURNS, com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ThiefLock.class) );
+		if (Dungeon.level.heroFOV[from]){
+			com.watabou.noosa.audio.Sample.INSTANCE.play( com.shatteredpixel.shatteredpixeldungeon.Assets.Sounds.UNLOCK );
+			//(결정) 문 위에 "잠김!"만 띄운다
+			com.watabou.utils.PointF p = com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.tileCenterToWorld(from);
+			com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText.show(p.x, p.y, from, Messages.get(Thief.class, "locked"),
+					com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite.WARNING);
+		}
+		Dungeon.observe();
 	}
 
 	@Override
@@ -102,6 +154,10 @@ public class Thief extends Mob {
 			//updates position
 			if (item instanceof Honeypot.ShatteredPot) ((Honeypot.ShatteredPot)item).dropPot( this, pos );
 			item = null;
+		}
+		//Maze Tower (H3): 잡으면 훔친 것에 더해 제 주머니의 금화도 떨군다
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.H3_THIEF_LOCK && Dungeon.level.heaps != null){
+			Dungeon.level.drop( new Gold().random(), pos ).sprite.drop();
 		}
 		super.rollToDropLoot();
 	}

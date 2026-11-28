@@ -11,7 +11,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects;
 import com.shatteredpixel.shatteredpixeldungeon.effects.TileFxLayer;
@@ -25,7 +24,7 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 
 //Maze Tower: 뿌리 지하(1~4층)의 수액 웅덩이 바닥 (명세 20번). 사라지지 않는다.
-//밟으면 젖음(물 위처럼, Wet.onWater) + 이동 감속(원작 다리 저림, 1턴씩 갱신). 불이 붙으면 타서 사라진다.
+//밟으면 이동 감속(원작 느려짐, 1턴씩 갱신). (결정) 젖지 않는다. 불이 붙으면 이어진 웅덩이로 불이 번지며(Fire) 타서 사라진다.
 //5층 보스가 남기는 수액(SapPuddle)과는 다른 것이다. 그림: maze_sap_puddle.png (16×16 2프레임 반복)
 public class SapFloor extends Blob {
 
@@ -50,9 +49,8 @@ public class SapFloor extends Blob {
 				volume += off[cell];
 
 				Char ch = Actor.findChar(cell);
-				if (ch != null && !ch.flying){
+				if (ch != null && !ch.flying && !ch.isImmune(getClass())){ //Maze Tower (E2): 정화 물약의 면역
 					Buff.prolong(ch, Cripple.class, 1f);
-					Buff.affect(ch, Wet.class);
 				}
 			}
 		}
@@ -61,8 +59,46 @@ public class SapFloor extends Blob {
 	//물 위에 깔리면 물을 대신한다 (SapPuddle과 같음)
 	@Override
 	public void seed( Level level, int cell, int amount ) {
+		if (SapPuddle.onDoor( level, cell )) return; //(사용자) 문 칸에는 수액이 생기지 않는다 (수액 채집꾼이 문간에서 쓰러져도)
 		super.seed( level, cell, amount );
 		SapPuddle.replaceWater( level, cell );
+	}
+
+	//이어지는 모양 번호 (TileFxLayer.connect와 같은 계산: 위1·오른쪽2·아래4·왼쪽8 + 대각선 16·32·64·128)
+	public static int connMask( int i ){
+		SapFloor s = Dungeon.level == null ? null : (SapFloor) Dungeon.level.blobs.get(SapFloor.class);
+		if (s == null) return 0;
+		int[] cur = s.cur; int w = Dungeon.level.width(); int mask = 0;
+		if (i - w >= 0 && cur[i - w] > 0)                         mask |= 1;
+		if ((i % w) < w - 1 && cur[i + 1] > 0)                  mask |= 2;
+		if (i + w < cur.length && cur[i + w] > 0)                 mask |= 4;
+		if ((i % w) > 0 && cur[i - 1] > 0)                      mask |= 8;
+		boolean l = (i % w) > 0, r = (i % w) < w - 1;
+		if (r && i - w + 1 >= 0 && cur[i - w + 1] > 0)                mask |= 16;
+		if (r && i + w + 1 < cur.length && cur[i + w + 1] > 0)        mask |= 32;
+		if (l && i + w - 1 < cur.length && cur[i + w - 1] > 0)        mask |= 64;
+		if (l && i - w - 1 >= 0 && cur[i - w - 1] > 0)                mask |= 128;
+		return mask;
+	}
+
+	//살펴보기 창(WndInfoCell)의 그림: 원작처럼 지도에 보이는 그 칸 그대로 (바닥 타일 위에 수액 웅덩이)
+	public static com.watabou.noosa.Image infoImage( int cell, com.watabou.noosa.Image base ){
+		try {
+			com.watabou.gltextures.SmartTexture bt = base.texture;
+			com.watabou.utils.RectF f = base.frame();
+			int S = com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap.SIZE;
+			com.badlogic.gdx.graphics.Pixmap pm = new com.badlogic.gdx.graphics.Pixmap(S, S, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+			pm.setBlending(com.badlogic.gdx.graphics.Pixmap.Blending.None);
+			pm.drawPixmap(bt.bitmap, 0, 0, Math.round(f.left * bt.width), Math.round(f.top * bt.height), S, S);
+			BossEffects.Fx fx = BossEffects.Fx.ROOT_SAP_CONN;
+			com.watabou.gltextures.SmartTexture st = com.watabou.gltextures.TextureCache.get(fx.file);
+			int idx = connMask(cell) * fx.frames, per = st.width / fx.w;
+			pm.setBlending(com.badlogic.gdx.graphics.Pixmap.Blending.SourceOver);
+			pm.drawPixmap(st.bitmap, 0, 0, (idx % per) * fx.w, (idx / per) * fx.h, fx.w, fx.h);
+			return new com.watabou.noosa.Image(new com.watabou.gltextures.SmartTexture(pm));
+		} catch (Exception e){
+			return base;
+		}
 	}
 
 	public static boolean at( int cell ){

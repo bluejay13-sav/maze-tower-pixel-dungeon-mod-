@@ -318,6 +318,8 @@ public class MeleeWeapon extends Weapon {
 				damage += Hero.heroDamageIntRange( 0, exStr );
 			}
 		}
+		//Maze Tower (K8): 미스릴 무기는 피해 +20% (평타·스킬 모두 이 값에서 나온다)
+		if (mazeMithril != null) damage = Math.round(damage * com.shatteredpixel.shatteredpixeldungeon.MazeTower.MITHRIL_WEAPON_DMG);
 		return damage;
 	}
 	
@@ -390,6 +392,9 @@ public class MeleeWeapon extends Weapon {
 			String s = WandMana.staffSkillDesc(Dungeon.hero, (MagesStaff)this);
 			if (!s.isEmpty()) info += "\n\n" + s;
 		}
+
+		//Maze Tower (K8): 미스릴 무기 안내 (피해 +20%·스킬 마나 -5, 도안의 고유 능력)
+		if (mazeMithril != null) info += "\n\n" + com.shatteredpixel.shatteredpixeldungeon.items.quest.MithrilBlueprint.weaponInfo(mazeMithril);
 
 		return info;
 	}

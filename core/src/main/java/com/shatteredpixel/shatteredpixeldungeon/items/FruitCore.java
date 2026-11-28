@@ -28,6 +28,18 @@ public class FruitCore extends KingsCrown {
 		image = MazeItemSprites.FRUIT_CORE;
 	}
 
+	//Maze Tower (사용자): 게임 안에서 은은한 새잎빛이 감돈다
+	@Override
+	public com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite.Glowing glowing() {
+		return com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.coreGlow();
+	}
+
+	//Maze Tower (사용자): 바닥(또는 가방)에 있을 때 열매 둘레에서 황금빛 알갱이가 드문드문 피어오른다
+	@Override
+	public com.watabou.noosa.particles.Emitter emitter() {
+		return com.shatteredpixel.shatteredpixeldungeon.effects.particles.GoldMoteParticle.emitter();
+	}
+
 	@Override
 	public void execute( Hero hero, String action ) {
 		if (action.equals( AC_USE )) {

@@ -96,21 +96,28 @@ public class Guard extends Mob {
 
 				if (sprite.visible || enemy.sprite.visible) {
 					yell(Messages.get(this, "scorpion"));
-					new Item().throwSound();
-					Sample.INSTANCE.play(Assets.Sounds.CHAINS);
-					sprite.parent.add(new Chains(sprite.center(),
-							enemy.sprite.destinationCenter(),
-							Effects.Type.CHAIN,
-							new Callback() {
+					//Maze Tower (H5): 사슬을 머리 위로 휘돌려 내던지는 동작이 끝나는 순간 사슬이 날아간다
+					sprite.zap(enemy.pos, new Callback() {
+						@Override
 						public void call() {
-							Actor.add(new Pushing(enemy, enemy.pos, newPosFinal, new Callback() {
+							sprite.idle();
+							new Item().throwSound();
+							Sample.INSTANCE.play(Assets.Sounds.CHAINS);
+							sprite.parent.add(new Chains(sprite.center(),
+									enemy.sprite.destinationCenter(),
+									Effects.Type.CHAIN,
+									new Callback() {
 								public void call() {
-									pullEnemy(enemy, newPosFinal);
+									Actor.add(new Pushing(enemy, enemy.pos, newPosFinal, new Callback() {
+										public void call() {
+											pullEnemy(enemy, newPosFinal);
+										}
+									}));
+									next();
 								}
 							}));
-							next();
 						}
-					}));
+					});
 				} else {
 					pullEnemy(enemy, newPos);
 				}

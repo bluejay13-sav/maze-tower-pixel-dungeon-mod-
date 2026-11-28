@@ -71,6 +71,15 @@ public class HallsLevel extends RegularLevel {
 		color2 = 0xa68521;
 	}
 
+	//Maze Tower (N1): 탑의 심장(21~24층) 바닥 곳곳에 검은 낙엽
+	@Override
+	protected void createMobs() {
+		com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.place( this );
+		super.createMobs();
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoKnot.place(this); //Maze Tower (N7): 22~24층 메아리 매듭
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.FruitBranch.place(this); //Maze Tower (N8): 23~24층 열매 맺는 가지
+	}
+
 	public static final String[] HALLS_TRACK_LIST
 			= new String[]{Assets.Music.HALLS_1, Assets.Music.HALLS_2, Assets.Music.HALLS_2,
 			Assets.Music.HALLS_1, Assets.Music.HALLS_3, Assets.Music.HALLS_3};
@@ -126,6 +135,7 @@ public class HallsLevel extends RegularLevel {
 	
 	@Override
 	public String tilesTex() {
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.HEART_NEW_FLOOR) return Assets.Environment.TILES_HALLS2; //Maze Tower (사용자): 21~24층 새 바닥·벽
 		return Assets.Environment.TILES_HALLS;
 	}
 	

@@ -66,7 +66,7 @@ public class MazeSkip {
 		if (target >= MazeTower.SKIP_FRUIT_DEPTH)     give.add(new com.shatteredpixel.shatteredpixeldungeon.items.FruitCore()); //Maze Tower: 25층 짐승 시험용
 		ArrayList<Item> kit = MazeTrial.kit(target); //Maze Tower: 보스전 체험판 20층 보스용 지급품 (체험판에서만)
 		//(결정) 체험판 20층 보스는 지나온 층의 아이템 대신 지급품만 준다 (가방·핵은 그대로)
-		if (!kit.isEmpty() && target == MazeTower.TRIAL_CITY_DEPTH) loot.clear();
+		if (!kit.isEmpty()) loot.clear();
 		give.addAll(kit);
 		loot.addAll(0, give);
 
@@ -95,13 +95,6 @@ public class MazeSkip {
 					Statistics.goldCollected += item.quantity();
 				} else if (item instanceof EnergyCrystal){
 					Dungeon.energy += item.quantity();
-				} else if (item instanceof com.shatteredpixel.shatteredpixeldungeon.items.journal.DocumentPage){
-					//(결정) 쪽지는 가방에 넣지 않고 일지에 읽은 상태로 바로 넣는다
-					com.shatteredpixel.shatteredpixeldungeon.items.journal.DocumentPage p = (com.shatteredpixel.shatteredpixeldungeon.items.journal.DocumentPage) item;
-					p.document().findPage(p.page());
-					p.document().readPage(p.page());
-				} else if (item instanceof com.shatteredpixel.shatteredpixeldungeon.items.journal.Guidebook){
-					readGuidebook();
 				} else {
 					loot.add(item);
 				}
@@ -113,26 +106,8 @@ public class MazeSkip {
 		for (int pos : emptied) l.heaps.remove(pos);
 	}
 
-	//원작 안내서(1층에 놓인 책)를 주운 것처럼 안내서 쪽지들을 일지에 넣되, 모두 읽은 상태로
-	private static void readGuidebook(){
-		com.shatteredpixel.shatteredpixeldungeon.journal.Document g = com.shatteredpixel.shatteredpixeldungeon.journal.Document.ADVENTURERS_GUIDE;
-		String[] pages = {
-				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_INTRO,
-				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_EXAMINING,
-				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_SURPRISE_ATKS,
-				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_IDING,
-				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_FOOD,
-				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_ALCHEMY,
-				com.shatteredpixel.shatteredpixeldungeon.journal.Document.GUIDE_DIEING };
-		for (String p : pages){
-			g.findPage(p);
-			g.readPage(p);
-		}
-	}
-
-	//올라가는 계단(다음 층 입구) 바로 앞 빈 칸. (체험판) 보스층으로 바로 건너뛰면 평소처럼 그 층 입구에 선다
+	//올라가는 계단(다음 층 입구) 바로 앞 빈 칸
 	public static int arrivalCell( Level l ){
-		if (Dungeon.bossLevel()) return l.entrance();
 		int exit = l.exit();
 		for (int n : PathFinder.NEIGHBOURS4){
 			int c = exit + n;

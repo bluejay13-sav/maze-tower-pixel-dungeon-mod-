@@ -33,7 +33,8 @@ public class SwarmSprite extends MobSprite {
 		
 		TextureFilm frames = new TextureFilm( texture, 16, 16 );
 		
-		idle = new Animation( 15, true );
+		//Maze Tower (F 다시 그림): 버섯 세 송이가 둥실거리는 가만히 동작은 천천히 (원작 15)
+		idle = new Animation( 7, true );
 		idle.frames( frames, 0, 1, 2, 3, 4, 5 );
 		
 		run = new Animation( 15, true );

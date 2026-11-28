@@ -341,11 +341,6 @@ public class StartScene extends PixelScene {
 		@Override
 		protected void onClick() {
 			if (newGame) {
-				//Maze Tower: 보스전 체험판은 빈 칸을 누르면 체험판 새 게임 (전사·사냥꾼 선택 → 보스 고르기)
-				if (com.shatteredpixel.shatteredpixeldungeon.MazeTrial.on()){
-					com.shatteredpixel.shatteredpixeldungeon.MazeTrial.newGame();
-					return;
-				}
 				GamesInProgress.selectedClass = null;
 				GamesInProgress.curSlot = slot;
 				ShatteredPixelDungeon.switchScene(HeroSelectScene.class);

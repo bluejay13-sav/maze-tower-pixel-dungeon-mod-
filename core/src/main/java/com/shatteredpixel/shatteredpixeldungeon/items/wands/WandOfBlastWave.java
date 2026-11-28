@@ -119,6 +119,15 @@ public class WandOfBlastWave extends DamageWand {
 
 	public static void throwChar(final Char ch, final Ballistica trajectory, int power,
 	                             boolean closeDoors, boolean collideDmg, Object cause){
+		//Maze Tower (D18): 박힌 화살 각성 - 박힌 적이 밀쳐지면 화살이 터진다
+		com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomHuntress.onCharThrown(ch);
+		final boolean stepBack = com.shatteredpixel.shatteredpixeldungeon.actors.hero.BattleHunter.takeStepBack(ch); //Maze Tower (S7): 발 빼기 (활대 타격의 밀침)
+		//Maze Tower (K4, 사용자): 15층 벌레는 밀리지 않고 버티는 동작만, 갉기는 끊긴다
+		if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RootGnawer){
+			((com.shatteredpixel.shatteredpixeldungeon.actors.mobs.RootGnawer) ch).onPushed(trajectory.collisionPos);
+			return;
+		}
+		if (!ch.isAlive()) return;
 		if (ch.properties().contains(Char.Property.BOSS)) {
 			power = (power+1)/2;
 		}
@@ -166,6 +175,7 @@ public class WandOfBlastWave extends DamageWand {
 				}
 				int oldPos = ch.pos;
 				ch.pos = newPos;
+				if (stepBack) com.shatteredpixel.shatteredpixeldungeon.actors.hero.BattleHunter.applyStepBack(ch); //Maze Tower (S7): 실제로 밀려난 적만 느려진다
 				if (finalCollided && ch.isActive()) {
 					ch.damage(Random.NormalIntRange(finalDist, 2*finalDist), new Knockback());
 					if (ch.isActive()) {
@@ -178,7 +188,9 @@ public class WandOfBlastWave extends DamageWand {
 						Dungeon.fail(cause);
 					}
 				}
-				if (closeDoors && Dungeon.level.map[oldPos] == Terrain.OPEN_DOOR){
+				//Maze Tower (사용자): 적이 밀려날 때는 문이 다시 닫히지 않는다 (닫힌 문 너머에서 다시 걸어오는 적에게 매번 기습이 걸리던 것)
+				if (closeDoors && !(com.shatteredpixel.shatteredpixeldungeon.MazeTower.PUSH_KEEPS_DOOR && ch != Dungeon.hero)
+						&& Dungeon.level.map[oldPos] == Terrain.OPEN_DOOR){
 					Door.leave(oldPos);
 				}
 				Dungeon.level.occupyCell(ch);

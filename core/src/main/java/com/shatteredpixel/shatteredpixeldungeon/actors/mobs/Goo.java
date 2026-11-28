@@ -57,7 +57,11 @@ import com.watabou.utils.GameMath;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 
-public class Goo extends Mob {
+public class Goo extends Mob implements com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar.PhaseMarks {
+
+	//Maze Tower (사용자): 보스 체력 바 페이즈 눈금 — 40% 하나 (불타는 중이면 쪼그라들며 수액 방울, SAP_BURN_UNTIL)
+	@Override public float[] phaseMarks(){ return com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED ? new float[]{ com.shatteredpixel.shatteredpixeldungeon.MazeTower.SAP_BURN_UNTIL } : new float[0]; }
+	@Override public int turnsLeft(){ return -1; }
 
 	{
 		HP = HT = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 120 : 100;
@@ -93,13 +97,46 @@ public class Goo extends Mob {
 
 	public int mazeStage(){ return stage; }
 
-	//물리 피해 감소가 사라진 상태 (불타는 중이거나 다 쪼그라든 동안)
+	//(G3) 다 쪼그라든 뒤 방울을 다 모으기 전까지 (흡수할 때마다 s4 → s3 → s2로 부풀어도 계속)
+	private boolean regrowing = false;
+	private boolean dropsSpawned = false; //(결정) 방울은 한 판에 한 번만 생긴다
+
+	//물리 피해 감소가 사라진 상태 (불타는 중이거나 다 쪼그라든 뒤 원래 몸으로 돌아오기 전)
 	private boolean exposed(){
-		return torched || stage >= 4;
+		return torched || regrowing || stage >= 4;
+	}
+
+	//(G4) 원래 몸은 무거워 밀리지 않는다 (쪼그라든 몸만 밀린다). "무거움" 아이콘으로 보인다
+	private boolean heavy(){
+		return maze() && stage == 0 && !torched && !regrowing;
+	}
+
+	@Override
+	public java.util.HashSet<Property> properties() {
+		java.util.HashSet<Property> props = super.properties();
+		if (heavy()) props.add(Property.IMMOVABLE);
+		return props;
+	}
+
+	private void updateHeavy(){
+		if (!maze()) return;
+		if (heavy()){
+			if (buff(Heavy.class) == null) Buff.affect(this, Heavy.class);
+		} else {
+			Buff.detach(this, Heavy.class);
+		}
+	}
+
+	//(G4) 무거움: 원래 몸은 밀쳐지지 않는다
+	public static class Heavy extends Buff {
+		{ type = buffType.NEUTRAL; announced = false; }
+		@Override public int icon() { return com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator.ARMOR; }
+		@Override public void tintIcon(com.watabou.noosa.Image icon) { icon.hardlight(0.75f, 0.55f, 0.3f); }
+		@Override public String desc() { return Messages.get(this, "desc"); }
 	}
 
 	{
-		if (MazeBosses.ENABLED) immunities.add(Wet.class);
+		//(G4) 젖을 수 있다: 물 위의 보스는 젖고, 냉기를 받으면 언다 (언 동안 회복·방울 흡수를 못 함)
 	}
 
 	private boolean maze(){
@@ -120,6 +157,7 @@ public class Goo extends Mob {
 		stage = s;
 		stageTimer = 0;
 		if (sprite instanceof GooSprite) ((GooSprite)sprite).mazeStage(stage);
+		updateHeavy(); //(G4)
 	}
 
 	//불타는 동안 한 턴마다: 체력에 맞춰 한 단계씩 쪼그라든다
@@ -138,47 +176,91 @@ public class Goo extends Mob {
 		}
 	}
 
-	//다 쪼그라든다: 불이 꺼지고 s4, 수액 방울을 흩뿌린다
+	//다 쪼그라든다: 불이 꺼지고 s4, (G2) 보스방에 수액 방울(몹) 6개가 흩어진다
 	private void shrivel(){
 		torched = false;
 		cycleDone = true;
 		absorbed = 0;
+		regrowing = true;
 		Buff.detach(this, Burning.class);
 		setStage(4);
-		java.util.ArrayList<Integer> cells = new java.util.ArrayList<>();
-		for (int i = 0; i < Dungeon.level.length(); i++){
-			if (i == pos || Dungeon.level.distance(i, pos) > MazeTower.SAP_DROP_RADIUS) continue;
-			if (!Dungeon.level.passable[i] || Dungeon.level.solid[i] || Dungeon.level.pit[i]) continue;
-			if (Actor.findChar(i) != null || com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapDrop.at(i)) continue;
-			cells.add(i);
-		}
-		int n = MazeTower.SAP_DROPS;
-		while (n-- > 0 && !cells.isEmpty()){
-			final int c = cells.remove(Random.Int(cells.size()));
-			GameScene.add(Blob.seed(c, 1, com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapDrop.class));
-			if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[c]){
-				BossEffects.fly(BossEffects.Fx.SAP_FLY, pos, c, 0.3f, null);
+		//(결정) 방울은 한 판에 한 번만 6개 생긴다. 원래 몸으로 돌아왔다가 다시 쪼그라들면 남아 있는 방울만 노린다
+		if (!dropsSpawned){
+			dropsSpawned = true;
+			for (int c : SapDroplet.scatter(this, MazeTower.SAP_DROPS)){
+				SapDroplet d = new SapDroplet();
+				d.pos = c;
+				GameScene.add(d);
+				if (Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[c]){
+					BossEffects.fly(BossEffects.Fx.SAP_FLY, pos, c, 0.3f, null);
+				}
 			}
 		}
+		chooseDroplet(); //(G3) 향할 방울을 한 박자 먼저 알린다
 		if (Dungeon.level.heroFOV[pos]){
 			if (sprite != null) sprite.showStatus(CharSprite.WARNING, Messages.get(this, "maze_shrivel_status"));
 			GLog.p(Messages.get(this, "maze_torch_out"));
 		}
 	}
 
-	//s4에서 방울 칸에 들어서면 흡수. 2개를 흡수하면 기본 모습으로
-	private void tryAbsorb(){
-		if (stage < 4 || !com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapDrop.at(pos)) return;
-		com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapDrop.remove(pos);
+	//(G3) 가장 가까운(걸어서) 방울을 고르고 그 방울만 떨리게·표시되게 한다
+	private SapDroplet chooseDroplet(){
+		java.util.ArrayList<SapDroplet> drops = SapDroplet.alive();
+		if (drops.isEmpty()) return null;
+		PathFinder.buildDistanceMap(pos, com.watabou.utils.BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null));
+		SapDroplet best = null;
+		int bestD = Integer.MAX_VALUE;
+		for (SapDroplet d : drops){
+			int dist = Integer.MAX_VALUE;
+			for (int n : PathFinder.NEIGHBOURS8){
+				int c = d.pos + n;
+				if (c >= 0 && c < PathFinder.distance.length) dist = Math.min(dist, PathFinder.distance[c]);
+			}
+			if (Dungeon.level.adjacent(pos, d.pos)) dist = 0;
+			if (dist < bestD){ bestD = dist; best = d; }
+		}
+		for (SapDroplet d : drops) d.setTargeted(d == best);
+		return best;
+	}
+
+	//(G3) 다 쪼그라든 동안: 공격보다 방울로 가는 것이 먼저. 옆에 오면 흡수. 갈 수 없으면 false (원래 행동)
+	private boolean seekDroplet(){
+		SapDroplet best = chooseDroplet();
+		if (best == null) return false;
+		if (Dungeon.level.adjacent(pos, best.pos)){
+			absorb(best);
+			spend(TICK);
+			return true;
+		}
+		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()) fieldOfView = new boolean[Dungeon.level.length()];
+		Dungeon.level.updateFieldOfView(this, fieldOfView);
+		int oldPos = pos;
+		if (getCloser(best.pos)){
+			spend(1 / speed());
+			return moveSprite(oldPos, pos);
+		}
+		return false;
+	}
+
+	//(G3) 방울 흡수: 한 단계 부풀고, 3개째면 원래 몸과 물리 감소가 돌아온다
+	private void absorb( SapDroplet d ){
+		d.absorbedBy(this);
 		absorbed++;
-		if (Dungeon.level.heroFOV[pos]) BossEffects.atCell(BossEffects.Fx.SAP_ABSORB, pos, 10, false);
 		if (absorbed >= MazeTower.SAP_DROPS_TO_HEAL){
 			absorbed = 0;
+			regrowing = false;
 			setStage(0);
-			com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapDrop.removeAll();
+			//(결정) 남은 방울은 사라지지 않는다 (다시 쪼그라들면 그 방울을 노린다). 노리던 표시만 끈다
+			for (SapDroplet other : SapDroplet.alive()) other.setTargeted(false);
 			if (Dungeon.level.heroFOV[pos]){
 				BossEffects.atCellBottom(BossEffects.Fx.SAP_HEAL, pos, 10, false);
 				GLog.n(Messages.get(this, "maze_restored"));
+			}
+		} else {
+			setStage(Math.max(1, stage - 1));
+			if (Dungeon.level.heroFOV[pos]){
+				BossEffects.atCellBottom(BossEffects.Fx.SAP_HEAL, pos, 10, false);
+				if (sprite != null) sprite.showStatus(CharSprite.WARNING, Messages.get(this, "maze_absorb_status", absorbed, MazeTower.SAP_DROPS_TO_HEAL));
 			}
 		}
 	}
@@ -203,15 +285,21 @@ public class Goo extends Mob {
 		return 1f - MazeTower.SAP_PHYS_REDUCE;
 	}
 
-	//내려칠 때 주변 3×3의 빈 바닥 몇 칸에 수액 웅덩이
+	//(G4) 힘 모아 내리치기의 범위(경고가 뜨는 칸들: 2칸 안, 막히지 않은 칸)에 수액 웅덩이 6칸을 무작위로
 	private void spillSap(){
 		if (!maze() || torched) return; //불타는 동안만 수액을 만들지 못한다 (다 쪼그라든 s4에서도 내려치면 수액이 생긴다)
 		java.util.ArrayList<Integer> cells = new java.util.ArrayList<>();
-		for (int n : PathFinder.NEIGHBOURS9){
-			int c = pos + n;
-			if (Dungeon.level.passable[c] && !Dungeon.level.pit[c] && !Dungeon.level.solid[c]) cells.add(c);
+		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){
+			fieldOfView = new boolean[Dungeon.level.length()];
+			Dungeon.level.updateFieldOfView(this, fieldOfView);
 		}
-		int count = Random.IntRange(MazeTower.SAP_PUDDLE_MIN, MazeTower.SAP_PUDDLE_MAX);
+		for (int c = 0; c < Dungeon.level.length(); c++){
+			if (Dungeon.level.distance(c, pos) > MazeTower.SAP_PUDDLE_RANGE || !fieldOfView[c]) continue;
+			if (!Dungeon.level.passable[c] || Dungeon.level.pit[c] || Dungeon.level.solid[c]) continue;
+			if (new Ballistica(pos, c, Ballistica.STOP_TARGET | Ballistica.STOP_SOLID | Ballistica.IGNORE_SOFT_SOLID).collisionPos != c) continue;
+			cells.add(c);
+		}
+		int count = MazeTower.SAP_PUDDLE_COUNT;
 		while (count-- > 0 && !cells.isEmpty()){
 			int c = cells.remove(Random.Int(cells.size()));
 			GameScene.add(Blob.seed(c, MazeTower.SAP_PUDDLE_TURNS, SapPuddle.class));
@@ -226,7 +314,6 @@ public class Goo extends Mob {
 	@Override
 	public void move( int step, boolean travelling ) {
 		super.move(step, travelling);
-		if (maze()) tryAbsorb(); //다 쪼그라든 동안 수액 방울 흡수
 		//수액 칸으로 옮기면 체력 +10 (불타는 동안은 회복하지 못한다)
 		if (maze() && SapPuddle.at(pos) && HP < HT && buff(Burning.class) == null){
 			int heal = Math.min(MazeTower.SAP_MOVE_HEAL, HT - HP);
@@ -293,7 +380,8 @@ public class Goo extends Mob {
 		}
 
 		//Maze Tower: 물뿐 아니라 수액 위에서도 회복하고, 불타는 동안은 회복하지 못한다
-		boolean heals = maze() ? onHealingGround() && buff(Burning.class) == null
+		boolean heals = maze() ? onHealingGround() && buff(Burning.class) == null && buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost.class) == null //(G4) 언 동안 회복 못 함
+				
 				: !flying && Dungeon.level.water[pos];
 		if (heals && HP < HT) {
 			HP += healInc;
@@ -322,6 +410,14 @@ public class Goo extends Mob {
 		
 		if (state != SLEEPING){
 			Dungeon.level.seal();
+		}
+
+		updateHeavy(); //(G4) 무거움 아이콘 (불이 붙거나 쪼그라들면 사라짐)
+		//(G3) 다 쪼그라든 동안에는 공격보다 가장 가까운 수액 방울로 가는 것이 먼저 (언 동안·기절 중에는 못 함)
+		if (maze() && regrowing && state != SLEEPING && paralysed <= 0
+				&& buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost.class) == null){
+			if (pumpedUp != 0){ pumpedUp = 0; sprite.idle(); }
+			if (seekDroplet()) return true;
 		}
 
 		return super.act();
@@ -482,7 +578,8 @@ public class Goo extends Mob {
 	@Override
 	public void die( Object cause ) {
 		Dungeon.level.mazeBossPos = pos; //Maze Tower: 보스가 쓰러진 자리 (역행 중 흔적)
-		
+		SapDroplet.popAll(); //Maze Tower (G2): 남은 수액 방울도 터진다
+
 		super.die( cause );
 		
 		Dungeon.level.unseal();
@@ -545,6 +642,8 @@ public class Goo extends Mob {
 		bundle.put( "maze_stage_timer", stageTimer );
 		bundle.put( "maze_absorbed", absorbed );
 		bundle.put( "maze_cycle_done", cycleDone );
+		bundle.put( "maze_regrowing", regrowing );
+		bundle.put( "maze_drops_spawned", dropsSpawned );
 	}
 
 	@Override
@@ -562,6 +661,8 @@ public class Goo extends Mob {
 		stageTimer = bundle.getInt("maze_stage_timer");
 		absorbed = bundle.getInt("maze_absorbed");
 		cycleDone = bundle.getBoolean("maze_cycle_done");
+		regrowing = bundle.contains("maze_regrowing") ? bundle.getBoolean("maze_regrowing") : stage >= 4;
+		dropsSpawned = bundle.getBoolean("maze_drops_spawned");
 	}
 	
 }

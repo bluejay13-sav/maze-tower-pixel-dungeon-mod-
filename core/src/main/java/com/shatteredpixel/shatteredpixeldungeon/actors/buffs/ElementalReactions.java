@@ -112,7 +112,9 @@ public class ElementalReactions {
 	}
 
 	public static boolean reacts( Char ch ){
-		return ch != null && ch.alignment != Char.Alignment.ALLY;
+		//Maze Tower (T7): 길든 주문(펫)은 아군이어도 원소 반응이 일어난다
+		return ch != null && ch.alignment != Char.Alignment.ALLY
+				|| ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetSpell.Spell;
 	}
 
 	public static boolean isWet( Char ch ){
@@ -133,8 +135,22 @@ public class ElementalReactions {
 	// ===== 상태이상이 붙기 직전 (true를 돌려주면 그 상태이상은 붙지 않는다) =====
 
 	//화상이 붙기 직전 (Burning.attachTo)
+	//Maze Tower (C4): 반응을 일으킨(나중에 붙은) 원소. 번지는 반응 각성이 이 원소를 묻힌다.
+	public static final int TRIGGER_FIRE = 0, TRIGGER_COLD = 1, TRIGGER_ELECTRIC = 2;
+	private static int lastTrigger = TRIGGER_FIRE;
+
+	//Maze Tower (G4): 5층 썩은 수액 덩어리(마탑 보스)는 불과 물이 만나면 불이 이긴다
+	private static boolean sapBossFireWins( Char ch ){
+		return ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo && com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED;
+	}
+
 	public static boolean beforeBurning( Char ch, Burning burning ){
+		lastTrigger = TRIGGER_FIRE;
 		if (ch.isImmune(Burning.class)) return false; //면역이면 붙지도, 반응하지도 않는다
+		//Maze Tower (G4): 5층 수액 덩어리는 불이 물을 이긴다 - 젖어 있어도 젖음만 마르고 그대로 탄다 (횃불 기믹이 막히지 않게)
+		if (sapBossFireWins(ch) && isWet(ch)){
+			Buff.detach(ch, Wet.class);
+		} else
 		//젖음 + 화상: 어떤 대상이든 둘 다 사라진다 (다른 반응보다 먼저)
 		if (isWet(ch)){
 			Buff.detach(ch, Wet.class);
@@ -166,6 +182,7 @@ public class ElementalReactions {
 
 	//냉기가 붙기 직전 (Chill.attachTo)
 	public static boolean beforeChill( Char ch ){
+		lastTrigger = TRIGGER_COLD;
 		if (ch.isImmune(Chill.class)) return false;
 		if (!reacts(ch)){
 			Buff.detach(ch, Burning.class); //원작 처리
@@ -186,6 +203,7 @@ public class ElementalReactions {
 
 	//혹한이 붙는 순간 (Frostbite.attachTo): 냉기처럼 반응하지만 혹한 자체는 지우지 않는다
 	public static void onFrostbite( Char ch ){
+		lastTrigger = TRIGGER_COLD;
 		if (!reacts(ch)){
 			Buff.detach(ch, Burning.class); //주인공·아군은 원작 냉기처럼 화상만 지운다
 			return;
@@ -202,6 +220,7 @@ public class ElementalReactions {
 
 	//빙결이 붙기 직전 (Frost.attachTo)
 	public static boolean beforeFrost( Char ch ){
+		lastTrigger = TRIGGER_COLD;
 		if (ch.isImmune(Frost.class)) return false;
 		if (!reacts(ch)){
 			Buff.detach(ch, Burning.class); //원작 처리
@@ -216,6 +235,8 @@ public class ElementalReactions {
 
 	//젖음이 붙기 직전 (Wet.attachTo): 불타고 있으면 둘 다 사라진다
 	public static boolean beforeWet( Char ch ){
+		//Maze Tower (G4): 불타는 5층 수액 덩어리는 젖지 않는다 (불이 꺼지지 않는다)
+		if (sapBossFireWins(ch) && ch.buff(Burning.class) != null) return true;
 		if (ch.isImmune(Wet.class)) return false;
 		Burning b = ch.buff(Burning.class);
 		if (b != null){
@@ -242,6 +263,7 @@ public class ElementalReactions {
 
 	//정전기가 붙은 직후 (StaticCharge.attachTo)
 	public static void onStaticApplied( Char ch ){
+		lastTrigger = TRIGGER_ELECTRIC;
 		if (reacts(ch) && ch.buff(Burning.class) != null){
 			explode(ch);
 		}
@@ -253,14 +275,14 @@ public class ElementalReactions {
 		return src instanceof Shocking
 				|| src instanceof WandOfLightning
 				|| src instanceof Electricity
-				|| src instanceof DM100.LightningBolt
-				|| src instanceof BloomEffects.ShockDamage;
+				|| src instanceof DM100.LightningBolt;
 	}
 
 	//Char.damage에서 호출
 	public static void onDamage( Char ch, int dmg, Object src ){
 		if (dmg > 0 && ch.isAlive() && isElectric(src)){
 			Buff.prolong(ch, StaticCharge.class, MazeTower.STATIC_TURNS);
+			com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.igniteAt(ch.pos); //Maze Tower (J1): 전격이 마력 증기에 닿으면 터진다
 		}
 	}
 
@@ -310,7 +332,9 @@ public class ElementalReactions {
 		}
 		Sample.INSTANCE.play(Assets.Sounds.BURNING);
 		Sample.INSTANCE.play(Assets.Sounds.GAS, 0.6f);
+		int trig = lastTrigger;
 		ch.damage(dmg, new ReactionDamage());
+		BloomEffects.onReactionDamage(ch, dmg, trig); //Maze Tower (C4): 번지는 반응
 	}
 
 	private static boolean exploding = false;
@@ -389,10 +413,12 @@ public class ElementalReactions {
 		Sample.INSTANCE.play(Assets.Sounds.BLAST);
 		Sample.INSTANCE.play(Assets.Sounds.LIGHTNING);
 
+		int trig = lastTrigger;
 		for (Char c : hit){
 			c.damage(dmg, new ReactionDamage());
 		}
 		exploding = false;
+		BloomEffects.onReactionDamage(ch, dmg, trig); //Maze Tower (C4): 번지는 반응 (폭발의 중심 기준)
 	}
 
 	//해빙: 얼음이 깨지며(원작 IceBlock이 녹고 얼음 조각) 불꽃이 튄다
@@ -404,7 +430,9 @@ public class ElementalReactions {
 		}
 		Sample.INSTANCE.play(Assets.Sounds.SHATTER);
 		Sample.INSTANCE.play(Assets.Sounds.BURNING, 0.6f);
+		int trig = lastTrigger;
 		ch.damage(dmg, new ReactionDamage());
+		BloomEffects.onReactionDamage(ch, dmg, trig); //Maze Tower (C4): 번지는 반응
 	}
 
 	//빙결 생성: 눈보라 + 원작 IceBlock (Frost가 붙으면 자동으로 얼음 덩어리가 생긴다)

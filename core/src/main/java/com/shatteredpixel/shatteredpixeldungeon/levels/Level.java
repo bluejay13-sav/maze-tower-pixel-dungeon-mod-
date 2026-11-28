@@ -1185,6 +1185,13 @@ public abstract class Level implements Bundlable {
 	}
 	
 	public void occupyCell( Char ch ){
+		//Maze Tower (C15): 가벼운 발 - 해로운 바닥에 들어선 첫 턴
+		if (ch == Dungeon.hero) com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.onHeroEnterCell(Dungeon.hero, ch.pos);
+		else com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.onMobEnterCell(ch); //Maze Tower (C21): 발도
+		if (ch == Dungeon.hero) com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ParasiteSprout.onHeroEnterCell(Dungeon.hero); //Maze Tower (F6): 기생 싹
+		com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.onStep(ch); //Maze Tower (N1): 검은 낙엽이 살짝 흩날림
+		com.shatteredpixel.shatteredpixeldungeon.actors.blobs.HotTrail.onEnter(ch); //Maze Tower (N3): 달궈진 광선 자국
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.FruitBranch.onEnterCell(ch); //Maze Tower (N8): 익은 열매를 먹음
 		if (!ch.isImmune(Web.class) && Blob.volumeAt(ch.pos, Web.class) > 0){
 			blobs.get(Web.class).clear(ch.pos);
 			Web.affectChar( ch );
@@ -1302,6 +1309,11 @@ public abstract class Level implements Bundlable {
 				discover(cell);
 				timeFreeze.setDelayedPress(cell);
 				
+			} else if (Dungeon.hero.pos == cell
+					&& com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.blockTrap(Dungeon.hero, cell)) {
+				//Maze Tower (C15): 가벼운 발 각성 - 함정이 한 번 발동하지 않는다 (드러나기만 한다)
+				discover(cell);
+				Dungeon.hero.interrupt();
 			} else {
 				if (Dungeon.hero.pos == cell) {
 					Dungeon.hero.interrupt();
@@ -1353,6 +1365,7 @@ public abstract class Level implements Bundlable {
 			//grass is see-through by some specific entities, but not during the fungi quest
 			if (!(Dungeon.level instanceof  MiningLevel) || Blacksmith.Quest.Type() != Blacksmith.Quest.FUNGI){
 				if ((c instanceof Hero && ((Hero) c).subClass == HeroSubClass.WARDEN)
+						|| (c instanceof Hero && com.shatteredpixel.shatteredpixeldungeon.actors.hero.ForestWarden.seesThroughGrass((Hero) c)) //Maze Tower (S9): 숲지기 숲의 품 4레벨
 						|| c instanceof YogFist.SoiledFist || c instanceof GnollGeomancer) {
 					if (blocking == null) {
 						System.arraycopy(Dungeon.level.losBlocking, 0, modifiableBlocking, 0, modifiableBlocking.length);
@@ -1381,6 +1394,21 @@ public abstract class Level implements Bundlable {
 					}
 				}
 			}
+			//Maze Tower (D13): 연막 깃의 연막도 원작 연막처럼 시야를 가린다
+			if ((c.alignment != Char.Alignment.ALLY && !(c instanceof GnollGeomancer))
+					&& Dungeon.level.blobs.containsKey(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.FeatherSmoke.class)
+					&& Dungeon.level.blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.FeatherSmoke.class).volume > 0) {
+				if (blocking == null) {
+					System.arraycopy(Dungeon.level.losBlocking, 0, modifiableBlocking, 0, modifiableBlocking.length);
+					blocking = modifiableBlocking;
+				}
+				Blob s = Dungeon.level.blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.FeatherSmoke.class);
+				for (int i = 0; i < blocking.length; i++){
+					if (!blocking[i] && s.cur[i] > 0){
+						blocking[i] = true;
+					}
+				}
+			}
 
 			if (blocking == null){
 				blocking = Dungeon.level.losBlocking;
@@ -1393,6 +1421,8 @@ public abstract class Level implements Bundlable {
 			}
 			
 			ShadowCaster.castShadow( cx, cy, width(), fieldOfView, blocking, Math.round(viewDist) );
+			if (c instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM100) ((com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM100)c).mazeMaskFov(fieldOfView); //Maze Tower (H1): 봉인 등롱은 앞쪽 부채꼴로만 본다
+			if (c instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ShadowWarden) ((com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ShadowWarden)c).mazeMaskFov(fieldOfView); //Maze Tower (I2): 간수는 1단계에 등불 부채꼴로만 본다
 		} else {
 			BArray.setFalse(fieldOfView);
 		}
@@ -1527,6 +1557,7 @@ public abstract class Level implements Bundlable {
 				if (m instanceof WandOfWarding.Ward
 						|| m instanceof WandOfRegrowth.Lotus
 						|| m instanceof SpiritHawk.HawkAlly
+						|| (m instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly && ((com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly) m).sharesVision()) //Maze Tower (T1): 정령 매 펫
 						|| m.buff(PowerOfMany.PowerBuff.class) != null){
 					if (m.fieldOfView == null || m.fieldOfView.length != length()){
 						m.fieldOfView = new boolean[length()];

@@ -79,6 +79,12 @@ public class Chains extends Group {
 		}
 	}
 
+	//Maze Tower (I8): 사슬이 날아가는 속도를 바꾼다 (예: 10층 간수의 끌어내기)
+	public Chains speed( float multi ){
+		if (multi > 0) duration /= multi;
+		return this;
+	}
+
 	@Override
 	public void update() {
 		if ((spent += Game.elapsed) > duration) {

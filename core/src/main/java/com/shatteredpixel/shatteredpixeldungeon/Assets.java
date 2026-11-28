@@ -50,8 +50,19 @@ public class Assets {
 		public static final String TILES_PRISON = "environment/maze_tiles_seal.png";  //봉인의 회랑
 		public static final String TILES_CAVES  = "environment/maze_tiles_vein.png";  //마력 광맥
 		public static final String TILES_CITY   = "environment/maze_tiles_city2.png"; //잊힌 마도시
+		//Maze Tower: 16~19층은 그 판의 20층 보스에 따라 (망령 왕 = 무너진 왕도, 여제 = 바랜 마도 대리석). 원본 docs/sprites/regions/make_city_variants4.ps1
+		public static final String TILES_CITY_WRAITH  = "environment/maze_tiles_city_wraith.png";
+		public static final String TILES_CITY_EMPRESS = "environment/maze_tiles_city_empress.png";
 		public static final String TILES_HALLS  = "environment/maze_tiles_heart.png"; //탑의 심장
 		public static final String TILES_HALLS_RETURN = "environment/maze_tiles_heart_return.png"; //탑의 심장 (역행 중)
+		//Maze Tower (사용자): 21~24층 새 바닥·벽 (돌 판석과 살점 / 역행: 잿갈색 판석과 이끼). 원본 docs/sprites/regions/make_heart_assets.ps1
+		public static final String TILES_HALLS2        = "environment/maze_tiles_heart2.png";
+		public static final String TILES_HALLS2_RETURN = "environment/maze_tiles_heart2_return.png";
+		public static final String HEART_FLOOR           = "environment/maze_heart_floor.png";
+		public static final String HEART_FLOOR_RETURN    = "environment/maze_heart_floor_return.png";
+		public static final String HEART_WALLFACE        = "environment/maze_heart_wallface.png";
+		public static final String HEART_WALLFACE_RETURN = "environment/maze_heart_wallface_return.png";
+		public static final String HEART_PULSE           = "environment/maze_heart_pulse.png";
 
 		public static final String TILES_CAVES_CRYSTAL  = "environment/tiles_caves_crystal.png";
 		public static final String TILES_CAVES_GNOLL    = "environment/tiles_caves_gnoll.png";
@@ -61,6 +72,9 @@ public class Assets {
 		public static final String WATER_PRISON = "environment/maze_water_seal.png";
 		public static final String WATER_CAVES  = "environment/maze_water_vein.png";
 		public static final String WATER_CITY   = "environment/maze_water_city.png";
+		//Maze Tower (사용자): 16~20층 물도 그 판의 20층 보스에 따라 (망령 왕 = 짙은 남빛, 여제 = 차분한 라벤더빛 잿빛). 원본 docs/sprites/regions/make_city_water.ps1
+		public static final String WATER_CITY_WRAITH  = "environment/maze_water_city_wraith.png";
+		public static final String WATER_CITY_EMPRESS = "environment/maze_water_city_empress.png";
 		public static final String WATER_HALLS  = "environment/maze_water_heart.png";
 		public static final String WATER_HALLS_RETURN = "environment/maze_water_heart_return.png";
 
@@ -75,12 +89,13 @@ public class Assets {
 		public static final String CITY_QUEST       = "environment/custom_tiles/city_quest.png";
 		public static final String CITY_BOSS        = "environment/custom_tiles/city_boss.png";
 		//Maze Tower: 마탑 특수 방 그림 (원작 그림과 칸 배치가 같다)
-		public static final String MAZE_CAVES_BOSS_GOLEM   = "environment/custom_tiles/maze_caves_boss_golem.png";
-		public static final String MAZE_CAVES_BOSS_CRYSTAL = "environment/custom_tiles/maze_caves_boss_crystal.png";
 		public static final String MAZE_CITY_BOSS_WRAITH   = "environment/custom_tiles/maze_city_boss_wraith.png";
 		public static final String MAZE_CITY_BOSS_EMPRESS  = "environment/custom_tiles/maze_city_boss_empress.png";
 		public static final String MAZE_PRINCE_ROOM        = "environment/custom_tiles/maze_prince_room.png";
+		public static final String MAZE_SAGE_ROOM          = "environment/custom_tiles/maze_sage_room.png"; //Maze Tower (사용자): 현자의 서재 가구
+		public static final String MAZE_WELL_WATER         = "environment/maze_well_water.png"; //Maze Tower (사용자): 16~19층 망령 왕 판 우물 속 물
 		public static final String HALLS_SP         = "environment/custom_tiles/halls_special.png";
+		public static final String HALLS_SP_RETURN  = "environment/custom_tiles/maze_halls_special_return.png"; //Maze Tower (사용자): 역행 중 (26층·검은 씨앗 혹 방)
 	}
 	
 	//TODO include other font assets here? Some are platform specific though...
@@ -301,32 +316,38 @@ public class Assets {
 		public static final String PET      = "sprites/pet.png";
 		public static final String AMULET   = "sprites/amulet.png";
 
-		public static final String RAT      = "sprites/rat.png";
-		public static final String BRUTE    = "sprites/brute.png";
-		public static final String SPINNER  = "sprites/spinner.png";
+		public static final String RAT      = "sprites/maze_rat.png"; //Maze Tower (F): 뿌리 지하 잡몹 외형 (원본 docs/sprites/mobs/f_draft/rat.png)
+		public static final String BRUTE    = "sprites/maze_brute.png"; //Maze Tower (J4): 갱도에 갇힌 광부 (줄 0 광부, 1 결정 갑옷 광부, 2 광폭한 광부, 3 광폭한 결정 갑옷 광부, 원본 docs/sprites/mobs/j_draft/brute.png)
+		public static final String SPINNER  = "sprites/maze_spinner.png"; //Maze Tower (J6): 수정 거미 (새로 그림, 원본 docs/sprites/mobs/j_draft/spinner.png ← make_spinner_new.ps1)
 		public static final String DM300    = "sprites/dm300.png";
-		public static final String WRAITH   = "sprites/wraith.png";
+		public static final String WRAITH   = "sprites/maze_wraith.png"; //Maze Tower: 혼령(검은 수의에 푸른 넋빛 눈)·저주받은 영혼(핏빛 수의) 외형 (원본 docs/sprites/mobs/h_draft/wraith.png)
 		public static final String UNDEAD   = "sprites/undead.png";
 		public static final String KING     = "sprites/king.png";
 		public static final String PIRANHA  = "sprites/piranha.png";
-		public static final String EYE      = "sprites/eye.png";
-		public static final String GNOLL    = "sprites/gnoll.png";
-		public static final String CRAB     = "sprites/crab.png";
+		public static final String EYE      = "sprites/maze_eye.png"; //Maze Tower (N3): 핏줄 눈
+		public static final String GNOLL    = "sprites/maze_gnoll.png"; //Maze Tower (F): 뿌리 지하 잡몹 외형 (원본 docs/sprites/mobs/f_draft/gnoll.png)
+		public static final String CRAB     = "sprites/maze_crab.png"; //Maze Tower (F): 뿌리 지하 잡몹 외형 (원본 docs/sprites/mobs/f_draft/crab.png)
 		public static final String GOO      = "sprites/goo.png";
-		public static final String SWARM    = "sprites/swarm.png";
-		public static final String SKELETON = "sprites/skeleton.png";
-		public static final String SHAMAN   = "sprites/shaman.png";
-		public static final String THIEF    = "sprites/thief.png";
+		public static final String SWARM    = "sprites/maze_swarm.png"; //Maze Tower (F): 뿌리 지하 잡몹 외형 (원본 docs/sprites/mobs/f_draft/swarm.png)
+		public static final String SKELETON = "sprites/maze_skeleton.png"; //Maze Tower (H2): 묶인 유골 외형 (원본 docs/sprites/mobs/h_draft/skeleton.png, 둘째 줄 금고 변종은 원작)
+		public static final String SHAMAN   = "sprites/maze_shaman.png"; //Maze Tower (J5): 마석 주술사 (줄 0~2 판초 색 붉은 약화·푸른 취약·보라 저주, 줄 3 금고 변종은 원작, 원본 docs/sprites/mobs/j_draft/shaman.png ← make_j5j6.ps1)
+		public static final String THIEF    = "sprites/maze_thief.png"; //Maze Tower (H3): 탈옥수 외형 (원본 docs/sprites/mobs/h_draft/thief.png, 둘째 줄 노상강도는 원작)
+		public static final String SOUL_MOTH = "sprites/maze_moth.png"; //Maze Tower (H4): 넋 나방 떼 (원본 docs/sprites/mobs/h_draft/moth.png, 칸 배치는 파리떼와 같음)
 		public static final String TENGU    = "sprites/tengu.png";
 		public static final String SHEEP    = "sprites/sheep.png";
 		public static final String KEEPER   = "sprites/shopkeeper.png";
-		public static final String BAT      = "sprites/bat.png";
-		public static final String ELEMENTAL= "sprites/elemental.png";
-		public static final String MONK     = "sprites/monk.png";
-		public static final String WARLOCK  = "sprites/warlock.png";
-		public static final String GOLEM    = "sprites/golem.png";
-		public static final String STATUE   = "sprites/statue.png";
-		public static final String SUCCUBUS = "sprites/succubus.png";
+		public static final String BAT      = "sprites/maze_bat.png"; //Maze Tower (J3): 마석 박쥐 (줄 0~3 = 배에 든 마나, 원본 docs/sprites/mobs/j_draft/bat.png)
+		public static final String ELEMENTAL= "sprites/maze_elemental.png"; //Maze Tower (L3): 풀려난 주문 (원작 칸 배치, 갓 태어난 불의 정령 줄은 원작)
+		public static final String MONK     = "sprites/maze_monk.png"; //Maze Tower (L2): 왕실 근위(줄 0)·근위대장(줄 1), 새로 그림 18x18 x 15 (원본 docs/sprites/mobs/l_draft/make_l1l2.ps1)
+		public static final String WARLOCK  = "sprites/maze_warlock.png"; //Maze Tower (L4): 궁정 마도사 (원작 칸 배치)
+		public static final String MIRROR   = "sprites/maze_mirror.png"; //Maze Tower (L6): 거울 초상
+		public static final String SAGE     = "sprites/maze_sage.png"; //Maze Tower (M1): 숨어 사는 현자
+		public static final String SAGE_LEAF = "sprites/maze_sage_leaf.png"; //Maze Tower (M3): 망령 왕 머리 위 잎 (5×5 × 2: 빈 잎, 찬 잎)
+		public static final String GOLEM    = "sprites/maze_golem.png"; //Maze Tower (L5): 수호 석상 (원작 칸 배치)
+		public static final String STATUE   = "sprites/maze_statue.png"; //Maze Tower: (사용자) 석상도 새 갑옷 색 (원본 docs/sprites/mobs/p_draft/make_p2.ps1)
+		public static final String SUCCUBUS = "sprites/maze_succubus.png"; //Maze Tower (N2): 검은 잎의 시녀 (원작 칸 배치)
+		public static final String SUCCUBUS_CHARM_F = "sprites/maze_succubus_charm_f.png"; //Maze Tower (N2): 전사·도적이 매혹된 동안 보이는 여자 외형 (같은 크기)
+		public static final String SUCCUBUS_CHARM_M = "sprites/maze_succubus_charm_m.png"; //Maze Tower (N2): 사냥꾼·마법사가 매혹된 동안 보이는 남자 외형 (같은 크기)
 		public static final String SCORPIO  = "sprites/scorpio.png";
 		public static final String FISTS    = "sprites/yog_fists.png";
 		public static final String YOG      = "sprites/yog.png";
@@ -336,22 +357,28 @@ public class Assets {
 		public static final String TROLL    = "sprites/blacksmith.png";
 		public static final String IMP      = "sprites/imp.png";
 		public static final String RATKING  = "sprites/ratking.png";
-		public static final String BEE      = "sprites/bee.png";
+		public static final String BEE      = "sprites/maze_bee.png"; //Maze Tower: (사용자) 수액벌 (원본 docs/sprites/mobs/p_draft/make_p_draft.ps1)
 		public static final String MIMIC    = "sprites/mimic.png";
-		public static final String ROT_LASH = "sprites/rot_lasher.png";
-		public static final String ROT_HEART= "sprites/rot_heart.png";
-		public static final String GUARD    = "sprites/guard.png";
+		public static final String ROT_LASH = "sprites/maze_rot_lasher.png"; //Maze Tower: (사용자) 검은 가시 덩굴
+		public static final String ROT_HEART= "sprites/maze_rot_heart.png"; //Maze Tower: (사용자) 검은 씨방
+		public static final String GUARD    = "sprites/maze_guard.png"; //Maze Tower (H5): 사슬 옥졸 외형 (원본 docs/sprites/mobs/h_draft/guard.png, 공격 3장을 6장으로 늘림)
 		public static final String WARDS    = "sprites/wards.png";
 		public static final String GUARDIAN = "sprites/guardian.png";
-		public static final String SLIME    = "sprites/slime.png";
-		public static final String SNAKE    = "sprites/snake.png";
-		public static final String NECRO    = "sprites/necromancer.png";
-		public static final String GHOUL    = "sprites/ghoul.png";
-		public static final String RIPPER   = "sprites/ripper.png";
-		public static final String SPAWNER  = "sprites/spawner.png";
-		public static final String DM100    = "sprites/dm100.png";
+		public static final String SLIME    = "sprites/maze_slime.png"; //Maze Tower (F): 뿌리 지하 잡몹 외형 (원본 docs/sprites/mobs/f_draft/slime.png)
+		public static final String SNAKE    = "sprites/maze_snake.png"; //Maze Tower (F): 뿌리 지하 잡몹 외형 (원본 docs/sprites/mobs/f_draft/snake.png)
+		public static final String NECRO    = "sprites/maze_necromancer.png"; //Maze Tower (H5): 봉인술사 외형 (원본 docs/sprites/mobs/h_draft/necromancer_new.png, 둘째 줄 영혼 술사는 원작)
+		public static final String SOUL       = "sprites/maze_soul.png"; //Maze Tower (H6): 갇힌 영혼·10층 죄수의 영혼 (원본 docs/sprites/mobs/h_draft/soul.png)
+		public static final String SEAL_CAGE  = "sprites/maze_sealcage.png"; //Maze Tower (I1): 10층 2단계 부적 철창 16×22 × 2 (원본 docs/sprites/boss10/make_sealcage.ps1)
+		public static final String CELL_DOOR  = "sprites/maze_celldoor.png"; //Maze Tower (I1): 10층 감방 문 (원본 docs/sprites/boss10/celldoor.png)
+		public static final String CHAIN_RING = "sprites/maze_chainring.png"; //Maze Tower (H6): 사슬 고리 (원본 docs/sprites/mobs/h_draft/chainring.png)
+		public static final String TALISMAN_SPIRIT = "sprites/maze_talisman_spirit.png"; //Maze Tower (H7): 부적 넋 (원본 docs/sprites/mobs/h_draft/talisman_spirit.png, 줄 0~4 = 부적 4~0장)
+		public static final String GHOUL    = "sprites/maze_ghoul.png"; //Maze Tower (L1): 짝 잃은 시민 (원작 구울을 푸른빛 망자로 다시 칠함, 칸 배치 같음, 원본 make_l1l2.ps1)
+		public static final String RIPPER   = "sprites/maze_ripper.png"; //Maze Tower (N5): 검은 싹
+		public static final String SPAWNER  = "sprites/maze_spawner.png"; //Maze Tower (N5): 검은 씨앗 혹
+		public static final String TANGLED  = "sprites/maze_tangled.png"; //Maze Tower (N6): 얽힌 것들 (줄 0~2 = 세 모양)
+		public static final String DM100    = "sprites/maze_dm100.png"; //Maze Tower (H1): 봉인 등롱 외형 (원본 docs/sprites/mobs/h_draft/lantern.png, 둘째 줄 금고 변종은 원작)
 		public static final String PYLON    = "sprites/pylon.png";
-		public static final String DM200    = "sprites/dm200.png";
+		public static final String DM200    = "sprites/maze_dm200.png"; //Maze Tower (J7): 갉힌 채굴 기계 (첫 줄 새로 그림, 둘째 줄 박힌 채굴 기계·금고 변종은 원작, 원본 docs/sprites/mobs/j_draft/dm200.png ← make_dm200_new.ps1)
 		public static final String LOTUS    = "sprites/lotus.png";
 		public static final String NINJA_LOG        = "sprites/ninja_log.png";
 		public static final String SPIRIT_HAWK      = "sprites/spirit_hawk.png";

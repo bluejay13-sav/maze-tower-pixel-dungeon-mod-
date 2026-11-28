@@ -25,13 +25,19 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.particles.Emitter;
 
 //Maze Tower: 만개의 핵 (3차 전직). 10층 보스(텐구)가 떨어뜨린다.
-//사용하면 원작 텐구의 가면처럼 서브클래스 선택 창이 열린다. 지금은 전사 검투사 하나만 보인다.
+//사용하면 원작 텐구의 가면처럼 서브클래스 선택 창이 열린다 (선택지 MazeTower.fullBloomPaths).
 public class FullBloomCore extends TengusMask {
 
 	private static final String AC_USE = "WEAR"; //원작 텐구의 가면 행동을 그대로 쓴다
 
 	{
 		image = MazeItemSprites.FULLBLOOM_CORE;
+	}
+
+	//Maze Tower (사용자): 게임 안에서 은은한 새잎빛이 감돈다
+	@Override
+	public com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite.Glowing glowing() {
+		return com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.coreGlow();
 	}
 
 	//바닥(또는 가방)에 있을 때 벚꽃잎이 나선을 따라 나무를 휘감는다

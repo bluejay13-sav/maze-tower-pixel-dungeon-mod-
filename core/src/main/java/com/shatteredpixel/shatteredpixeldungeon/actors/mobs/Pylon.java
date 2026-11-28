@@ -66,21 +66,6 @@ public class Pylon extends Mob {
 		alignment = Alignment.NEUTRAL;
 	}
 
-	//Maze Tower: 수정 거인의 수정 기둥은 켜지기 전에도 때려 부술 수 있다.
-	//때릴 수 있게 처음부터 적 편이지만, 켜지기 전(mazeDormant)에는 원작 꺼진 기둥처럼 번개를 쏘지 않는다.
-	public boolean mazeDormant = false;
-
-	public static Pylon mazeCrystalPylon(){
-		Pylon p = new Pylon();
-		p.alignment = Alignment.ENEMY;
-		p.mazeDormant = true;
-		return p;
-	}
-
-	public boolean inactive(){
-		return alignment == Alignment.NEUTRAL || mazeDormant;
-	}
-
 	private int targetNeighbor = Random.Int(8);
 
 	@Override
@@ -102,7 +87,7 @@ public class Pylon extends Mob {
 		enemySeen = enemy != null && enemy.isAlive() && fieldOfView[enemy.pos] && enemy.invisible <= 0;
 		//end of char/mob logic
 
-		if (inactive()){ //Maze Tower: 켜지기 전 수정 기둥
+		if (alignment == Alignment.NEUTRAL){
 			spend(TICK);
 			return true;
 		}
@@ -165,7 +150,6 @@ public class Pylon extends Mob {
 
 	public void activate(){
 		alignment = Alignment.ENEMY;
-		mazeDormant = false; //Maze Tower
 		state = HUNTING; //so allies know to attack it
 		((PylonSprite) sprite).activate();
 	}
@@ -173,7 +157,7 @@ public class Pylon extends Mob {
 	@Override
 	public CharSprite sprite() {
 		PylonSprite p = (PylonSprite) super.sprite();
-		if (!inactive()) p.activate(); //Maze Tower
+		if (alignment != Alignment.NEUTRAL) p.activate();
 		return p;
 	}
 
@@ -184,11 +168,7 @@ public class Pylon extends Mob {
 
 	@Override
 	public String description() {
-		//Maze Tower: 수정 기둥
-		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.textKey(this, "desc") != null){
-			return Messages.get(this, inactive() ? "maze_crystal_desc" : "maze_crystal_desc_active");
-		}
-		if (inactive()){ //Maze Tower
+		if (alignment == Alignment.NEUTRAL){
 			return Messages.get(this, "desc_inactive");
 		} else {
 			return Messages.get(this, "desc_active");
@@ -203,7 +183,7 @@ public class Pylon extends Mob {
 	@Override
 	public boolean add(Buff buff) {
 		//immune to all buffs/debuffs when inactive
-		if (!inactive()) { //Maze Tower
+		if (alignment != Alignment.NEUTRAL) {
 			return super.add(buff);
 		}
 		return false;
@@ -232,12 +212,6 @@ public class Pylon extends Mob {
 
 	@Override
 	public void die(Object cause) {
-		//Maze Tower: 켜지기 전에 부순 수정 기둥은 보스의 충전을 끊지 않는다
-		if (mazeDormant){
-			super.die(cause);
-			((CavesBossLevel)Dungeon.level).mazeDormantPylonBroken();
-			return;
-		}
 		super.die(cause);
 		((CavesBossLevel)Dungeon.level).eliminatePylon();
 	}
@@ -250,7 +224,6 @@ public class Pylon extends Mob {
 		super.storeInBundle(bundle);
 		bundle.put(ALIGNMENT, alignment);
 		bundle.put(TARGET_NEIGHBOUR, targetNeighbor);
-		bundle.put("maze_dormant", mazeDormant); //Maze Tower
 	}
 
 	@Override
@@ -258,7 +231,6 @@ public class Pylon extends Mob {
 		alignment = bundle.getEnum(ALIGNMENT, Alignment.class);
 		super.restoreFromBundle(bundle);
 		targetNeighbor = bundle.getInt(TARGET_NEIGHBOUR);
-		mazeDormant = bundle.getBoolean("maze_dormant"); //Maze Tower
 	}
 
 }

@@ -464,7 +464,10 @@ public class Blacksmith extends NPC {
 
 			Statistics.questScores[2] += favor;
 
-			if (favor >= 2500){
+			//Maze Tower (K8, 사용자): 퀘스트를 끝내면 미스릴 도안 제작 비용만큼 호감을 더 준다 (원작 무료 곡괭이 판정에는 넣지 않음)
+			boolean mazeFreePick = favor >= 2500;
+			favor += com.shatteredpixel.shatteredpixeldungeon.MazeTower.K_MITHRIL_FAVOR;
+			if (mazeFreePick){
 				freePickaxe = true;
 			}
 		}

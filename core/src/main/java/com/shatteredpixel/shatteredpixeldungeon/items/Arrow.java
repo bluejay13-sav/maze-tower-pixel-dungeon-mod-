@@ -71,7 +71,9 @@ public class Arrow extends Item {
 	public static void recover( int cell, int n ){
 		int got = 0;
 		for (int i = 0; i < n; i++){
-			if (Random.Float() < MazeTower.ARROW_RECOVER_CHANCE) got++;
+			//Maze Tower (D19): 화살 줍기 - 쓰러진 적이 화살을 더 자주 떨군다
+			if (Random.Float() < MazeTower.ARROW_RECOVER_CHANCE
+					+ com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomHuntress.arrowDropBonus()) got++;
 		}
 		dropAt(cell, got);
 	}

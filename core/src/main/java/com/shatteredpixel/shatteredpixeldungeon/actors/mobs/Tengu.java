@@ -198,11 +198,6 @@ public class Tengu extends Mob {
 
 				@Override
 				protected boolean act() {
-					//Maze Tower: 만개 광선을 모으는 동안은 순간이동도 미룬다
-					if (MazeBosses.ENABLED && buff(WardenAbilities.BloomBeam.class) != null){
-						spend( TICK );
-						return true;
-					}
 					Actor.remove(this);
 					jump();
 					return true;
@@ -399,21 +394,12 @@ public class Tengu extends Mob {
 	}
 
 	//tengu is always hunting, and can use simpler rules because he never moves
-	//Maze Tower: 주인공을 찾지 못한 턴 수
-	private int lostTurns = 0;
-
 	private class Hunting extends Mob.Hunting{
-		
+
 		@Override
 		public boolean act(boolean enemyInFOV, boolean justAlerted) {
-			
+
 			enemySeen = enemyInFOV;
-			if (enemyInFOV) lostTurns = 0; //Maze Tower
-			//Maze Tower: 만개 광선을 모으는 동안은 움직이지 않는다
-			if (MazeBosses.ENABLED && buff(WardenAbilities.BloomBeam.class) != null){
-				spend( TICK );
-				return true;
-			}
 			if (enemyInFOV && !isCharmedBy( enemy ) && canAttack( enemy )) {
 				
 				if (canUseAbility()){
@@ -448,17 +434,6 @@ public class Tengu extends Mob {
 				return useAbility();
 			}
 
-			//Maze Tower: 2턴 동안 주인공을 찾지 못하면 아무 데로나 움직인다
-			if (MazeBosses.ENABLED && !enemyInFOV && ++lostTurns >= MazeTower.WARDEN_LOST_TURNS){
-				int step = WardenAbilities.wanderCell(Tengu.this);
-				if (step != -1){
-					sprite.move(pos, step);
-					move(step);
-					spend(1 / speed());
-					return true;
-				}
-			}
-
 			spend( TICK );
 			return true;
 
@@ -489,12 +464,6 @@ public class Tengu extends Mob {
 		if (HP > HT/2) return false;
 		
 		if (abilitiesUsed >= targetAbilityUses()){
-			//Maze Tower: 순간이동 뒤에 정해진 횟수를 다 쓴 뒤에도 가끔(WARDEN_IDLE_CD_MIN~MAX턴마다) 스킬을 쓴다
-			if (MazeBosses.ENABLED){
-				abilityCooldown--;
-				if (abilityCooldown < 0) abilityCooldown = Random.IntRange(MazeTower.WARDEN_IDLE_CD_MIN, MazeTower.WARDEN_IDLE_CD_MAX);
-				return abilityCooldown == 0;
-			}
 			return false;
 		} else {
 			
@@ -533,17 +502,6 @@ public class Tengu extends Mob {
 	}
 	
 	public boolean useAbility(){
-		//Maze Tower: 그림자 간수 2단계 마법 (봉인 부적·영혼 해방·만개 광선, WardenAbilities)
-		if (MazeBosses.ENABLED){
-			int ability = WardenAbilities.choose(abilitiesUsed, lastAbility);
-			boolean thrown = WardenAbilities.perform(this, ability);
-			if (targetAbilityUses() - abilitiesUsed >= 4) spend(TICK);
-			else spend(2 * TICK);
-			lastAbility = ability;
-			abilitiesUsed++;
-			return !thrown;
-		}
-
 		boolean abilityUsed = false;
 		int abilityToUse = -1;
 		
@@ -616,9 +574,21 @@ public class Tengu extends Mob {
 	//***Bomb Ability***
 	//******************
 	
+	//Maze Tower (H5): 봉인술사가 던지는 작은 봉인 부적 (터지는 범위, 던진 이가 봉인술사인지)
+	private static int throwingRadius = 2;
+	private static boolean throwingBinder = false;
+
+	public static boolean throwBomb(final Char thrower, final Char target, int radius){
+		throwingRadius = radius;
+		throwingBinder = thrower instanceof Necromancer;
+		boolean thrown = throwBomb(thrower, target);
+		if (!thrown){ throwingRadius = 2; throwingBinder = false; }
+		return thrown;
+	}
+
 	//returns true if bomb was thrown
 	public static boolean throwBomb(final Char thrower, final Char target){
-		
+
 		int targetCell = -1;
 		
 		//Targets closest cell which is adjacent to target and has no existing bombs
@@ -662,6 +632,21 @@ public class Tengu extends Mob {
 		
 		public int bombPos = -1;
 		private int timer = 3;
+		//Maze Tower (H5): 터지는 범위(간수 2칸, 봉인술사 1칸)와 봉인술사의 부적인지
+		public int radius = 2;
+		public boolean binder = false;
+
+		//Maze Tower (H5): 터지기 전에 사라지면(던진 봉인술사가 쓰러짐) 바닥의 부적도 치운다
+		@Override
+		public void detach() {
+			Heap h = Dungeon.level != null ? Dungeon.level.heaps.get(bombPos) : null;
+			if (h != null) {
+				for (Item i : h.items.toArray(new Item[0])) {
+					if (i instanceof BombItem) h.remove(i);
+				}
+			}
+			super.detach();
+		}
 
 		private ArrayList<Emitter> smokeEmitters = new ArrayList<>();
 		
@@ -680,25 +665,34 @@ public class Tengu extends Mob {
 			} else if (timer == 1){
 				FloatingText.show(p.x, p.y, bombPos, "1...", CharSprite.WARNING);
 			} else {
-				PathFinder.buildDistanceMap( bombPos, BArray.not( Dungeon.level.solid, null ), 2 );
+				PathFinder.buildDistanceMap( bombPos, BArray.not( Dungeon.level.solid, null ), radius ); //Maze Tower (H5): 범위
 				for (int cell = 0; cell < PathFinder.distance.length; cell++) {
 
 					if (PathFinder.distance[cell] < Integer.MAX_VALUE) {
 						Char ch = Actor.findChar(cell);
-						if (ch != null && !(ch instanceof Tengu) && !WardenAbilities.spared(ch)) { //Maze Tower: 봉인 부적은 간수 편(영혼·철창)을 다치게 하지 않는다
+						//Maze Tower (H5): 봉인술사의 부적은 몬스터(적 편)를 다치게 하지 않고, 봉인술사는 어떤 부적에도 면역
+						boolean binderSpared = ch != null && (ch instanceof Necromancer && MazeTower.H5_SEAL_TALISMAN
+								|| binder && ch.alignment == Char.Alignment.ENEMY);
+						if (ch != null && !binderSpared && !(ch instanceof Tengu)) {
 							int dmg = Random.NormalIntRange(5 + Dungeon.scalingDepth(), 10 + Dungeon.scalingDepth() * 2);
 							dmg -= ch.drRoll();
 
 							if (dmg > 0) {
 								ch.damage(dmg, Bomb.class);
 							}
-							//Maze Tower: 봉인 부적 - 맞은 대상 속박
-							if (MazeBosses.ENABLED && ch.isAlive()){
+							//Maze Tower (H5): 봉인술사의 부적 - 맞은 대상 속박
+							if (binder && ch.isAlive()){
 								Buff.prolong(ch, Roots.class, MazeTower.TALISMAN_ROOT_TURNS);
 								if (Dungeon.level.heroFOV[ch.pos]) BossEffects.onChar(BossEffects.Fx.BIND, ch.sprite, 6, false);
 							}
 
-							if (ch == Dungeon.hero){
+							if (ch == Dungeon.hero && binder){
+								//Maze Tower (H5): 봉인술사의 부적 (보스 점수와 상관없음)
+								if (!ch.isAlive()) {
+									Dungeon.fail(Necromancer.class);
+									GLog.n(Messages.get(Necromancer.class, "talisman_kill"));
+								}
+							} else if (ch == Dungeon.hero){
 								Statistics.qualifiedForBossChallengeBadge = false;
 								Statistics.bossScores[1] -= 100;
 
@@ -733,7 +727,7 @@ public class Tengu extends Mob {
 		@Override
 		public void fx(boolean on) {
 			if (on && bombPos != -1){
-				PathFinder.buildDistanceMap( bombPos, BArray.not( Dungeon.level.solid, null ), 2 );
+				PathFinder.buildDistanceMap( bombPos, BArray.not( Dungeon.level.solid, null ), radius ); //Maze Tower (H5): 범위
 				for (int i = 0; i < PathFinder.distance.length; i++) {
 					if (PathFinder.distance[i] < Integer.MAX_VALUE) {
 						Emitter e = CellEmitter.get(i);
@@ -756,6 +750,8 @@ public class Tengu extends Mob {
 			super.storeInBundle(bundle);
 			bundle.put( BOMB_POS, bombPos );
 			bundle.put( TIMER, timer );
+			bundle.put( "maze_radius", radius ); //Maze Tower (H5)
+			bundle.put( "maze_binder", binder );
 		}
 		
 		@Override
@@ -763,6 +759,8 @@ public class Tengu extends Mob {
 			super.restoreFromBundle(bundle);
 			bombPos = bundle.getInt( BOMB_POS );
 			timer = bundle.getInt( TIMER );
+			if (bundle.contains("maze_radius")) radius = bundle.getInt("maze_radius"); //Maze Tower (H5)
+			binder = bundle.getBoolean("maze_binder");
 		}
 		
 		public static class BombItem extends Item {
@@ -785,7 +783,11 @@ public class Tengu extends Mob {
 			protected void onThrow(int cell) {
 				super.onThrow(cell);
 				if (throwingChar != null){
-					Buff.append(throwingChar, BombAbility.class).bombPos = cell;
+					BombAbility b = Buff.append(throwingChar, BombAbility.class);
+					b.bombPos = cell;
+					b.radius = throwingRadius; //Maze Tower (H5)
+					b.binder = throwingBinder;
+					throwingRadius = 2; throwingBinder = false;
 					throwingChar = null;
 				} else {
 					Buff.append(curUser, BombAbility.class).bombPos = cell;

@@ -82,6 +82,7 @@ public class ArmoredBrute extends Brute {
 		public boolean act() {
 			
 			if (target.HP > 0){
+				if (target instanceof Brute) ((Brute) target).mazeRageEnded = true; //Maze Tower (J4)
 				detach();
 				return true;
 			}

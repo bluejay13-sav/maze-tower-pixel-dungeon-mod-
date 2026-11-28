@@ -38,6 +38,12 @@ public class MobSpawner extends Actor {
 	@Override
 	protected boolean act() {
 
+		//Maze Tower (M): 현자에게 보고해 강화된 브로치를 지니고 역행 중이면 16~19층에는 적이 다시 생기지 않는다
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeSage.blocksRespawn(Dungeon.depth)){
+			spend(Dungeon.level.respawnCooldown());
+			return true;
+		}
+
 		if (Dungeon.level.mobCount() < Dungeon.level.mobLimit()) {
 
 			if (Dungeon.level.spawnMob(12)){
@@ -61,10 +67,27 @@ public class MobSpawner extends Actor {
 
 	public static ArrayList<Class<? extends Mob>> getMobRotation(int depth ){
 		ArrayList<Class<? extends Mob>> mobs = standardMobRotation( depth );
+		mazeBossBias( depth, mobs ); //Maze Tower (L7)
 		addRareMobs(depth, mobs);
 		swapMobAlts(mobs);
 		Random.shuffle(mobs);
 		return mobs;
+	}
+
+	//Maze Tower (L7): 16~19층은 그 판의 20층 보스에 따라 잡몹이 조금 기운다 (완전히 한쪽만 나오지는 않음).
+	//망령 왕이면 짝 잃은 시민·왕실 근위가, 마도시의 여제면 풀려난 주문·궁정 마도사가 층마다 하나씩 더 (MazeTower.L7_BOSS_BIAS)
+	private static void mazeBossBias( int depth, ArrayList<Class<? extends Mob>> mobs ){
+		if (!com.shatteredpixel.shatteredpixeldungeon.MazeTower.L7_BOSS_BIAS || depth < 16 || depth > 19
+				|| !com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) return;
+		for (int i = 0; i < com.shatteredpixel.shatteredpixeldungeon.MazeTower.L7_BIAS_EXTRA; i++){
+			if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.empress()){
+				mobs.add( Elemental.random() );
+				mobs.add( Warlock.class );
+			} else {
+				mobs.add( Ghoul.class );
+				mobs.add( Monk.class );
+			}
+		}
 	}
 
 	//returns a rotation of standard mobs, unshuffled.
@@ -84,11 +107,13 @@ public class MobSpawner extends Actor {
 						Gnoll.class, Gnoll.class));
 			case 3:
 				//1x rat, 1x snake, 3x gnoll, 1x swarm, 1x crab
+				//Maze Tower (F5): + 수액 슬라임 1 (3층부터)
 				return new ArrayList<>(Arrays.asList(Rat.class,
 						Snake.class,
 						Gnoll.class, Gnoll.class, Gnoll.class,
 						Swarm.class,
-						Crab.class));
+						Crab.class,
+						Slime.class));
 			case 4: case 5:
 				//1x gnoll, 1x swarm, 2x crab, 2x slime
 				return new ArrayList<>(Arrays.asList(Gnoll.class,
@@ -101,13 +126,14 @@ public class MobSpawner extends Actor {
 				//3x skeleton, 1x thief, 1x swarm
 				return new ArrayList<>(Arrays.asList(Skeleton.class, Skeleton.class, Skeleton.class,
 						Thief.class,
-						Swarm.class));
+						SoulMoth.class)); //Maze Tower (H4): 넋 나방 떼
 			case 7:
 				//3x skeleton, 1x thief, 1x DM-100, 1x guard
 				return new ArrayList<>(Arrays.asList(Skeleton.class, Skeleton.class, Skeleton.class,
 						Thief.class,
 						DM100.class,
-						Guard.class));
+						Guard.class,
+						SoulMoth.class)); //Maze Tower (H4): 넋 나방 떼 1
 			case 8:
 				//2x skeleton, 1x thief, 2x DM-100, 2x guard, 1x necromancer
 				return new ArrayList<>(Arrays.asList(Skeleton.class, Skeleton.class,
@@ -175,38 +201,44 @@ public class MobSpawner extends Actor {
 						Elemental.random(),
 						Warlock.class, Warlock.class,
 						Monk.class, Monk.class,
-						Golem.class));
+						Golem.class,
+						MirrorPortrait.class)); //Maze Tower (L6): 거울 초상 18층부터
 			case 19: case 20:
 				//1x elemental, 2x warlock, 2x monk, 3x golem
 				return new ArrayList<>(Arrays.asList(
 						Elemental.random(),
 						Warlock.class, Warlock.class,
 						Monk.class, Monk.class,
-						Golem.class, Golem.class, Golem.class));
+						Golem.class, Golem.class, Golem.class,
+						MirrorPortrait.class)); //Maze Tower (L6)
 
 			// Halls
 			case 21:
 				//2x succubus, 1x evil eye
 				return new ArrayList<>(Arrays.asList(
 						Succubus.class, Succubus.class,
-						Eye.class));
+						Eye.class,
+						Tangled.class)); //Maze Tower (N6)
 			case 22:
 				//1x succubus, 1x evil eye
 				return new ArrayList<>(Arrays.asList(
 						Succubus.class,
-						Eye.class));
+						Eye.class,
+						Tangled.class)); //Maze Tower (N6)
 			case 23:
 				//1x succubus, 2x evil eye, 1x scorpio
 				return new ArrayList<>(Arrays.asList(
 						Succubus.class,
 						Eye.class, Eye.class,
-						Scorpio.class));
+						Scorpio.class,
+						Tangled.class)); //Maze Tower (N6)
 			case 24: case 25: case 26:
 				//1x succubus, 2x evil eye, 3x scorpio
 				return new ArrayList<>(Arrays.asList(
 						Succubus.class,
 						Eye.class, Eye.class,
-						Scorpio.class, Scorpio.class, Scorpio.class));
+						Scorpio.class, Scorpio.class, Scorpio.class,
+						Tangled.class)); //Maze Tower (N6)
 		}
 
 	}

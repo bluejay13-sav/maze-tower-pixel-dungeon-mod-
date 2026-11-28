@@ -125,6 +125,9 @@ public abstract class Mob extends Char {
 	public AiState WANDERING	= new Wandering();
 	public AiState FLEEING		= new Fleeing();
 	public AiState PASSIVE		= new Passive();
+	//Maze Tower (N8): 싸움을 멈추고 한 칸(익은 열매)으로 걸어간다 (FruitBranch가 정함, 저장할 때는 HUNTING으로)
+	public AiState MAZE_SEEK	= new MazeSeek();
+	public int mazeSeekCell = -1;
 	public AiState state = SLEEPING;
 	
 	public Class<? extends CharSprite> spriteClass;
@@ -185,6 +188,8 @@ public abstract class Mob extends Char {
 			bundle.put( STATE, Hunting.TAG );
 		} else if (state == FLEEING) {
 			bundle.put( STATE, Fleeing.TAG );
+		} else if (state == MAZE_SEEK) {
+			bundle.put( STATE, Hunting.TAG ); //Maze Tower (N8)
 		} else if (state == PASSIVE) {
 			bundle.put( STATE, Passive.TAG );
 		}
@@ -268,6 +273,7 @@ public abstract class Mob extends Char {
 		
 		super.act();
 		RetreatFrenzy.apply(this); //Maze Tower: 역행 중 모든 적은 광폭 (도망치지 않음)
+		com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.syncMob(this); //Maze Tower (N1): 검은 낙엽 위의 적 표시
 		
 		boolean justAlerted = alerted;
 		alerted = false;
@@ -361,6 +367,10 @@ public abstract class Mob extends Char {
 	
 	protected Char chooseEnemy() {
 
+		//Maze Tower (T4): 이끼 곰의 포효에 끌린 동안 곰을 먼저 노린다
+		Char bearTaunt = com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetBear.tauntSource(this);
+		if (bearTaunt != null) return bearTaunt;
+
 		Dread dread = buff( Dread.class );
 		if (dread != null) {
 			Char source = (Char)Actor.findById( dread.object );
@@ -415,6 +425,8 @@ public abstract class Mob extends Char {
 				newEnemy = true;
 			}
 		}
+		//Maze Tower (T1): 보스는 펫을 평타의 대상으로 삼지 않는다
+		if (!newEnemy && com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly.untargetable(this, enemy)) newEnemy = true;
 
 		if ( newEnemy ) {
 
@@ -462,7 +474,8 @@ public abstract class Mob extends Char {
 			} else if (alignment == Alignment.ENEMY) {
 				//look for ally mobs to attack
 				for (Mob mob : Dungeon.level.mobs)
-					if (mob.alignment == Alignment.ALLY && fieldOfView[mob.pos] && mob.invisible <= 0)
+					if (mob.alignment == Alignment.ALLY && fieldOfView[mob.pos] && mob.invisible <= 0
+							&& !com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly.untargetable(this, mob)) //Maze Tower (T1)
 						enemies.add(mob);
 
 				//and look for the hero
@@ -795,6 +808,8 @@ public abstract class Mob extends Char {
 	public float attackDelay() {
 		float delay = 1f;
 		if ( buff(Adrenaline.class) != null) delay /= 1.5f;
+		//Maze Tower (C20): 받아넘기기 각성 - 쳐내진 적은 자세가 무너져 공격이 느려진다
+		if ( buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomBuffs.Staggered.class) != null) delay *= com.shatteredpixel.shatteredpixeldungeon.MazeTower.C20_STAGGER_MULTI;
 		return delay;
 	}
 	
@@ -912,7 +927,19 @@ public abstract class Mob extends Char {
 		return surprisedBy( enemy, true);
 	}
 
+	//Maze Tower (F5): 기습 판정을 아예 받지 않는 때 (덩굴뱀이 키 큰 풀 속에 있을 때). 잠든 상태의 기습·특성의 기습도 막는다
+	//Maze Tower (지시서 1127): 움직이지도 공격하지도 않는 소품 몹(사슬 고리·감방 문·광맥·매듭·방울 등)인가. 3차 전직의 규칙은 이 값만 본다
+	public boolean mazeFixed(){
+		return com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetAlly.isProp( this );
+	}
+
+	public boolean mazeNoSurprise(){
+		return false;
+	}
+
 	public boolean surprisedBy( Char enemy, boolean attacking ){
+		if (mazeNoSurprise()) return false; //Maze Tower (F5)
+		if (attacking && com.shatteredpixel.shatteredpixeldungeon.actors.hero.ForestWarden.grassAmbush(enemy)) return true; //Maze Tower (S8): 숲지기의 풀 속 기습
 		return enemy == Dungeon.hero
 				&& (enemy.invisible > 0 || !enemySeen || (fieldOfView != null && fieldOfView.length == Dungeon.level.length() && !fieldOfView[enemy.pos]))
 				&& (!attacking || enemy.canSurpriseAttack());
@@ -936,6 +963,13 @@ public abstract class Mob extends Char {
 		if (state == HUNTING) state = WANDERING;
 	}
 	
+	//Maze Tower (D10): 풀숲의 몸 각성 - 쫓던 대상을 놓치고 아무 데로나 돌아다닌다
+	public void mazeLoseTrack(float turns){
+		clearEnemy();
+		if (state == WANDERING) target = Dungeon.level.randomDestination(this);
+		com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.prolong(this, com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomBuffs.LostTrack.class, turns);
+	}
+
 	public boolean isTargeting( Char ch){
 		return enemy == ch;
 	}
@@ -1025,6 +1059,8 @@ public abstract class Mob extends Char {
 	
 	@Override
 	public void die( Object cause ) {
+		com.shatteredpixel.shatteredpixeldungeon.actors.hero.DuelMaster.onMobDie(this); //Maze Tower (S4): 결투가의 결투 상대가 쓰러짐 (승리)
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.EchoKnot.onMobDie(this); //Maze Tower (N7): 광맥 메아리의 껍질이 터짐
 
 		if (cause == Chasm.class){
 			//50% chance to round up, 50% to round down
@@ -1268,7 +1304,8 @@ public abstract class Mob extends Char {
 					}
 				}
 
-				if (closestHostile != null && Random.Float() < SproutEffects.wakeChance(closestHostile, detectionChance(closestHostile))) { //Maze Tower: 조용한 걸음
+				if (closestHostile != null && Random.Float() < com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomEffects.wakeChance(Mob.this,
+						SproutEffects.wakeChance(closestHostile, detectionChance(closestHostile)))) { //Maze Tower: 조용한 걸음, (D1) 첫 일격 각성
 					awaken(enemyInFOV);
 					if (state == SLEEPING){
 						spend(TICK); //wait if we can't wake up for some reason
@@ -1311,7 +1348,9 @@ public abstract class Mob extends Char {
 
 		@Override
 		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
-			if (enemyInFOV && (justAlerted || Random.Float() < detectionChance(enemy))) {
+			//Maze Tower (D10): 풀숲의 몸 각성으로 놓친 동안은 주인공을 다시 알아채지 못한다 (맞으면 원작대로 알아챔)
+			if (enemyInFOV && (justAlerted || Random.Float() < detectionChance(enemy))
+					&& (justAlerted || enemy != Dungeon.hero || buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomBuffs.LostTrack.class) == null)) {
 
 				return noticeEnemy();
 
@@ -1529,6 +1568,37 @@ public abstract class Mob extends Char {
 			}
 		}
 	}
+
+	//Maze Tower (N8): 익은 열매로 걸어간다. 칸이 비거나(열매가 사라짐) 닿으면 원래처럼 (적이 보이면 쫓고, 아니면 돌아다님)
+	protected class MazeSeek implements AiState {
+		@Override
+		public boolean act( boolean enemyInFOV, boolean justAlerted ) {
+			if (mazeSeekCell == -1 || pos == mazeSeekCell){
+				mazeSeekCell = -1;
+				state = enemyInFOV ? HUNTING : WANDERING;
+				if (state == WANDERING) target = Dungeon.level.randomDestination( Mob.this );
+				return state.act( enemyInFOV, justAlerted );
+			}
+			int oldPos = pos;
+			if (getCloser( mazeSeekCell )){
+				mazeSeekFails = 0;
+				spend( 1 / speed() );
+				return moveSprite( oldPos, pos );
+			}
+			//(점검) 길이 막혀 3번 못 가면 포기하고 원래처럼 싸운다 (그 열매는 다시 고르지 않음, FruitBranch)
+			if (++mazeSeekFails >= 3){
+				mazeSeekGaveUp = mazeSeekCell;
+				mazeSeekCell = -1;
+				mazeSeekFails = 0;
+				state = enemyInFOV ? HUNTING : WANDERING;
+				if (state == WANDERING) target = Dungeon.level.randomDestination( Mob.this );
+			}
+			spend( TICK );
+			return true;
+		}
+	}
+	public int mazeSeekFails = 0;
+	public int mazeSeekGaveUp = -1; //포기한 열매 칸
 
 	protected class Passive implements AiState {
 

@@ -21,8 +21,16 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.watabou.noosa.audio.Sample;
+import com.watabou.utils.PathFinder;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ShieldBuff;
@@ -71,14 +79,54 @@ public class Brute extends Mob {
 		return super.drRoll() + Random.NormalIntRange(0, 8);
 	}
 
+	//Maze Tower (J4): 갱도에 갇힌 광부. 광폭이 체력 회복으로 풀렸는지 (풀린 뒤 쓰러지면 터지지 않는다, 저장됨)
+	protected boolean mazeRageEnded = false;
+
+	//Maze Tower (J4): 지금 광폭 중인지 (그림의 광폭 줄, 마석 터짐 판정)
+	public boolean mazeRaging(){
+		return hasRaged && !mazeRageEnded && HP <= 0;
+	}
+
 	@Override
 	public void die(Object cause) {
+		//Maze Tower (J4): 광폭 중에 쓰러지면(맞아서든, 광폭이 저절로 꺼져서든 — 결정) 몸의 마석이 터진다. 구덩이는 안 터짐
+		boolean burst = mazeRaging() && cause != Chasm.class;
+
 		super.die(cause);
 
 		if (cause == Chasm.class){
 			hasRaged = true; //don't let enrage trigger for chasm deaths
 		}
+
+		if (burst) mazeBurst();
 	}
+
+	//Maze Tower (J4): 둘레 1칸의 모두(주인공·다른 적 포함)에게 피해
+	private void mazeBurst(){
+		if (Dungeon.level == null) return;
+		boolean seen = Dungeon.level.heroFOV[pos];
+		if (seen){
+			MazeFx.atCell(MazeFx.Fx.MINE_BURST, pos); //(사용자) 광부 칸 가운데에 푸른 폭발 한 번 (9칸마다 띄우지 않음)
+			Sample.INSTANCE.play(Assets.Sounds.SHATTER, 1f, 0.9f);
+			Sample.INSTANCE.play(Assets.Sounds.BLAST, 0.7f, 1.3f);
+			PixelScene.shake(1, 0.15f);
+			GLog.w(Messages.get(Brute.class, "burst"));
+		}
+		for (int i : PathFinder.NEIGHBOURS8){
+			int c = pos + i;
+			if (c < 0 || c >= Dungeon.level.length()) continue;
+			Char ch = Actor.findChar(c);
+			if (ch == null || !ch.isAlive()) continue;
+			ch.damage(Random.NormalIntRange(MazeTower.J4_BURST_MIN, MazeTower.J4_BURST_MAX), new MineBurst());
+			if (ch == Dungeon.hero && !ch.isAlive()){
+				Dungeon.fail(MineBurst.class);
+				GLog.n(Messages.get(Brute.class, "burst_kill"));
+			}
+		}
+	}
+
+	//Maze Tower (J4): 사망 기록용 피해 출처
+	public static class MineBurst {}
 
 	//cache this buff to prevent having to call buff(...) a bunch in isAlive
 	private BruteRage rage;
@@ -112,17 +160,20 @@ public class Brute extends Mob {
 	}
 	
 	private static final String HAS_RAGED = "has_raged";
-	
+	private static final String RAGE_ENDED = "maze_rage_ended";
+
 	@Override
 	public void storeInBundle(Bundle bundle) {
 		super.storeInBundle(bundle);
 		bundle.put(HAS_RAGED, hasRaged);
+		bundle.put(RAGE_ENDED, mazeRageEnded);
 	}
-	
+
 	@Override
 	public void restoreFromBundle(Bundle bundle) {
 		super.restoreFromBundle(bundle);
 		hasRaged = bundle.getBoolean(HAS_RAGED);
+		mazeRageEnded = bundle.getBoolean(RAGE_ENDED);
 	}
 	
 	public static class BruteRage extends ShieldBuff {
@@ -135,10 +186,11 @@ public class Brute extends Mob {
 		public boolean act() {
 			
 			if (target.HP > 0){
+				if (target instanceof Brute) ((Brute) target).mazeRageEnded = true; //Maze Tower (J4)
 				detach();
 				return true;
 			}
-			
+
 			absorbDamage( Math.round(4*AscensionChallenge.statModifier(target)));
 			
 			if (shielding() <= 0){

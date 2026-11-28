@@ -333,6 +333,8 @@ public enum HeroClass {
 	public boolean isUnlocked(){
 		//always unlock on debug builds
 		if (DeviceCompat.isDebug()) return true;
+		//Maze Tower (사용자): 테스트 버전은 네 직업을 모두 처음부터 고를 수 있다
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.TEST_BUILD && (this == WARRIOR || this == MAGE || this == ROGUE || this == HUNTRESS)) return true;
 
 		switch (this){
 			case WARRIOR: default:

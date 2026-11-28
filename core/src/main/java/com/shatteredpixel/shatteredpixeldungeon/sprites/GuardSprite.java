@@ -41,8 +41,13 @@ public class GuardSprite extends MobSprite {
 		run = new MovieClip.Animation( 15, true );
 		run.frames( frames, 2, 3, 4, 5, 6, 7 );
 
-		attack = new MovieClip.Animation( 12, false );
-		attack.frames( frames, 8, 9, 10 );
+		//Maze Tower (H5): 사슬 옥졸 공격 6장 (들어 올림 → 치켜듦 → 머리 위로 휘돌림 → 내리침 → 바닥 불꽃 → 거둠)
+		attack = new MovieClip.Animation( 16, false );
+		attack.frames( frames, 8, 15, 16, 9, 17, 10 );
+
+		//Maze Tower (H5): 사슬 던지기 - 들어 올림 → 치켜듦 → 머리 위로 휘돌림 → 앞으로 내던짐 (끝나면 Guard가 사슬을 날린다)
+		zap = new MovieClip.Animation( 16, false );
+		zap.frames( frames, 8, 15, 16, 9 );
 
 		die = new MovieClip.Animation( 8, false );
 		die.frames( frames, 11, 12, 13, 14 );

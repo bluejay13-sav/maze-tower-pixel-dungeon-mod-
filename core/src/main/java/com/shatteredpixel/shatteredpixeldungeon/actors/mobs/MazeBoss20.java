@@ -37,6 +37,7 @@ public class MazeBoss20 {
 	//보스 Mob.die가 끝난 뒤에 부른다
 	public static void afterDeath( Mob boss ){
 		int at = boss.pos;
+		com.shatteredpixel.shatteredpixeldungeon.MazeSage.onBoss20Defeated( boss instanceof MazeEmpress ); //Maze Tower (M): 브로치를 지닌 채 넘기면 전해 준 것으로
 		if (!MazeTower.ORIGINAL_ARMOR_ABILITY){
 			if (MazeTower.DWARF_KING_DROPS_FRUIT_CORE && Dungeon.hero.armorAbility == null){
 				Dungeon.level.drop(new com.shatteredpixel.shatteredpixeldungeon.items.FruitCore(), at).sprite.drop(at);

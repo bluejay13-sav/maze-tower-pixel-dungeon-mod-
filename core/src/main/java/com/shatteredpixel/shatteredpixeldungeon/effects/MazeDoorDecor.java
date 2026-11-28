@@ -58,9 +58,11 @@ public class MazeDoorDecor {
 		if (Assets.Environment.TILES_SEWERS.equals(tex))       return 0;
 		if (Assets.Environment.TILES_PRISON.equals(tex))       return 1;
 		if (Assets.Environment.TILES_CAVES.equals(tex))        return 2;
-		if (Assets.Environment.TILES_CITY.equals(tex))         return 3;
-		if (Assets.Environment.TILES_HALLS.equals(tex))        return 4;
-		if (Assets.Environment.TILES_HALLS_RETURN.equals(tex)) return 5;
+		if (Assets.Environment.TILES_CITY.equals(tex)
+				|| Assets.Environment.TILES_CITY_WRAITH.equals(tex)
+				|| Assets.Environment.TILES_CITY_EMPRESS.equals(tex)) return 3;
+		if (Assets.Environment.TILES_HALLS.equals(tex) || Assets.Environment.TILES_HALLS2.equals(tex)) return 4;
+		if (Assets.Environment.TILES_HALLS_RETURN.equals(tex) || Assets.Environment.TILES_HALLS2_RETURN.equals(tex)) return 5;
 		return -1; //대장장이 광산 등 원작 그림을 쓰는 층은 장식 없음
 	}
 

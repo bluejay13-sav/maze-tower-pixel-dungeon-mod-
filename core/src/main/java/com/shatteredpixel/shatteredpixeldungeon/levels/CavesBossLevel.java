@@ -110,9 +110,6 @@ public class CavesBossLevel extends Level {
 	public static Rect mainArena = new Rect(5, 14, 28, 37);
 	public static Rect gate = new Rect(14, 13, 19, 14);
 	public static int[] pylonPositions = new int[]{ 4 + 13*WIDTH, 28 + 13*WIDTH, 4 + 37*WIDTH, 28 + 37*WIDTH };
-	//Maze Tower: 마도 골렘 보스방의 광맥 자리 (원작 기둥 자리 + 보스방 안쪽)
-	public static int[] MAZE_VEINS = new int[]{ 4 + 13*WIDTH, 28 + 13*WIDTH, 4 + 37*WIDTH, 28 + 37*WIDTH,
-			9 + 20*WIDTH, 23 + 20*WIDTH, 9 + 30*WIDTH, 23 + 30*WIDTH, 16 + 25*WIDTH };
 
 	private ArenaVisuals customArenaVisuals;
 
@@ -126,13 +123,11 @@ public class CavesBossLevel extends Level {
 		//set up main boss arena
 		Painter.fillEllipse(this, mainArena, Terrain.EMPTY);
 
-		//Maze Tower: 마도 골렘 보스방에는 물이 없다
-		boolean mazeGolem = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.golem();
 		boolean[] patch = Patch.generate( width, height-14, 0.15f, 2, true );
 		for (int i= 14*width(); i < length(); i++) {
 			if (map[i] == Terrain.EMPTY) {
 				if (patch[i - 14*width()]){
-					if (!mazeGolem) map[i] = Terrain.WATER;
+					map[i] = Terrain.WATER;
 				} else if (Random.Int(Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 4 : 8) == 0){
 					map[i] = Terrain.INACTIVE_TRAP;
 				}
@@ -141,8 +136,6 @@ public class CavesBossLevel extends Level {
 
 		buildEntrance();
 		buildCorners();
-		if (com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) mazeOpenEntrance(); //Maze Tower: 사다리 바로 옆 벽 없애기
-		if (mazeGolem) mazeWallCorners(); //Maze Tower: 마도 골렘은 원작 기둥 자리를 벽으로 막는다
 
 		new CavesPainter().paint(this, null);
 
@@ -185,8 +178,6 @@ public class CavesBossLevel extends Level {
 		customVisuals.setRect(0, 12, width(), 27);
 		customTiles.add(customVisuals);
 
-		if (mazeGolem) return true; //Maze Tower: 기둥이 없다
-
 		//ensures that all pylons can be reached without stepping over water or wires
 		boolean[] pass = new boolean[length];
 		for (int i = 0; i < length; i++){
@@ -215,34 +206,8 @@ public class CavesBossLevel extends Level {
 
 	@Override
 	protected void createMobs() {
-		//Maze Tower: 마도 골렘은 기둥 대신 광맥, 수정 거인은 수정 기둥(원작 기둥) + 숨은 물
-		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.golem()){
-			//보스방 안 무작위 칸에 VEIN_COUNT개. 사다리 칸과 그 둘레에는 두지 않는다
-			int placed = 0, tries = 0;
-			while (placed < com.shatteredpixel.shatteredpixeldungeon.MazeTower.VEIN_COUNT && tries++ < 2000){
-				int i = pointToCell(Random.element(mainArena.getPoints()));
-				if (!passable[i] || map[i] == Terrain.ENTRANCE || findMob(i) != null) continue;
-				if (distance(i, entrance()) <= 1) continue;
-				com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ManaVein vein = new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ManaVein();
-				vein.pos = i;
-				mobs.add(vein);
-				placed++;
-			}
-			return;
-		}
-		if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal()){
-			int placed = 0, tries = 0;
-			while (placed < com.shatteredpixel.shatteredpixeldungeon.MazeTower.CRYSTAL_WATER_TILES && tries++ < 500){
-				int c = Random.IntRange(4, 28) + Random.IntRange(15, 36) * width();
-				if (map[c] == Terrain.EMPTY || map[c] == Terrain.EMPTY_DECO){
-					set(c, Terrain.WATER, this);
-					placed++;
-				}
-			}
-		}
 		for (int i : pylonPositions) {
-			//Maze Tower: 수정 거인의 수정 기둥은 켜지기 전에도 때릴 수 있다
-			Pylon pylon = com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.crystal() ? Pylon.mazeCrystalPylon() : new Pylon();
+			Pylon pylon = new Pylon();
 			pylon.pos = i;
 			mobs.add(pylon);
 		}
@@ -318,12 +283,7 @@ public class CavesBossLevel extends Level {
 		//seal the level when the hero moves near to a pylon, the level isn't already sealed, and the gate hasn't been destroyed
 		int gatePos = pointToCell(new Point(gate.left, gate.top));
 		if (ch == Dungeon.hero && !locked && solid[gatePos]){
-			//Maze Tower: 마도 골렘 보스방은 기둥 자리가 막혀 있으므로, 사다리에서 3칸 떨어지면 닫힌다
-			if (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.GolemAbilities.golem()
-					&& distance(ch.pos, entrance()) >= 3){
-				seal();
-			}
-			if (!locked) for (int pos : pylonPositions){
+			for (int pos : pylonPositions){
 				if (Dungeon.level.distance(ch.pos, pos) <= 3){
 					seal();
 					break;
@@ -389,14 +349,7 @@ public class CavesBossLevel extends Level {
 	public void unseal() {
 		super.unseal();
 
-		if (blobs.get(PylonEnergy.class) != null) blobs.get(PylonEnergy.class).fullyClear(); //Maze Tower: 기둥 전기가 한 번도 생기지 않았을 수 있다
-
-		//Maze Tower: 보스가 쓰러지면 남은 수정 기둥도 무너진다 (적 편이라 남아 있으면 쉬기를 막는다)
-		for (Mob m : mobs.toArray(new Mob[0])){
-			if (m instanceof Pylon && ((Pylon) m).mazeDormant){
-				m.die(null);
-			}
-		}
+		blobs.get(PylonEnergy.class).fullyClear();
 
 		set( entrance(), Terrain.ENTRANCE );
 		int i = gate.top*width();
@@ -426,28 +379,10 @@ public class CavesBossLevel extends Level {
 
 	}
 
-	//Maze Tower: 켜지기 전에 부서진 수정 기둥 (보스의 충전은 그대로)
-	public void mazeDormantPylonBroken(){
-		if (customArenaVisuals != null) customArenaVisuals.updateState();
-	}
-
-	//Maze Tower: 부서진 기둥 수 (처음 4개)
-	public int mazePylonsBroken(){
-		int alive = 0;
-		for (Mob m : mobs) if (m instanceof Pylon && m.isAlive()) alive++;
-		return pylonPositions.length - alive;
-	}
-
-	//Maze Tower: 켤 수 있는 기둥이 남았는지
-	public boolean mazeHasPylonToActivate(){
-		for (Mob m : mobs) if (m instanceof Pylon && ((Pylon) m).inactive()) return true;
-		return false;
-	}
-
 	public void activatePylon(){
 		ArrayList<Pylon> pylons = new ArrayList<>();
 		for (Mob m : mobs){
-			if (m instanceof Pylon && ((Pylon) m).inactive()){ //Maze Tower: 켜지기 전 수정 기둥 포함
+			if (m instanceof Pylon && m.alignment == Char.Alignment.NEUTRAL){
 				pylons.add((Pylon) m);
 			}
 		}
@@ -486,7 +421,7 @@ public class CavesBossLevel extends Level {
 		}
 		int finalPylonsRemaining = Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 1 : 2;
 		if (pylonsRemaining > finalPylonsRemaining) {
-			if (blobs.get(PylonEnergy.class) != null) blobs.get(PylonEnergy.class).fullyClear(); //Maze Tower: 기둥 전기가 한 번도 생기지 않았을 수 있다
+			blobs.get(PylonEnergy.class).fullyClear();
 		}
 	}
 
@@ -690,36 +625,6 @@ public class CavesBossLevel extends Level {
 			corner4
 	};
 
-	//Maze Tower: 사다리 둘레 8칸의 벽을 바닥으로
-	private void mazeOpenEntrance(){
-		int entrance = 16 + 25*width();
-		for (int o : PathFinder.NEIGHBOURS8){
-			if (map[entrance + o] == Terrain.WALL) map[entrance + o] = Terrain.EMPTY;
-		}
-	}
-
-	//Maze Tower: 네 귀퉁이(원작 기둥 자리와 그리로 가는 길)를 모두 벽으로
-	private void mazeWallCorners(){
-		int NW = 2 + 11*width();
-		int NE = 30 + 11*width();
-		int SE = 30 + 39*width();
-		int SW = 2 + 39*width();
-		short[] cornerTiles = corner1;
-		for(int i = 0; i < cornerTiles.length; i++){
-			if (i % 10 == 0 && i != 0){
-				NW += (width() - 10);
-				NE += (width() + 10);
-				SE -= (width() - 10);
-				SW -= (width() + 10);
-			}
-			//원작 귀퉁이 그림에서 바꾸는 칸(n이 아닌 칸)은 모두 벽
-			boolean any = false;
-			for (short[] v : cornerVariants) if (v[i] != n) any = true;
-			if (any) map[NW] = map[NE] = map[SE] = map[SW] = Terrain.WALL;
-			NW++; NE--; SW++; SE--;
-		}
-	}
-
 	private void buildCorners(){
 		int NW = 2 + 11*width();
 		int NE = 30 + 11*width();
@@ -747,7 +652,7 @@ public class CavesBossLevel extends Level {
 	public static class CityEntrance extends CustomTilemap{
 
 		{
-			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cavesBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
+			texture = Assets.Environment.CAVES_BOSS;
 		}
 
 		private static short[] entryWay = new short[]{
@@ -805,7 +710,7 @@ public class CavesBossLevel extends Level {
 	public static class EntranceTerrain extends CustomTilemap {
 
 		{
-			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cavesBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
+			texture = Assets.Environment.CAVES_BOSS;
 		}
 
 		private static short[] entryWay = new short[]{
@@ -844,7 +749,7 @@ public class CavesBossLevel extends Level {
 	public static class EntranceOverhang extends CustomTilemap{
 
 		{
-			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cavesBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
+			texture = Assets.Environment.CAVES_BOSS;
 		}
 
 		private static short[] entryWay = new short[]{
@@ -888,7 +793,7 @@ public class CavesBossLevel extends Level {
 	public static class ArenaVisuals extends CustomTilemap {
 
 		{
-			texture = com.shatteredpixel.shatteredpixeldungeon.MazeBosses.cavesBossTex(); //Maze Tower: 보스에 맞춘 보스방 그림
+			texture = Assets.Environment.CAVES_BOSS;
 		}
 
 		@Override

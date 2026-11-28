@@ -34,7 +34,7 @@ public class Longsword extends MeleeWeapon {
 		hitSound = Assets.Sounds.HIT_SLASH;
 		hitSoundPitch = 1f;
 
-		tier = 4;
+		tier = 3; //Maze Tower: (사용자) 롱소드는 3티어 (힘 14, 3티어 표준 피해)
 	}
 
 	@Override

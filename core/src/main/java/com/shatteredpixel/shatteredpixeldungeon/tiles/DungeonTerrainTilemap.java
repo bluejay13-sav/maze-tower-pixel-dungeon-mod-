@@ -42,7 +42,7 @@ public class DungeonTerrainTilemap extends DungeonTilemap {
 	@Override
 	protected int getTileVisual(int pos, int tile, boolean flat) {
 		//Maze Tower: 망령 왕의 왕좌 칸은 바닥만 그리고, 왕좌는 effects/WraithThrone이 따로 그린다
-		if (!flat && com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel.mazeThroneCell(pos)){
+		if (!flat && (com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel.mazeThroneCell(pos) || com.shatteredpixel.shatteredpixeldungeon.levels.MasterBossLevel.saplingCell(pos))){ //Maze Tower (O1): 25층 세계수 어린 줄기도
 			return DungeonTileSheet.getVisualWithAlts(DungeonTileSheet.FLOOR, pos);
 		}
 		int visual = DungeonTileSheet.directVisuals.get(tile, -1);

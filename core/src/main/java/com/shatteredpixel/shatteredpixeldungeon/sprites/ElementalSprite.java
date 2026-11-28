@@ -87,6 +87,7 @@ public abstract class ElementalSprite extends MobSprite {
 		if (particles != null){
 			particles.visible = visible;
 		}
+		mazeTint();
 	}
 	
 	@Override
@@ -105,6 +106,76 @@ public abstract class ElementalSprite extends MobSprite {
 		}
 	}
 	
+	//Maze Tower (L3·L4, 사용자): 풀려난 주문은 평소 원작보다 작고 적은 입자를 뿜고(MazeTower.L3_PARTICLE_SIZE·L3_PARTICLE_SPARSE),
+	//궁정 마도사에게 증폭되면 원작 입자(원작 크기·개수)를 뿜으며 몸이 아주 조금 커진다(MazeTower.L4_AMP_SCALE). 증폭이 끊기면 다시 작게
+	private int shownAmp = -1;
+
+	//(사용자: 입자가 너무 자유분방하지 않게) 원작 입자를 차분하게: 원소 둘레의 좁은 자리에서만 생기고(mazeTint의 particles.pos),
+	//천천히 움직인다(MazeTower.L3_PARTICLE_CALM, 불꽃은 천천히 떠오름 L3_PARTICLE_RISE). k = 크기 배율 (평소 L3_PARTICLE_SIZE, 증폭 1).
+	//원작 입자는 매 프레임 크기를 다시 정하므로 그 뒤에 곱한다
+	private static final float CALM = com.shatteredpixel.shatteredpixeldungeon.MazeTower.L3_PARTICLE_CALM;
+	public static class CalmFlame extends FlameParticle {
+		public float k = 1;
+		public CalmFlame(){ super(); acc.set( 0, -com.shatteredpixel.shatteredpixeldungeon.MazeTower.L3_PARTICLE_RISE ); }
+		@Override public void update(){ super.update(); scale.set( scale.x * k ); }
+	}
+	public static class CalmMagic extends MagicMissile.MagicParticle {
+		public float k = 1;
+		public CalmMagic(){ super(); speed.scale( CALM ); }
+		@Override public void update(){ super.update(); scale.set( scale.x * k ); }
+	}
+	public static class CalmSpark extends SparkParticle {
+		public float k = 1;
+		@Override public void update(){ super.update(); scale.set( scale.x * k ); }
+	}
+	public static class CalmRainbow extends RainbowParticle {
+		public float k = 1;
+		@Override public void update(){ super.update(); scale.set( scale.x * k ); }
+	}
+	//type 0 불꽃, 1 푸른 마력, 2 불똥, 3 무지개 빛
+	protected static Emitter.Factory calm( final int type, final float k ){
+		return new Emitter.Factory(){
+			@Override public void emit( Emitter e, int index, float x, float y ){
+				switch (type){
+					case 0: { CalmFlame p = (CalmFlame)e.recycle( CalmFlame.class ); p.k = k; p.reset( x, y ); break; }
+					case 1: { CalmMagic p = (CalmMagic)e.recycle( CalmMagic.class ); p.k = k; p.reset( x, y ); break; }
+					case 2: { CalmSpark p = (CalmSpark)e.recycle( CalmSpark.class ); p.k = k; p.resetStatic( x, y ); break; }
+					default: { CalmRainbow p = (CalmRainbow)e.recycle( CalmRainbow.class ); p.k = k; p.resetBurst( x, y ); p.speed.scale( CALM ); break; }
+				}
+			}
+			@Override public boolean lightMode(){ return true; }
+		};
+	}
+	private static final float QK = com.shatteredpixel.shatteredpixeldungeon.MazeTower.L3_PARTICLE_SIZE;
+	protected static final Emitter.Factory QUIET_FLAME = calm( 0, QK ), AMP_FLAME = calm( 0, 1 );
+	protected static final Emitter.Factory QUIET_MAGIC = calm( 1, QK ), AMP_MAGIC = calm( 1, 1 );
+	protected static final Emitter.Factory QUIET_SPARK = calm( 2, QK ), AMP_SPARK = calm( 2, 1 );
+	protected static final Emitter.Factory QUIET_RAINBOW = calm( 3, QK ), AMP_RAINBOW = calm( 3, 1 );
+
+	//원작 입자와 그 간격 (증폭됐을 때), 작은 입자 (평소). null이면 바꾸지 않는다
+	protected Emitter.Factory spellFactory(){ return null; }
+	protected Emitter.Factory quietFactory(){ return null; }
+	protected float spellInterval(){ return 0.06f; }
+
+	protected void mazeTint(){
+		if (!(ch instanceof Elemental)) return;
+		boolean amp = ch.isAlive() && ((Elemental) ch).mazeAmpBy != -1;
+		float want = amp ? com.shatteredpixel.shatteredpixeldungeon.MazeTower.L4_AMP_SCALE : 1f;
+		if (scale.x != want){
+			origin.set( width / 2f, height );
+			scale.set( want );
+		}
+		if (particles != null && particles.on && quietFactory() != null && ch.isAlive()){
+			int now = amp ? 1 : 0;
+			if (now != shownAmp){
+				shownAmp = now;
+				particles.pos( this, 3, 2, 6, 7 ); //(사용자) 원소가 떠 있는 자리에서만
+				if (amp) particles.pour( spellFactory(), spellInterval() * com.shatteredpixel.shatteredpixeldungeon.MazeTower.L4_AMP_DENSE );
+				else     particles.pour( quietFactory(), spellInterval() * com.shatteredpixel.shatteredpixeldungeon.MazeTower.L3_PARTICLE_SPARSE );
+			}
+		}
+	}
+
 	public void zap( int cell ) {
 		super.zap( cell );
 		
@@ -130,6 +201,8 @@ public abstract class ElementalSprite extends MobSprite {
 	}
 	
 	public static class Fire extends ElementalSprite {
+		@Override protected Emitter.Factory spellFactory(){ return AMP_FLAME; } //Maze Tower (L3·L4)
+		@Override protected Emitter.Factory quietFactory(){ return QUIET_FLAME; }
 		
 		{
 			boltType = MagicMissile.FIRE;
@@ -178,6 +251,8 @@ public abstract class ElementalSprite extends MobSprite {
 	}
 	
 	public static class Frost extends ElementalSprite {
+		@Override protected Emitter.Factory spellFactory(){ return AMP_MAGIC; } //Maze Tower (L3·L4)
+		@Override protected Emitter.Factory quietFactory(){ return QUIET_MAGIC; }
 		
 		{
 			boltType = MagicMissile.FROST;
@@ -202,6 +277,8 @@ public abstract class ElementalSprite extends MobSprite {
 	}
 	
 	public static class Shock extends ElementalSprite {
+		@Override protected Emitter.Factory spellFactory(){ return AMP_SPARK; } //Maze Tower (L3·L4)
+		@Override protected Emitter.Factory quietFactory(){ return QUIET_SPARK; }
 		
 		//different bolt, so overrides zap
 		@Override
@@ -232,12 +309,23 @@ public abstract class ElementalSprite extends MobSprite {
 	}
 	
 	public static class Chaos extends ElementalSprite {
+		@Override protected Emitter.Factory spellFactory(){ return AMP_RAINBOW; } //Maze Tower (L3·L4)
+		@Override protected Emitter.Factory quietFactory(){ return QUIET_RAINBOW; }
+		@Override protected float spellInterval(){ return 0.025f; }
 
 		@Override
 		public void zap(int cell) {
-			zap( cell, null ); //effectively super.super.zap
-			//relies on cursed wand for effects
-			((Elemental)ch).onZapComplete();
+			//Maze Tower (L3): 다음에 쓸 원소의 탄을 쏜다 (전격은 빛줄기)
+			int el = ch instanceof Elemental.ChaosElemental ? ((Elemental.ChaosElemental) ch).mazeNext : 1;
+			if (el == 3){
+				zap( cell, null );
+				((Elemental)ch).onZapComplete();
+				parent.add( new Beam.LightRay(center(), DungeonTilemap.raisedTileCenterToWorld(cell)) );
+				Sample.INSTANCE.play( Assets.Sounds.RAY );
+			} else {
+				boltType = el == 1 ? MagicMissile.FIRE : MagicMissile.FROST;
+				super.zap( cell );
+			}
 		}
 
 		@Override

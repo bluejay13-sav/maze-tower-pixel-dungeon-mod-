@@ -19,23 +19,21 @@ You climb a tower instead of descending a dungeon. Maze Tower adds, among other 
 
 Text is available in Korean and English.
 
-## Boss Trial (test build)
+## Test build
 
-The Boss Trial release lets you try three boss fights right away, as the Warrior:
-- Floor 5: Rotting Sap Mass (start at the boss floor entrance, level 6)
-- Floor 20: Wraith King (start at the boss floor entrance, level 19)
-- Floor 20: Mage-City Empress (start at the boss floor entrance, level 19)
-
-You start with every item from the floors before the boss. Climb the stairs up to reach the boss room.
+The test build is the full game, starting from floor 1. All four classes can be picked
+(the Mage's and Rogue's 2nd and 3rd tier classes are not ready yet).
+For testing, the in-game menu also has two cheats: **Go to Depth** (go to any floor) and **Get Items** (get any item).
 
 **How to play (Windows):** download the zip from the Releases page, unzip it anywhere, and run `Maze Tower.exe`.
 No separate Java install is needed.
 
-The Boss Trial is built from the `boss-trial` branch of this repository (the only change from `main` is `MazeTower.BOSS_TRIAL = true`).
+The test build is built from the `boss-trial` branch of this repository. The only changes from `main` are
+`MazeTower.TEST_BUILD = true` and leaving out the `docs` folder (art drafts and previews).
 
 ## Building from source
 
-Follow the original [desktop compile guide](docs/getting-started-desktop.md):
+Follow the original [desktop compile guide](https://github.com/00-Evan/shattered-pixel-dungeon/blob/master/docs/getting-started-desktop.md):
 - run: `gradlew desktop:debug`
 - runnable jar: `gradlew desktop:release` (output in `desktop/build/libs`)
 - Windows app folder with a bundled Java runtime: `gradlew desktop:jpackageImage` (output in `desktop/build/jpackage`)
@@ -53,14 +51,10 @@ All original credits are kept in the in-game About screen. The full source code 
 **미궁의 마탑은 [Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/)(녹픽던)을 바탕으로 만든 비공식 팬 모드입니다.**
 원작 개발자(Shattered Pixel, Evan Debenham)가 만들거나 승인한 게임이 아닙니다. 미궁의 마탑의 버그를 원작 개발자에게 알리지 말아 주세요.
 
-## 보스전 체험판
+## 테스트 버전
 
-전사로 보스전 세 가지를 바로 해 볼 수 있는 시험 버전입니다.
-- 5층 썩은 수액 덩어리 (보스층 입구·레벨 6에서 시작)
-- 20층 망령 왕 (보스층 입구·레벨 19에서 시작)
-- 20층 마도시의 여제 (보스층 입구·레벨 19에서 시작)
-
-보스층 바로 앞 층까지의 아이템을 모두 받은 채 시작하며, 올라가는 계단으로 올라가면 보스방입니다.
+1층부터 시작하는 게임 전체입니다. 네 직업을 모두 고를 수 있습니다(마법사·도적의 2차·3차 전직은 아직 준비 중입니다).
+시험해 보기 쉽게 게임 메뉴에 치트 두 가지가 있습니다: **층 이동**(원하는 층으로 이동)과 **아이템 꺼내기**(원하는 아이템 받기).
 
 **실행 방법 (Windows):** Releases 페이지에서 zip을 받아 아무 곳에나 압축을 풀고 `Maze Tower.exe`를 실행하세요. 자바를 따로 설치하지 않아도 됩니다.
 

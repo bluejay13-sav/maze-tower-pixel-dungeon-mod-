@@ -22,6 +22,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
+import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.Blob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ToxicGas;
@@ -89,6 +91,27 @@ public class DM200 extends Mob {
 
 	private int ventCooldown = 0;
 
+	{
+		//Maze Tower (J7): 자기가 뿜는 마력 증기에 다치지 않는다
+		if (MazeTower.J7_VAPOR) immunities.add(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.class);
+	}
+
+	//Maze Tower (J7): 젖은 채 맞으면 기절한다 (봉인 등롱과 같은 규칙: 젖음을 지우고 2턴, 그 뒤 5턴은 다시 기절하지 않음).
+	//박힌 채굴 기계(DM201)는 원작 그대로
+	@Override
+	public void damage( int dmg, Object src ) {
+		boolean wet = MazeTower.J7_VAPOR && !(this instanceof DM201)
+				&& com.shatteredpixel.shatteredpixeldungeon.actors.buffs.ElementalReactions.isWet(this);
+		super.damage( dmg, src );
+		if (wet && isAlive() && buff(DM100.StunGuard.class) == null
+				&& buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis.class) == null){
+			com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.detach(this, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Wet.class);
+			com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.prolong(this, com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Paralysis.class, MazeTower.H1_STUN_TURNS);
+			com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(this, DM100.StunGuard.class, MazeTower.H1_STUN_GUARD);
+			if (sprite != null && sprite.visible) sprite.showStatus(com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite.WARNING, Messages.get(DM200.class, "short_circuit"));
+		}
+	}
+
 	private static final String VENT_COOLDOWN = "vent_cooldown";
 
 	@Override
@@ -120,10 +143,12 @@ public class DM200 extends Mob {
 
 		Ballistica trajectory = new Ballistica(pos, enemy.pos, Ballistica.STOP_TARGET);
 
+		//Maze Tower (J7): 갉힌 채굴 기계는 원작 독가스 자리에 마력 증기를 뿜는다 (같은 양)
+		Class<? extends Blob> gas = MazeTower.J7_VAPOR ? com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ManaVapor.class : ToxicGas.class;
 		for (int i : trajectory.subPath(0, trajectory.dist)){
-			GameScene.add(Blob.seed(i, 20, ToxicGas.class));
+			GameScene.add(Blob.seed(i, 20, gas));
 		}
-		GameScene.add(Blob.seed(trajectory.collisionPos, 100, ToxicGas.class));
+		GameScene.add(Blob.seed(trajectory.collisionPos, 100, gas));
 
 	}
 

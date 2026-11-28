@@ -51,7 +51,12 @@ public class WndBloomTalent extends Window {
 		titlebar.setRect(0, 0, width, 0);
 		add(titlebar);
 
-		RenderedTextBlock txtInfo = PixelScene.renderTextBlock(talent.desc(), 6);
+		String desc = talent.desc();
+		//(B2) 전용 특성인데 지금 그 계열 무기를 들고 있지 않으면 꺼져 있다고 알린다
+		if (!talent.activeFor(Dungeon.hero)){
+			desc += "\n\n" + Messages.get(WndBloomTalent.class, talent.scope == BloomTalent.Scope.BOW ? "inactive_bow" : "inactive_sword");
+		}
+		RenderedTextBlock txtInfo = PixelScene.renderTextBlock(desc, 6);
 		txtInfo.maxWidth(width);
 		txtInfo.setPos(titlebar.left(), titlebar.bottom() + 2*GAP);
 		add(txtInfo);

@@ -368,6 +368,8 @@ public class WndSettings extends WndTabbed {
 		ColorBlock sep2;
 		CheckBox chkFont;
 		CheckBox chkVibrate;
+		CheckBox chkAutoDew; //Maze Tower (사용자): 걸으며 이슬 줍기
+		CheckBox chkKeySlide; //Maze Tower (사용자): PC 대각선 방향키 벽 따라 이동 (PC에만)
 
 		@Override
 		protected void createChildren() {
@@ -601,6 +603,30 @@ public class WndSettings extends WndTabbed {
 				chkVibrate.checked(SPDSettings.vibration());
 			}
 			add(chkVibrate);
+
+			//Maze Tower (사용자): 시야에 적이 없을 때, 걸어서 지나는 칸의 이슬을 1턴 들여 저절로 줍는다
+			chkAutoDew = new CheckBox(Messages.get(this, "auto_dew")){
+				@Override
+				protected void onClick() {
+					super.onClick();
+					SPDSettings.mazeAutoDew(checked());
+				}
+			};
+			chkAutoDew.checked(SPDSettings.mazeAutoDew());
+			add(chkAutoDew);
+
+			//Maze Tower (사용자): PC에서 방향키 두 개로 대각선을 누를 때 막혀 있으면 갈 수 있는 쪽으로 (모바일에는 없음)
+			if (DeviceCompat.isDesktop()){
+				chkKeySlide = new CheckBox(Messages.get(this, "key_slide")){
+					@Override
+					protected void onClick() {
+						super.onClick();
+						SPDSettings.mazeKeySlide(checked());
+					}
+				};
+				chkKeySlide.checked(SPDSettings.mazeKeySlide());
+				add(chkKeySlide);
+			}
 		}
 
 		@Override
@@ -647,6 +673,14 @@ public class WndSettings extends WndTabbed {
 				chkFont.setRect(0, sep2.y + 1 + GAP, width, BTN_HEIGHT);
 				chkVibrate.setRect(0, chkFont.bottom() + GAP, width, BTN_HEIGHT);
 				height = chkVibrate.bottom();
+			}
+
+			//Maze Tower (사용자): 걸으며 이슬 줍기
+			chkAutoDew.setRect(0, height + GAP, width, BTN_HEIGHT);
+			height = chkAutoDew.bottom();
+			if (chkKeySlide != null){
+				chkKeySlide.setRect(0, height + GAP, width, BTN_HEIGHT);
+				height = chkKeySlide.bottom();
 			}
 		}
 

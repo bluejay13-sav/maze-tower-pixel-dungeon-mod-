@@ -105,11 +105,16 @@ public class CityLevel extends RegularLevel {
 
 	@Override
 	public String tilesTex() {
+		//Maze Tower: 그 판의 20층 보스에 따라 다른 그림 (MazeTower.CITY_BY_BOSS)
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.CITY_BY_BOSS && com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED)
+			return com.shatteredpixel.shatteredpixeldungeon.MazeBosses.empress() ? Assets.Environment.TILES_CITY_EMPRESS : Assets.Environment.TILES_CITY_WRAITH;
 		return Assets.Environment.TILES_CITY;
 	}
 
 	@Override
 	public String waterTex() {
+		if (com.shatteredpixel.shatteredpixeldungeon.MazeTower.CITY_BY_BOSS && com.shatteredpixel.shatteredpixeldungeon.MazeBosses.ENABLED) //Maze Tower (사용자): 물도 그 판의 보스에 따라
+			return com.shatteredpixel.shatteredpixeldungeon.MazeBosses.empress() ? Assets.Environment.WATER_CITY_EMPRESS : Assets.Environment.WATER_CITY_WRAITH;
 		return Assets.Environment.WATER_CITY;
 	}
 

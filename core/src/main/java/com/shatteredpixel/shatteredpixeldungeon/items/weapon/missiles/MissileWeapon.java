@@ -182,13 +182,19 @@ abstract public class MissileWeapon extends Weapon {
 		if (action.equals(AC_DISASSEMBLE) && Arrow.canDisassemble(hero, this)){
 			Arrow.disassemble(hero, this);
 		}
+		if (action.equals(AC_SET_TRAP) && com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomHuntress.canSetTrap(hero, this)){
+			com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomHuntress.setTrap(hero, this); //Maze Tower (D15): 덫 놓기
+		}
 	}
+
+	public static final String AC_SET_TRAP = "SET_TRAP";
 
 	@Override
 	public ArrayList<String> actions( Hero hero ) {
 		ArrayList<String> actions = super.actions( hero );
 		actions.remove( AC_EQUIP );
 		if (Arrow.canDisassemble(hero, this)) actions.add(AC_DISASSEMBLE); //Maze Tower: 사냥꾼 투척 무기 분해
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomHuntress.canSetTrap(hero, this)) actions.add(AC_SET_TRAP); //Maze Tower (D15): 덫 놓기
 		return actions;
 	}
 	
@@ -441,12 +447,6 @@ abstract public class MissileWeapon extends Weapon {
 		}
 	}
 	
-	//Maze Tower: 고리지기 연속 투척 (저격의 반지 스킬)이 던진 뒤 원작처럼 내구도·떨어뜨리기를 처리한다
-	public void mazeAfterThrow( Char enemy, int cell, boolean hit ){
-		if (hit) rangedHit(enemy, cell);
-		else rangedMiss(cell);
-	}
-
 	protected void rangedMiss( int cell ) {
 		parent = null;
 		if (!spawnedForEffect) super.onThrow(cell);

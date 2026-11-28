@@ -74,6 +74,58 @@ public class Necromancer extends Mob {
 	private NecroSkeleton mySkeleton;
 	private int storedSkeletonID = -1;
 
+	// ===== Maze Tower (H7): 부적 넋 (드문 변종, 원작 영혼 강령술사 자리) =====
+	//처음에는 혼령을 부르는 대신 봉인 부적(10층 간수의 부적과 같은 피해·속박, 범위는 1칸)을 던진다.
+	//(결정) 한 마리가 H5_TALISMANS장을 갖고, 던질 때마다 로브의 부적이 한 장씩 사라진다. 던진 뒤 H5_TALISMAN_CD턴은 다시 던지지 않는다.
+	//(결정) 부적이 다 떨어지면 원작 영혼 강령술사처럼 혼령을 불러낸다. 이동 속도는 절반.
+	//몬스터는 이 부적에 다치지 않고, 술사(봉인술사·부적 넋)는 어떤 부적에도 면역이다(Tengu.BombAbility). 술사가 쓰러지면 아직 터지지 않은 부적도 사라진다.
+	//일반 봉인술사(이 클래스 그대로)는 원작처럼 묶인 유골을 부른다.
+	public int talismans = com.shatteredpixel.shatteredpixeldungeon.MazeTower.H5_TALISMANS;
+	private int talismanCD = 0;
+
+	public boolean mazeBinder(){
+		return com.shatteredpixel.shatteredpixeldungeon.MazeTower.H5_SEAL_TALISMAN && getClass() == SpectralNecromancer.class;
+	}
+
+	//(결정) 부적 넋은 느리게 움직인다
+	@Override
+	public float speed() {
+		return mazeBinder() ? super.speed() * com.shatteredpixel.shatteredpixeldungeon.MazeTower.H5_BINDER_SPEED : super.speed();
+	}
+
+	//부적을 던지거나, 거리를 두거나. 이번 차례를 처리했으면 결과(Boolean), 원작 사냥(부적이 다 떨어진 뒤의 소환 포함)으로 넘기면 null
+	private Boolean binderAct( boolean enemyInFOV ){
+		if (talismanCD > 0) talismanCD--;
+		if (talismans <= 0) return null; //부적이 다 떨어지면 원작대로 혼령을 부른다
+		if (!enemyInFOV || enemy == null) return null;
+		int dist = Dungeon.level.distance(pos, enemy.pos);
+		if (talismanCD <= 0 && dist <= com.shatteredpixel.shatteredpixeldungeon.MazeTower.H5_TALISMAN_RANGE
+				&& !isCharmedBy(enemy)
+				&& Tengu.throwBomb(this, enemy, com.shatteredpixel.shatteredpixeldungeon.MazeTower.H5_TALISMAN_RADIUS)){
+			talismans--;
+			talismanCD = com.shatteredpixel.shatteredpixeldungeon.MazeTower.H5_TALISMAN_CD;
+			if (sprite instanceof com.shatteredpixel.shatteredpixeldungeon.sprites.SpectralNecromancerSprite){
+				((com.shatteredpixel.shatteredpixeldungeon.sprites.SpectralNecromancerSprite) sprite).updateTalismans();
+			}
+			if (Dungeon.level.heroFOV[pos]) Dungeon.hero.interrupt();
+			spend(TICK);
+			return false; //부적이 날아가 닿으면 다음으로 (Tengu.throwBomb)
+		}
+		//가까우면 물러서고, 사거리 안이면 자리를 지킨다
+		if (dist <= 2){
+			int old = pos;
+			if (getFurther(enemy.pos)){
+				spend(1 / speed());
+				return moveSprite(old, pos);
+			}
+		}
+		if (dist <= com.shatteredpixel.shatteredpixeldungeon.MazeTower.H5_TALISMAN_RANGE){
+			spend(TICK);
+			return true;
+		}
+		return null;
+	}
+
 	@Override
 	protected boolean act() {
 		if (summoning && state != HUNTING){
@@ -141,6 +193,8 @@ public class Necromancer extends Mob {
 		super.storeInBundle(bundle);
 		bundle.put( SUMMONING, summoning );
 		bundle.put( FIRST_SUMMON, firstSummon );
+		bundle.put( "maze_talismans", talismans ); //Maze Tower (H5)
+		bundle.put( "maze_talisman_cd", talismanCD );
 		if (summoning){
 			bundle.put( SUMMONING_POS, summoningPos);
 		}
@@ -156,6 +210,7 @@ public class Necromancer extends Mob {
 		super.restoreFromBundle(bundle);
 		summoning = bundle.getBoolean( SUMMONING );
 		if (bundle.contains(FIRST_SUMMON)) firstSummon = bundle.getBoolean(FIRST_SUMMON);
+		if (bundle.contains("maze_talismans")){ talismans = bundle.getInt("maze_talismans"); talismanCD = bundle.getInt("maze_talisman_cd"); } //Maze Tower (H5)
 		if (summoning){
 			summoningPos = bundle.getInt( SUMMONING_POS );
 		}
@@ -272,7 +327,15 @@ public class Necromancer extends Mob {
 			if (enemySeen){
 				target = enemy.pos;
 			}
-			
+
+			//Maze Tower (H5): 봉인술사는 유골을 부르지 않고 부적을 던진다
+			if (mazeBinder()){
+				Boolean done = binderAct(enemyInFOV);
+				if (done != null) return done;
+				//부적이 남아 있으면 원작 사냥(다가가기)만, 다 떨어지면 아래의 원작 소환으로
+				if (talismans > 0) return super.act(enemyInFOV, justAlerted);
+			}
+
 			if (storedSkeletonID != -1){
 				Actor ch = Actor.findById(storedSkeletonID);
 				storedSkeletonID = -1;

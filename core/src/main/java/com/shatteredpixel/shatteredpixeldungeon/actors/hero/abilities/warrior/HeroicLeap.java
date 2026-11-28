@@ -22,7 +22,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
-import com.shatteredpixel.shatteredpixeldungeon.MazeTower;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
@@ -58,13 +57,8 @@ public class HeroicLeap extends ArmorAbility {
 	public float chargeUse( Hero hero ) {
 		float chargeUse = super.chargeUse(hero);
 		if (hero.buff(DoubleJumpTracker.class) != null){
-			if (MazeTower.ORIGINAL_TALENTS) {
-				//reduced charge use by 16%/30%/41%/50%
-				chargeUse *= Math.pow(0.84, hero.pointsInTalent(Talent.DOUBLE_JUMP));
-			} else {
-				//Maze Tower: 이중 도약 16/30/40/50%
-				chargeUse *= 1f - MazeTower.T4_DOUBLE_JUMP[Math.min(4, hero.pointsInTalent(Talent.DOUBLE_JUMP))];
-			}
+			//reduced charge use by 16%/30%/41%/50%
+			chargeUse *= Math.pow(0.84, hero.pointsInTalent(Talent.DOUBLE_JUMP));
 		}
 		return chargeUse;
 	}
@@ -83,12 +77,6 @@ public class HeroicLeap extends ArmorAbility {
 
 			//can't occupy the same cell as another char, so move back one.
 			int backTrace = route.dist-1;
-
-			//Maze Tower: 최대 도약 거리
-			if (!MazeTower.ORIGINAL_TALENTS && route.dist > MazeTower.LEAP_MAX_DIST){
-				cell = route.path.get(MazeTower.LEAP_MAX_DIST);
-				backTrace = MazeTower.LEAP_MAX_DIST - 1;
-			}
 			while (Actor.findChar( cell ) != null && cell != hero.pos) {
 				cell = route.path.get(backTrace);
 				backTrace--;
@@ -109,25 +97,7 @@ public class HeroicLeap extends ArmorAbility {
 
 					for (int i : PathFinder.NEIGHBOURS8) {
 						Char mob = Actor.findChar(hero.pos + i);
-						if (mob != null && mob != hero && mob.alignment != Char.Alignment.ALLY && !MazeTower.ORIGINAL_TALENTS) {
-							//Maze Tower: 몸통 박치기 5 + 방어력 × 비율 (적 방어력은 원작처럼 뺀다), 충격파 2칸 + 취약 확률
-							int slam = Math.min(4, hero.pointsInTalent(Talent.BODY_SLAM));
-							if (slam > 0){
-								int damage = MazeTower.T4_BODY_SLAM_FLAT + Math.round(hero.drRoll() * MazeTower.T4_BODY_SLAM_ARMOR[slam]);
-								damage -= mob.drRoll();
-								mob.damage(Math.max(0, damage), hero);
-								if (mob.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.SLAM_WAVE, mob.sprite);
-							}
-							int wave = Math.min(4, hero.pointsInTalent(Talent.IMPACT_WAVE));
-							if (wave > 0 && mob.isAlive() && mob.pos == hero.pos + i){
-								if (slam <= 0 && mob.sprite != null) com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.onChar(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.SLAM_WAVE, mob.sprite);
-								Ballistica trajectory = new Ballistica(mob.pos, mob.pos + i, Ballistica.MAGIC_BOLT);
-								WandOfBlastWave.throwChar(mob, trajectory, MazeTower.T4_IMPACT_PUSH, true, true, HeroicLeap.this);
-								if (Random.Float() < MazeTower.T4_IMPACT_VULN[wave]){
-									Buff.prolong(mob, Vulnerable.class, MazeTower.T4_IMPACT_VULN_TURNS);
-								}
-							}
-						} else if (mob != null && mob != hero && mob.alignment != Char.Alignment.ALLY) {
+						if (mob != null && mob != hero && mob.alignment != Char.Alignment.ALLY) {
 							if (hero.hasTalent(Talent.BODY_SLAM)){
 								int damage = Hero.heroDamageIntRange(hero.pointsInTalent(Talent.BODY_SLAM), 4*hero.pointsInTalent(Talent.BODY_SLAM));
 								damage += Math.round(hero.drRoll()*0.25f*hero.pointsInTalent(Talent.BODY_SLAM));
@@ -145,14 +115,8 @@ public class HeroicLeap extends ArmorAbility {
 						}
 					}
 
-					if (MazeTower.ORIGINAL_TALENTS){
-						WandOfBlastWave.BlastWave.blast(dest);
-						PixelScene.shake(2, 0.5f);
-					} else {
-						//Maze Tower (2026-11-21): 다시 그린 착지 그림 (fx3_16), 몸통 박치기·충격파를 받은 적에게 fx3_17, 흔들림 1픽셀
-						com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.atCell(com.shatteredpixel.shatteredpixeldungeon.effects.MazeFx.Fx.LEAP, dest);
-						PixelScene.shake(1, 0.1f);
-					}
+					WandOfBlastWave.BlastWave.blast(dest);
+					PixelScene.shake(2, 0.5f);
 
 					Invisibility.dispel();
 					hero.spendAndNext(Actor.TICK);
@@ -161,7 +125,7 @@ public class HeroicLeap extends ArmorAbility {
 						hero.buff(DoubleJumpTracker.class).detach();
 					} else {
 						if (hero.hasTalent(Talent.DOUBLE_JUMP)) {
-							Buff.affect(hero, DoubleJumpTracker.class, MazeTower.T4_DOUBLE_JUMP_TURNS);
+							Buff.affect(hero, DoubleJumpTracker.class, 3);
 						}
 					}
 				}

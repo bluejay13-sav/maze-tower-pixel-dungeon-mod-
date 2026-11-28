@@ -106,8 +106,7 @@ public enum Talent {
 	//Berserker T3
 	ENDLESS_RAGE(11, 3), DEATHLESS_FURY(12, 3), ENRAGED_CATALYST(13, 3),
 	//Gladiator T3
-	//Maze Tower: 3차 특성은 1~4레벨 (원작 3). 야성=CLEAVE
-	CLEAVE(14, 4), LETHAL_DEFENSE(15, 4), ENHANCED_COMBO(16, 4),
+	CLEAVE(14, 3), LETHAL_DEFENSE(15, 3), ENHANCED_COMBO(16, 3),
 	//Heroic Leap T4
 	BODY_SLAM(17, 4), IMPACT_WAVE(18, 4), DOUBLE_JUMP(19, 4),
 	//Shockwave T4
@@ -208,12 +207,16 @@ public enum Talent {
 	//Maze Tower: 1차(발아) 특성 중 원작에 없는 것 (아이콘은 임시로 원작 아이콘 재사용)
 	GRIT(12),       //전사 투지
 	MANA_CYCLE(40), //마법사 마나 순환
-	//Maze Tower: 3차(만개) 특성 중 원작에 없는 것
-	SKILL_LINK(7, 4), //검투사 기술 연계
-	//Maze Tower: 사냥꾼 3차 추적자 / 고리지기, 4차 정령 매 (아이콘은 원작 것을 빌려 씀)
-	PREY_MARK(107, 4), LONG_SHOT(106, 4), SNARE(110, 4), PREY_DRAIN(109, 4),
-	RING_PULSE(73, 4), RING_RESONANCE(108, 4), BARE_HUNT(142, 4), RING_BLOOM(112, 4),
-	HAWK_LINGER(121, 4), HAWK_EYE(119, 4), HUNT_SIGNAL(120, 4);
+	//Maze Tower (S1, 지시서 1127): 새 3차 전직 특성 (모두 0~4레벨, 수치 MazeTower T3B_*, 아이콘은 원작 것을 빌려 씀)
+	FLOW_EDGE(3, 4), DANCING_FEET(25, 4), FINISHING_BLADE(153, 4), FLOWING_STEP(18, 4),       //검무가: 결 흐름 / 춤추는 발 / 끝맺는 칼 / 이어지는 걸음
+	HEAD_ON(7, 4), LOCKED_EYES(24, 4), VICTOR_BREATH(88, 4), LONG_DUEL(26, 4),             //결투가: 정면 승부 / 맞선 눈 / 승자의 숨 / 긴 승부
+	CLOSE_SHOT(106, 4), RETURN_FIRE(121, 4), CLOSE_SHOT_II(119, 4), STEP_BACK(110, 4),   //전투 사냥꾼: 코앞 사격 / 맞불 / 코앞 사격 II / 발 빼기
+	SPREADING_GROVE(112, 4), LEAF_ARROW(107, 4), GROVE_EMBRACE(50, 4), ROOT_STEP(109, 4), //숲지기: 번지는 숲 / 풀잎 화살 / 숲의 품 / 뿌리 걸음
+	//Maze Tower (T2): 4차 펫 강화. 펫마다 셋 + 원작 영웅적인 에너지, 모두 0~4레벨 (수치·설명은 pets/PetTalents, 아이콘은 원작 것을 빌려 씀)
+	PET_BEAK(120, 4), PET_HAWK_EYE(119, 4), PET_FLAP(121, 4),   //정령 매: 날카로운 부리 / 매의 눈 / 성가신 날갯짓
+	PET_HIDE(88, 4), PET_SHARE(24, 4), PET_ROAR(18, 4),         //이끼 곰: 두꺼운 가죽 / 대신 받기 / 포효
+	PET_STANCE(25, 4), PET_REQUITE(153, 4), PET_OATH(3, 4),     //마지막 근위: 곧은 자세 / 되갚는 칼 / 굳은 맹세
+	PET_ESSENCE(50, 4), PET_SHIFT(52, 4), PET_TOUCH(53, 4);     //길든 주문: 짙은 원소 / 빠른 변주 / 스며드는 손길
 
 	public static class ImprovisedProjectileCooldown extends FlavourBuff{
 		public int icon() { return BuffIndicator.TIME; }
@@ -500,6 +503,10 @@ public enum Talent {
 	}
 
 	public String desc(boolean metamorphed){
+		//Maze Tower (T2): 펫 강화는 MazeTower 수치로 레벨별 설명을 채운다
+		if (com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetTalents.isPetTalent(this)){
+			return com.shatteredpixel.shatteredpixeldungeon.actors.hero.pets.PetTalents.desc(this);
+		}
 		if (metamorphed){
 			String metaDesc = Messages.get(this, name() + ".meta_desc");
 			if (!metaDesc.equals(Messages.NO_TEXT_FOUND)){
@@ -1123,13 +1130,19 @@ public enum Talent {
 				break;
 			case GLADIATOR:
 				Collections.addAll(tierTalents, CLEAVE, LETHAL_DEFENSE, ENHANCED_COMBO);
-				if (!MazeTower.ORIGINAL_TALENTS) tierTalents.add(SKILL_LINK); //Maze Tower: 기술 연계
 				break;
-			case TRACKER: //Maze Tower: 사냥꾼 추적자
-				Collections.addAll(tierTalents, PREY_MARK, LONG_SHOT, SNARE, PREY_DRAIN);
+			//Maze Tower (S1, 지시서 1127): 새 3차 전직 넷
+			case BLADEDANCER:
+				Collections.addAll(tierTalents, FLOW_EDGE, DANCING_FEET, FINISHING_BLADE, FLOWING_STEP);
 				break;
-			case RINGKEEPER: //Maze Tower: 사냥꾼 고리지기
-				Collections.addAll(tierTalents, RING_PULSE, RING_RESONANCE, BARE_HUNT, RING_BLOOM);
+			case DUELMASTER:
+				Collections.addAll(tierTalents, HEAD_ON, LOCKED_EYES, VICTOR_BREATH, LONG_DUEL);
+				break;
+			case BATTLEHUNTER:
+				Collections.addAll(tierTalents, CLOSE_SHOT, RETURN_FIRE, CLOSE_SHOT_II, STEP_BACK);
+				break;
+			case FORESTWARDEN:
+				Collections.addAll(tierTalents, SPREADING_GROVE, LEAF_ARROW, GROVE_EMBRACE, ROOT_STEP);
 				break;
 			case BATTLEMAGE:
 				Collections.addAll(tierTalents, EMPOWERED_STRIKE, MYSTICAL_CHARGE, EXCESS_CHARGE);
@@ -1212,7 +1225,10 @@ public enum Talent {
 
 	private static final HashSet<String> removedTalents = new HashSet<>();
 	static{
-		//nothing atm
+		//Maze Tower (T2): 예전 사냥꾼 4차 정령 매 특성 (4차가 펫으로 바뀜)
+		removedTalents.add("HAWK_LINGER"); removedTalents.add("HAWK_EYE"); removedTalents.add("HUNT_SIGNAL");
+		//Maze Tower (2026-11-27): 옛 3차 검투사 기술 연계·추적자·고리지기 특성은 지웠다
+		for (String s : new String[]{"SKILL_LINK","PREY_MARK","LONG_SHOT","SNARE","PREY_DRAIN","RING_PULSE","RING_RESONANCE","BARE_HUNT","RING_BLOOM"}) removedTalents.add(s);
 	}
 
 	private static final HashMap<String, String> renamedTalents = new HashMap<>();

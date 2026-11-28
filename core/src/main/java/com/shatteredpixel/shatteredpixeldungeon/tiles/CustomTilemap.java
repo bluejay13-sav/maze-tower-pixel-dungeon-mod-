@@ -88,7 +88,9 @@ public abstract class CustomTilemap implements Bundlable {
 	
 	public Tilemap create(){
 		if (vis != null && vis.alive) vis.killAndErase();
-		vis = new Tilemap(texture, new TextureFilm( texture, SIZE, SIZE )){
+		//Maze Tower (사용자): 역행 중에는 역행판 그림 (26층·검은 씨앗 혹 방의 halls_special 등, MazeRetreat.tiles)
+		Object tex = texture instanceof String ? com.shatteredpixel.shatteredpixeldungeon.MazeRetreat.tiles( (String) texture ) : texture;
+		vis = new Tilemap(tex, new TextureFilm( tex, SIZE, SIZE )){
 			@Override
 			protected NoosaScript script() {
 				//allow lighting for custom tilemaps

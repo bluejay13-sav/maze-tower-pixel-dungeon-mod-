@@ -144,6 +144,7 @@ public class SewerLevel extends RegularLevel {
 		if (!(this instanceof SewerBossLevel)) com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.place(this);
 		if (!(this instanceof SewerBossLevel)) MazeDeco.thinWalls(this, com.shatteredpixel.shatteredpixeldungeon.MazeTower.SEWER_WALL_DECO_KEEP); //Maze Tower: 뿌리 단면 벽 장식 줄이기
 		super.createMobs();
+		if (!(this instanceof SewerBossLevel)) com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ParasiteSprout.place(this); //Maze Tower (F6): 기생 싹 (3층부터, 드묾)
 	}
 	
 	@Override

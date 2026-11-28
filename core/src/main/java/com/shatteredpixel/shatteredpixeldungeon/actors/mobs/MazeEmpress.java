@@ -110,12 +110,19 @@ public class MazeEmpress extends Mob implements com.shatteredpixel.shatteredpixe
 	private final ArrayList<MovieClip> boltFx = new ArrayList<>(), rainFx = new ArrayList<>(),
 			warnZoneFx = new ArrayList<>(), stormFx = new ArrayList<>();
 
+	//Maze Tower: 화면 그리기(매 프레임)에서도 불린다. 그사이 게임 진행 쪽이 몹 목록을 바꾸면 ConcurrentModificationException으로
+	// 튕길 수 있어, 그때는 지난번에 찾은 값을 쓴다.
+	private static MazeEmpress cachedFind = null;
 	public static MazeEmpress find(){
 		if (Dungeon.level == null) return null;
-		for (Mob m : Dungeon.level.mobs){
-			if (m instanceof MazeEmpress && m.isAlive()) return (MazeEmpress) m;
+		try {
+			for (Mob m : Dungeon.level.mobs){
+				if (m instanceof MazeEmpress && m.isAlive()) return cachedFind = (MazeEmpress) m;
+			}
+			return cachedFind = null;
+		} catch (java.util.ConcurrentModificationException e){
+			return cachedFind != null && cachedFind.isAlive() && Dungeon.level.mobs.contains(cachedFind) ? cachedFind : null;
 		}
-		return null;
 	}
 
 	public int phase(){ return phase; }

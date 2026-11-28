@@ -84,6 +84,12 @@ public class Ghoul extends Mob {
 	private int timesDowned = 0;
 	protected int partnerID = -1;
 
+	//Maze Tower (L1): 짝 잃은 시민의 영혼 끈(GhoulSprite → SoulTether)이 짝을 찾을 때 쓴다. 짝이 쓰러져 있으면(행동 목록에 없음) null
+	public Ghoul mazePartner(){
+		Actor a = partnerID == -1 ? null : Actor.findById( partnerID );
+		return a instanceof Ghoul ? (Ghoul) a : null;
+	}
+
 	private static final String PARTNER_ID = "partner_id";
 	private static final String TIMES_DOWNED = "times_downed";
 	

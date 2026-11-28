@@ -223,6 +223,9 @@ abstract public class Weapon extends KindOfWeapon {
 	private static final String MASTERY_POTION_BONUS = "mastery_potion_bonus";
 	private static final String AUGMENT	        = "augment";
 
+	//Maze Tower (K8): 미스릴 도안을 쓴 무기 (도안 종류 이름, 없으면 null). 강화·마법·저주는 그대로 두고 피해·마나·고유 능력만 바뀐다(MithrilForge)
+	public String mazeMithril = null;
+
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle( bundle );
@@ -233,6 +236,7 @@ abstract public class Weapon extends KindOfWeapon {
 		bundle.put( CURSE_INFUSION_BONUS, curseInfusionBonus );
 		bundle.put( MASTERY_POTION_BONUS, masteryPotionBonus );
 		bundle.put( AUGMENT, augment );
+		if (mazeMithril != null) bundle.put( "maze_mithril", mazeMithril ); //Maze Tower (K8)
 	}
 	
 	@Override
@@ -246,6 +250,7 @@ abstract public class Weapon extends KindOfWeapon {
 		masteryPotionBonus = bundle.getBoolean( MASTERY_POTION_BONUS );
 
 		augment = bundle.getEnum(AUGMENT, Augment.class);
+		mazeMithril = bundle.contains( "maze_mithril" ) ? bundle.getString( "maze_mithril" ) : null; //Maze Tower (K8)
 	}
 	
 	@Override
@@ -376,6 +381,16 @@ abstract public class Weapon extends KindOfWeapon {
 	
 	public Item upgrade(boolean enchant ) {
 
+		//Maze Tower (K8, 사용자): 미스릴 무기는 강화해도 부여된 마법과 저주가 사라지지 않는다 (저주는 저주 해제 주문서로 푼다)
+		if (mazeMithril != null){
+			boolean keepCursed = cursed;
+			if (enchant && enchantment == null) enchant(Enchantment.random());
+			if (enchantment instanceof Crystal) ((Crystal) enchantment).repair(this, false, 100);
+			Item r = super.upgrade();
+			cursed = keepCursed;
+			return r;
+		}
+
 		if (enchant){
 			if (enchantment == null){
 				enchant(Enchantment.random());
@@ -409,11 +424,13 @@ abstract public class Weapon extends KindOfWeapon {
 	
 	@Override
 	public String name() {
+		//Maze Tower (K8): 미스릴 무기는 무기 이름 앞에 "미스릴" (마법 부여 이름은 그 바깥에)
+		String base = mazeMithril != null ? Messages.get(Weapon.class, "maze_mithril_name", super.name()) : super.name();
 		if (isEquipped(Dungeon.hero) && !hasCurseEnchant() && Dungeon.hero.buff(HolyWeapon.HolyWepBuff.class) != null
 			&& (Dungeon.hero.subClass != HeroSubClass.PALADIN || enchantment == null)){
-				return Messages.get(HolyWeapon.class, "ench_name", super.name());
+				return Messages.get(HolyWeapon.class, "ench_name", base);
 			} else {
-				return enchantment != null && (cursedKnown || !enchantment.curse()) ? enchantment.name(super.name()) : super.name();
+				return enchantment != null && (cursedKnown || !enchantment.curse()) ? enchantment.name(base) : base;
 
 		}
 	}

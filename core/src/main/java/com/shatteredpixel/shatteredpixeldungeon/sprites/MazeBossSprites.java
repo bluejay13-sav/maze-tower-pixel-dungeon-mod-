@@ -25,8 +25,6 @@ public class MazeBossSprites {
 	public enum Look {
 		SAP        ("sprites/maze_b1_sap_sheet.png",        26, 18), //5층 썩은 수액 덩어리
 		WARDEN     ("sprites/maze_b2_warden_sheet.png",     24, 24), //10층 그림자 간수
-		GOLEM      ("sprites/maze_b3_golem_sheet.png",      31, 26), //15층 마도 골렘
-		CRYSTAL    ("sprites/maze_b4_crystal_sheet.png",    27, 28), //15층 수정 거인
 		WRAITHKING ("sprites/maze_b5_wraithking_sheet.png", 22, 25), //20층 망령 왕
 		EMPRESS    ("sprites/maze_b6_empress_sheet.png",    22, 23), //20층 마도시의 여제
 		MASTER     ("sprites/maze_b7_master_sheet.png",     32, 27); //25층 탑의 주인
@@ -41,7 +39,6 @@ public class MazeBossSprites {
 		}
 	}
 
-	public static Look look15(){ return MazeBosses.crystalGiant() ? Look.CRYSTAL : Look.GOLEM; }
 	public static Look look20(){ return MazeBosses.empress() ? Look.EMPRESS : Look.WRAITHKING; }
 
 	//그림을 바꾸고 기본 동작(대기·이동·공격·사망)을 채운다. 특수 동작에 쓸 수 있게 TextureFilm을 돌려준다.
@@ -110,7 +107,7 @@ public class MazeBossSprites {
 		if (!MazeBosses.ENABLED || s.parent == null) return;
 		int level;
 		if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo)            level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT;
-		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu)     level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT; //(결정) 10층도 5층과 같은 정도로
+		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu || ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ShadowWarden) level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT; //(결정) 10층도 5층과 같은 정도로
 		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.WraithKing || ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.MazeEmpress) level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT; //20층 마탑 보스
 		else if (ch instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing) level = com.shatteredpixel.shatteredpixeldungeon.effects.particles.BossPetalParticle.FAINT; //(결정) 20층도 5층과 같은 정도로
 		else return;

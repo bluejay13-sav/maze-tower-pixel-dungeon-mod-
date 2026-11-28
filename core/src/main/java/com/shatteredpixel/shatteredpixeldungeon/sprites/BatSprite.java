@@ -22,29 +22,56 @@
 package com.shatteredpixel.shatteredpixeldungeon.sprites;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Bat;
 import com.watabou.noosa.TextureFilm;
 
 public class BatSprite extends MobSprite {
-	
+
+	//Maze Tower (J3): 마석 박쥐. 그림 줄 0~3 = 배에 든 마나(빈 배 → 가득 부푼 배)
+	private int belly = -1;
+	private TextureFilm frames;
+
 	public BatSprite() {
 		super();
-		
+
 		texture( Assets.Sprites.BAT );
-		
-		TextureFilm frames = new TextureFilm( texture, 15, 15 );
-		
-		idle = new Animation( 8, true );
-		idle.frames( frames, 0, 1 );
-		
-		run = new Animation( 12, true );
-		run.frames( frames, 0, 1 );
-		
-		attack = new Animation( 12, false );
-		attack.frames( frames, 2, 3, 0, 1 );
-		
-		die = new Animation( 12, false );
-		die.frames( frames, 4, 5, 6 );
-		
+
+		frames = new TextureFilm( texture, 15, 15 );
+
+		belly(0);
+
 		play( idle );
+	}
+
+	@Override
+	public void link( Char ch ) {
+		super.link( ch );
+		if (ch instanceof Bat) belly(((Bat) ch).bellyRow());
+	}
+
+	//Maze Tower (J3): 배의 줄을 바꾼다. 지금 돌던 동작은 새 줄로 이어서 돈다
+	public void belly( int row ){
+		if (row == belly) return;
+		belly = row;
+		Animation oldIdle = idle, oldRun = run;
+		int o = row * 8; //한 줄에 8칸 (128 / 15)
+
+		idle = new Animation( 8, true );
+		idle.frames( frames, o, o+1 );
+
+		run = new Animation( 12, true );
+		run.frames( frames, o, o+1 );
+
+		attack = new Animation( 12, false );
+		attack.frames( frames, o+2, o+3, o, o+1 );
+
+		die = new Animation( 12, false );
+		die.frames( frames, o+4, o+5, o+6 );
+
+		if (curAnim != null){
+			if (curAnim == oldIdle) play( idle );
+			else if (curAnim == oldRun) play( run );
+		}
 	}
 }

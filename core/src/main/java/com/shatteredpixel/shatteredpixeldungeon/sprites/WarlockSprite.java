@@ -71,6 +71,32 @@ public class WarlockSprite extends MobSprite {
 		Sample.INSTANCE.play( Assets.Sounds.ZAP );
 	}
 	
+	//Maze Tower (L4): 증폭하는 주문과 잇는 푸른 선 (공명 수정의 실과 같은 그림: 아주 옅은 실 위로 빛 알갱이가 마도사에서 주문 쪽으로 흐름)
+	private com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ResonanceCrystal.ThreadLine ampLine;
+	private int ampId = -1;
+
+	@Override
+	public void update() {
+		super.update();
+		if (!(ch instanceof Warlock)) return;
+		com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Elemental e = ((Warlock) ch).mazeAmpElemental();
+		boolean ok = ch.isAlive() && e != null && e.isAlive() && e.sprite != null && e.sprite.parent != null && e.mazeAmpBy == ch.id();
+		if (!ok || (ampLine != null && ampId != e.id())){
+			if (ampLine != null){ ampLine.killAndErase(); ampLine = null; ampId = -1; }
+		}
+		if (ok && (ampLine == null || ampLine.parent == null)){
+			ampLine = new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ResonanceCrystal.ThreadLine( this, e.sprite );
+			com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene.groupEffect( ampLine );
+			ampId = e.id();
+		}
+	}
+
+	@Override
+	public void kill() {
+		if (ampLine != null){ ampLine.killAndErase(); ampLine = null; }
+		super.kill();
+	}
+
 	@Override
 	public void onComplete( Animation anim ) {
 		if (anim == zap) {

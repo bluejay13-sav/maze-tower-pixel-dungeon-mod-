@@ -76,6 +76,9 @@ public class QuickSlotButton extends Button {
 		targetingSlot = -1;
 	}
 	
+	//Maze Tower: (사용자) 퀵슬롯을 두 번 눌러(두 번째 누름이 타게팅된 적을 고름) 칸을 고르는 중이면 true
+	public static boolean mazeAutoFire = false;
+
 	@Override
 	protected void createChildren() {
 		super.createChildren();
@@ -89,11 +92,16 @@ public class QuickSlotButton extends Button {
 				if (targetingSlot == slotNum && lastTarget != null) {
 					int cell = autoAim(lastTarget, select(slotNum));
 
-					if (cell != -1){
-						GameScene.handleCell(cell);
-					} else {
-						//couldn't auto-aim, just target the position and hope for the best.
-						GameScene.handleCell( lastTarget.pos );
+					mazeAutoFire = true; //Maze Tower: (사용자) 퀵슬롯을 한 번 더 눌러 타게팅된 적을 고른 것 (검은 스킬 대신 기본공격)
+					try {
+						if (cell != -1){
+							GameScene.handleCell(cell);
+						} else {
+							//couldn't auto-aim, just target the position and hope for the best.
+							GameScene.handleCell( lastTarget.pos );
+						}
+					} finally {
+						mazeAutoFire = false;
 					}
 				} else {
 					Item item = select(slotNum);

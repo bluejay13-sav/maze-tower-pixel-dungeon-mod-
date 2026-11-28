@@ -48,7 +48,7 @@ public class BowCharge extends Buff {
 			GLog.w(Messages.get(BowCharge.class, "already"));
 			return;
 		}
-		if (!Mana.get(hero).spend(cost)) return;
+		if (!Mana.get(hero).spendForSkill(cost)) return; //(A1) 장전·집중한 턴은 회복 없음 (강화된 평타를 쏘는 턴은 찬다)
 
 		BowCharge c = Buff.affect(hero, BowCharge.class);
 		c.kind = kind;

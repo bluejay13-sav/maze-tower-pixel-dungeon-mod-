@@ -48,6 +48,8 @@ public class WraithEyes extends Mob {
 	public void damage( int dmg, Object src ) {
 		WraithKing k = WraithKing.find();
 		if (k != null && dmg > 0) k.counterHit(dmg, src);
+		TowerMaster m = TowerMaster.find(); //Maze Tower (O2): 25층 탑의 주인의 기습 눈도 같다
+		if (k == null && m != null && dmg > 0) m.counterHit(dmg, src);
 		if (sprite != null) sprite.flash();
 	}
 

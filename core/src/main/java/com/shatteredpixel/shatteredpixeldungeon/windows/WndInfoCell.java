@@ -78,7 +78,13 @@ public class WndInfoCell extends Window {
 				water.frame(0, 0, DungeonTilemap.SIZE, DungeonTilemap.SIZE);
 				return water;
 			} else {
-				return DungeonTerrainTilemap.tile(cell, tile);
+				Image base = DungeonTerrainTilemap.tile(cell, tile);
+				//Maze Tower (F3): 수액 웅덩이는 지도에 보이는 그 칸 그대로 (바닥 위에 수액)
+				if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.at(cell)) return com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.infoImage(cell, base);
+				//Maze Tower (사용자): 검은 낙엽·새잎 땅도 지도에 보이는 그 칸 그대로
+				if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.at(cell)) return com.shatteredpixel.shatteredpixeldungeon.effects.TileFxLayer.infoImage(Dungeon.level.blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.class), com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects.Fx.BLACK_LEAVES_CONN, true, cell, base);
+				if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.at(cell)) return com.shatteredpixel.shatteredpixeldungeon.effects.TileFxLayer.infoImage(Dungeon.level.blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.class), com.shatteredpixel.shatteredpixeldungeon.effects.BossEffects.Fx.SPROUT_GROUND_CONN, true, cell, base);
+				return base;
 			}
 		}
 	}
@@ -114,6 +120,11 @@ public class WndInfoCell extends Window {
 		if (customTile != null && customTile.name(x, y) != null){
 			return customTile.name(x, y);
 		} else {
+			//Maze Tower (F3): 수액 웅덩이 칸의 이름
+			if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.at(cell)) return com.shatteredpixel.shatteredpixeldungeon.messages.Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SapFloor.class, "name");
+			//Maze Tower (사용자): 검은 낙엽·새잎 땅 칸의 이름
+			if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.at(cell)) return com.shatteredpixel.shatteredpixeldungeon.messages.Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.class, "name");
+			if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.at(cell)) return com.shatteredpixel.shatteredpixeldungeon.messages.Messages.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.class, "name");
 			return Dungeon.level.tileName(Dungeon.level.map[cell]);
 		}
 	}
@@ -161,6 +172,10 @@ public class WndInfoCell extends Window {
 			} else {
 				desc += Dungeon.level.tileDesc(Dungeon.level.map[cell]);
 			}
+
+		} else if (com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ThiefLock.at(cell)) {
+			//Maze Tower (H3): 탈옥수가 잠근 문은 열쇠 안내 대신 몇 턴 뒤 열리는지
+			desc += com.shatteredpixel.shatteredpixeldungeon.actors.blobs.ThiefLock.desc(cell);
 
 		} else {
 

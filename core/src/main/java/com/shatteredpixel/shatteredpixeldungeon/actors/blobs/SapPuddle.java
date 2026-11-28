@@ -43,7 +43,7 @@ public class SapPuddle extends Blob {
 				volume += off[cell];
 
 				Char ch = Actor.findChar(cell);
-				if (ch != null && !(ch instanceof Goo) && !ch.flying){
+				if (ch != null && !(ch instanceof Goo) && !ch.flying && !ch.isImmune(getClass())){ //Maze Tower (E2): 정화 물약의 면역
 					Buff.prolong(ch, Cripple.class, 1f);
 				}
 			}
@@ -53,8 +53,21 @@ public class SapPuddle extends Blob {
 	//Maze Tower: 수액이 물 위에 떨어지면 그 칸의 물을 없애고 수액이 대신한다 (물과 이어져 보이지 않게)
 	@Override
 	public void seed( Level level, int cell, int amount ) {
+		if (onDoor( level, cell )) return; //(사용자) 문 칸에는 수액이 생기지 않는다
 		super.seed( level, cell, amount );
 		replaceWater( level, cell );
+	}
+
+	//(사용자) 문이 있는 칸 (열린 문·닫힌 문·잠긴 문·비밀 문·수정 문): 수액 웅덩이(SapFloor·SapPuddle)가 생기지 않는다
+	public static boolean onDoor( Level level, int cell ){
+		if (level == null || cell < 0 || cell >= level.length()) return false;
+		int t = level.map[cell];
+		return t == com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.DOOR
+				|| t == com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.OPEN_DOOR
+				|| t == com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.LOCKED_DOOR
+				|| t == com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.HERO_LKD_DR
+				|| t == com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.SECRET_DOOR
+				|| t == com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.CRYSTAL_DOOR;
 	}
 
 	public static void replaceWater( Level level, int cell ){

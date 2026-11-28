@@ -94,12 +94,19 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 		return c instanceof WraithKing && ((WraithKing) c).isDark();
 	}
 
+	//Maze Tower: 화면 그리기(매 프레임)에서도 불린다. 그사이 게임 진행 쪽이 몹 목록을 바꾸면 ConcurrentModificationException으로
+	// 튕길 수 있어, 그때는 지난번에 찾은 값을 쓴다.
+	private static WraithKing cachedFind = null;
 	public static WraithKing find(){
 		if (Dungeon.level == null) return null;
-		for (Mob m : Dungeon.level.mobs){
-			if (m instanceof WraithKing && m.isAlive()) return (WraithKing) m;
+		try {
+			for (Mob m : Dungeon.level.mobs){
+				if (m instanceof WraithKing && m.isAlive()) return cachedFind = (WraithKing) m;
+			}
+			return cachedFind = null;
+		} catch (java.util.ConcurrentModificationException e){
+			return cachedFind != null && cachedFind.isAlive() && Dungeon.level.mobs.contains(cachedFind) ? cachedFind : null;
 		}
-		return null;
 	}
 
 	public boolean isDark(){
@@ -681,7 +688,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 				GLog.n(Messages.get(this, "zolt_kill"));
 			}
 		}
-		if (seen) PixelScene.shake(2, 0.4f);
+		if (seen) PixelScene.shake(1, 0.15f); //Maze Tower: 흔들림은 언제나 1픽셀, 아주 짧게
 		Sample.INSTANCE.play(Assets.Sounds.RAY);
 	}
 
@@ -828,7 +835,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 					.show(fx, c);
 		}
 		target.sprite.emitter().burst(com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle.UP, 8);
-		PixelScene.shake(1.5f, 0.2f);
+		PixelScene.shake(1, 0.15f); //Maze Tower: 흔들림은 언제나 1픽셀, 아주 짧게
 	}
 
 	private void cancelAmbush(){
@@ -873,10 +880,67 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 		yell(Messages.get(this, "phase3"));
 	}
 
+	// ===== Maze Tower (M3): 현자의 브로치 =====
+	//브로치(망령 왕에게 전할 것)를 지닌 채 3단계(기어 다니는 왕)를 공격하지 않고 두면 머리 위에 잎 다섯 장이 차오른다(잎 하나에 M_LEAF_TURNS턴).
+	//다 차면 왕이 브로치를 알아보고, 거뒀던 영혼을 풀어 주고, 결실의 핵을 내놓은 뒤 흩어진다(처치로 판정). 다 차기 전에 왕이 피해를 받으면 이벤트는 없어진다.
+	public float leafTime = 0;        //잎이 차는 데 흐른 시간 (저장됨)
+	public boolean leafBroken = false;//왕이 3단계에서 피해를 받아 이벤트가 없어졌는지 (저장됨)
+	private float leafLast = -1;
+	private boolean recognizedEnd = false;
+
+	//머리 위 잎: -1 보이지 않음, 0~5 찬 잎 수 (WraithKingSprite가 그린다)
+	public int mazeLeaves(){
+		if (!MazeTower.M_SAGE || phase != 3 || leafBroken || !isAlive() || !com.shatteredpixel.shatteredpixeldungeon.MazeSage.carries( false )) return -1;
+		return Math.min( MazeTower.M_LEAVES, (int)Math.floor( leafTime / MazeTower.M_LEAF_TURNS ) );
+	}
+
+	//3단계 왕의 차례마다. 잎이 다 차면 알아보고 흩어진다 (true면 이번 차례는 끝)
+	private boolean mazeLeafTick(){
+		if (mazeLeaves() < 0){ leafLast = -1; return false; }
+		float now = now();
+		if (leafLast >= 0) leafTime += now - leafLast;
+		leafLast = now;
+		if (mazeLeaves() >= MazeTower.M_LEAVES){
+			//(지시서) 잎이 다 차면 왕이 도망을 멈추고 주인공에게 기어 온다. 바로 옆에 닿으면(또는 M_APPROACH_TURNS턴이 지나면) 브로치를 알아본다
+			if (approachTime < 0) approachTime = 0;
+			Hero hero = Dungeon.hero;
+			if (hero == null || Dungeon.level.adjacent(pos, hero.pos) || approachTime >= MazeTower.M_APPROACH_TURNS){
+				mazeRecognize();
+				return true;
+			}
+			approachTime += 1f / speed();
+			int oldPos = pos;
+			if (!rooted && getCloser(hero.pos)){
+				spend(1f / speed());
+				moveSprite(oldPos, pos);
+			} else {
+				spend(TICK);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public float approachTime = -1; //(M3) 잎이 다 찬 뒤 주인공에게 기어 온 시간 (저장됨, -1 아직)
+
+	private void mazeRecognize(){
+		recognizedEnd = true;
+		com.shatteredpixel.shatteredpixeldungeon.MazeSage.quest().recognized = true;
+		yell( Messages.get( this, "recognize" ) );
+		souls = 0;
+		if (sprite != null){
+			sprite.emitter().burst( com.shatteredpixel.shatteredpixeldungeon.effects.Speck.factory( com.shatteredpixel.shatteredpixeldungeon.effects.Speck.LIGHT ), 12 );
+			sprite.centerEmitter().burst( com.shatteredpixel.shatteredpixeldungeon.effects.particles.ShadowParticle.UP, 14 );
+		}
+		Sample.INSTANCE.play( Assets.Sounds.LULLABY );
+		die( Dungeon.hero );
+	}
+
 	//(결정) 3단계: 기어다니는 왕은 주인공에게서 도망친다 (이동 속도 70%).
 	//주인공에게서 더 멀어지는 칸이 없고 주인공이 바로 옆에 있을 때만 할퀴기
 	private boolean actCrawl(){
 		Hero hero = Dungeon.hero;
+		if (mazeLeafTick()) return true; //Maze Tower (M3)
 		if (hero == null || !hero.isAlive()){
 			spend(TICK);
 			return true;
@@ -924,6 +988,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 
 	@Override
 	public void damage( int dmg, Object src ) {
+		int phaseBefore = phase; //Maze Tower (M3)
 		//3단계: 받는 평타·스킬 피해 +50%
 		if (phase == 3 && src instanceof Char){
 			dmg = Math.round(dmg * MazeTower.WK_PHASE3_TAKEN);
@@ -934,6 +999,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 		int pre = HP;
 		super.damage(dmg, src);
 		MazeBoss20.settlePhaseHP(this, pre, thr);
+		if (phaseBefore == 3 && pre != HP) leafBroken = true; //Maze Tower (M3): 잎이 다 차기 전에 치면 이벤트는 없어진다
 		LockedFloor lock = Dungeon.hero.buff(LockedFloor.class);
 		if (lock != null && !isImmune(src.getClass()) && !isInvulnerable(src.getClass())){
 			lock.addTime((pre - HP) / 3f);
@@ -1011,14 +1077,15 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 		GameScene.bossSlain();
 		super.die(cause);
 		MazeBoss20.afterDeath(this);
-		yell(Messages.get(this, "defeated"));
+		yell(Messages.get(this, recognizedEnd ? "peace" : "defeated")); //Maze Tower (M3)
 	}
 
 	//불러온 뒤 화면 연출을 다시 만든다
 	private void restoreFx(){
 		if (zoltCharge > 0 && zoltChargeFx == null && zoltZone == null) showZoltFx();
 		if (ambushCell != -1) showEyes();
-		if (phase == 3 && sprite instanceof WraithKingSprite) ((WraithKingSprite) sprite).crawl();
+		//(사용자) 쓰러지는 연출 중이면 끊지 않는다 (불러온 뒤에만 기어다니는 시트로 바로 바꿈)
+		if (phase == 3 && sprite instanceof WraithKingSprite && !((WraithKingSprite) sprite).isCollapsing()) ((WraithKingSprite) sprite).crawl();
 	}
 
 	// ===== 저장 =====
@@ -1040,6 +1107,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 		bundle.put("ambush_cell", ambushCell);
 		bundle.put("countered", countered);
 		bundle.put("dark_intro", darkIntro);
+		bundle.put("leaf_time", leafTime); bundle.put("leaf_broken", leafBroken); bundle.put("approach", approachTime); //Maze Tower (M3)
 	}
 
 	@Override
@@ -1060,6 +1128,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 		ambushCell = bundle.getInt("ambush_cell");
 		countered = bundle.getBoolean("countered");
 		darkIntro = bundle.getBoolean("dark_intro");
+		leafTime = bundle.getFloat("leaf_time"); leafBroken = bundle.getBoolean("leaf_broken"); approachTime = bundle.contains("approach") ? bundle.getFloat("approach") : -1; //Maze Tower (M3)
 		BossHealthBar.assignBoss(this);
 		if (phase == 3) BossHealthBar.bleed(true);
 	}
@@ -1142,10 +1211,47 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 			super.play(anim);
 		}
 
+		//Maze Tower (M3): 현자의 브로치를 지닌 채 3단계 왕을 두면 머리 위에 잎 다섯 장(빈 잎 → 찬 잎, sprites/maze_sage_leaf.png 5×5 × 2)
+		private com.watabou.noosa.Group leafRow;
+		private com.watabou.noosa.Image[] leafImg;
+
+		private void mazeLeafUpdate() {
+			int n = ch instanceof WraithKing ? ((WraithKing) ch).mazeLeaves() : -1;
+			if (n < 0){
+				if (leafRow != null){ leafRow.killAndErase(); leafRow = null; }
+				return;
+			}
+			if (leafRow == null || leafRow.parent == null){
+				leafRow = new com.watabou.noosa.Group();
+				leafImg = new com.watabou.noosa.Image[MazeTower.M_LEAVES];
+				for (int i = 0; i < leafImg.length; i++){
+					leafImg[i] = new com.watabou.noosa.Image( Assets.Sprites.SAGE_LEAF );
+					leafRow.add( leafImg[i] );
+				}
+				GameScene.groupEffect( leafRow );
+			}
+			//(사용자) 아래 줄 세 장, 위 줄 두 장. 아래 줄 왼쪽부터 차고 그다음 위 줄
+			float cx = x + width / 2f - 2.5f;
+			int[][] at = { {-6, -7}, {0, -7}, {6, -7}, {-3, -13}, {3, -13} };
+			for (int i = 0; i < leafImg.length; i++){
+				leafImg[i].frame( i < n ? 5 : 0, 0, 5, 5 );
+				leafImg[i].x = cx + at[i % at.length][0];
+				leafImg[i].y = y + at[i % at.length][1];
+				leafImg[i].visible = visible;
+			}
+		}
+
+		@Override
+		public void kill() {
+			if (leafRow != null){ leafRow.killAndErase(); leafRow = null; }
+			super.kill();
+		}
+
 		@Override
 		public void die() {
 			//실제 사망은 기어다니는 시트의 9~12
 			if (!crawling) crawl();
+			if (leafRow != null){ leafRow.killAndErase(); leafRow = null; }
 			super.die();
 		}
 
@@ -1208,6 +1314,7 @@ public class WraithKing extends Mob implements com.shatteredpixel.shatteredpixel
 		@Override
 		public void update() {
 			super.update();
+			mazeLeafUpdate(); //Maze Tower (M3)
 			if (!(ch instanceof WraithKing) || !ch.isAlive()) return;
 			if (reveal > 0){
 				visible = true; //나타난 칸이 시야 밖이어도 드러내는 동안은 보인다

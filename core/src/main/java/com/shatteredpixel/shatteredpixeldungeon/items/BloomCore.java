@@ -34,6 +34,12 @@ public class BloomCore extends Item {
 		unique = true;
 	}
 
+	//Maze Tower (사용자): 게임 안에서 은은한 새잎빛이 감돈다
+	@Override
+	public com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite.Glowing glowing() {
+		return com.shatteredpixel.shatteredpixeldungeon.sprites.MazeItemSprites.coreGlow();
+	}
+
 	@Override
 	public ArrayList<String> actions( Hero hero ) {
 		ArrayList<String> actions = super.actions( hero );
@@ -49,6 +55,11 @@ public class BloomCore extends Item {
 			BloomTree tree = BloomTree.get(hero);
 			if (tree.unlocked){
 				GLog.w(Messages.get(this, "already"));
+				return;
+			}
+			//Maze Tower (2026-11-24): 2차 특성이 아직 없는 직업(마법사·도적)은 쓰지 않는다 (핵은 그대로 남는다)
+			if (com.shatteredpixel.shatteredpixeldungeon.actors.hero.BloomTalent.poolOf(hero) == null){
+				GLog.w(Messages.get(this, "not_ready"));
 				return;
 			}
 
