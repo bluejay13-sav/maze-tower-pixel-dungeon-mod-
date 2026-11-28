@@ -457,12 +457,21 @@ public class MasterBossLevel extends Level {
 	private void sproutNow(){
 		sproutQueue.clear();
 		witherQueue.clear();
+		//(고침) 불러온 블롭은 갱신 범위가 비어 있다. 여기서 한 칸이라도 심으면 범위가 그 칸만으로 정해지므로, 먼저 전체 범위를 잡는다
+		for (Class<? extends Blob> k : new Class[]{ com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.class, com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.class }){
+			Blob b = blobs.get(k);
+			if (b != null && b.cur != null && b.area.isEmpty()) b.setupArea();
+		}
 		for (int c : outsideSprouts(sproutRadius())) witherAt(c, false);
 		for (int c : missingSprouts()) sproutAt(c, false);
 		//(점검) 새잎 땅·검은 낙엽 블롭을 미리 만들어 둔다: 매 프레임(화면 쪽) 돋고 시드는 칸이 처음으로 블롭을 만들면
 		// 행동 쪽이 level.blobs를 도는 중에 새 항목이 생겨 튕길 수 있다 (있는 블롭에 양 0을 심으면 아무것도 바뀌지 않음)
-		Blob.seed(SAPLING, 0, com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.class, this);
-		Blob.seed(SAPLING, 0, com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.class, this);
+		// (고침) 이미 있는 블롭에는 심지 않는다: 저장 파일에서 불러온 블롭은 갱신 범위(area)가 비어 있다가 첫 턴에 전체로 잡히는데,
+		// 양 0을 한 칸에 심으면 그 범위가 줄기 한 칸으로 정해져 나머지 칸의 낙엽·새잎 땅이 한 턴 뒤 지워졌다
+		if (blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.class) == null)
+			Blob.seed(SAPLING, 0, com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.class, this);
+		if (blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.class) == null)
+			Blob.seed(SAPLING, 0, com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.class, this);
 		//(점검) 화면을 만드는 중에 새로 생긴 바닥 블롭도 행동 목록에 넣는다
 		Blob sg = blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.SproutGround.class); if (sg != null) Actor.add(sg);
 		Blob bl = blobs.get(com.shatteredpixel.shatteredpixeldungeon.actors.blobs.BlackLeaves.class); if (bl != null) Actor.add(bl);
